@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "xml", "xml.vcproj", "{96F729CE-D745-44D4-A305-78156D020071}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug_vc90|Win32 = Debug_vc90|Win32
+		Release_vc90|Win32 = Release_vc90|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{96F729CE-D745-44D4-A305-78156D020071}.Debug_vc90|Win32.ActiveCfg = Debug_vc90|Win32
+		{96F729CE-D745-44D4-A305-78156D020071}.Debug_vc90|Win32.Build.0 = Debug_vc90|Win32
+		{96F729CE-D745-44D4-A305-78156D020071}.Release_vc90|Win32.ActiveCfg = Release_vc90|Win32
+		{96F729CE-D745-44D4-A305-78156D020071}.Release_vc90|Win32.Build.0 = Release_vc90|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

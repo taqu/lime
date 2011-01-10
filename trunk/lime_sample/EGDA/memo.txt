@@ -1,0 +1,4 @@
+ビットマップの作成・ロード
+android.graphics.BitmapFactoryに、ファイル内容ごと食わせてBitmapを得る。
+編集できないBitmapなら一度コピー
+copyPixelsToBufferでバイトデータゲット

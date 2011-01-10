@@ -1,0 +1,108 @@
+struct VS_OUTPUT
+{
+    float4 position : POSITION0;
+
+#ifdef PNORMAL
+    float3 normal : TEXCOORD1;
+#endif
+
+#ifdef PCOLOR
+    float3 color : COLOR0;
+#endif
+
+#ifdef PTEX0
+    float2 tex0 : TEXCOORD0;
+#endif
+
+#ifdef PPOS
+    float3 pos0 : TEXCOORD2;
+#endif
+};
+
+static const float PI = 3.14159265358979323846;
+static const float PI2 = 6.28318530717958647692;
+static const float INV_PI = 0.31830988618379067153;
+static const float INV_PI2 = 0.15915494309189533576;
+
+#ifdef FRESNEL
+//ディフューズフレネルリフレクタンスの近似式係数
+static const float4 coeffFdr = float4(-1.440f, 0.710f, 0.668f, 0.0636f);
+
+
+uniform float3 dlDir;
+uniform float3 camPos;
+uniform float4 specular;
+#endif
+
+//マテリアル設定
+uniform float4 diffuse;
+
+//テクスチャ
+#if defined(PTEX0)
+sampler texAlbedo;
+#endif
+
+float4 main(VS_OUTPUT input) : COLOR
+{
+    // 色計算
+    //-------------
+    float4 color;
+#if defined(PTEX0)
+    //ディフューズテクスチャ参照
+    color = tex2D(texAlbedo, input.tex0);
+#else
+    color = diffuse;
+#endif
+
+#if defined(FRESNEL)
+
+    float3 L = dlDir;
+    float3 N = normalize(input.normal);
+    float3 V = normalize(camPos - input.pos0); //視線ベクトル
+    float3 H = normalize(L+V); //ハーフベクトル
+
+    float cosNL = max(0.0f, dot(N,L));
+    float cosVH = max(0.0f, dot(V,H));
+    float cosNH = max(0.0f, dot(N,H));
+
+    const float shininess = specular.w;
+    const float3 ks = specular.xyz;
+    //Phong
+    float3 reflectance = ks * (shininess + 2)*INV_PI2*pow(max(0.0001f, cosNH), shininess);
+
+    //フレネル 複素屈折・偏光なし
+    float ni = 1.5f; //複素屈折率実部
+    //const float nt = 1.0;
+    float F0 = (1.0f - ni)/(1.0f + ni);
+    F0 = F0*F0;
+
+    //フレネルリフレクタンス
+    float Fr = F0 + (1.0f - F0)* pow(1.0f - cosNL, 5.0f);
+
+    //反射の割合
+    reflectance *= Fr;
+
+    //ディフューズフレネルリフレクタンス
+    //入射角と法線の余弦θ、入射ベクトルω、屈折率の比ηについて、
+    //ディフューズリフレクタンス Fdr = ∫Ω(Fr(η,θ))dω
+    //近似、Fdr = -1.440/(η*η) + 0.710/η + 0.668 + 0.0636*η
+    //float invNi = 1.0f/ni;
+    //float4 reflectPoly = float4(invNi*invNi, invNi, 1.0f, ni);
+    //float Fdr = dot(reflectPoly, coeffFdr);
+    float Fdr = 1.0f - reflectance;
+
+    //拡散反射の割合
+    float4 dcolor;
+    dcolor.xyz = diffuse * Fdr * INV_PI;
+    dcolor.w = diffuse.w;
+    color.xyzw = dcolor;
+    color.xyz += reflectance;
+
+#else
+#endif
+
+#if defined(PCOLOR)
+    color.xyz *= input.color;
+#endif
+    return color;
+}
