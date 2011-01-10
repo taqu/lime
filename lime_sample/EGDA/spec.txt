@@ -1,0 +1,23 @@
+T-Mobile G1 (dev phone1?)
+HT-03A
+
+Qualcomm MSM7201A
+CPU: 32bit Qualcomm MSM7200A 528 MHz ARMv6 
+
+Snapdragon
+
+第１世代
+===============================
+QSD8250 1GHz ARMv7 Adreno 200
+QSD8650 1GHz ARMv7 Adreno 200
+
+第２世代
+===============================
+MSM7630
+
+
+Xperia X10 Android OS2.1 QSD8250
+Nexus One Android OS2.1 QSD8250
+シャープIS01 Android OS1.6 QSD8650
+シャープIS03 Android OS2.1 QSD8650
+REGZA Phone IS04 Android OS2.1 QSD8650

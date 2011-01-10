@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libConverter", "libConverter.vcproj", "{06BD67E6-88AA-4BC0-9FFB-9F5384453F8C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{06BD67E6-88AA-4BC0-9FFB-9F5384453F8C}.Debug|Win32.ActiveCfg = Debug|Win32
+		{06BD67E6-88AA-4BC0-9FFB-9F5384453F8C}.Debug|Win32.Build.0 = Debug|Win32
+		{06BD67E6-88AA-4BC0-9FFB-9F5384453F8C}.Release|Win32.ActiveCfg = Release|Win32
+		{06BD67E6-88AA-4BC0-9FFB-9F5384453F8C}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

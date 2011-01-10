@@ -1,0 +1,60 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lcore", "lcore\project\lcore.vcproj", "{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lmath", "lmath\project\lmath.vcproj", "{47A8A0CE-31C1-420B-83A4-3097833E734F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0} = {37544678-7AEF-4A27-AFB1-EE98C75DD8A0}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lgraphics", "lgraphics\project\lgraphics_es2.vcproj", "{64300411-1C4C-4EDA-A929-2F503FFAD938}"
+	ProjectSection(ProjectDependencies) = postProject
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0} = {37544678-7AEF-4A27-AFB1-EE98C75DD8A0}
+		{47A8A0CE-31C1-420B-83A4-3097833E734F} = {47A8A0CE-31C1-420B-83A4-3097833E734F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lframework", "lframework\project\lframework_es2.vcproj", "{C8DFA1CA-1EC9-42BC-823A-4683157E05AA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{64300411-1C4C-4EDA-A929-2F503FFAD938} = {64300411-1C4C-4EDA-A929-2F503FFAD938}
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59} = {15FD3F76-CC09-4080-8BE2-B636370FBB59}
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0} = {37544678-7AEF-4A27-AFB1-EE98C75DD8A0}
+		{47A8A0CE-31C1-420B-83A4-3097833E734F} = {47A8A0CE-31C1-420B-83A4-3097833E734F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lfont", "lfont\project\lfont.vcproj", "{15FD3F76-CC09-4080-8BE2-B636370FBB59}"
+	ProjectSection(ProjectDependencies) = postProject
+		{64300411-1C4C-4EDA-A929-2F503FFAD938} = {64300411-1C4C-4EDA-A929-2F503FFAD938}
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}.Debug|Win32.Build.0 = Debug|Win32
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}.Release|Win32.ActiveCfg = Release|Win32
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}.Release|Win32.Build.0 = Release|Win32
+		{47A8A0CE-31C1-420B-83A4-3097833E734F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{47A8A0CE-31C1-420B-83A4-3097833E734F}.Debug|Win32.Build.0 = Debug|Win32
+		{47A8A0CE-31C1-420B-83A4-3097833E734F}.Release|Win32.ActiveCfg = Release|Win32
+		{47A8A0CE-31C1-420B-83A4-3097833E734F}.Release|Win32.Build.0 = Release|Win32
+		{64300411-1C4C-4EDA-A929-2F503FFAD938}.Debug|Win32.ActiveCfg = Debug|Win32
+		{64300411-1C4C-4EDA-A929-2F503FFAD938}.Debug|Win32.Build.0 = Debug|Win32
+		{64300411-1C4C-4EDA-A929-2F503FFAD938}.Release|Win32.ActiveCfg = Release|Win32
+		{64300411-1C4C-4EDA-A929-2F503FFAD938}.Release|Win32.Build.0 = Release|Win32
+		{C8DFA1CA-1EC9-42BC-823A-4683157E05AA}.Debug|Win32.ActiveCfg = Debug|Win32
+		{C8DFA1CA-1EC9-42BC-823A-4683157E05AA}.Debug|Win32.Build.0 = Debug|Win32
+		{C8DFA1CA-1EC9-42BC-823A-4683157E05AA}.Release|Win32.ActiveCfg = Release|Win32
+		{C8DFA1CA-1EC9-42BC-823A-4683157E05AA}.Release|Win32.Build.0 = Release|Win32
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Debug|Win32.ActiveCfg = Debug|Win32
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Debug|Win32.Build.0 = Debug|Win32
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Release|Win32.ActiveCfg = Release|Win32
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

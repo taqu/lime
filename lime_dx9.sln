@@ -1,0 +1,72 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lcore", "lcore\project\lcore.vcproj", "{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lmath", "lmath\project\lmath.vcproj", "{47A8A0CE-31C1-420B-83A4-3097833E734F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0} = {37544678-7AEF-4A27-AFB1-EE98C75DD8A0}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lgraphics", "lgraphics\project\lgraphics_dx9.vcproj", "{AA50E557-01AD-486E-9818-B6EE71DBBDDE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0} = {37544678-7AEF-4A27-AFB1-EE98C75DD8A0}
+		{47A8A0CE-31C1-420B-83A4-3097833E734F} = {47A8A0CE-31C1-420B-83A4-3097833E734F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "linput", "linput\project\linput_dx.vcproj", "{6F989857-BFE8-432B-87BC-A1A8E34D10A0}"
+	ProjectSection(ProjectDependencies) = postProject
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0} = {37544678-7AEF-4A27-AFB1-EE98C75DD8A0}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lrenderlib", "lrenderlib\project\lrenderlib_dx9.vcproj", "{99F7D3F3-C128-496C-8AFF-14A00674A2E1}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lframework", "lframework\project\lframework_dx9.vcproj", "{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}"
+	ProjectSection(ProjectDependencies) = postProject
+		{AA50E557-01AD-486E-9818-B6EE71DBBDDE} = {AA50E557-01AD-486E-9818-B6EE71DBBDDE}
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59} = {15FD3F76-CC09-4080-8BE2-B636370FBB59}
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0} = {37544678-7AEF-4A27-AFB1-EE98C75DD8A0}
+		{47A8A0CE-31C1-420B-83A4-3097833E734F} = {47A8A0CE-31C1-420B-83A4-3097833E734F}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lfont", "lfont\project\lfont.vcproj", "{15FD3F76-CC09-4080-8BE2-B636370FBB59}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}.Debug|Win32.Build.0 = Debug|Win32
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}.Release|Win32.ActiveCfg = Release|Win32
+		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0}.Release|Win32.Build.0 = Release|Win32
+		{47A8A0CE-31C1-420B-83A4-3097833E734F}.Debug|Win32.ActiveCfg = Debug|Win32
+		{47A8A0CE-31C1-420B-83A4-3097833E734F}.Debug|Win32.Build.0 = Debug|Win32
+		{47A8A0CE-31C1-420B-83A4-3097833E734F}.Release|Win32.ActiveCfg = Release|Win32
+		{47A8A0CE-31C1-420B-83A4-3097833E734F}.Release|Win32.Build.0 = Release|Win32
+		{AA50E557-01AD-486E-9818-B6EE71DBBDDE}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AA50E557-01AD-486E-9818-B6EE71DBBDDE}.Debug|Win32.Build.0 = Debug|Win32
+		{AA50E557-01AD-486E-9818-B6EE71DBBDDE}.Release|Win32.ActiveCfg = Release|Win32
+		{AA50E557-01AD-486E-9818-B6EE71DBBDDE}.Release|Win32.Build.0 = Release|Win32
+		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Debug|Win32.ActiveCfg = Debug_dx|Win32
+		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Debug|Win32.Build.0 = Debug_dx|Win32
+		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Release|Win32.ActiveCfg = Release_dx|Win32
+		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Release|Win32.Build.0 = Release_dx|Win32
+		{99F7D3F3-C128-496C-8AFF-14A00674A2E1}.Debug|Win32.ActiveCfg = Debug|Win32
+		{99F7D3F3-C128-496C-8AFF-14A00674A2E1}.Debug|Win32.Build.0 = Debug|Win32
+		{99F7D3F3-C128-496C-8AFF-14A00674A2E1}.Release|Win32.ActiveCfg = Release|Win32
+		{99F7D3F3-C128-496C-8AFF-14A00674A2E1}.Release|Win32.Build.0 = Release|Win32
+		{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}.Debug|Win32.ActiveCfg = Debug|Win32
+		{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}.Debug|Win32.Build.0 = Debug|Win32
+		{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}.Release|Win32.ActiveCfg = Release|Win32
+		{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}.Release|Win32.Build.0 = Release|Win32
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Debug|Win32.ActiveCfg = Debug|Win32
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Debug|Win32.Build.0 = Debug|Win32
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Release|Win32.ActiveCfg = Release|Win32
+		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
