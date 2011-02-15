@@ -17,15 +17,15 @@ namespace lcore
         ios::in,
         ios::out,
         ios::app,
-        (ios::in|ios::binary),
-        (ios::out|ios::binary),
-        (ios::app|ios::binary),
-        (ios::in|ios::out),
-        (ios::in|ios::out|ios::trunc),
-        (ios::in|ios::out|ios::app),
-        (ios::in|ios::out|ios::binary),
-        (ios::in|ios::out|ios::trunc|ios::binary),
-        (ios::in|ios::out|ios::app|ios::binary),
+        (ios::in | ios::binary),
+        (ios::out | ios::binary),
+        (ios::app | ios::out | ios::binary),
+        (ios::in | ios::out),
+        (ios::in | ios::out| ios::trunc),
+        (ios::in | ios::out| ios::app),
+        (ios::in | ios::out| ios::binary),
+        (ios::in | ios::out| ios::trunc|ios::binary),
+        (ios::in | ios::out| ios::app|ios::binary),
     };
 
     const char* ios::ModeString[] =
@@ -152,16 +152,18 @@ namespace lcore
         return current_;
     }
 
-    void sstream_base<istream>::read(char* dst, u32 count)
+    u32 sstream_base<istream>::read(char* dst, u32 count)
     {
         s32 end = current_ + count;
         end = (end>capacity_)? capacity_ : end;
+        count = end - current_;
         
         while(current_<end){
             *dst = buffer_[current_];
             ++dst;
             ++current_;
         }
+        return count;
     }
 #endif
 }
