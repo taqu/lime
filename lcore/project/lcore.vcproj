@@ -191,6 +191,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\Buffer.cpp"
+			>
+		</File>
+		<File
 			RelativePath="..\Buffer.h"
 			>
 		</File>
@@ -243,10 +247,6 @@
 			>
 		</File>
 		<File
-			RelativePath="..\liofwd.h"
-			>
-		</File>
-		<File
 			RelativePath="..\liostream.cpp"
 			>
 		</File>
@@ -284,6 +284,14 @@
 		</File>
 		<File
 			RelativePath="..\Tree.h"
+			>
+		</File>
+		<File
+			RelativePath="..\utility.h"
+			>
+		</File>
+		<File
+			RelativePath="..\utlity.cpp"
 			>
 		</File>
 		<File

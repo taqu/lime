@@ -37,8 +37,16 @@ namespace lcore
             lcore::memcpy(buffer_, rhs.buffer_, SIZE);
         }
 
-        explicit String(const Char* str, u32 length)
+        explicit String(u32 length)
         {
+            LASSERT(MAX_LENGTH > 0);
+            LASSERT(length > 0);
+            resize(length);
+        }
+
+        String(const Char* str, u32 length)
+        {
+            LASSERT(MAX_LENGTH > 0);
             assign(str, length);
         }
 
@@ -47,6 +55,11 @@ namespace lcore
         }
 
         const Char* c_str() const
+        {
+            return buffer_;
+        }
+
+        Char* c_str()
         {
             return buffer_;
         }
@@ -62,47 +75,19 @@ namespace lcore
             buffer_[0] = '\0';
         }
 
-        void assign(const Char* str, u32 length)
+        void resize(u32 size)
         {
-            LASSERT(str != NULL);
-            strncpy(buffer_, SIZE, str, length);
-            size_ = (MAX_LENGTH>length)? length : MAX_LENGTH;
+            size_ = (size<=MAX_LENGTH)? size : MAX_LENGTH;
             buffer_[size_] = '\0';
         }
 
-        void assignMemory(const Char* str, u32 size)
-        {
-            LASSERT(str != NULL);
-            u32 count = (size>=SIZE)? MAX_LENGTH : size;
-            u32 i=0;
-            for(; i<count; ++i){
-                buffer_[i] = str[i];
-                if(str[i] == '\0'){
-                    size_ = i;
-                    return;
-                }
-            }
-            size_ = i;
-            buffer_[i] = '\0';
-        }
+        void assign(const Char* str, u32 length);
 
-        void swap(this_type& rhs)
-        {
-            Char buffer[SIZE];
-            memcpy(buffer, rhs.buffer_, rhs.size_ + 1);
-            memcpy(rhs.buffer_, buffer_, size_ + 1);
-            memcpy(buffer_, buffer, rhs.size_ + 1);
+        void assignMemory(const Char* str, u32 size);
 
-            lcore::swap(size_, rhs.size_);
-        }
+        void swap(this_type& rhs);
 
-        bool operator==(const this_type& rhs) const
-        {
-            if(size_ != rhs.size()){
-                return false;
-            }
-            return (strncmp(buffer_, rhs.buffer_, size_) == 0);
-        }
+        bool operator==(const this_type& rhs) const;
 
         bool operator!=(const this_type& rhs) const
         {
@@ -116,34 +101,74 @@ namespace lcore
             return !(*this == str);
         }
 
-        String& operator=(const String& rhs)
-        {
-            if(this != &rhs){
-                memcpy(buffer_, rhs.buffer_, SIZE);
-                size_ = rhs.size_;
-            }
-            return *this;
-        }
+        String& operator=(const String& rhs);
 
-        u32 push_back(const Char* str, u32 len)
-        {
-            u32 j=0;
-            while(size_<MAX_LENGTH){
-                buffer_[size_] = str[j];
-                ++size_;
-                ++j;
-            }
-            buffer_[size_] = '\0';
-            return j;
-        }
+        u32 push_back(const Char* str, u32 len);
 
         lcore::istream& read(lcore::istream& is);
         lcore::ostream& write(lcore::ostream& os);
 
+        Char& operator[](u32 index)
+        {
+            LASSERT(0<=index && index<size_);
+            return buffer_[index];
+        }
+
+        const Char& operator[](u32 index) const
+        {
+            LASSERT(0<=index && index<size_);
+            return buffer_[index];
+        }
     private:
         u32 size_;
         Char buffer_[SIZE];
     };
+
+    template<u32 SIZE>
+    void String<SIZE>::assign(const Char* str, u32 length)
+    {
+        LASSERT(str != NULL);
+        strncpy(buffer_, SIZE, str, length);
+        size_ = (MAX_LENGTH>length)? length : MAX_LENGTH;
+        buffer_[size_] = '\0';
+    }
+
+    template<u32 SIZE>
+    void String<SIZE>::assignMemory(const Char* str, u32 size)
+    {
+        LASSERT(str != NULL);
+        u32 count = (size>=SIZE)? MAX_LENGTH : size;
+        u32 i=0;
+        for(; i<count; ++i){
+            buffer_[i] = str[i];
+            if(str[i] == '\0'){
+                size_ = i;
+                return;
+            }
+        }
+        size_ = i;
+        buffer_[i] = '\0';
+    }
+
+    template<u32 SIZE>
+    void String<SIZE>::swap(this_type& rhs)
+    {
+        Char buffer[SIZE];
+        memcpy(buffer, rhs.buffer_, rhs.size_ + 1);
+        memcpy(rhs.buffer_, buffer_, size_ + 1);
+        memcpy(buffer_, buffer, rhs.size_ + 1);
+
+        lcore::swap(size_, rhs.size_);
+    }
+
+    template<u32 SIZE>
+    bool String<SIZE>::operator==(const this_type& rhs) const
+    {
+        if(size_ != rhs.size()){
+            return false;
+        }
+        return (strncmp(buffer_, rhs.buffer_, size_) == 0);
+    }
 
     template<u32 SIZE>
     bool String<SIZE>::operator==(const Char* str) const
@@ -166,6 +191,36 @@ namespace lcore
         buffer_[i] = '\0';
         return is;
     }
+
+    template<u32 SIZE>
+    String<SIZE>& String<SIZE>::operator=(const String<SIZE>& rhs)
+    {
+        if(this != &rhs){
+            memcpy(buffer_, rhs.buffer_, SIZE);
+            size_ = rhs.size_;
+        }
+        return *this;
+    }
+
+
+    template<u32 SIZE>
+    u32 String<SIZE>::push_back(const Char* str, u32 len)
+    {
+        u32 j=0;
+        len += size_;
+        if(len>MAX_LENGTH){
+            len = MAX_LENGTH;
+        }
+
+        while(size_<len){
+            buffer_[size_] = str[j];
+            ++size_;
+            ++j;
+        }
+        buffer_[size_] = '\0';
+        return j;
+    }
+
 
     template<u32 SIZE>
     lcore::ostream& String<SIZE>::write(lcore::ostream& os)

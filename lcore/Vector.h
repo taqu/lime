@@ -40,6 +40,31 @@ namespace lcore
             return items_[index];
         }
 
+        T& front()
+        {
+            LASSERT(0<size_);
+            return items_[0];
+        }
+
+        const T& front() const
+        {
+            LASSERT(0<size_);
+            return items_[0];
+        }
+
+        T& back()
+        {
+            LASSERT(0<size_);
+            return items_[size_-1];
+        }
+
+        const T& back() const
+        {
+            LASSERT(0<size_);
+            return items_[size_-1];
+        }
+
+
         void push_back(const T& t);
         void pop_back();
 
@@ -177,10 +202,10 @@ namespace lcore
     template<class T>
     void vector_arena<T>::swap(vector_arena& rhs)
     {
-        swap(incSize_, rhs.incSize_);
-        swap(capacity_, rhs.capacity_);
-        swap(size_, rhs.size_);
-        swap(items_, rhs.items_);
+        lcore::swap(incSize_, rhs.incSize_);
+        lcore::swap(capacity_, rhs.capacity_);
+        lcore::swap(size_, rhs.size_);
+        lcore::swap(items_, rhs.items_);
     }
 
     template<class T>

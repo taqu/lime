@@ -9,15 +9,21 @@
 
 namespace lcore
 {
+    /**
+    @brief バッファ管理クラス
+    */
     class Buffer
     {
     public:
+        static const u32 MemAlignSize = sizeof(f64);
+
         inline Buffer();
         inline Buffer(u32 size);
 
         inline ~Buffer();
 
-        inline void reset(u32 size);
+        u32 getSize() const;
+        void resize(u32 size);
 
         template<class T>
         T* allocate(u32 offset)
@@ -69,6 +75,9 @@ namespace lcore
             lcore::swap(buffer_, rhs.buffer_);
         }
     private:
+        void construct(u32 size);
+        void destruct();
+
         u8 *buffer_;
     };
 
@@ -78,25 +87,14 @@ namespace lcore
     }
 
     inline Buffer::Buffer(u32 size)
+        :buffer_(NULL)
     {
-        buffer_ = LIME_NEW u8[size];
-#ifdef _DEBUG
-        memset(buffer_, 0, size);
-#endif
+        construct(size);
     }
 
     inline Buffer::~Buffer()
     {
-        LIME_DELETE_ARRAY(buffer_);
-    }
-
-    inline void Buffer::reset(u32 size)
-    {
-        LIME_DELETE_ARRAY(buffer_);
-        buffer_ = LIME_NEW u8[size];
-#ifdef _DEBUG
-        memset(buffer_, 0, size);
-#endif
+        destruct();
     }
 }
 #endif //INC_LCORE_BUFFER_H__
