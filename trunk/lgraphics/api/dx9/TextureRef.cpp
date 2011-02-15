@@ -97,74 +97,26 @@ namespace lgraphics
     {
         LASSERT(data != NULL);
 
+        D3DSURFACE_DESC desc;
+        HRESULT hr = texture_->GetLevelDesc(level, &desc);
+        if(FAILED(hr)){
+            return;
+        }
+
         LockedRect lockedRect;
-        HRESULT hr = texture_->LockRect(level, (D3DLOCKED_RECT*)&lockedRect, NULL, Lock_None);
+        hr = texture_->LockRect(level, (D3DLOCKED_RECT*)&lockedRect, NULL, Lock_None);
         if(FAILED(hr)){
             return;
         }
 
         //ミップマップサイズ計算
-        u32 w = width_ >> level;
-        w = (w<=0)? 1 : w;
+        u32 size = desc.Width * desc.Height;
 
-        u32 h = height_ >> level;
-        h = (h<=0)? 1 : h;
+        //TODO:ちゃんとピッチやサイズをみないと
+        lcore::memcpy(lockedRect.bits_, data, size);
 
-        u32 size = w*h;
+        texture_->UnlockRect(level);
 
-        switch(format_)
-        {
-        case Buffer_A8:
-            break;
-
-        case Buffer_R8G8B8:
-            size;
-            break;
-
-        case Buffer_A8R8G8B8: //バイト並び反転の必要あり
-            internalFormat = GL_RGBA;
-            type = GL_UNSIGNED_BYTE;
-
-            {//反転
-                u32 size = getLevelSize(level, bpp_);
-                TexARGB2ABGR(data, size);
-            }
-            break;
-
-        case Buffer_X8R8G8B8: //バイト並び反転の必要あり
-            internalFormat = GL_RGB;
-            type = GL_UNSIGNED_BYTE;
-
-            {//反転
-                u32 size = getLevelSize(level, bpp_);
-                TexXRGB2BGR(data, size);
-            }
-            break;
-
-        case Buffer_A8B8G8R8:
-            internalFormat = GL_RGBA;
-            type = GL_UNSIGNED_BYTE;
-            break;
-
-        case Buffer_X8B8G8R8: //データ削減
-            internalFormat = GL_RGB;
-            type = GL_UNSIGNED_BYTE;
-
-            {//削減
-                u32 size = getLevelSize(level, bpp_);
-                TexXBGR2BGR(data, size);
-            }
-            break;
-
-        case Buffer_L8:
-            internalFormat = GL_LUMINANCE;
-            type = GL_UNSIGNED_BYTE;
-            break;
-
-        default:
-            LASSERT(false);
-            break;
-        };
     }
 
     void TextureRef::attach(u32 index) const
@@ -268,7 +220,7 @@ namespace lgraphics
             return TextureRef();
         }
 
-        TextureRef::TextureDesc *texDesc = LIME_NEW TetureRef::TextureDesc;
+        TextureRef::TextureDesc *texDesc = LIME_NEW TextureRef::TextureDesc;
         texDesc->addRef();
 
         return TextureRef(d3dtex, texDesc);

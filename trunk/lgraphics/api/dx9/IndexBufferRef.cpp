@@ -42,6 +42,20 @@ namespace lgraphics
         buffer_->Unlock();
     }
 
+    // データ転送
+    void IndexBufferRef::blit(const void* data, u32 offset, u32 size)
+    {
+        LASSERT(buffer_ != NULL);
+
+        void* dst = NULL;
+        HRESULT hr = buffer_->Lock(offset, size, &dst, Lock_None);
+
+        if(SUCCEEDED(hr)){
+            lcore::memcpy(dst, data, size);
+            buffer_->Unlock();
+        }
+    }
+
     void IndexBufferRef::attach() const
     {
         GraphicsDeviceRef &device = Graphics::getDevice();

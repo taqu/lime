@@ -6,7 +6,7 @@
 @date 2011/01/08 create
 */
 #include "../lgraphicscore.h"
-#include <lcore/liofwd.h>
+#include <lcore/liostream.h>
 
 namespace lgraphics
 {

@@ -67,6 +67,9 @@ namespace lgraphics
         bool lock(u32 offset, u32 size, void** data, Lock lock=Lock_None);
         void unlock();
 
+        // データ転送
+        void blit(const void* data, u32 offset, u32 size);
+
         bool getDesc(BufferDesc& desc);
 
         void attach() const;

@@ -279,7 +279,7 @@ namespace lgraphics
     {
         switch(type)
         {
-            CASE_ENTRY(Primitive_PointList);
+            //CASE_ENTRY(Primitive_PointList);
             CASE_ENTRY(Primitive_LineList);
             CASE_ENTRY(Primitive_LineStrip);
             CASE_ENTRY(Primitive_TriangleList);
@@ -294,7 +294,7 @@ namespace lgraphics
     {
         static PrimitiveType decodeTable[]=
         {
-            Primitive_PointList,
+            //Primitive_PointList,
             Primitive_LineList,
             Primitive_LineStrip,
             Primitive_TriangleList,

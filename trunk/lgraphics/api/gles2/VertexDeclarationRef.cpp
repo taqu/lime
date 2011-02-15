@@ -59,21 +59,10 @@ namespace lgraphics
             GL_HALF_FLOAT_OES,
         };
 
-        GLboolean DeclUsageNormalizedTable[DeclUsage_Num] =
+        GLboolean DeclMethodNormalizedTable[DeclMethod_Num] =
         {
-            GL_FALSE, // Position
-            GL_TRUE, //BlendWeight
-            GL_FALSE, //BlendIndices
-            GL_FALSE, //Normal
-            GL_FALSE, //PSize
-            GL_FALSE, //Texcoord
-            GL_FALSE, //Tangent
-            GL_FALSE, //Binormal
-            GL_FALSE, //TessFactor
-            GL_TRUE, //Color
-            GL_TRUE, //Fog
-            GL_TRUE, //Depth
-            GL_FALSE, //Sample
+            GL_FALSE,
+            GL_TRUE,
         };
 
         static const s32 MaxUageNameLength = 16;
@@ -180,9 +169,9 @@ namespace lgraphics
         VertexElement *elements = declaration_->elements_;
         u32 size = numElements_-1;
         for(u32 i=0; i<size; ++i){
-            s32 size = DeclTypeSizeTable[elements[i].type_];
-            GLenum type = DeclTypeTable[elements[i].type_];
-            GLboolean normalized = DeclUsageNormalizedTable[elements[i].usage_];
+            s32 size = DeclTypeSizeTable[elements[i].element_[VertexElement::Elem_Type] ];
+            GLenum type = DeclTypeTable[elements[i].element_[VertexElement::Elem_Type] ];
+            GLboolean normalized = DeclMethodNormalizedTable[ elements[i].element_[VertexElement::Elem_Method] ];
 
             glVertexAttribPointer(i, size, type, normalized, vertexSize_, (const void*)elements[i].offset_);
             glEnableVertexAttribArray(i);
@@ -205,11 +194,11 @@ namespace lgraphics
         VertexElement *elements = declaration_->elements_;
         u32 size = numElements_-1;
         for(u32 i=0; i<size; ++i){
-            u8 usage = elements[i].usage_;
+            u8 usage = elements[i].element_[VertexElement::Elem_Usage];
             u32 size = DeclUsageNameSizeTable[usage];
             lcore::memcpy(name, DeclUsageNameTable[usage], size);
 
-            name[ size ] = '0' + elements[i].usageIndex_;
+            name[ size ] = '0' + elements[i].element_[VertexElement::Elem_UsageIndex];
             name[ size + 1 ] = '\0';
             glBindAttribLocation(program, i, name);
         }
@@ -247,18 +236,19 @@ namespace lgraphics
         LIME_DELETE_ARRAY( elements_ );
     }
 
-    u16 VertexDeclCreator::add(u16 stream, u16 offset, DeclType type, DeclUsage usage, u8 usageIndex)
+    u16 VertexDeclCreator::add(u16 stream, u16 offset, DeclType type, DeclMethod method, DeclUsage usage, u8 usageIndex)
     {
         LASSERT(count_ < size_);
         LASSERT(0<=type && type<=DeclType_UnUsed);
+        LASSERT(0<=method && method<=DeclMethod_Normalize);
         LASSERT(0<=usage && usage<DeclUsage_Num);
 
         elements_[count_].stream_ = stream;
         elements_[count_].offset_ = offset;
-        elements_[count_].type_ = static_cast<u8>( type );
-        elements_[count_].method_ = 0;
-        elements_[count_].usage_ = static_cast<u8>( usage );
-        elements_[count_].usageIndex_ = usageIndex;
+        elements_[count_].element_[VertexElement::Elem_Type] = static_cast<u8>( type );
+        elements_[count_].element_[VertexElement::Elem_Method] = static_cast<u8>( method );
+        elements_[count_].element_[VertexElement::Elem_Usage] = static_cast<u8>( usage );
+        elements_[count_].element_[VertexElement::Elem_UsageIndex] = usageIndex;
 
         ++count_;
 

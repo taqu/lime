@@ -135,6 +135,18 @@ namespace lgraphics
         DeclUsage_Num,
     };
 
+    enum DeclMethod
+    {
+        DeclMethod_Default = 0,
+        DeclMethod_PartialU,
+        DeclMethod_PartialV,
+        DeclMethod_CrossUV,
+        DeclMethod_UV,
+        DeclMethod_LookUp,
+        DeclMethod_LookUpPerSampled,
+        DeclMethod_Normalize = DeclMethod_Default,
+    };
+
     enum PrimitiveType
     {
         //Primitive_PointList = D3DPT_POINTLIST,

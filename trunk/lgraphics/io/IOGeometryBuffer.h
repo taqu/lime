@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2010/05/05 create
 */
-#include <lcore/liofwd.h>
+#include <lcore/liostream.h>
 #include "../api/GeometryBuffer.h"
 namespace lgraphics
 {

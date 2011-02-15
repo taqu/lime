@@ -87,6 +87,8 @@ namespace lgraphics
             return false;
         }
 
+        this->setRenderState(D3DRS_ALPHAREF, Default_AlphaTestRef);
+
         return true;
     }
 
