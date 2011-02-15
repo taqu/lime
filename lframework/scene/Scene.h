@@ -1,5 +1,5 @@
-#ifndef INC_SCENE_H__
-#define INC_SCENE_H__
+#ifndef INC_LFRAMEWORK_SCENE_H__
+#define INC_LFRAMEWORK_SCENE_H__
 /**
 @file Scene.h
 @author t-sakai
@@ -66,4 +66,4 @@ namespace lscene
     };
 }
 
-#endif //INC_SCENE_H__
+#endif //INC_LFRAMEWORK_SCENE_H__

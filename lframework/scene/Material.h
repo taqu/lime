@@ -64,8 +64,9 @@ namespace lscene
         inline const Flags& getFlags() const;
         inline Flags& getFlags();
 
+        Material& operator=(const Material& rhs);
+
     //private:
-        NameString shading_;
         lmath::Vector4 diffuse_;
         lmath::Vector4 specular_;
         lmath::Vector3 ambient_;
@@ -76,7 +77,7 @@ namespace lscene
         f32 opacity_;
         f32 refraction_;
         Flags materialFlags_;
-
+        NameString shading_;
     private:
         void releaseTextures();
 

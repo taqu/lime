@@ -44,7 +44,7 @@ namespace lscene
         u32 batchSize = sizeof(lrender::Batch);
 
         u32 bufferSize = numGeometries * geomSize + numMaterials * matSize + numGeometries * batchSize;
-        resourceBuffer_.reset(bufferSize);
+        resourceBuffer_.resize(bufferSize);
 
         //---------------------------------------------------
         for(u32 i=0; i<numGeometries_; ++i){

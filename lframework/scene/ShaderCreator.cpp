@@ -59,12 +59,53 @@ namespace lscene
 
             u32 flags = 0;
             for(u32 i=0; i<numElements; ++i){
-                u16 flag = vflags[ elements[i].usage_ ];
-                flag <<= elements[i].usageIndex_;
+                u16 flag = vflags[ elements[i].getUsage() ];
+                flag <<= elements[i].getUsageIndex();
 
                 flags |= flag;
             }
             return flags;
+        }
+
+
+        /**
+        @brief
+        */
+        void addVertexDeclarationMacrosVS(lgraphics::VertexDeclarationRef& vdecl, const char** macros, u32& numMacros)
+        {
+            lgraphics::VertexElement elements[lgraphics::VertexDeclarationRef::MAX_ELEMENTS];
+            if(false == vdecl.getDecl(elements)){
+                return;
+            }
+
+            Macro toMacro[lgraphics::DeclUsage_Num] =
+            {
+                Macro_Num,
+                Macro_VWEIGHT,
+                Macro_VBONE,
+                Macro_VNORMAL,
+                Macro_Num,
+                Macro_VTEX0,
+
+                Macro_Num,
+                Macro_Num,
+                Macro_Num,
+                Macro_Num,
+                Macro_Num,
+                Macro_Num,
+                Macro_Num,
+                Macro_Num,
+            };
+            for(u32 i=0; i<vdecl.getNumElements(); ++i){
+                u8 usage = elements[i].getUsage();
+                if(toMacro[usage] != Macro_Num){
+                    macros[numMacros++] = MacroNames[ toMacro[usage] ];
+
+                    if(usage == lgraphics::DeclUsage_Normal){
+                        macros[numMacros++] = MacroNames[Macro_PNORMAL];
+                    }
+                }
+            }
         }
     }
 
@@ -80,12 +121,11 @@ namespace lscene
         //----------------------------------------------------------
         u32 inputVSFlags = createGeometryInputFlags(geometry) | shader::VFlag_Pos0;
         u32 inputPSFlags = inputVSFlags;
-        inputVSFlags <<= 16; //頂点シェーダのフラグは上位ワードへ
 
         u32 featureVSFlags = geometry.getFlags().get();
         u32 featurePSFlags = material.getFlags().get();
 
-        lgraphics::ShaderKey vsKey(inputVSFlags, featureVSFlags);
+        lgraphics::ShaderKey vsKey((inputVSFlags<<16), featureVSFlags); //頂点シェーダのフラグは上位ワードへ
         lgraphics::ShaderKey psKey(inputPSFlags, featurePSFlags);
 
         // すでに登録されているか
@@ -99,25 +139,36 @@ namespace lscene
             // 頂点フォーマットとピクセルシェーダへの出力、機能によってマクロセット
             const char* macros[Macro_Num];
             u32 numMacros = 0;
-            macros[numMacros++] = MacroNames[Macro_VNORMAL];
-            macros[numMacros++] = MacroNames[Macro_VTEX0];
-            macros[numMacros++] = MacroNames[Macro_VBONE];
-            macros[numMacros++] = MacroNames[Macro_VWEIGHT];
 
-            //macros[numMacros++] = MacroNames[Macro_PCOLOR];
-            macros[numMacros++] = MacroNames[Macro_PNORMAL];
+            // 入力のマクロ生成
+            addVertexDeclarationMacrosVS(geometry.getGeometryBuffer()->getDecl(), macros, numMacros);
+
+            if(featurePSFlags & Material::MatFlag_Fresnel){
+                macros[numMacros++] = MacroNames[Macro_PPOS];
+            }
+
             if(material.getTextureNum()>0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
             }
-            macros[numMacros++] = MacroNames[Macro_PPOS];
 
-            macros[numMacros++] = MacroNames[Macro_VDIFFUSE];
+            // 頂点カラーがあるか、拡散反射を頂点で計算するなら色出力
+            if( (featureVSFlags & Geometry::GeomFlag_DiffuseVS)
+                && (inputVSFlags & VFlag_Normal))
+            {
+                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+                    macros[numMacros++] = MacroNames[Macro_VDIFFUSE];
+            }else{
+                if(inputVSFlags & VFlag_Color0){
+                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+                }
+            }
 
             //スキニングあり？
             if(geometry.getFlags().checkFlag(lscene::Geometry::GeomFlag_Skinning)){
                 macros[numMacros++] = MacroNames[Macro_SKINNING];
             }
 
+            //シェーダ作成
             vsDesc = lgraphics::Shader::createVertexShaderFromMemory(
                 shader::DefaultVSSource,
                 shader::DefaultVSSourceSize,
@@ -130,14 +181,29 @@ namespace lscene
         if(psDesc == NULL){
             const char* macros[Macro_Num];
             u32 numMacros = 0;
-            //macros[numMacros++] = MacroNames[Macro_PCOLOR];
-            macros[numMacros++] = MacroNames[Macro_PNORMAL];
+
+            // 頂点カラーがあるか、拡散反射を頂点で計算するなら色出力
+            if( (featureVSFlags & Geometry::GeomFlag_DiffuseVS)
+                && (inputVSFlags & VFlag_Normal))
+            {
+                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+            }else{
+                if(inputVSFlags & VFlag_Color0){
+                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+                }
+            }
+
+            if(inputVSFlags & VFlag_Normal){ //頂点フォーマットに法線があれば
+                macros[numMacros++] = MacroNames[Macro_PNORMAL];
+            }
             if(material.getTextureNum()>0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
             }
-            macros[numMacros++] = MacroNames[Macro_PPOS];
 
-            //macros[numMacros++] = MacroNames[Macro_FRESNEL];
+            if(featurePSFlags & Material::MatFlag_Fresnel){
+                macros[numMacros++] = MacroNames[Macro_PPOS];
+                macros[numMacros++] = MacroNames[Macro_FRESNEL];
+            }
 
             psDesc = lgraphics::Shader::createPixelShaderFromMemory(
                 shader::DefaultPSSource,
@@ -189,12 +255,11 @@ namespace lscene
         //----------------------------------------------------------
         u32 inputVSFlags = createGeometryInputFlags(geometry) | shader::VFlag_Pos0;
         u32 inputPSFlags = inputVSFlags;
-        inputVSFlags <<= 16; //頂点シェーダのフラグは上位ワードへ
 
         u32 featureVSFlags = geometry.getFlags().get();
         u32 featurePSFlags = material.getFlags().get();
 
-        lgraphics::ShaderKey vsKey(inputVSFlags, featureVSFlags);
+        lgraphics::ShaderKey vsKey((inputVSFlags<<16), featureVSFlags); //頂点シェーダのフラグは上位ワードへ
         lgraphics::ShaderKey psKey(inputPSFlags, featurePSFlags);
 
         // すでに登録されているか
@@ -208,19 +273,29 @@ namespace lscene
             // 頂点フォーマットとピクセルシェーダへの出力、機能によってマクロセット
             const char* macros[Macro_Num];
             u32 numMacros = 0;
-            macros[numMacros++] = MacroNames[Macro_VNORMAL];
-            macros[numMacros++] = MacroNames[Macro_VTEX0];
-            macros[numMacros++] = MacroNames[Macro_VBONE];
-            macros[numMacros++] = MacroNames[Macro_VWEIGHT];
 
-            //macros[numMacros++] = MacroNames[Macro_PCOLOR];
-            macros[numMacros++] = MacroNames[Macro_PNORMAL];
+            // 入力のマクロ生成
+            addVertexDeclarationMacrosVS(geometry.getGeometryBuffer()->getDecl(), macros, numMacros);
+
+            if(featurePSFlags & Material::MatFlag_Fresnel){
+                macros[numMacros++] = MacroNames[Macro_PPOS];
+            }
+
             if(material.getTextureNum()>0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
             }
-            macros[numMacros++] = MacroNames[Macro_PPOS];
 
-            macros[numMacros++] = MacroNames[Macro_VDIFFUSE];
+            // 頂点カラーがあるか、拡散反射を頂点で計算するなら色出力
+            if( (featureVSFlags & Geometry::GeomFlag_DiffuseVS)
+                && (inputVSFlags & VFlag_Normal))
+            {
+                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+                    macros[numMacros++] = MacroNames[Macro_VDIFFUSE];
+            }else{
+                if(inputVSFlags & VFlag_Color0){
+                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+                }
+            }
 
             //スキニングあり？
             if(geometry.getFlags().checkFlag(lscene::Geometry::GeomFlag_Skinning)){
@@ -245,14 +320,31 @@ namespace lscene
         if(ps == NULL){
             const char* macros[Macro_Num];
             u32 numMacros = 0;
-            //macros[numMacros++] = MacroNames[Macro_PCOLOR];
-            macros[numMacros++] = MacroNames[Macro_PNORMAL];
+
+            macros[numMacros++] = MacroNames[Macro_PPOS];
+
+            // 頂点カラーがあるか、拡散反射を頂点で計算するなら色出力
+            if( (featureVSFlags & Geometry::GeomFlag_DiffuseVS)
+                && (inputVSFlags & VFlag_Normal))
+            {
+                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+            }else{
+                if(inputVSFlags & VFlag_Color0){
+                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+                }
+            }
+
+            if(inputVSFlags & VFlag_Normal){ //頂点フォーマットに法線があれば
+                macros[numMacros++] = MacroNames[Macro_PNORMAL];
+            }
             if(material.getTextureNum()>0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
             }
-            macros[numMacros++] = MacroNames[Macro_PPOS];
 
-            //macros[numMacros++] = MacroNames[Macro_FRESNEL];
+            if(featurePSFlags & Material::MatFlag_Fresnel){
+                macros[numMacros++] = MacroNames[Macro_PPOS];
+                macros[numMacros++] = MacroNames[Macro_FRESNEL];
+            }
 
             lgraphics::PixelShaderRef psRef = lgraphics::Shader::createPixelShaderFromMemory(
                 shader::DefaultPSSource,

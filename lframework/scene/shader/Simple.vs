@@ -46,19 +46,20 @@ float3 skinning_normal(uniform float3 normal, uniform float weight, uniform int 
     return (weight * tmp);
 }
 
-void skinning(in float4 position, in float3 normal, out float4 retPosition, out float3 retNormal, uniform float4 indices, uniform float weight)
+void skinning(in float4 position, in float3 normal, out float4 retPosition, out float3 retNormal, uniform float4 indices)
 {
     retPosition = (float4)float(c_izero);
     retNormal = (float3)float(c_izero);
 
+    float weight = indices.z * 0.01f;
     int index = int(indices.x) * c_ithree;
     retPosition += skinning_position(position, weight, index);
     retNormal += skinning_normal(normal, weight, index);
 
-    float weight1 = float(c_ione) - weight;
+    weight = float(c_ione) - weight;
     index = int(indices.y) * c_ithree;
-    retPosition += skinning_position(position, weight1, index);
-    retNormal += skinning_normal(normal, weight1, index);
+    retPosition += skinning_position(position, weight, index);
+    retNormal += skinning_normal(normal, weight, index);
 }
 #endif
 
@@ -77,10 +78,6 @@ struct VSInput
 
 #ifdef VBONE
     float4 bones       : BLENDINDICES;
-#endif
-
-#ifdef VWEIGHT
-    float weights     : BLENDWEIGHT;
 #endif
 };
 
@@ -113,11 +110,12 @@ VS_OUTPUT main(VSInput input)
     float4 position;
     float3 normal;
 #ifdef SKINNING
-    skinning(input.position, input.normal, position, normal, input.bones, input.weights);
-
+    skinning(input.position, input.normal, position, normal, input.bones);
 #else
     position = input.position;
+#ifdef V_NORMAL
     normal = input.normal;
+#endif
 #endif
     output.position = mul(position, mwvp);
 

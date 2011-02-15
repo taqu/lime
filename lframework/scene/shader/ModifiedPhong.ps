@@ -104,5 +104,6 @@ float4 main(VS_OUTPUT input) : COLOR
 #if defined(PCOLOR)
     color.xyz *= input.color;
 #endif
+
     return color;
 }

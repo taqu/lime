@@ -32,6 +32,7 @@ namespace lanim
 
         /// ジョイントポーズ取得
         inline const JointPoseWithFrame& getPose(u32 index) const;
+        inline JointPoseWithFrame& getPose(u32 index);
 
         /// ジョイントポーズ設定
         inline void setPose(u32 index, JointPoseWithFrame& pose);
@@ -100,6 +101,13 @@ namespace lanim
 
     // ジョイントポーズ取得
     inline const JointPoseWithFrame& JointAnimation::getPose(u32 index) const
+    {
+        LASSERT(0<=index && index<numPoses_);
+        return poses_[index];
+    }
+
+    // ジョイントポーズ取得
+    inline JointPoseWithFrame& JointAnimation::getPose(u32 index)
     {
         LASSERT(0<=index && index<numPoses_);
         return poses_[index];

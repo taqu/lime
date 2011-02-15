@@ -17,43 +17,43 @@ namespace lscene
         ,shaderPS_(NULL)
         ,indexOffset_(0)
         ,numIndices_(0)
-        ,count_(0)
-        ,materialIndex_(0xFFU)
-        ,numBonesInPalette_(0)
+        ,primitiveCount_(0)
         ,geometryFlags_(0)
     {
+        data_[Index_Material] = 0xFFU;
+        data_[Index_NumBones] = 0;
     }
 
     Geometry::Geometry(
-        u16 count,
+        u32 primCount,
         u32 indexOffset,
         u8 materialIndex)
         :shaderVS_(NULL)
         ,shaderPS_(NULL)
         ,indexOffset_(indexOffset)
-        ,numIndices_(count*3)
-        ,count_(count)
-        ,materialIndex_(materialIndex)
-        ,numBonesInPalette_(0)
+        ,numIndices_(primCount*3)
+        ,primitiveCount_(primCount)
         ,geometryFlags_(0)
     {
+        data_[Index_Material] = materialIndex;
+        data_[Index_NumBones] = 0;
     }
 
     Geometry::Geometry(
         lgraphics::GeometryBuffer::pointer& geomBuffer,
-        u16 count,
+        u32 primCount,
         u32 indexOffset,
         u8 materialIndex)
         :geomBuffer_(geomBuffer)
         ,shaderVS_(NULL)
         ,shaderPS_(NULL)
         ,indexOffset_(indexOffset)
-        ,numIndices_(count*3)
-        ,count_(count)
-        ,materialIndex_(materialIndex)
-        ,numBonesInPalette_(0)
+        ,numIndices_(primCount*3)
+        ,primitiveCount_(primCount)
         ,geometryFlags_(0)
     {
+        data_[Index_Material] = materialIndex;
+        data_[Index_NumBones] = 0;
     }
 
     Geometry::~Geometry()
@@ -67,8 +67,8 @@ namespace lscene
         lcore::swap(shaderPS_, rhs.shaderPS_);
         lcore::swap(indexOffset_, rhs.indexOffset_);
         lcore::swap(numIndices_, rhs.numIndices_);
-        lcore::swap(count_, rhs.count_);
-        lcore::swap(materialIndex_, rhs.materialIndex_);
+        lcore::swap(primitiveCount_, rhs.primitiveCount_);
+        lcore::swap(data_[Index_Material], rhs.data_[Index_Material]);
         geometryFlags_.swap(rhs.geometryFlags_);
     }
 

@@ -55,18 +55,5 @@ namespace io
         }
         return Img_None;
     }
-
-    const Char* rFindChr(const Char* src, Char c, u32 size)
-    {
-        LASSERT(src != NULL);
-        src += (size-1);
-        for(u32 i=0; i<size; ++i){
-            if(*src == c){
-                return src;
-            }
-            --src;
-        }
-        return NULL;
-    }
 }
 }

@@ -35,7 +35,7 @@ namespace lanim
             total += size[i];
         }
 
-        resourceBuffer_.reset(total);
+        resourceBuffer_.resize(total);
 
         u32 offset = 0;
         joints_ = resourceBuffer_.allocate<Joint>(offset, numJoints_);

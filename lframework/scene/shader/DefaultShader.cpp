@@ -207,8 +207,7 @@ namespace lscene
 
         //TODO:なんかもういろいろ
         //テクスチャ
-        if(material->getTextureNum()>=TexPS_Num){
-        for(u32 i=0; i<TexPS_Num; ++i){
+        for(u32 i=0; i<material->getTextureNum(); ++i){
             const lgraphics::SamplerState& samplerState = material->getSamplerState(i);
             const lgraphics::TextureRef& tex = material->getTexture(i);
 #if defined(LIME_GLES2)
@@ -217,7 +216,6 @@ namespace lscene
             samplerState.apply( textures_[i] );
 #endif
             tex.attach( textures_[i] );
-        }
         }
     }
 
