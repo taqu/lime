@@ -66,15 +66,16 @@ namespace lgraphics
         LIME_DELETE_ARRAY( elements_ );
     }
 
-    u16 VertexDeclCreator::add(u16 stream, u16 offset, DeclType type, DeclUsage usage, u8 usageIndex)
+    u16 VertexDeclCreator::add(u16 stream, u16 offset, DeclType type, DeclMethod method, DeclUsage usage, u8 usageIndex)
     {
         LASSERT(count_ < size_);
         LASSERT(0<=type && type<=DeclType_UnUsed);
+        LASSERT(0<=method && method<=DeclMethod_Normalize);
 
         elements_[count_].stream_ = stream;
         elements_[count_].offset_ = offset;
         elements_[count_].type_ = static_cast<u8>(type);
-        elements_[count_].method_ = 0;
+        elements_[count_].method_ = static_cast<u8>(method);
         elements_[count_].usage_ = static_cast<u8>(usage);
         elements_[count_].usageIndex_ = usageIndex;
 

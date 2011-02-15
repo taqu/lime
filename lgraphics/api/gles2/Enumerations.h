@@ -119,6 +119,19 @@ namespace lgraphics
         DeclUsage_Num,
     };
 
+    enum DeclMethod
+    {
+        DeclMethod_Default = 0,
+        //DeclMethod_PartialU,
+        //DeclMethod_PartialV,
+        //DeclMethod_CrossUV,
+        //DeclMethod_UV,
+        //DeclMethod_LookUp,
+        //DeclMethod_LookUpPerSampled,
+        DeclMethod_Normalize,
+        DeclMethod_Num,
+    };
+
     enum PrimitiveType
     {
         Primitive_PointList = GL_POINTS,

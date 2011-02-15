@@ -81,7 +81,7 @@ namespace lgraphics
          return (CmpFunc)Graphics::getDevice().getRenderState(D3DRS_ALPHAFUNC);
      }
 
-     void RenderStateRef::setAlphaTestRef(s32 refValue)
+     void RenderStateRef::setAlphaTestRef(u32 refValue)
      {
          Graphics::getDevice().setRenderState(D3DRS_ALPHAREF, refValue);
      }

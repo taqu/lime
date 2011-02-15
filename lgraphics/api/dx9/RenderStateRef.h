@@ -21,7 +21,7 @@ namespace lgraphics
         static void setAlphaTestFunc(CmpFunc func);
         static CmpFunc getAlphaTestFunc();
 
-        static void setAlphaTestRef(s32 refValue);
+        static void setAlphaTestRef(u32 refValue);
         static u32 getAlphaTestRef();
 
         static void setCullMode(CullMode mode);

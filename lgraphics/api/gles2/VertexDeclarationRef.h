@@ -13,12 +13,23 @@ namespace lgraphics
 {
     struct VertexElement
     {
+        enum ElementIndex
+        {
+            Elem_Type =0,
+            Elem_Method,
+            Elem_Usage,
+            Elem_UsageIndex,
+            Elem_Num,
+        };
+
+        u8 getType() const{ return element_[Elem_Type];}
+        u8 getMethod() const{ return element_[Elem_Method];}
+        u8 getUsage() const{ return element_[Elem_Usage];}
+        u8 getUsageIndex() const{ return element_[Elem_UsageIndex];}
+
         u16 stream_;
         u16 offset_;
-        u8 type_;
-        u8 method_;
-        u8 usage_;
-        u8 usageIndex_;
+        u8 element_[Elem_Num];
     };
 
     class VertexDeclaration;
@@ -97,7 +108,7 @@ namespace lgraphics
         /**
         @return 要素のバイト数を返す
         */
-        u16 add(u16 stream, u16 offset, DeclType type, DeclUsage usage, u8 usageIndex);
+        u16 add(u16 stream, u16 offset, DeclType type, DeclMethod method, DeclUsage usage, u8 usageIndex);
         void end(VertexDeclarationRef& declaration);
         void end(VertexDeclarationRef& declaration, u32 vertexSize);
     private:
@@ -106,7 +117,7 @@ namespace lgraphics
 
         void declEnd()
         {
-            add(0xFFU, 0, DeclType_UnUsed, DeclUsage_Position, 0);
+            add(0xFFU, 0, DeclType_UnUsed, DeclMethod_Default, DeclUsage_Position, 0);
         }
         VertexElement *elements_;
         u32 count_;

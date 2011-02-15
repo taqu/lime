@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\;..\..\tools"
+				AdditionalIncludeDirectories="..\..\;..\..\tools;../../ext/win32/include"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;LIME_DX9"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,8 +63,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="d3dx9.lib d3d9.lib"
+				AdditionalDependencies="d3dx9.lib d3d9.lib zlib.lib libpng.lib libjpeg.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_dx9_vc90_d.lib"
+				AdditionalLibraryDirectories="../../ext/win32/lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -108,7 +109,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="2"
-				AdditionalIncludeDirectories="..\..\;..\..\tools"
+				AdditionalIncludeDirectories="..\..\;..\..\tools;../../ext/win32/include"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;LIME_DX9"
 				StringPooling="true"
 				RuntimeLibrary="2"
@@ -129,8 +130,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="d3d9.lib d3dx9.lib"
+				AdditionalDependencies="d3d9.lib d3dx9.lib zlib.lib libpng.lib libjpeg.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_dx9_vc90.lib"
+				AdditionalLibraryDirectories="../../ext/win32/lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -421,6 +423,14 @@
 			</File>
 			<File
 				RelativePath="..\io\IOIndexBuffer.h"
+				>
+			</File>
+			<File
+				RelativePath="..\io\IOPNG.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\io\IOPNG.h"
 				>
 			</File>
 			<File

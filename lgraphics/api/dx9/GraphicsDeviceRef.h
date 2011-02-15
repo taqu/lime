@@ -41,6 +41,9 @@ namespace lgraphics
     class GraphicsDeviceRef
     {
     public:
+        static const u32 Default_AlphaTestRef = 128;
+
+
         GraphicsDeviceRef(const GraphicsDeviceRef& rhs);
 
         GraphicsDeviceRef& operator=(const GraphicsDeviceRef& rhs)

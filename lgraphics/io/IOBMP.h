@@ -7,7 +7,7 @@
 
 */
 #include "../lgraphicscore.h"
-#include <lcore/liofwd.h>
+#include <lcore/liostream.h>
 
 namespace lgraphics
 {

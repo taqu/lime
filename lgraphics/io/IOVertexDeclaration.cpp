@@ -30,11 +30,13 @@ namespace io
 
         VertexDeclCreator creator(declHeader.numElements_);
         for(u32 i=0; i<declHeader.numElements_; ++i){
+
             creator.add( elem[i].stream_,
                 elem[i].offset_,
-                static_cast<DeclType>(elem[i].type_),
-                static_cast<DeclUsage>(elem[i].usage_),
-                elem[i].usageIndex_);
+                static_cast<DeclType>(elem[i].getType() ),
+                static_cast<DeclMethod>(elem[i].getMethod() ),
+                static_cast<DeclUsage>(elem[i].getUsage() ),
+                elem[i].getUsageIndex() );
         }
 
         creator.end(decl);

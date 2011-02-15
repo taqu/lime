@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2010/07/29 create
 */
-#include <lcore/liofwd.h>
+#include <lcore/liostream.h>
 
 namespace lgraphics
 {
