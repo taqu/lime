@@ -56,4 +56,32 @@ namespace lscene
             (*itr).texture_.destroy();
         }
     }
+
+    Material& Material::operator=(const Material& rhs)
+    {
+        shading_ = rhs.shading_;
+
+        diffuse_ = rhs.diffuse_;
+        specular_ = rhs.specular_;
+        ambient_ = rhs.ambient_;
+        emissive_ = rhs.emissive_;
+        transparent_ = rhs.transparent_;
+
+        shininess_ = rhs.shininess_;
+        shininessStrength_ = rhs.shininessStrength_;
+        opacity_ = rhs.opacity_;
+        refraction_ = rhs.refraction_;
+        materialFlags_ = rhs.materialFlags_;
+
+        setTextureNum(rhs.getTextureNum());
+
+        for(u32 i=0; i<textures_.size(); ++i){
+            textures_[i].state_ = rhs.textures_[i].state_;
+            textures_[i].texture_ = rhs.textures_[i].texture_;
+        }
+
+        renderState_ = rhs.renderState_;
+
+        return *this;
+    }
 }

@@ -361,6 +361,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\scene\Object.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\scene\Object.h"
+				>
+			</File>
+			<File
 				RelativePath="..\scene\Scene.h"
 				>
 			</File>

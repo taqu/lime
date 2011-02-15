@@ -6,7 +6,7 @@
 @date 2010/05/06 create
 
 */
-#include <lcore/liofwd.h>
+#include <lcore/liostream.h>
 #include "lframework.h"
 #include "Static.h"
 
@@ -27,8 +27,6 @@ namespace io
 
 
     ImageFormat getFormatFromExt(const char* ext);
-
-    const Char* rFindChr(const Char* src, Char c, u32 size);
 }
 }
 #endif //INC_LFRAMEWORK_IOUTIL_H__

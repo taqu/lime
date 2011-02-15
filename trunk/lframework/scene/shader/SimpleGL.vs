@@ -7,6 +7,7 @@ const int c_izero = 0;
 const int c_ione = 1;
 const int c_itwo = 2;
 const int c_ithree = 3;
+const float f_1_100 = 0.01;
 
 uniform mat4 mwvp; //World * View * Projection Matrix
 
@@ -25,7 +26,7 @@ uniform vec3 ambient;
 attribute vec3 a_pos0;
 
 #ifdef VNORMAL
-attribute vec3 a_normal0;
+attribute vec4 a_normal0;
 #endif
 
 #ifdef VTEX0
@@ -34,10 +35,6 @@ attribute vec2 a_tex0;
 
 #ifdef VBONE
 attribute vec4 a_indices0;
-#endif
-
-#ifdef VWEIGHT
-attribute float a_weights0;
 #endif
 
 
@@ -88,12 +85,12 @@ void skinning(in vec4 position, in vec3 normal, out vec4 retPosition, out vec3 r
     retPosition = vec4(float(c_izero));
     retNormal = vec3(float(c_izero));
 
-    float weight = a_weights0;
+    float weight = a_indices0.z * f_1_100;
     int index = int(a_indices0.x) * c_ithree;
     skinning_position(retPosition, position, weight, index);
     skinning_normal(retNormal, normal, weight, index);
 
-    weight = float(c_ione) - a_weights0;
+    weight = float(c_ione) - weight;
     index = int(a_indices0.y) * c_ithree;
     skinning_position(retPosition, position, weight, index);
     skinning_normal(retNormal, normal, weight, index);
@@ -106,10 +103,13 @@ void main()
     vec4 position;
     vec3 normal;
 #ifdef SKINNING
-    skinning(vec4(a_pos0.xyz, float(c_ione)), a_normal0, position, normal);
+    skinning(vec4(a_pos0.xyz, float(c_ione)), a_normal0.xyz, position, normal);
 #else
     position = vec4(a_pos0.xyz, float(c_ione));
-    normal = a_normal0;
+#ifdef V_NORMAL
+    normal = a_normal0.xyz;
+#endif
+
 #endif
     gl_Position = mwvp * position;
 

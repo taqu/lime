@@ -64,9 +64,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="lcore_vc90_d.lib lmath_vc90_d.lib lgraphics_dx9_vc90_d.lib lfont_vc90_d.lib zlib.lib"
+				AdditionalDependencies="lcore_vc90_d.lib lmath_vc90_d.lib lgraphics_dx9_vc90_d.lib lfont_vc90_d.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_dx9_vc90_d.lib"
-				AdditionalLibraryDirectories="..\..\lib;..\..\ext\lib\win32"
+				AdditionalLibraryDirectories="..\..\lib;..\..\ext\win32\lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -133,9 +133,9 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="lcore_vc90.lib lmath_vc90.lib lgraphics_dx9_vc90.lib lfont_vc90.lib zlib.lib"
+				AdditionalDependencies="lcore_vc90.lib lmath_vc90.lib lgraphics_dx9_vc90.lib lfont_vc90.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_dx9_vc90.lib"
-				AdditionalLibraryDirectories="..\..\lib;..\..\ext\lib\win32"
+				AdditionalLibraryDirectories="..\..\lib;..\..\ext\win32\lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -222,18 +222,6 @@
 			</File>
 			<File
 				RelativePath="..\anim\AnimationControler.h"
-				>
-			</File>
-			<File
-				RelativePath="..\anim\AnimationControlerIK.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\anim\AnimationControlerIK.h"
-				>
-			</File>
-			<File
-				RelativePath="..\anim\AnimationControlerImpl.h"
 				>
 			</File>
 			<File
