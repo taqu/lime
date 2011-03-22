@@ -1,5 +1,7 @@
 package hm.orz.stabo.EGDA;
 
+import hm.orz.stabo.EGDA.io.SensorSystem;
+
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.egl.EGLContext;
@@ -8,193 +10,130 @@ import javax.microedition.khronos.egl.EGLSurface;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
-import android.graphics.PixelFormat;
 import android.opengl.GLSurfaceView;
-import android.os.SystemClock;
-import android.view.MotionEvent;
-import android.view.SurfaceHolder;
-import android.widget.TextView;
+import android.util.AttributeSet;
+import android.util.Log;
 
-/**
- * 
- * @author taqu_2
- * 
- */
-public class MainView extends GLSurfaceView
+public class MainView extends android.opengl.GLSurfaceView 
+        implements
+        android.opengl.GLSurfaceView.EGLConfigChooser,
+        android.opengl.GLSurfaceView.EGLContextFactory
 {
-	
-	static final int EGL_PRESERVED_RESOURCES = 0x3030; // EGL10.EGL_PRESERVED_RESOURCES,
-    static final int EGL_BIND_TO_TEXTURE_RGB = 0x3039; // EGL10.EGL_BIND_TO_TEXTURE_RGB,
-    static final int EGL_BIND_TO_TEXTURE_RGBA = 0x303A; // EGL10.EGL_BIND_TO_TEXTURE_RGBA,
-    static final int EGL_MIN_SWAP_INTERVAL = 0x303B; // EGL10.EGL_MIN_SWAP_INTERVAL,
-    static final int EGL_MAX_SWAP_INTERVAL = 0x303C; // EGL10.EGL_MAX_SWAP_INTERVAL,
+    public static final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+    
+    public static final int EGL_PRESERVED_RESOURCES = 0x3030; // EGL10.EGL_PRESERVED_RESOURCES,
+    public static final int EGL_BIND_TO_TEXTURE_RGB = 0x3039; // EGL10.EGL_BIND_TO_TEXTURE_RGB,
+    public static final int EGL_BIND_TO_TEXTURE_RGBA = 0x303A; // EGL10.EGL_BIND_TO_TEXTURE_RGBA,
+    public static final int EGL_MIN_SWAP_INTERVAL = 0x303B; // EGL10.EGL_MIN_SWAP_INTERVAL,
+    public static final int EGL_MAX_SWAP_INTERVAL = 0x303C; // EGL10.EGL_MAX_SWAP_INTERVAL,
+    
+    public static final int EGL_BACK_BUFFER = 12420;
+    
+    public static final int EGL_OPENGL_ES_BIT = 0x0001;
+    public static final int EGL_OPENVG_BIT = 0x0002;
+    public static final int EGL_OPENGL_ES2_BIT = 0x0004;
+    public static final int EGL_OPENGL_BIT = 0x0008;
+    
 
-	/**
-	 * 
-	 * @author taqu_2 GLES2.0のためのコンテキストファクトリ
-	 */
-	private static class EGLContextFactory2 implements GLSurfaceView.EGLContextFactory
+    public MainView(Context context, MainRenderer renderer)
     {
-		public EGLContext createContext(EGL10 egl, EGLDisplay display,
-				EGLConfig eglConfig) {
-			int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
+        super(context);
+        initialize(renderer);
+    }
 
-			// コンテキスト作成
-			int[] attributes = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE }; // 2.0指定
-			EGLContext context = egl.eglCreateContext(display, eglConfig,
-					EGL10.EGL_NO_CONTEXT, attributes);
-
-			return context;
-		}
-
-		public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context)
-		{
-			//EGLSurface surface = egl.eglGetCurrentSurface(EGL10.EGL_DRAW);
-			
-			//egl.eglMakeCurrent(display, draw, read, context);
-		    //ライブラリ終了
-	        EGDALib.terminate();
-			egl.eglDestroyContext(display, context);
-		}
-	}
-
-	/**
-	 * 
-	 * @author taqu_2
-	 * 
-	 */
-	private static class EGLConfigChooser2 implements GLSurfaceView.EGLConfigChooser
-	{
-		public EGLConfigChooser2(
-        		int redSize,
-        		int greenSize,
-        		int blueSize,
-        		int alphaSize,
-        		int depthSize,
-        		int stencilSize)
+    public MainView(Context context, AttributeSet attrs, MainRenderer renderer)
+    {
+        super(context, attrs);
+        initialize(renderer);
+    }
+    
+    private void initialize(MainRenderer renderer)
+    {
+        renderer_ = renderer;
+        setEGLConfigChooser(this);
+        setEGLContextFactory(this);
+        setKeepScreenOn(true);
+        setRenderer(renderer);
+    }
+    
+    @Override
+    public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display)
+    {
+      //choose default configure
+        int[] attribs24 =
         {
-        	redSize_ = redSize;
-            greenSize_ = greenSize;
-            blueSize_ = blueSize;
-            alphaSize_ = alphaSize;
-            depthSize_ = depthSize;
-            stencilSize_ = stencilSize;
+                EGL10.EGL_RED_SIZE, 8,
+                EGL10.EGL_GREEN_SIZE, 8,
+                EGL10.EGL_BLUE_SIZE, 8,
+                EGL10.EGL_DEPTH_SIZE, 24,
+                EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+                //EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
+                EGL10.EGL_NONE,
+        };
+        
+        
+        int[] attribs16 =
+        {
+                EGL10.EGL_RED_SIZE, 5,
+                EGL10.EGL_GREEN_SIZE, 6,
+                EGL10.EGL_BLUE_SIZE, 5,
+                EGL10.EGL_DEPTH_SIZE, 24,
+                EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+                //EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
+                EGL10.EGL_NONE,
+        };
+        
+        EGLConfig[] configs = new EGLConfig[1];
+        int[] numConfigs = new int[1];
+        int[] value = new int[1];
+
+        boolean ret = false;
+        
+//        for(int i=0; i<3; ++i){
+//            attribs24[7] = 8*(4-i);
+//            ret = egl.eglChooseConfig(display, attribs24, configs, 4, numConfigs);
+//            if(ret && numConfigs[0]>0){
+//                egl.eglGetConfigAttrib(display, configs[0], EGL10.EGL_DEPTH_SIZE, value);
+//                Log.d(Tag, "depth " + value[0]);
+//                return configs[0];
+//            }
+//        }
+        
+        for(int i=0; i<2; ++i){
+            attribs16[7] = 8*(3-i);
+            ret = egl.eglChooseConfig(display, attribs16, configs, 1, numConfigs);
+            if(ret && numConfigs[0]>0){
+                egl.eglGetConfigAttrib(display, configs[0], EGL10.EGL_DEPTH_SIZE, value);
+                return configs[0];
+            }
         }
+        return null;
+    }
 
-		private static int EGL_OPENGL_ES_BIT = 0x0001;
-		private static int EGL_OPENVG_BIT = 0x0002;
-		private static int EGL_OPENGL_ES2_BIT = 0x0004;
-		private static int EGL_OPENGL_BIT = 0x0008;
+    @Override
+    public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig config)
+    {
+        int[] attributes = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE }; // gles2
+        return egl.eglCreateContext(display, config, EGL10.EGL_NO_CONTEXT, attributes);
+        //return egl.eglCreateContext(display, config, EGL10.EGL_NO_CONTEXT, null);
+    }
 
-		public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display) {
-			int[] numConfigs = new int[1];
+    @Override
+    public void destroyContext(EGL10 egl, EGLDisplay display, EGLContext context)
+    {
+        renderer_.onDestroy();
+        egl.eglDestroyContext(display, context);
+    }
+    
+    public MainRenderer getRenderer()
+    {
+        return renderer_;
+    }
+    
+    EGLDisplay display_ = EGL10.EGL_NO_DISPLAY;
+    EGLContext context_ = EGL10.EGL_NO_CONTEXT;
+    EGLSurface surface_ = EGL10.EGL_NO_SURFACE;
 
-			int[] attributes = new int[9];
-			attributes[0] = EGL10.EGL_RED_SIZE;
-			attributes[1] = 4;
-			attributes[2] = EGL10.EGL_GREEN_SIZE;
-			attributes[3] = 4;
-			attributes[4] = EGL10.EGL_BLUE_SIZE;
-			attributes[5] = 4;
-			attributes[6] = EGL10.EGL_RENDERABLE_TYPE;
-			attributes[7] = EGL_OPENGL_ES2_BIT;
-			attributes[8] = EGL10.EGL_NONE;
-
-			egl.eglChooseConfig(display, attributes, null, 0, numConfigs);
-
-			if (numConfigs[0] <= 0) {
-				return null;
-			}
-
-			EGLConfig[] configs = new EGLConfig[numConfigs[0]];
-			egl.eglChooseConfig(display, attributes, configs, numConfigs[0],
-					numConfigs);
-
-			int[] value = new int[1];
-			boolean ret = false;
-			for (int i = 0; i < numConfigs[0]; ++i) {
-				EGLConfig config = configs[i];
-				ret = egl.eglGetConfigAttrib(display, config, EGL10.EGL_DEPTH_SIZE, value);
-				if(!ret || value[0] < depthSize_){
-					continue;
-				}
-				
-				ret = egl.eglGetConfigAttrib(display, config, EGL10.EGL_STENCIL_SIZE, value);
-				if(!ret || value[0] < stencilSize_){
-					continue;
-				}
-				
-				ret = egl.eglGetConfigAttrib(display, config, EGL10.EGL_RED_SIZE, value);
-				if(!ret || value[0] != redSize_){
-					continue;
-				}
-				
-				ret = egl.eglGetConfigAttrib(display, config, EGL10.EGL_GREEN_SIZE, value);
-				if(!ret || value[0] != greenSize_){
-					continue;
-				}
-				
-				ret = egl.eglGetConfigAttrib(display, config, EGL10.EGL_BLUE_SIZE, value);
-				if(!ret || value[0] != blueSize_){
-					continue;
-				}
-				
-				ret = egl.eglGetConfigAttrib(display, config, EGL10.EGL_ALPHA_SIZE, value);
-				if(!ret || value[0] != alphaSize_){
-					continue;
-				}
-				return config;
-			}
-			return null;
-		}
-
-		int redSize_;
-		int greenSize_;
-		int blueSize_;
-		int alphaSize_;
-		int depthSize_;
-		int stencilSize_;
-	}
-
-	/**
-	 * 
-	 * @param context
-	 */
-	public MainView(Context context, boolean translucent, int redSize, int greenSize, int blueSize, int alphaSize, int depthSize, int stencilSize)
-	{
-		super(context);
-		
-		if (translucent) {
-			this.getHolder().setFormat(PixelFormat.TRANSLUCENT);
-		}
-		
-		setEGLContextFactory(new EGLContextFactory2());
-		EGLConfigChooser2 chooser = new EGLConfigChooser2(redSize, greenSize, blueSize, alphaSize, depthSize, stencilSize);
-		setEGLConfigChooser(chooser);
-
-		renderer_ = new MainRenderer();
-		setRenderer(renderer_);
-	}
-	
-	/**
-	 * タッチパネルイベント
-	 * @return
-	 */
-	public boolean onTouchEvent(final MotionEvent event)
-	{
-		queueEvent(new Runnable(){
-			public void run()
-			{
-				renderer_.onTouchEvent(event);
-			}
-		});
-		return true;
-	}
-	
-	public CommandManager getCommandManager()
-	{
-	    return renderer_.getCommandManager();
-	}
-	
-	private MainRenderer renderer_;
+    private SensorSystem sensorSys_ = null;
+    private MainRenderer renderer_ = null;
 }
