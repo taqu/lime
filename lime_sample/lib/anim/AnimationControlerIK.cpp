@@ -41,16 +41,15 @@ namespace lanim
         }
 
         /**
-        @brief ’·‚³ƒ`ƒFƒbƒN‚µ‚Ä³‹K‰»
-        @return ’·‚³‚ª0‚È‚çfalse
+        @brief é•·ã•ãƒã‚§ãƒƒã‚¯ã—ã¦æ­£è¦åŒ–
+        @return é•·ã•ãŒ0ãªã‚‰false
         */
-        inline bool normalizeVec(lmath::Vector3& dst, const lmath::Vector3& src)
+        inline bool normalizeVec(lmath::Vector3& dst, const lmath::Vector3& src, f32 length)
         {
-            f32 l = src.lengthSqr();
-            if(lmath::isEqual(l, 0.0f)){
+            if(lmath::isEqual(length, 0.0f)){
                 return false;
             }
-            l = lmath::rsqrt_22bit(l);
+            f32 l = lmath::rsqrt_22bit(length);
             dst.set( src._x*l, src._y*l, src._z*l);
             return true;
         }
@@ -58,7 +57,7 @@ namespace lanim
 
     void AnimationControlerIK::blendPose(SkeletonPose& pose)
     {
-        //TODO:•¨—‰‰Z‘Î‰
+        //TODO:ç‰©ç†æ¼”ç®—å¯¾å¿œ
         if(ikPack_ == NULL){
             return;
         }
@@ -72,57 +71,41 @@ namespace lanim
 
         lmath::Vector3 localToTarget, localToEffector;
         lmath::Vector3 axis;
+        f32 ltot, ltoe;
 
-        f32 totalHeading = 0.0f;
+        f32 totalXRot = 0.0f;
 
         for(u32 i=0; i<ikPack_->getNumIKs(); ++i){
             IKEntry& entry = ikPack_->get(i);
-#if 0
-            if(entry.joint_ >= pose.getNumJoints()){
-                continue;
-            }
-            if(entry.targetJoint_>=pose.getNumJoints()){
-                continue;
-            }
-#endif
 
-            Joint& target = skeleton_->getJoint( entry.joint_ );
-            Joint& effector = skeleton_->getJoint( entry.targetJoint_ );
+            Joint& target = skeleton_->getJoint( entry.targetJoint_ );
+            Joint& effector = skeleton_->getJoint( entry.effectorJoint_ );
 
-            //ƒ^[ƒQƒbƒg‚ÌŒ»İˆÊ’u
-            transformPosition(targetPos, target.getPosition(), matrices, entry.joint_);
-            
-#if defined(LIME_ANIM_IK_DEBUG)
-            drawDebugTriangle(targetPos, 0xFF00FF00U);
-#endif
+            //const lanim::Name& effectorName = skeleton_->getJointName( entry.effectorJoint_);
+            //const lanim::Name& targetName = skeleton_->getJointName( entry.targetJoint_);
 
-            totalHeading = 0.0f; //‹È‚°Šp‰Šú‰»
-            for(u32 j=0; j<entry.numIterations_; ++j){ //ƒCƒeƒŒ[ƒVƒ‡ƒ“
-                for(u32 k=0; k<entry.chainLength_; ++k){
+            //ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®ç¾åœ¨ä½ç½®
+            transformPosition(targetPos, target.getPosition(), matrices, entry.targetJoint_);
+
+            totalXRot = 0.0f; //æ›²ã’è§’åˆæœŸåŒ–
+            for(u32 j=0; j<entry.numIterations_; ++j){ //ã‚¤ãƒ†ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³
+                for(u16 k=0; k<entry.chainLength_; ++k){
                     LASSERT(entry.children_[k]<pose.getNumJoints());
-#if 0
-                    if(entry.children_[k]>=pose.getNumJoints()){
-                        continue;
-                    }
-#endif
+
                     u8 childIndex = entry.children_[k];
                     Joint& child = skeleton_->getJoint(childIndex);
 
-                    //ƒGƒtƒFƒNƒ^Œ»İ‚ÌˆÊ’uŒvZ
-                    transformPosition(effectorPos, effector.getPosition(), matrices, entry.targetJoint_);
-#if 0
-                    if(effectorPos.isNan() || targetPos.isNan()){
-                        LASSERT(false);
-                    }
-#endif
-                    //ƒGƒtƒFƒNƒ^‚É‹ß‚¯‚ê‚Î‚È‚É‚à‚µ‚È‚¢
+                    //ã‚¨ãƒ•ã‚§ã‚¯ã‚¿ç¾åœ¨ã®ä½ç½®è¨ˆç®—
+                    transformPosition(effectorPos, effector.getPosition(), matrices, entry.effectorJoint_);
+
+                    //ã‚¨ãƒ•ã‚§ã‚¯ã‚¿ã«è¿‘ã‘ã‚Œã°ãªã«ã‚‚ã—ãªã„
                     f32 l = effectorPos.distance(targetPos);
                     if(l <= IKEpsilon){
-                        j = entry.numIterations_; //ƒCƒeƒŒ[ƒVƒ‡ƒ“‚àI—¹
+                        j = entry.numIterations_; //ã‚¤ãƒ†ãƒ¬ãƒ¼ã‚·ãƒ§ãƒ³ã‚‚çµ‚äº†
                         break;
                     }
 
-                    //ƒGƒtƒFƒNƒ^Aƒ^[ƒQƒbƒg‚ğƒWƒ‡ƒCƒ“ƒgƒ[ƒJƒ‹‚Ö
+                    //ã‚¨ãƒ•ã‚§ã‚¯ã‚¿ã€ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã‚’ã‚¸ãƒ§ã‚¤ãƒ³ãƒˆãƒ­ãƒ¼ã‚«ãƒ«ã¸
                     matInv = matrices[childIndex];
                     matInv.preTranslate( (skeleton_->getJoint(childIndex).getPosition()) );
                     matInv.invert();
@@ -130,20 +113,22 @@ namespace lanim
                     localTargetPos.mul(targetPos, matInv);
                     localEffectorPos.mul(effectorPos, matInv);
 
-                    //Œ´“_‚©‚ç‚Ì‹——£‚ª0‚È‚ç‚È‚É‚à‚µ‚È‚¢
-                    if(false == normalizeVec(localToTarget, localTargetPos)){
+                    //åŸç‚¹ã‹ã‚‰ã®è·é›¢ãŒ0ãªã‚‰ãªã«ã‚‚ã—ãªã„
+                    ltot = localTargetPos.lengthSqr();
+                    if(false == normalizeVec(localToTarget, localTargetPos, ltot)){
                         continue;
                     }
+                    ltot = lmath::sqrt(ltot);
 
-                    if(false == normalizeVec(localToEffector, localEffectorPos)){
+                    ltoe = localEffectorPos.lengthSqr();
+                    if(false == normalizeVec(localToEffector, localEffectorPos, ltoe)){
                         continue;
                     }
+                    ltoe = lmath::sqrt(ltoe);
 
-                    //‰ñ“]²ŒvZ
+                    //å›è»¢è»¸è¨ˆç®—
                     axis.cross(localToEffector, localToTarget);
-                    if(false == normalizeVec(axis, axis)){
-                        continue;
-                    }
+                    normalizeVec(axis, axis, axis.lengthSqr());
 
                     f32 dotProduct = localToTarget.dot(localToEffector);
                     f32 radian;
@@ -165,16 +150,30 @@ namespace lanim
 
 
                     if(child.getFlag() & lanim::JointFlag_IKLimitHeading){
+
                         rotation.setRotateAxis(axis, radian);
 
                         f32 head, pitch, bank;
                         lmath::getEulerObjectToInertial(head, pitch, bank, rotation);
 
-                        if(totalHeading > -head){ //ƒvƒ‰ƒX•ûŒü‚É‹È‚ª‚ç‚È‚¢‚æ‚¤‚É
-                            head = -totalHeading;
+                        //ã‚¨ãƒ•ã‚§ã‚¯ã‚¿ã®æ–¹ãŒé ãã«ã‚ã‚‹å ´åˆã€æ›²ã’ã‚’ãƒ—ãƒ©ã‚¹
+                        if(ltot<ltoe){
+                            f32 cs = ltot/ltoe;//ltot/ltoeã¯ã€ãŠã‚ˆãcosã«ãªã‚‹ã®ã§ã¯ãªã„ã‹ãª
+                            pitch -= lmath::acos(cs);
                         }
-                        rotation.setRotateAxis(1.0f, 0.0f, 0.0f, head);
-                        totalHeading += head;
+
+                        f32 sum = totalXRot + pitch;
+
+                        if(sum > 0.0f){ //ãƒ—ãƒ©ã‚¹æ–¹å‘ã«æ›²ãŒã‚‰ãªã„ã‚ˆã†ã«
+                            pitch = -totalXRot;
+                        }else if(sum<(-PI)){
+                            pitch = -PI - totalXRot;
+                        }
+
+                        rotation.setRotateAxis(1.0f, 0.0f, 0.0f, pitch);
+
+                        totalXRot += pitch;
+
                     }else{
                         rotation.setRotateAxis(axis, radian);
                     }
@@ -184,16 +183,21 @@ namespace lanim
                     poses[childIndex].rotation_.normalize();
 
 
-                    //TODO:Ä‹A‚ğ–³‚­‚·orƒXƒ^ƒbƒNÁ”ï‚ğ—}‚¦‚é
-                    updateMatrices(pose, childIndex);
+                    updateMatrices(pose, entry, k);
+
                 }// for(u32 k=0; k<entry.chainLength_
             }// for(u32 j=0; j<entry.numIterations_
 
+            updateChildMatrices(pose, entry.effectorJoint_);
 #if defined(LIME_ANIM_IK_DEBUG)
-            //ƒ^[ƒQƒbƒg‚ÌŒ»İˆÊ’u
+            //ã‚¿ãƒ¼ã‚²ãƒƒãƒˆã®ç¾åœ¨ä½ç½®
             transformPosition(targetPos, target.getPosition(), matrices, entry.targetJoint_);
 
-            drawDebugTriangle(targetPos, 0xFFFF0000U);
+            drawDebugTriangle(targetPos, 0xFF0000FFU);
+
+            transformPosition(effectorPos, effector.getPosition(), matrices, entry.effectorJoint_);
+
+            drawDebugTriangle(effectorPos, 0x9000FF00U);
 
             lmath::Vector3 childPos;
             for(u32 k=0; k<entry.chainLength_; ++k){
@@ -210,32 +214,81 @@ namespace lanim
     }
 
 
-    inline void AnimationControlerIK::updateMatrices(SkeletonPose& pose, u8 childIndex)
+    void AnimationControlerIK::updateMatrix(const JointPose& jointPose, lmath::Matrix43* matrices, u8 jointIndex)
+    {
+        lmath::Matrix43& mat = matrices[ jointIndex ];
+
+        jointPose.rotation_.getMatrix( mat );
+        mat.translate( jointPose.translation_ );
+        mat.translate( jointPose.offset_ );
+
+        const Joint& joint = skeleton_->getJoint(jointIndex);
+
+        //è¦ªæœ‰ãªã‚‰è¦ªã®ãƒãƒˆãƒªãƒƒã‚¯ã‚¹ã‹ã‘ã‚‹
+        if(joint.getParentIndex() != lanim::InvalidJointIndex){
+            mat *= matrices[ joint.getParentIndex() ];
+        }
+
+        mat.preTranslate( -joint.getPosition() );
+    }
+
+    void AnimationControlerIK::updateMatrices(SkeletonPose& pose, u8 childIndex)
     {
         JointPose* poses = pose.getPoses();
         lmath::Matrix43 *matrices = pose.getMatrices();
 
-        JointPose& jointPose = poses[childIndex];
-        Joint& joint = skeleton_->getJoint(childIndex);
+        const JointPose& jointPose = poses[childIndex];
 
-        jointPose.rotation_.getMatrix( matrices[ childIndex ] );
-        matrices[ childIndex ].translate( jointPose.translation_ );
-        matrices[ childIndex ].translate( jointPose.offset_ );
+        //ãƒ‘ãƒ¬ãƒƒãƒˆã®è¡Œåˆ—æ›´æ–°
+        updateMatrix(jointPose, matrices, childIndex);
 
-        if(joint.getParentIndex() != lanim::InvalidJointIndex){
-            //e—L
-            matrices[ childIndex ] *= matrices[ joint.getParentIndex() ];
-        }
-
-        //ƒpƒŒƒbƒg‚Ìs—ñXV
-        matrices[ childIndex ].preTranslate( -joint.getPosition() );
-
-        //q‚àXV
-        for(u32 i=childIndex+1; i<pose.getNumJoints(); ++i){
+        //å­ã‚‚æ›´æ–°
+        for(u8 i=childIndex+1; i<pose.getNumJoints(); ++i){
             Joint& joint = skeleton_->getJoint(i);
             if(joint.getParentIndex() == childIndex){
-                updateMatrices(pose, i); //Ä‹A
+                updateMatrices(pose, i); //å†å¸°
             }
         }
+    }
+
+    void AnimationControlerIK::updateChildMatrices(SkeletonPose& pose, u8 jointIndex)
+    {
+        //TODO:å†å¸°ã‚’ç„¡ãã™orã‚¹ã‚¿ãƒƒã‚¯æ¶ˆè²»ã‚’æŠ‘ãˆã‚‹
+        JointPose* poses = pose.getPoses();
+        lmath::Matrix43 *matrices = pose.getMatrices();
+
+        //å­æ›´æ–°
+        for(u8 i=jointIndex+1; i<pose.getNumJoints(); ++i){
+            Joint& joint = skeleton_->getJoint(i);
+
+            if(joint.getParentIndex() == jointIndex){
+                //ãƒ‘ãƒ¬ãƒƒãƒˆã®è¡Œåˆ—æ›´æ–°
+                updateMatrix(poses[i], matrices, i);
+
+                updateChildMatrices(pose, i); //å†å¸°
+            }
+        }
+    }
+
+    inline void AnimationControlerIK::updateMatrices(SkeletonPose& pose, const IKEntry& entry, u16 ikIndex)
+    {
+        JointPose* poses = pose.getPoses();
+        lmath::Matrix43 *matrices = pose.getMatrices();
+
+
+        for(s32 i=ikIndex; i>=0; --i){
+            u8 childIndex = entry.children_[i];
+
+            //ãƒ‘ãƒ¬ãƒƒãƒˆã®è¡Œåˆ—æ›´æ–°
+            updateMatrix(poses[childIndex], matrices, childIndex);
+        }
+
+        {
+            u16 jointIndex = entry.effectorJoint_;
+
+            //ãƒ‘ãƒ¬ãƒƒãƒˆã®è¡Œåˆ—æ›´æ–°
+            updateMatrix(poses[jointIndex], matrices, jointIndex);
+        }
+
     }
 }
