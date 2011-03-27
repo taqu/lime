@@ -5,18 +5,10 @@
 @author t-sakai
 @date 2009/05/13 create
 */
-#include "linputAPIInclude.h"
+#include "linputcore.h"
 
 namespace linput
 {
-    enum DeviceType
-    {
-        DevType_Keyboard =0,
-        DevType_Mouse,
-        DevType_TouchPad,
-        DevType_Num,
-    };
-
     enum KeyCode
     {
         Key_ESCAPE = DIK_ESCAPE,

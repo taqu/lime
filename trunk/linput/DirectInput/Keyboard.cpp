@@ -3,43 +3,62 @@
 @author t-sakai
 @date 2009/05/13
 */
-#include <cstring>
-#include "../linputAPIInclude.h"
-#include "../Keyboard.h"
+#include <lcore/lcore.h>
+#include "Keyboard.h"
 
 namespace linput
 {
     Keyboard::Keyboard()
-        :currentBuffer_(0),
-        oldBuffer_(0)
+        :currentBuffer_(0)
+        ,oldBuffer_(0)
     {
     }
 
     Keyboard::~Keyboard()
     {
-        device_.terminate();
     }
 
-    bool Keyboard::initialize(Device::InitParam& param)
+    bool Keyboard::initialize(HWND__* hWnd, IDirectInputDevice8* device)
     {
-        device_.initialize(param);
-        if(false == device_.isInit()){
-            return false;
-        }
+        LASSERT(hWnd != NULL);
+        LASSERT(device != NULL);
 
-        //create(GUID_SysKeyboard);
+        {
+            Device devTmp(device);
+            device_.swap(devTmp);
+        }
 
         if(false == device_.setDataFormat(DevType_Keyboard)){
             return false;
         }
 
-        if(false == device_.setCooperateLevel(param.hWnd_)){
+        if(false == device_.setCooperateLevel(hWnd)){
             return false;
+        }
+
+        {
+            DIPROPDWORD dipdw; 
+            dipdw.diph.dwSize = sizeof(DIPROPDWORD); 
+            dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
+            dipdw.diph.dwObj = 0; 
+            dipdw.diph.dwHow = DIPH_DEVICE; 
+
+            dipdw.dwData = 8; //バッファリングサイズ
+            //HRESULT hr = device_->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph);
+            //if(FAILED(hr)){
+            //    return false;
+            //}
         }
 
         for(u32 i=0; i<BUFFER_NUM; ++i){
             std::memset(keystate_[i], 0, KEYSTATE_NUM*sizeof(char));
         }
+
+        //アクセス権取得、入力開始
+        HRESULT hr = device_->Acquire();
+        //if(FAILED(hr)){
+        //    return false;
+        //}
         return true;
     }
 
@@ -66,15 +85,14 @@ namespace linput
         oldBuffer_ = currentBuffer_;
         currentBuffer_ = (currentBuffer_ ^ 0x01U) & 0x01U;
 
-        IDirectInputDevice8 *device = device_.get();
+        //HRESULT hr = device_->Acquire();
+        //if(FAILED(hr)){
+        //    return;
+        //}
 
-        HRESULT hr = device->Acquire();
+        HRESULT hr = device_->GetDeviceState(KEYSTATE_NUM, (LPVOID)&(keystate_[currentBuffer_][0]));
         if(FAILED(hr)){
-            return;
-        }
-
-        hr = device->GetDeviceState(KEYSTATE_NUM, (LPVOID)&(keystate_[currentBuffer_][0]));
-        if(FAILED(hr)){
+            //device_->Acquire(); //もう一度アクセス権取得
             return;
         }
     }
