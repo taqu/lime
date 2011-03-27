@@ -41,33 +41,33 @@ namespace lrender
             return matrix_;
         }
 
-        /**
-        @brief 境界球取得
-        */
-        const lmath::Vector4& getBSphere() const
-        {
-            return BSphere_;
-        }
+        ///**
+        //@brief 境界球取得
+        //*/
+        //const lmath::Vector4& getBSphere() const
+        //{
+        //    return BSphere_;
+        //}
 
-        /**
-        @brief 境界球セット
-        */
-        void setBSphere(const lmath::Vector4& bsphere)
-        {
-            BSphere_ = bsphere;
-        }
+        ///**
+        //@brief 境界球セット
+        //*/
+        //void setBSphere(const lmath::Vector4& bsphere)
+        //{
+        //    BSphere_ = bsphere;
+        //}
 
     protected:
         Spatial()
         {
             matrix_.identity();
-            BSphere_.set(0.0f, 0.0f, 0.0f, 1.0f);
+            //BSphere_.set(0.0f, 0.0f, 0.0f, 1.0f);
         }
 
         ~Spatial(){}
 
         lmath::Matrix43 matrix_;
-        lmath::Vector4 BSphere_; //境界球
+        //lmath::Vector4 BSphere_; //境界球
     };
 }
 

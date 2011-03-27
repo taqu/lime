@@ -36,6 +36,8 @@ namespace lscene
             MatFlag_TextureS = (0x01U<<3),
             MatFlag_DiffuseVS = (0x01U<<4),
             MatFlag_Fresnel = (0x01U<<5),
+            MatFlag_TexGrad = (0x01U<<6),
+            MatFlag_Emissive = (0x01U<<7),
             MatFlag_Valid = (0x01U<<31),
             MatFlag_Num = 5,
         };
@@ -52,9 +54,11 @@ namespace lscene
         inline void setTexture(u32 index, const lgraphics::TextureRef& texture);
 
         inline const lgraphics::SamplerState& getSamplerState(u32 index) const;
+        inline lgraphics::SamplerState& getSamplerState(u32 index);
         inline void setSamplerState(u32 index, const lgraphics::SamplerState& state);
 
         inline lgraphics::RenderStateRef& getRenderState();
+        inline const lgraphics::RenderStateRef& getRenderState() const;
         inline void setRenderState(const lgraphics::RenderStateRef& state);
 
         inline void applyRenderState();
@@ -64,20 +68,22 @@ namespace lscene
         inline const Flags& getFlags() const;
         inline Flags& getFlags();
 
+        inline u32 getShaderID() const;
+        inline void setShaderID(u32 shaderID);
+
         Material& operator=(const Material& rhs);
 
     //private:
         lmath::Vector4 diffuse_;
         lmath::Vector4 specular_;
         lmath::Vector3 ambient_;
-        lmath::Vector4 emissive_;
-        lmath::Vector4 transparent_;
-        f32 shininess_;
-        f32 shininessStrength_;
-        f32 opacity_;
-        f32 refraction_;
+        lmath::Vector3 emissive_;
+        //lmath::Vector4 transparent_;
+        //f32 opacity_;
+        //f32 refraction_;
+        f32 reflectance_;
         Flags materialFlags_;
-        NameString shading_;
+        u32 shaderID_;
     private:
         void releaseTextures();
 
@@ -128,6 +134,12 @@ namespace lscene
         return textures_[index].state_;
     }
 
+    inline lgraphics::SamplerState& Material::getSamplerState(u32 index)
+    {
+        return textures_[index].state_;
+    }
+
+
     inline void Material::setSamplerState(u32 index, const lgraphics::SamplerState& state)
     {
         textures_[index].state_ = state;
@@ -135,6 +147,11 @@ namespace lscene
 
 
     inline lgraphics::RenderStateRef& Material::getRenderState()
+    {
+        return renderState_;
+    }
+
+    inline const lgraphics::RenderStateRef& Material::getRenderState() const
     {
         return renderState_;
     }
@@ -158,6 +175,16 @@ namespace lscene
     inline Material::Flags& Material::getFlags()
     {
         return materialFlags_;
+    }
+
+    inline u32 Material::getShaderID() const
+    {
+        return shaderID_;
+    }
+
+    inline void Material::setShaderID(u32 shaderID)
+    {
+        shaderID_ = shaderID;
     }
 }
 

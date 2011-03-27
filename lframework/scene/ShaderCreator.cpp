@@ -125,8 +125,8 @@ namespace lscene
         u32 featureVSFlags = geometry.getFlags().get();
         u32 featurePSFlags = material.getFlags().get();
 
-        lgraphics::ShaderKey vsKey((inputVSFlags<<16), featureVSFlags); //頂点シェーダのフラグは上位ワードへ
-        lgraphics::ShaderKey psKey(inputPSFlags, featurePSFlags);
+        lgraphics::ShaderKey vsKey(0, (inputVSFlags<<16), featureVSFlags); //頂点シェーダのフラグは上位ワードへ
+        lgraphics::ShaderKey psKey(material.getShaderID(), inputPSFlags, featurePSFlags);
 
         // すでに登録されているか
         lgraphics::Descriptor* vsDesc = manager.findVS(vsKey);
@@ -143,11 +143,12 @@ namespace lscene
             // 入力のマクロ生成
             addVertexDeclarationMacrosVS(geometry.getGeometryBuffer()->getDecl(), macros, numMacros);
 
-            if(featurePSFlags & Material::MatFlag_Fresnel){
+            if(featurePSFlags & Material::MatFlag_Fresnel
+                || featurePSFlags & Material::MatFlag_TexGrad){
                 macros[numMacros++] = MacroNames[Macro_PPOS];
             }
 
-            if(material.getTextureNum()>0){
+            if(inputVSFlags & VFlag_Tex0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
             }
 
@@ -175,7 +176,17 @@ namespace lscene
                 numMacros,
                 macros);
             manager.addVS(vsKey, vsDesc);
+#if 1
         }
+#else
+            lcore::Log("=== create vs ===");
+            for(u32 i=0; i<numMacros; ++i){
+                lcore::Log("%s", macros[i]);
+            }
+        }else{
+            lcore::Log("=== not create vs ===");
+        }
+#endif
 
         //PSないから作るよ
         if(psDesc == NULL){
@@ -196,7 +207,7 @@ namespace lscene
             if(inputVSFlags & VFlag_Normal){ //頂点フォーマットに法線があれば
                 macros[numMacros++] = MacroNames[Macro_PNORMAL];
             }
-            if(material.getTextureNum()>0){
+            if((inputVSFlags & VFlag_Tex0) && material.getTextureNum()>0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
             }
 
@@ -205,14 +216,42 @@ namespace lscene
                 macros[numMacros++] = MacroNames[Macro_FRESNEL];
             }
 
+            //発光
+            if(featurePSFlags & Material::MatFlag_Emissive){
+                macros[numMacros++] = MacroNames[Macro_EMISSIVE];
+            }
+
+            // 法線あり、テクスチャでグラディエーションフラグ、テクスチャありなら
+            if(inputVSFlags & VFlag_Normal
+                && featurePSFlags & Material::MatFlag_TexGrad
+                && material.getTextureNum()>0)
+            {
+                macros[numMacros++] = MacroNames[Macro_PPOS];
+                macros[numMacros++] = MacroNames[Macro_TEXSHADE];
+            }
+
+            shader::ShaderID shaderID = shader::getShaderID( material.getShaderID() );
+            const char* source = shader::ShaderPSSource[ shaderID ];
+            u32 sourceSize = shader::ShaderPSSourceSize[ shaderID ];
+
             psDesc = lgraphics::Shader::createPixelShaderFromMemory(
-                shader::DefaultPSSource,
-                shader::DefaultPSSourceSize,
+                source,
+                sourceSize,
                 numMacros,
                 macros);
 
             manager.addPS(psKey, psDesc);
+#if 1
         }
+#else
+            lcore::Log("=== create ps ===");
+            for(u32 i=0; i<numMacros; ++i){
+                lcore::Log("%s", macros[i]);
+            }
+        }else{
+            lcore::Log("=== not create ps ===");
+        }
+#endif
 
         ShaderVSBase* vs = NULL;
         ShaderPSBase* ps = NULL;
@@ -221,11 +260,7 @@ namespace lscene
             lgraphics::VertexShaderRef vsRef;
             lgraphics::PixelShaderRef psRef;
             lgraphics::VertexDeclarationRef& decl = geometry.getGeometryBuffer()->getDecl();
-            bool ret = lgraphics::Shader::linkShader(vsRef, psRef, decl, vsDesc, psDesc);
-            LASSERT(ret);
-            if(ret){
-                lcore::Log("Shader success to link");
-            }
+            lgraphics::Shader::linkShader(vsRef, psRef, decl, vsDesc, psDesc);
 
             //頂点属性インデックスをattribute変数にバインドする
             decl.bindAttributes(vsRef.getProgramID()->id_);
@@ -259,8 +294,8 @@ namespace lscene
         u32 featureVSFlags = geometry.getFlags().get();
         u32 featurePSFlags = material.getFlags().get();
 
-        lgraphics::ShaderKey vsKey((inputVSFlags<<16), featureVSFlags); //頂点シェーダのフラグは上位ワードへ
-        lgraphics::ShaderKey psKey(inputPSFlags, featurePSFlags);
+        lgraphics::ShaderKey vsKey(0, (inputVSFlags<<16), featureVSFlags); //頂点シェーダのフラグは上位ワードへ
+        lgraphics::ShaderKey psKey(material.getShaderID(), inputPSFlags, featurePSFlags);
 
         // すでに登録されているか
         ShaderVSBase *vs = manager.findVS(vsKey);
@@ -277,11 +312,12 @@ namespace lscene
             // 入力のマクロ生成
             addVertexDeclarationMacrosVS(geometry.getGeometryBuffer()->getDecl(), macros, numMacros);
 
-            if(featurePSFlags & Material::MatFlag_Fresnel){
+            if(featurePSFlags & Material::MatFlag_Fresnel
+                || featurePSFlags & Material::MatFlag_TexGrad){
                 macros[numMacros++] = MacroNames[Macro_PPOS];
             }
 
-            if(material.getTextureNum()>0){
+            if(inputVSFlags & VFlag_Tex0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
             }
 
@@ -337,7 +373,7 @@ namespace lscene
             if(inputVSFlags & VFlag_Normal){ //頂点フォーマットに法線があれば
                 macros[numMacros++] = MacroNames[Macro_PNORMAL];
             }
-            if(material.getTextureNum()>0){
+            if((inputVSFlags & VFlag_Tex0) && material.getTextureNum()>0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
             }
 
@@ -346,9 +382,22 @@ namespace lscene
                 macros[numMacros++] = MacroNames[Macro_FRESNEL];
             }
 
+            // 法線あり、テクスチャでグラディエーションフラグ、テクスチャありなら
+            if(inputVSFlags & VFlag_Normal
+                && featurePSFlags & Material::MatFlag_TexGrad
+                && material.getTextureNum()>0)
+            {
+                macros[numMacros++] = MacroNames[Macro_PPOS];
+                macros[numMacros++] = MacroNames[Macro_TEXSHADE];
+            }
+
+            shader::ShaderID shaderID = shader::getShaderID( material.getShaderID() );
+            const char* source = shader::ShaderPSSource[ shaderID ];
+            u32 sourceSize = shader::ShaderPSSourceSize[ shaderID ];
+
             lgraphics::PixelShaderRef psRef = lgraphics::Shader::createPixelShaderFromMemory(
-                shader::DefaultPSSource,
-                shader::DefaultPSSourceSize,
+                source,
+                sourceSize,
                 numMacros,
                 macros);
             LASSERT(psRef.valid());

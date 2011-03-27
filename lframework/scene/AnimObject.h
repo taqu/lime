@@ -38,21 +38,11 @@ namespace lscene
 
         ~AnimObject();
 
-        void initializeShader();
-
-        u32 getNumGeometries() const{ return numGeometries_;}
-        Geometry& getGeometry(u32 index);
-
-        u32 getNumMaterials() const{ return numMaterials_;}
-        Material& getMaterial(s32 index);
-
-        void addDraw();
-        void removeDraw();
-
         void swap(AnimObject& rhs);
 
         inline void setSkeleton(lanim::Skeleton::pointer& skeleton);
         inline lanim::Skeleton::pointer& getSkeleton();
+        inline const lanim::Skeleton::pointer& getSkeleton() const;
 
         inline void setIKPack(lanim::IKPack::pointer& ikPack);
         inline lanim::IKPack::pointer& getIKPack();
@@ -70,16 +60,6 @@ namespace lscene
         const lanim::SkeletonPose* skeletonPose_;
 
         lanim::IKPack::pointer ikPack_;
-
-        u32 numGeometries_;
-        Geometry *geometries_;
-
-        u32 numMaterials_;
-        Material *materials_;
-
-        lrender::Batch *batches_;
-
-        lcore::Buffer resourceBuffer_;
     };
 
     inline void AnimObject::setSkeleton(lanim::Skeleton::pointer& skeleton)
@@ -88,6 +68,11 @@ namespace lscene
     }
 
     inline lanim::Skeleton::pointer& AnimObject::getSkeleton()
+    {
+        return skeleton_;
+    }
+
+    inline const lanim::Skeleton::pointer& AnimObject::getSkeleton() const
     {
         return skeleton_;
     }

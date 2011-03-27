@@ -28,13 +28,13 @@ namespace lscene
             lmath::Vector4 diffuse_;
             lmath::Vector4 specular_;
             lmath::Vector3 ambient_;
-            lmath::Vector4 emissive_;
-            lmath::Vector4 transparent_;
-            f32 shininess_;
-            f32 shininessStrength_;
-            f32 opacity_;
-            f32 refraction_;
+            lmath::Vector3 emissive_;
+            //lmath::Vector4 transparent_;
+            //f32 opacity_;
+            //f32 refraction_;
+            f32 reflectance_;
             u32 flags_;
+            u32 shaderID_;
             u32 numTextures_;
         };
     }
@@ -43,12 +43,7 @@ namespace lscene
     {
         u32 materialID = 0;
 
-        char buffer[Material::MAX_NAME_BUFFER_SIZE];
-
         lcore::io::read(is, materialID);
-
-        lcore::io::read(is, buffer, Material::MAX_NAME_BUFFER_SIZE);
-        material.shading_.assign(buffer, Material::MAX_NAME_BUFFER_SIZE-1);
 
         MaterialHeader header;
         lcore::io::read(is, header);
@@ -57,12 +52,12 @@ namespace lscene
         material.specular_ = header.specular_;
         material.ambient_ = header.ambient_;
         material.emissive_ = header.emissive_;
-        material.transparent_ = header.transparent_;
-        material.shininess_ = header.shininess_;
-        material.shininessStrength_ = header.shininessStrength_;
-        material.opacity_ = header.opacity_;
-        material.refraction_ = header.refraction_;
+        //material.transparent_ = header.transparent_;
+        //material.opacity_ = header.opacity_;
+        //material.refraction_ = header.refraction_;
+        material.reflectance_ = header.reflectance_;
         material.getFlags().set(header.flags_);
+        material.setShaderID( header.shaderID_ );
 
 
         lgraphics::RenderStateRef& state = material.getRenderState();
@@ -83,19 +78,18 @@ namespace lscene
         u32 materialID = MaterialID;
 
         lcore::io::write(os, materialID);
-        lcore::io::write(os, material.shading_.c_str(), Material::MAX_NAME_BUFFER_SIZE);
 
         MaterialHeader header;
         header.diffuse_ = material.diffuse_;
         header.specular_ = material.specular_;
         header.ambient_ = material.ambient_;
         header.emissive_ = material.emissive_;
-        header.transparent_ = material.transparent_;
-        header.shininess_ = material.shininess_;
-        header.shininessStrength_ = material.shininessStrength_;
-        header.opacity_ = material.opacity_;
-        header.refraction_ = material.refraction_;
+        //header.transparent_ = material.transparent_;
+        //header.opacity_ = material.opacity_;
+        //header.refraction_ = material.refraction_;
+        header.reflectance_ = material.reflectance_;
         header.flags_ = material.getFlags().get();
+        header.shaderID_ = material.getShaderID();
         header.numTextures_ = material.getTextureNum();
 
         lcore::io::write(os, header);

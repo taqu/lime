@@ -23,7 +23,7 @@ namespace lframework
         @return 成否
         @param param ... グラフィック関係初期化パラメータ
         */
-        bool create(lgraphics::InitParam& param, const char* title);
+        bool create(lgraphics::InitParam& param, const char* title, WNDPROC wndProc);
 
         /// 処理ループ実行
         void run();

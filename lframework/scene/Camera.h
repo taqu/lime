@@ -23,12 +23,22 @@ namespace lscene
             return viewMatrix_;
         }
 
+        lmath::Matrix44& getViewMatrix()
+        {
+            return viewMatrix_;
+        }
+
         void setViewMatrix(const lmath::Matrix44& view)
         {
             viewMatrix_ = view;
         }
 
         const lmath::Matrix44& getProjMatrix() const
+        {
+            return projMatrix_;
+        }
+
+        lmath::Matrix44& getProjMatrix()
         {
             return projMatrix_;
         }

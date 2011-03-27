@@ -56,7 +56,7 @@ namespace lscene
         AnimObject tmp(header.numGeometries_,
             header.numMaterials_);
 
-        tmp.setBSphere(bsphere);
+        //tmp.setBSphere(bsphere);
 
          for(u32 i=0; i<header.numGeometries_; ++i){
             IOGeometry::read(is, tmp.getGeometry(i));
@@ -131,7 +131,7 @@ namespace lscene
         header.numMaterials_ = obj.getNumMaterials();
 
         lcore::io::write(os, header);
-        lcore::io::write(os, obj.getBSphere());
+        //lcore::io::write(os, obj.getBSphere());
 
         for(u32 i=0; i<header.numGeometries_; ++i){
             lscene::Geometry& geometry = obj.getGeometry(i);

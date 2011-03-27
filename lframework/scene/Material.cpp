@@ -10,6 +10,7 @@ namespace lscene
 {
     Material::Material()
         :materialFlags_(0)
+        ,shaderID_(0)
         ,textures_(0)
     {
     }
@@ -28,19 +29,16 @@ namespace lscene
 
     void Material::swap(Material& rhs)
     {
-        shading_.swap(rhs.shading_);
-
         diffuse_.swap(rhs.diffuse_);
         specular_.swap(rhs.specular_);
         ambient_.swap(rhs.ambient_);
         emissive_.swap(rhs.emissive_);
-        transparent_.swap(rhs.transparent_);
-
-        lcore::swap(shininess_, rhs.shininess_);
-        lcore::swap(shininessStrength_, rhs.shininessStrength_);
-        lcore::swap(opacity_, rhs.opacity_);
-        lcore::swap(refraction_, rhs.refraction_);
+        //transparent_.swap(rhs.transparent_);
+        //lcore::swap(opacity_, rhs.opacity_);
+        //lcore::swap(refraction_, rhs.refraction_);
+        lcore::swap(reflectance_, rhs.reflectance_);
         materialFlags_.swap(rhs.materialFlags_);
+        lcore::swap(shaderID_, rhs.shaderID_);
 
         textures_.swap(rhs.textures_);
         
@@ -59,19 +57,17 @@ namespace lscene
 
     Material& Material::operator=(const Material& rhs)
     {
-        shading_ = rhs.shading_;
-
         diffuse_ = rhs.diffuse_;
         specular_ = rhs.specular_;
         ambient_ = rhs.ambient_;
         emissive_ = rhs.emissive_;
-        transparent_ = rhs.transparent_;
+        //transparent_ = rhs.transparent_;
 
-        shininess_ = rhs.shininess_;
-        shininessStrength_ = rhs.shininessStrength_;
-        opacity_ = rhs.opacity_;
-        refraction_ = rhs.refraction_;
+        //opacity_ = rhs.opacity_;
+        //refraction_ = rhs.refraction_;
+        reflectance_ = rhs.reflectance_;
         materialFlags_ = rhs.materialFlags_;
+        shaderID_ = rhs.shaderID_;
 
         setTextureNum(rhs.getTextureNum());
 

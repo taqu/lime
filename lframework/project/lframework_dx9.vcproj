@@ -177,6 +177,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\render\Drawable.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\render\Drawable.h"
 				>
 			</File>
@@ -358,6 +362,14 @@
 			</File>
 			<File
 				RelativePath="..\scene\Material.h"
+				>
+			</File>
+			<File
+				RelativePath="..\scene\Object.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\scene\Object.h"
 				>
 			</File>
 			<File

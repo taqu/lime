@@ -189,18 +189,14 @@ namespace lanim
 
                     //次のフレームのポーズ
                     const JointPoseWithFrame& nextPose = jointAnim.getPose(animIndex+1);
-                    if(nextPose.frameNo_ == animPose.frameNo_){
-                        jointPose.translation_ = animPose.translation_;
-                        jointPose.rotation_ = animPose.rotation_;
+                    LASSERT(nextPose.frameNo_ != animPose.frameNo_); //データコンバート、ロード時にチェックする
 
-                    }else{
-                        f32 blend = (frame_ - static_cast<f32>(animPose.frameNo_));
-                        blend /= static_cast<f32>(nextPose.frameNo_ - animPose.frameNo_);
+                    f32 blend = (frame_ - static_cast<f32>(animPose.frameNo_));
+                    blend /= static_cast<f32>(nextPose.frameNo_ - animPose.frameNo_);
 
-                        jointPose.translation_.lerp(animPose.translation_, nextPose.translation_, blend);
+                    jointPose.translation_.lerp(animPose.translation_, nextPose.translation_, blend);
 
-                        jointPose.rotation_.slerp(animPose.rotation_, nextPose.rotation_, blend);
-                    }
+                    jointPose.rotation_.slerp(animPose.rotation_, nextPose.rotation_, blend);
                 } //if(animIndex ==
             } //if(joint.getType()
 
