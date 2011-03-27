@@ -253,6 +253,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\render\Drawable.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\render\Drawable.h"
 				>
 			</File>

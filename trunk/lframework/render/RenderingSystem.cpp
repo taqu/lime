@@ -8,17 +8,24 @@
 #include "RenderingSystem.h"
 #include "../System.h"
 #include <lgraphics/lgraphics.h>
+#include <lgraphics/api/GraphicsDeviceRef.h>
 #include <lgraphics/api/Enumerations.h>
+
+#include "RenderBuffer.h"
 
 namespace lrender
 {
     RenderingSystem::RenderingSystem()
-        :clearTarget_(lgraphics::ClearTarget_Color|lgraphics::ClearTarget_Depth)
+        ://renderBufferBatchState_(NULL)
+        clearTarget_(lgraphics::ClearTarget_Color|lgraphics::ClearTarget_Depth)
     {
+        //renderBufferBatchState_ = LIME_NEW RenderBufferBatchState;
+        //renderBufferBatchState_->create();
     }
 
     RenderingSystem::~RenderingSystem()
     {
+        //LIME_DELETE(renderBufferBatchState_);
     }
 
     void RenderingSystem::initialize()
@@ -29,14 +36,14 @@ namespace lrender
     {
     }
 
-    void RenderingSystem::add(Pass pass, Batch* batch)
+    void RenderingSystem::add(Pass pass, Drawable* drawable)
     {
-        passMain_.add(batch);
+        passMain_.add(drawable);
     }
 
-    void RenderingSystem::remove(Pass pass, Batch* batch)
+    void RenderingSystem::remove(Pass pass, Drawable* drawable)
     {
-        passMain_.remove(batch);
+        passMain_.remove(drawable);
     }
 
     void RenderingSystem::beginDraw()
@@ -48,9 +55,7 @@ namespace lrender
         device.present(NULL, NULL, NULL);
 #endif
 
-        if(clearTarget_ != 0){
-            device.clear(clearTarget_);
-        }
+        device.clear(clearTarget_);
 
         device.beginScene();
     }
@@ -66,4 +71,36 @@ namespace lrender
         lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
         device.endScene();
     }
+
+
+#if 0
+    bool RenderingSystem::createRenderBuffer(RenderBuffer& buffer, u32 width, u32 height, lgraphics::BufferFormat format)
+    {
+        //lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
+        //IDirect3DSurface9* surface = device.createRenderTarget(width, height, format, lgraphics::MutiSample_None, 0, false);
+        //if(NULL == surface){
+        //    return false;
+        //}
+
+        //RenderBuffer tmp(surface, renderBufferBatchState_);
+        //buffer.swap(tmp);
+        //buffer.createGeometry();
+        return true;
+    }
+
+    bool RenderingSystem::createRenderBufferFromTarget(RenderBuffer& buffer)
+    {
+        //lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
+        //IDirect3DSurface9 *surface = NULL;
+        //if(false == device.getRenderTarget(0, &surface)){
+        //    return false;
+        //}
+        //LASSERT(surface != NULL);
+
+        //RenderBuffer tmp(surface, renderBufferBatchState_);
+        //buffer.swap(tmp);
+        //buffer.createGeometry();
+        return true;
+    }
+#endif
 }

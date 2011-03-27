@@ -44,22 +44,22 @@ namespace lanim
 
     enum JointType
     {
-        JointType_Rotation =0, //‰ñ“]
-        JointType_RotTrans,    //‰ñ“]EˆÚ“®
+        JointType_Rotation =0, //å›è»¢
+        JointType_RotTrans,    //å›è»¢ãƒ»ç§»å‹•
         JointType_IK,          //IK
-        JointType_UnderIK0,    //IK‰e‹¿‰º
-        JointType_UnderIK1,    //IK‰e‹¿‰º
-        JointType_UnderRot,    //‰ñ“]‰e‹¿‰º
-        JointType_ToIK,        //IKÚ‘±æ
-        JointType_Hide,        //”ñ•\¦
-        JointType_Twist,       //”P‚è
-        JointType_FreeRot,     //‰ñ“]‰^“®B”P‚è‰e‹¿‰ºBæ’[‚©‚ç‚Ì”P‚è‚Ì‰e‹¿‚ğó‚¯‚é
+        JointType_UnderIK0,    //IKå½±éŸ¿ä¸‹
+        JointType_UnderIK1,    //IKå½±éŸ¿ä¸‹
+        JointType_UnderRot,    //å›è»¢å½±éŸ¿ä¸‹
+        JointType_ToIK,        //IKæ¥ç¶šå…ˆ
+        JointType_Hide,        //éè¡¨ç¤º
+        JointType_Twist,       //æ»ã‚Š
+        JointType_FreeRot,     //å›è»¢é‹å‹•ã€‚æ»ã‚Šå½±éŸ¿ä¸‹ã€‚å…ˆç«¯ã‹ã‚‰ã®æ»ã‚Šã®å½±éŸ¿ã‚’å—ã‘ã‚‹
         JointType_Num,
     };
 
     enum JointFlag
     {
-        JointFlag_IKLimitHeading = (0x01U << 0), //‹È‚°‚é²‚ğ§ŒÀ‚·‚é
+        JointFlag_IKLimitHeading = (0x01U << 0), //æ›²ã’ã‚‹è»¸ã‚’åˆ¶é™ã™ã‚‹
         JointFlag_Num = 1,
     };
 }

@@ -17,7 +17,7 @@ namespace io
     void swapOrigin(TextureRef& texture)
     {
         u32 levels = texture.getLevels();
-        TextureRef::SurfaceDesc desc;
+        SurfaceDesc desc;
 
         if( false == texture.getLevelDesc(0, desc) ){
             return;
@@ -26,7 +26,7 @@ namespace io
         u32 height = desc.height_;
 
         for(u32 i=0; i<levels; ++i){
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             if(false == texture.lock(i, rect)){
                 break;
             }

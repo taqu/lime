@@ -17,7 +17,7 @@ namespace lframework
     {
     }
 
-    bool Application::create(lgraphics::InitParam& param, const char* title)
+    bool Application::create(lgraphics::InitParam& param, const char* title, WNDPROC wndProc)
     {
         //ウィンドウサイズ、ビューポートサイズはバックバッファと同じにする。
 
@@ -26,6 +26,7 @@ namespace lframework
         windowParam.width_ = param.backBufferWidth_;
         windowParam.height_ = param.backBufferHeight_;
         windowParam.setTitle(title, lcore::strlen(title)+1);
+        windowParam.wndProc_ = wndProc;
         bool ret = window_.initialize(windowParam, true);
         if(false == ret){
             return false;

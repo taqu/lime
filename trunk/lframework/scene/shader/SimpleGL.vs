@@ -33,6 +33,10 @@ attribute vec4 a_normal0;
 attribute vec2 a_tex0;
 #endif
 
+#ifdef VTEX1
+attribute vec2 a_tex1;
+#endif
+
 #ifdef VBONE
 attribute vec4 a_indices0;
 #endif
@@ -49,6 +53,10 @@ varying  vec3 v_color0;
 
 #ifdef PTEX0
 varying vec2 v_tex0;
+#endif
+
+#ifdef PTEX1
+varying vec2 v_tex1;
 #endif
 
 #ifdef PPOS
@@ -111,11 +119,18 @@ void main()
 #endif
 
 #endif
-    gl_Position = mwvp * position;
 
 #ifdef PPOS
-    v_pos0 = a_pos0.xyz;
+    v_pos0 = position.xyz;
 #endif
+
+    position = mwvp * position;
+
+//linear-z
+    position.z *= position.w;
+
+    gl_Position = position;
+
 
 #ifdef PNORMAL
     v_normal = normal;
@@ -123,6 +138,10 @@ void main()
 
 #ifdef PTEX0
     v_tex0 = a_tex0;
+#endif
+
+#ifdef PTEX1
+    v_tex1 = a_tex1;
 #endif
 
 #if defined(VDIFFUSE) && defined(PCOLOR)

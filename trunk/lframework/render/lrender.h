@@ -17,5 +17,7 @@ namespace lrender
     using lcore::u32;
     using lcore::f32;
     using lcore::f64;
+
+    using lcore::Char;
 }
 #endif //INC_LRENDER_H__

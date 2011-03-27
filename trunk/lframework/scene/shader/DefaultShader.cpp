@@ -176,34 +176,45 @@ namespace lscene
     {
         const lrender::Drawable* drawable = batch.getDrawable();
         const lscene::Material* material = batch.getMaterial();
+        const lscene::LightEnvironment& lightEnv = scene.getLightEnv();
+
+        lmath::Matrix43 toLocal = drawable->getWorldMatrix();
+        toLocal.invert();
+
+        // ライト方向をローカルへ変換
+        lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
+        lightDirection.mul33(lightDirection, toLocal);
+
+        shader_.setVector3(params_[ParamPS_DLightDirection], lightDirection);
+        shader_.setVector4(params_[ParamPS_DLightColor], lightEnv.getDirectionalLight().getColor());
+
+        lmath::Matrix43 cameraToLocal = drawable->getWorldMatrix();
+        cameraToLocal *= scene.getViewMatrix();
+        cameraToLocal.invert();
+
+        // カメラ位置をローカルへ変換
+        lmath::Vector3 cameraPos(0.0f,0.0f,0.0f);
+        cameraPos.mul(cameraPos, cameraToLocal);
+
+        shader_.setVector3(params_[ParamPS_CameraPosition], cameraPos);
+
 
         if( material->getFlags().checkFlag(Material::MatFlag_Fresnel) ){
-            lmath::Matrix43 toLocal = drawable->getWorldMatrix();
-            toLocal.invert();
-
-            const lscene::LightEnvironment& lightEnv = scene.getLightEnv();
-
-            // ライト方向をローカルへ変換
-            lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
-            lightDirection.mul33(lightDirection, toLocal);
-
-            shader_.setVector3(params_[ParamPS_DLightDirection], lightDirection);
-
-            lmath::Matrix43 cameraToLocal = drawable->getWorldMatrix();
-            cameraToLocal *= scene.getViewMatrix();
-            cameraToLocal.invert();
-
-            // カメラ位置をローカルへ変換
-            lmath::Vector3 cameraPos(0.0f,0.0f,-1.0f);
-            cameraPos.mul(cameraPos, cameraToLocal);
-
-            shader_.setVector3(params_[ParamPS_CameraPosition], cameraPos);
 
             shader_.setVector4(params_[ParamPS_Specular], material->specular_);
+
+            shader_.setFloat(params_[ParamPS_Fresnel], material->reflectance_);
+
+            shader_.setVector3(params_[ParamPS_Emissive], material->emissive_);
+
+        }else if( material->getFlags().checkFlag(Material::MatFlag_TexGrad) ){
+
         }
 
         //マテリアル
         shader_.setVector4(params_[ParamPS_Diffuse], material->diffuse_);
+        shader_.setVector3(params_[ParamPS_Ambient], material->ambient_);
+        shader_.setVector3(params_[ParamPS_Emissive], material->emissive_);
 
         //TODO:なんかもういろいろ
         //テクスチャ
@@ -238,15 +249,25 @@ namespace shader
 
     const u32 DefaultVSSourceSize = sizeof(DefaultVSSource);
 
-    // デフォルトピクセルシェーダソース
-    const char DefaultPSSource[] =
+    // Phongピクセルシェーダソース
+    const char PhongPSSource[] =
 #if defined(LIME_GLES2)
 #include "ModifiedPhongPS.glsl"
 #else
 #include "ModifiedPhongPS.hlsl"
 #endif
         ;
-    const u32 DefaultPSSourceSize = sizeof(DefaultPSSource);
+    const u32 PhongPSSourceSize = sizeof(PhongPSSource);
+
+    // Toonピクセルシェーダソース
+    const char ToonPSSource[] =
+#if defined(LIME_GLES2)
+#include "ToonPS.glsl"
+#else
+#include "ToonPS.hlsl"
+#endif
+        ;
+    const u32 ToonPSSourceSize = sizeof(ToonPSSource);
 
     // バーテックスシェーダパラメータ名
     const char* ParamVSNames[ParamVS_Num] =
@@ -262,9 +283,13 @@ namespace shader
     const char* ParamPSNames[ParamPS_Num] =
     {
         "dlDir",
+        "dlColor",
         "camPos",
         "diffuse",
+        "ambient",
         "specular",
+        "emissive",
+        "fresnel",
     };
 
     // ピクセルシェーダテクスチャ名
@@ -290,6 +315,10 @@ namespace shader
         "#define VDIFFUSE\n",
         "#define FRESNEL\n",
         "#define SKINNING\n",
+
+        "#define TEXSHADE\n",
+
+        "#define EMISSIVE\n",
     };
 #else
     const char* MacroNames[Macro_Num] =
@@ -307,8 +336,43 @@ namespace shader
         "VDIFFUSE",
         "FRESNEL",
         "SKINNING",
+
+        "TEXSHADE",
+
+        "EMISSIVE",
     };
 #endif
+
+
+
+    const u32 ShaderName[Shader_Num] =
+    {
+        'phon',
+        'toon',
+    };
+
+    ShaderID getShaderID(u32 shaderName)
+    {
+        for(u32 i=0; i<Shader_Num; ++i){
+            if(shaderName == ShaderName[i]){
+                return static_cast<ShaderID>(i);
+            }
+        }
+        return Shader_Phong;
+    }
+
+
+    const char* ShaderPSSource[Shader_Num] =
+    {
+        PhongPSSource,
+        ToonPSSource,
+    };
+
+    const u32 ShaderPSSourceSize[Shader_Num] =
+    {
+        PhongPSSourceSize,
+        ToonPSSourceSize,
+    };
 }
 
 }

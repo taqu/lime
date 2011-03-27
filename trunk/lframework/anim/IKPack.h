@@ -21,8 +21,8 @@ namespace lanim
             LIME_DELETE_ARRAY(children_);
         }
 
-        u16 joint_;
         u16 targetJoint_;
+        u16 effectorJoint_;
         u16 chainLength_;
         u16 numIterations_;
         f32 limitAngle_;
@@ -50,13 +50,13 @@ namespace lanim
         friend inline void intrusive_ptr_addref(IKPack* ptr);
         friend inline void intrusive_ptr_release(IKPack* ptr);
 
-        /// QÆƒJƒEƒ“ƒg
+        /// å‚ç…§ã‚«ã‚¦ãƒ³ãƒˆ
         void addRef()
         {
             ++refCount_;
         }
 
-        /// QÆƒJƒEƒ“ƒgŠJ•ú
+        /// å‚ç…§ã‚«ã‚¦ãƒ³ãƒˆé–‹æ”¾
         void release()
         {
             if(--refCount_ == 0){

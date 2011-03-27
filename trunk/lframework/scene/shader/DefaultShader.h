@@ -39,9 +39,13 @@ namespace lscene
         extern const char DefaultVSSource[];
         extern const u32 DefaultVSSourceSize;
 
-        /// デフォルトピクセルシェーダソース
-        extern const char DefaultPSSource[];
-        extern const u32 DefaultPSSourceSize;
+        /// Phongピクセルシェーダソース
+        extern const char PhongPSSource[];
+        extern const u32 PhongPSSourceSize;
+
+        /// Toon
+        extern const char ToonPSSource[];
+        extern const u32 ToonPSSourceSize;
 
         /// 頂点フォーマットフラグ
         enum VertexFlag
@@ -71,9 +75,13 @@ namespace lscene
         enum ParamPS
         {
             ParamPS_DLightDirection =0,
+            ParamPS_DLightColor,
             ParamPS_CameraPosition,
             ParamPS_Diffuse,
+            ParamPS_Ambient,
             ParamPS_Specular,
+            ParamPS_Emissive,
+            ParamPS_Fresnel,
             ParamPS_Num,
         };
 
@@ -104,10 +112,28 @@ namespace lscene
             Macro_VDIFFUSE,
             Macro_FRESNEL,
             Macro_SKINNING,
+
+            Macro_TEXSHADE,
+            Macro_EMISSIVE,
             Macro_Num,
         };
 
         extern const char* MacroNames[Macro_Num]; /// マクロ名
+
+
+        enum ShaderID
+        {
+            Shader_Phong =0,
+            Shader_Toon,
+            Shader_Num,
+        };
+
+        extern const u32 ShaderName[Shader_Num];
+
+        ShaderID getShaderID(u32 shaderName);
+
+        extern const char* ShaderPSSource[Shader_Num];
+        extern const u32 ShaderPSSourceSize[Shader_Num];
     }
 
     //---------------------------------------------------

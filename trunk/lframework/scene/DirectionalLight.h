@@ -29,12 +29,22 @@ namespace lscene
             return position_;
         }
 
+        lmath::Vector3& getPosition()
+        {
+            return position_;
+        }
+
         void setPosition(const lmath::Vector3& position)
         {
             position_ = position;
         }
 
         const lmath::Vector3& getDirection() const
+        {
+            return direction_;
+        }
+
+        lmath::Vector3& getDirection()
         {
             return direction_;
         }
@@ -50,21 +60,15 @@ namespace lscene
             return lightColor_;
         }
 
+        lmath::Vector4& getColor()
+        {
+            return lightColor_;
+        }
+
         void setColor(const lmath::Vector3& color, f32 intensity)
         {
-            intensity = lmath::absolute(intensity);
-
-            f32 sqr = color.lengthSqr();
-            if(lmath::isEqual(0.0f, sqr)){
-                lightColor_.set(0.0f, 0.0f, 0.0f, intensity);
-            }else{
-#if defined(ANDROID)
-                f32 rsqrt = 1.0f/lmath::sqrt(sqr);
-#else
-                f32 rsqrt = lmath::rcp_22bit(sqr);
-#endif
-                lightColor_.set(color._x * rsqrt, color._y * rsqrt, color._z * rsqrt, intensity);
-            }
+            //先に明るさをかけておく
+            lightColor_.set(color._x*intensity, color._y*intensity, color._z*intensity, intensity);
         }
 
     private:
