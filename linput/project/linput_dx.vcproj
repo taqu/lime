@@ -17,7 +17,7 @@
 	</ToolFiles>
 	<Configurations>
 		<Configuration
-			Name="Debug_dx|Win32"
+			Name="Debug|Win32"
 			OutputDirectory="$(SolutionDir)\lib"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -83,7 +83,7 @@
 			/>
 		</Configuration>
 		<Configuration
-			Name="Release_dx|Win32"
+			Name="Release|Win32"
 			OutputDirectory="$(SolutionDir)\lib"
 			IntermediateDirectory="$(ConfigurationName)"
 			ConfigurationType="4"
@@ -165,6 +165,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\DirectInput\DeviceBase.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\DirectInput\InitParam.h"
+				>
+			</File>
+			<File
 				RelativePath="..\DirectInput\InputImpl.cpp"
 				>
 			</File>
@@ -177,6 +185,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\DirectInput\Keyboard.h"
+				>
+			</File>
+			<File
 				RelativePath="..\DirectInput\linput.cpp"
 				>
 			</File>
@@ -185,12 +197,16 @@
 				>
 			</File>
 			<File
-				RelativePath="..\DirectInput\MouseData.h"
+				RelativePath="..\DirectInput\Mouse.h"
 				>
 			</File>
 		</Filter>
 		<File
-			RelativePath="..\InitParam.h"
+			RelativePath="..\Device.h"
+			>
+		</File>
+		<File
+			RelativePath="..\DeviceBase.h"
 			>
 		</File>
 		<File
@@ -199,10 +215,6 @@
 		</File>
 		<File
 			RelativePath="..\linput.h"
-			>
-		</File>
-		<File
-			RelativePath="..\linputAPIInclude.h"
 			>
 		</File>
 		<File

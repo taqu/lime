@@ -11,6 +11,14 @@
 #define LIME_DINPUT (1)
 #endif
 
+#if defined(LIME_DINPUT)
+#define DIRECTINPUT_VERSION 0x0800
+#include <dinput.h>
+
+#include "DirectInput/InputImpl.h"
+#endif
+
+
 #define SAFE_RELEASE(p) {if(p!=NULL){(p)->Release();(p)=NULL;}}
 
 namespace linput
@@ -23,5 +31,13 @@ namespace linput
     using lcore::u32;
     using lcore::f32;
     using lcore::f64;
+
+    enum DeviceType
+    {
+        DevType_Keyboard =0,
+        DevType_Mouse,
+        //DevType_TouchPad,
+        DevType_Num,
+    };
 }
 #endif //INC_LINPUTCORE_H__

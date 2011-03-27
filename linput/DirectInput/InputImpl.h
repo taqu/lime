@@ -1,5 +1,5 @@
-#ifndef INC_LINPUT_DX_INPUTIMPL_H__
-#define INC_LINPUT_DX_INPUTIMPL_H__
+#ifndef INC_LINPUT_DINPUT_INPUTIMPL_H__
+#define INC_LINPUT_DINPUT_INPUTIMPL_H__
 /**
 @file InputImpl.h
 @author t-sakai
@@ -19,8 +19,8 @@ namespace linput
         InputImpl();
         ~InputImpl();
 
-        bool isInit() const{ return (impl_ != NULL);}
-        void initialize(HWND__* hWnd);
+        inline bool valid() const;
+        bool initialize(HWND__* hWnd);
         void terminate();
 
         IDirectInputDevice8 *createDevice(const _GUID& deviceID);
@@ -29,7 +29,12 @@ namespace linput
         InputImpl(const InputImpl&);
         InputImpl& operator=(const InputImpl&);
 
-        IDirectInput8 *impl_;
+        IDirectInput8* dinput_;
     };
+
+    inline bool InputImpl::valid() const
+    {
+        return (dinput_ != NULL);
+    }
 }
-#endif //INC_LINPUT_DX_INPUTIMPL_H__
+#endif //INC_LINPUT_DINPUT_INPUTIMPL_H__

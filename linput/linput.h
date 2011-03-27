@@ -5,20 +5,16 @@
 @author t-sakai
 @date 2009/05/13 create
 */
-#include "linputEnum.h"
 #include "linputcore.h"
 
-#if defined(LIME_DINPUT)
-#include "DirectInput/InputImpl.h"
-#endif
+struct HWND__;
 
 namespace linput
 {
     class Device;
+    class DeviceBase;
     class Keyboard;
     class Mouse;
-
-    struct InitParam;
 
     /**
     Inputマネージャ
@@ -26,18 +22,34 @@ namespace linput
     class Input
     {
     public:
+        enum Error
+        {
+            Error_None = 0,
+            Error_Init,
+        };
+
+        struct InitParam
+        {
+            InitParam();
+
+            HWND__* hWnd_;
+            bool initDevices_[DevType_Num];
+        };
+
         /**
         */
-        static void initialize(InitParam& param);
+        static Error initialize(InitParam& param);
         static void terminate();
 
         static Input& getInstance();
 
         void update();
 
-        const Keyboard* getKeyboard() const{ return keyboard_;}
-        const Mouse* getMouse() const{ return mouse_;}
+        const Keyboard* getKeyboard() const{ return reinterpret_cast<const Keyboard*>( devices_[DevType_Keyboard] );}
+        const Mouse* getMouse() const{ return reinterpret_cast<const Mouse*>( devices_[DevType_Mouse] );}
 
+        void acquire();
+        void unacquire();
     private:
         Input();
         ~Input();
@@ -47,8 +59,7 @@ namespace linput
 
         InputImpl impl_;
 
-        Keyboard *keyboard_;
-        Mouse *mouse_;
+        DeviceBase *devices_[DevType_Num];
     };
 }
 

@@ -3,9 +3,7 @@
 @author t-sakai
 @date 2009/05/13
 */
-#include "../linputAPIInclude.h"
-#include "../linputcore.h"
-
+#include "../linputEnum.h"
 #include "Device.h"
 
 namespace linput
@@ -15,15 +13,14 @@ namespace linput
     {
     }
 
-    Device::~Device()
+    Device::Device(IDirectInputDevice8* device)
+        :device_(device)
     {
     }
 
-    void Device::initialize(InitParam& param)
+    Device::~Device()
     {
-        LASSERT(param.device_ != NULL);
         terminate();
-        device_ = param.device_;
     }
 
     void Device::terminate()
@@ -47,22 +44,8 @@ namespace linput
     {
         LASSERT(device_ != NULL);
         LASSERT(0<=type && type<DevType_Num);
-        const DIDATAFORMAT* DataFormat[DevType_Num] = {&c_dfDIKeyboard, &c_dfDIMouse, NULL};
+        const DIDATAFORMAT* DataFormat[DevType_Num] = {&c_dfDIKeyboard, &c_dfDIMouse2};
         HRESULT hr = device_->SetDataFormat(DataFormat[type]);
-        return SUCCEEDED(hr);
-    }
-
-    bool Device::setProperty()
-    {
-        LASSERT(device_ != NULL);
-        DIPROPDWORD dipdw; 
-        dipdw.diph.dwSize = sizeof(DIPROPDWORD); 
-        dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
-        dipdw.diph.dwObj = 0; 
-        dipdw.diph.dwHow = DIPH_DEVICE; 
-
-        dipdw.dwData = DIPROPAXISMODE_REL;
-        HRESULT hr = device_->SetProperty(DIPROP_AXISMODE, &dipdw.diph);
         return SUCCEEDED(hr);
     }
 }

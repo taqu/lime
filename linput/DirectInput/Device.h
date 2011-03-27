@@ -1,11 +1,10 @@
-#ifndef INC_LINPUT_DX_DEVICE_H__
-#define INC_LINPUT_DX_DEVICE_H__
+#ifndef INC_LINPUT_DINPUT_DEVICE_H__
+#define INC_LINPUT_DINPUT_DEVICE_H__
 /**
 @file Device.h
 @author t-sakai
 @date 2009/05/13 create
 */
-#include "../linputEnum.h"
 struct HWND__;
 struct IDirectInputDevice8;
 
@@ -14,27 +13,47 @@ namespace linput
     class Device
     {
     public:
-        struct InitParam
-        {
-            HWND__ *hWnd_;
-            IDirectInputDevice8* device_;
-        };
-
         Device();
+        Device(IDirectInputDevice8* device);
         ~Device();
 
-        bool isInit() const{ return (device_ != NULL);}
-        void initialize(InitParam& param);
+        inline bool valid() const;
         void terminate();
+        inline void swap(Device& rhs);
 
-        IDirectInputDevice8* get(){ return device_;}
+        inline IDirectInputDevice8* get();
+        inline IDirectInputDevice8* operator->();
 
         bool setCooperateLevel(HWND__* hWnd);
         bool setDataFormat(DeviceType type);
-        bool setProperty();
+
     private:
+        Device(const Device&);
+        Device& operator=(const Device&);
+
         IDirectInputDevice8 *device_;
     };
+
+    inline bool Device::valid() const
+    {
+        return (device_ != NULL);
+    }
+
+    inline IDirectInputDevice8* Device::get()
+    {
+        return device_;
+    }
+
+    inline IDirectInputDevice8* Device::operator->()
+    {
+        LASSERT(device_ != NULL);
+        return device_;
+    }
+
+    inline void Device::swap(Device& rhs)
+    {
+        lcore::swap(device_, rhs.device_);
+    }
 }
 
-#endif //INC_LINPUT_DX_DEVICE_H__
+#endif //INC_LINPUT_DINPUT_DEVICE_H__

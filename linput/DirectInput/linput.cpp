@@ -3,63 +3,85 @@
 @author t-sakai
 @date 2009/05/13
 */
-#include <lcore/smart_ptr/ScopedPtr.h>
-#include "../linputAPIInclude.h"
 #include "../linput.h"
+#include "../linputEnum.h"
 
-#include "../InitParam.h"
-
-#include "../Keyboard.h"
-#include "../Mouse.h"
+#include "Keyboard.h"
+#include "Mouse.h"
 
 namespace linput
 {
-    Input::Input()
-        :keyboard_(NULL)
-        ,mouse_(NULL)
+    Input::InitParam::InitParam()
+        :hWnd_(NULL)
     {
+        for(s32 i=0; i<DevType_Num; ++i){
+            initDevices_[i] = false;
+        }
+    }
+
+
+    Input::Input()
+    {
+        for(s32 i=0; i<DevType_Num; ++i){
+            devices_[i] = NULL;
+        }
     }
 
     Input::~Input()
     {
-        LIME_DELETE(keyboard_);
-        LIME_DELETE(mouse_);
     }
 
-    void Input::initialize(InitParam& param)
+    Input::Error Input::initialize(InitParam& param)
     {
-        Input &instance = getInstance();
+        Input& instance = getInstance();
+        InputImpl &impl = instance.impl_;
 
-        if(instance.impl_.isInit()){
-            return;
+        if(false == impl.valid()){
+            impl.initialize(param.hWnd_);
+            if(false == impl.valid()){
+                return Error_None;
+            }
         }
 
-        instance.impl_.initialize(param.hWnd_);
+        IDirectInputDevice8 *device = NULL;
+        
+        Error error = Error_None;
+        if(param.initDevices_[DevType_Keyboard]){
+            device = impl.createDevice(GUID_SysKeyboard);
 
-        Device::InitParam devParam;
-        devParam.hWnd_ = param.hWnd_;
-
-        devParam.device_ = instance.impl_.createDevice(GUID_SysKeyboard);
-
-        instance.keyboard_ = LIME_NEW Keyboard;
-        if(false == instance.keyboard_->initialize(devParam)){
-            LIME_DELETE(instance.keyboard_);
+            Keyboard* keyboard = LIME_NEW Keyboard;
+            if(false == keyboard->initialize(param.hWnd_, device)){
+                LIME_DELETE(keyboard);
+                error = Error_Init;
+            }else{
+                LIME_DELETE(instance.devices_[DevType_Keyboard]);
+                instance.devices_[DevType_Keyboard] = keyboard;
+            }
         }
 
-        devParam.device_ = instance.impl_.createDevice(GUID_SysMouse);
+        if(param.initDevices_[DevType_Mouse]){
+            device = impl.createDevice(GUID_SysMouse);
 
-        instance.mouse_ = LIME_NEW Mouse;
-        if(false == instance.mouse_->initialize(devParam)){
-            LIME_DELETE(instance.mouse_);
+            Mouse* mouse = LIME_NEW Mouse;
+            if(false == mouse->initialize(param.hWnd_, device)){
+                LIME_DELETE(mouse);
+                error = Error_Init;
+            }else{
+                LIME_DELETE(instance.devices_[DevType_Mouse]);
+                instance.devices_[DevType_Mouse] = mouse;
+            }
         }
+        return error;
     }
 
     void Input::terminate()
     {
         Input &instance = getInstance();
 
-        LIME_DELETE(instance.keyboard_);
-        LIME_DELETE(instance.mouse_);
+        for(s32 i=0; i<DevType_Num; ++i){
+            LIME_DELETE(instance.devices_[i]);
+        }
+
         instance.impl_.terminate();
     }
 
@@ -71,7 +93,28 @@ namespace linput
 
     void Input::update()
     {
-        keyboard_->poll();
-        mouse_->poll();
+        for(s32 i=0; i<DevType_Num; ++i){
+            if(devices_[i]){
+                devices_[i]->poll();
+            }
+        }
+    }
+
+    void Input::acquire()
+    {
+        for(s32 i=0; i<DevType_Num; ++i){
+            if(devices_[i]){
+                devices_[i]->acquire();
+            }
+        }
+    }
+
+    void Input::unacquire()
+    {
+        for(s32 i=0; i<DevType_Num; ++i){
+            if(devices_[i]){
+                devices_[i]->unacquire();
+            }
+        }
     }
 }

@@ -4,15 +4,13 @@
 @date 2010/07/22 create
 
 */
-#include <lcore/smart_ptr/ScopedPtr.h>
-#include "../linputAPIInclude.h"
 #include "../linputcore.h"
 #include "InputImpl.h"
 
 namespace linput
 {
     InputImpl::InputImpl()
-        :impl_(NULL)
+        :dinput_(NULL)
     {
     }
 
@@ -21,10 +19,10 @@ namespace linput
         terminate();
     }
 
-    void InputImpl::initialize(HWND__* hWnd)
+    bool InputImpl::initialize(HWND__* hWnd)
     {
-        if(impl_ != NULL){
-            return;
+        if(dinput_ != NULL){
+            return true;
         }
 
         LASSERT(hWnd != NULL);
@@ -32,23 +30,27 @@ namespace linput
         LASSERT(hInstance != NULL);
 
         IDirectInput8 *dinput = NULL;
-        HRESULT hr = DirectInput8Create(hInstance, DIRECTINPUT_VERSION, 
-            IID_IDirectInput8, (void**)&dinput, NULL);
+        HRESULT hr = DirectInput8Create(
+            hInstance,
+            DIRECTINPUT_VERSION, 
+            IID_IDirectInput8,
+            (void**)&dinput,
+            NULL);
 
-        LASSERT(SUCCEEDED(hr));
-
-        impl_ = dinput;
+        dinput_ = dinput;
+        return SUCCEEDED(hr);
     }
 
     void InputImpl::terminate()
     {
-        SAFE_RELEASE(impl_);
+        SAFE_RELEASE(dinput_);
     }
 
     IDirectInputDevice8* InputImpl::createDevice(const _GUID& deviceID)
     {
+        LASSERT(dinput_ != NULL);
         IDirectInputDevice8 *device = NULL;
-        impl_->CreateDevice(deviceID, &device, NULL);
+        dinput_->CreateDevice(deviceID, &device, NULL);
         return device;
     }
 

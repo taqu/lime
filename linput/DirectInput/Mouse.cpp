@@ -3,42 +3,53 @@
 @author t-sakai
 @date 2009/09/08
 */
-#include "../linputAPIInclude.h"
-#include "../Mouse.h"
+#include "Mouse.h"
 
 namespace linput
 {
     Mouse::Mouse()
+        :hWnd_(NULL)
     {
     }
 
     Mouse::~Mouse()
     {
-        device_.terminate();
-        data_.hWnd_ = NULL;
+        hWnd_ = NULL;
     }
 
-    bool Mouse::initialize(Device::InitParam& param)
+    bool Mouse::initialize(HWND__* hWnd, IDirectInputDevice8* device)
     {
-        device_.initialize(param);
-        if(false == device_.isInit()){
-            return false;
+        LASSERT(hWnd != NULL);
+        LASSERT(device != NULL);
+
+        hWnd_ = hWnd;
+        {
+            Device devTmp(device);
+            device_.swap(devTmp);
         }
 
         getMousePoint();
-
-        //create(GUID_SysMouse);
 
         if(false == device_.setDataFormat(DevType_Mouse)){
             return false;
         }
 
-        if(false == device_.setCooperateLevel(param.hWnd_)){
+        if(false == device_.setCooperateLevel(hWnd_)){
             return false;
         }
 
-        if(false == device_.setProperty()){
-            return false;
+        {
+            DIPROPDWORD dipdw; 
+            dipdw.diph.dwSize = sizeof(DIPROPDWORD); 
+            dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
+            dipdw.diph.dwObj = 0; 
+            dipdw.diph.dwHow = DIPH_DEVICE; 
+
+            dipdw.dwData = DIPROPAXISMODE_REL; //相対値モード
+            HRESULT hr = device_->SetProperty(DIPROP_AXISMODE, &dipdw.diph);
+            if(FAILED(hr)){
+                return false;
+            }
         }
 
         for(int i=0; i<MouseButton_Num; ++i){
@@ -46,7 +57,12 @@ namespace linput
         }
         clear();
 
-        data_.hWnd_ = param.hWnd_;
+        //アクセス権取得、入力開始
+        HRESULT hr = device_->Acquire();
+        //if(FAILED(hr)){
+        //    return false;
+        //}
+
         return true;
     }
 
@@ -80,39 +96,28 @@ namespace linput
         return axisDuration_[axis];
     }
 
-    s32 Mouse::getX() const
-    {
-        return mousePoint_.x_;
-    }
-
-    s32 Mouse::getY() const
-    {
-        return mousePoint_.y_;
-    }
-
     inline void Mouse::getMousePoint()
     {
         GetCursorPos((LPPOINT)&mousePoint_);
-        ScreenToClient(data_.hWnd_, (LPPOINT)&mousePoint_);
+        ScreenToClient(hWnd_, (LPPOINT)&mousePoint_);
     }
 
     void Mouse::poll()
     {
         getMousePoint();
 
-        DIMOUSESTATE state;
+        DIMOUSESTATE2 state;
 
         clear();
 
+        //HRESULT hr = device_->Acquire();
+        //if(FAILED(hr)){
+        //    return;
+        //}
 
-        IDirectInputDevice8 *device = device_.get();
-        HRESULT hr = device->Acquire();
+        HRESULT hr = device_->GetDeviceState(sizeof(DIMOUSESTATE2), &state);
         if(FAILED(hr)){
-            return;
-        }
-
-        hr = device->GetDeviceState(sizeof(DIMOUSESTATE), &state);
-        if(FAILED(hr)){
+            device_->Acquire(); //もう一度アクセス権取得
             return;
         }
 
