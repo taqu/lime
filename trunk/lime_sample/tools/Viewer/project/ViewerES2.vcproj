@@ -63,7 +63,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lframework_gles2_vc90_d.lib libConverter_gles2_vc90_d.lib libEGL.lib libGLESv2.lib"
+				AdditionalDependencies="lframework_gles2_vc90_d.lib linput_vc90_d.lib libConverter_gles2_vc90_d.lib libEGL.lib libGLESv2.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="../../../../lib;../../libConverter/lib;&quot;$(POWERVRSDK)\WindowsPC\Lib&quot;"
 				GenerateDebugInformation="true"
@@ -140,7 +140,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lframework_gles2_vc90.lib libConverter_gles2_vc90.lib libEGL.lib libGLESv2.lib"
+				AdditionalDependencies="lframework_gles2_vc90.lib linput_vc90.lib libConverter_gles2_vc90.lib libEGL.lib libGLESv2.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="../../../../lib;../../libConverter/lib;&quot;$(POWERVRSDK)\WindowsPC\Lib&quot;"
 				GenerateDebugInformation="true"
@@ -187,7 +187,39 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\Camera.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Camera.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Input.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Input.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Light.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Light.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Scene.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Scene.h"
 				>
 			</File>
 			<File

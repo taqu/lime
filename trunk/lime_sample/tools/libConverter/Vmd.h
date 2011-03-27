@@ -6,7 +6,7 @@
 @date 2010/12/30 create
 */
 #include <lcore/lcore.h>
-#include <lcore/liofwd.h>
+#include <lcore/liostream.h>
 #include <lframework/anim/AnimationClip.h>
 
 namespace vmd
@@ -28,7 +28,7 @@ namespace vmd
     static const u32 DefaultVectorSize = 64;
 
     //------------------------------------------------------------
-    //--- VMDãƒ•ã‚¡ã‚¤ãƒ«ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆç”¨æ§‹é€ ä½“
+    //--- VMDƒtƒ@ƒCƒ‹ƒtƒH[ƒ}ƒbƒg—p\‘¢‘Ì
     //------------------------------------------------------------
     //--------------------------------------
     //---
@@ -45,10 +45,10 @@ namespace vmd
         Char magic_[MagicSize];
         Char name_[NameSize];
 
-        /// ãƒ•ãƒ¬ãƒ¼ãƒ ãƒ‡ãƒ¼ã‚¿æ•°
+        /// ƒtƒŒ[ƒ€ƒf[ƒ^”
         u32 frameNum_;
 
-        //ã‚¹ãƒˆãƒªãƒ¼ãƒ ãƒ­ãƒ¼ãƒ‰
+        //ƒXƒgƒŠ[ƒ€ƒ[ƒh
         friend lcore::istream& operator>>(lcore::istream& is, Header& rhs);
     };
 
@@ -71,7 +71,7 @@ namespace vmd
         f32 rotation_[4];
         u32 interp_[16];
 
-        //ã‚¹ãƒˆãƒªãƒ¼ãƒ ãƒ­ãƒ¼ãƒ‰
+        //ƒXƒgƒŠ[ƒ€ƒ[ƒh
         friend lcore::istream& operator>>(lcore::istream& is, Header& rhs);
     };
 

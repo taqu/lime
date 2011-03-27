@@ -36,11 +36,16 @@
 #include <lframework/anim/Joint.h>
 #include <lframework/anim/IKPack.h>
 
+#include <lframework/scene/shader/DefaultShader.h>
+
+#include "converter.h"
 #include "SplitBone.h"
 
 #if defined(_WIN32) && defined(_DEBUG)
-#define LIME_LIB_CONV_DEBUG (1)
+//#define LIME_LIB_CONV_DEBUG (1)
 #endif
+
+using namespace lconverter;
 
 namespace pmd
 {
@@ -48,10 +53,10 @@ namespace pmd
     using namespace lcore;
     using namespace lgraphics;
 
-    // å‹•ãåˆ¶é™ã™ã‚‹ã‚¸ãƒ§ã‚¤ãƒ³ãƒˆã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ã€‚Shift-JIS?
+    // “®‚«§ŒÀ‚·‚éƒWƒ‡ƒCƒ“ƒgƒL[ƒ[ƒhBShift-JIS?
     const Char* LimitJointName[NumLimitJoint] =
     {
-        "\x82\xD0\x82\xB4\x00", //"ã²ã–"
+        "\x82\xD0\x82\xB4\x00", //"‚Ğ‚´"
     };
 
 
@@ -59,31 +64,11 @@ namespace pmd
     static const u32 TexNameSize = lgraphics::MAX_NAME_BUFFER_SIZE;
     typedef lgraphics::NameString TextureName;
 
-    typedef lcore::HashMapCharArray<lgraphics::TextureRef*> NameTextureMap;
-
 namespace
 {
-    void extractDirectoryPath(CHAR* dst, const CHAR* path, u32 size)
+    void extractTextureName(TextureName& dst, const Char* path, u32 size)
     {
-        if(size<=0){
-            return;
-        }
-
-        u32 i;
-        for(i=size-1; 0<=i; --i){
-            if(path[i] == '/'){
-                break;
-            }
-        }
-        u32 dstSize = i+1;
-        for(i=0; i<dstSize; ++i){
-            dst[i] = path[i];
-        }
-    }
-
-    TextureRef* loadTexture(const CHAR* path, u32 size, const CHAR* directory, NameTextureMap& texMap)
-    {
-        TextureName name;
+        LASSERT(path != NULL);
         u32 i;
         for(i=0; i<size; ++i){
             if(path[i] == '*'
@@ -91,87 +76,8 @@ namespace
                 break;
             }
         }
-        name.assign(path, i);
-
-        lframework::ImageFormat format = lframework::Img_None;
-        const CHAR* ext = lframework::io::rFindChr(name.c_str(), '.', name.size()+1);
-        if(ext == NULL){
-            lcore::Log("pmd tex name has no ext(%s)", name.c_str());
-            return NULL;
-
-        }else{
-            format = lframework::io::getFormatFromExt(ext+1);
-        }
-
-        u32 mapPos = texMap.find(name.c_str(), name.size());
-        if(texMap.isEnd(mapPos) == false){
-            //ã™ã§ã«åŒã˜åå‰ã®ãƒ†ã‚¯ã‚¹ãƒãƒ£ãŒå­˜åœ¨ã—ãŸ
-            lcore::Log("pmd tex has already loaded");
-            return texMap.getValue(mapPos);
-        }
-
-        char* filepath = NULL;
-        if(directory == NULL){
-            filepath = LIME_NEW char[name.size()+1];
-            lcore::strncpy(filepath, name.size()+1, name.c_str(), name.size());
-        }else{
-            u32 dlen = lcore::strlen(directory);
-            u32 pathLen = dlen + name.size() + 1;
-            filepath = LIME_NEW char[pathLen];
-            lcore::memcpy(filepath, directory, dlen);
-            lcore::memcpy(filepath+dlen, name.c_str(), name.size() + 1);
-        }
-
-        lcore::ifstream is(filepath, lcore::ios::in|lcore::ios::binary);
-        if(is.is_open() == false){
-            lcore::Log("pmd failt to open tex(%s)", filepath);
-            LIME_DELETE_ARRAY(filepath);
-            return NULL;
-        }
-
-        TextureRef *texture = LIME_NEW TextureRef;
-        if(texture == NULL){
-            LIME_DELETE_ARRAY(filepath);
-            return NULL;
-        }
-
-        bool ret = false;
-        switch(format)
-        {
-        case lframework::Img_BMP:
-            ret = lgraphics::io::IOBMP::read(is, *texture);
-            break;
-
-        case lframework::Img_TGA:
-            ret = lgraphics::io::IOTGA::read(is, *texture);
-            break;
-
-        case lframework::Img_DDS:
-            ret = lgraphics::io::IODDS::read(is, *texture);
-            break;
-
-        case lframework::Img_PNG:
-            ret = lgraphics::io::IOPNG::read(is, *texture);
-            break;
-
-        default:
-            break;
-        };
-
-        if(ret){
-            texture->setName(name);
-
-            texMap.insert(texture->getName().c_str(), texture->getName().size(), texture);
-            lcore::Log("pmd success to load tex(%s)", filepath);
-        }else{
-            LIME_DELETE(texture);
-            lcore::Log("pmd fail to load tex(%s)", filepath);
-        }
-
-        LIME_DELETE_ARRAY(filepath);
-        return texture;
+        dst.assign(path, i);
     }
-
 }
 
     //--------------------------------------
@@ -192,7 +98,7 @@ namespace
         lcore::io::read(is, rhs.magic_, Header::MagicSize);
         lcore::io::read(is, rhs.version_);
         lcore::io::read(is, rhs.name_, NameSize);
-        lcore::io::read(is, rhs.comment_, Header::CommentSize);
+        lcore::io::read(is, rhs.comment_, CommentSize);
         return is;
     }
 
@@ -203,18 +109,27 @@ namespace
     //--------------------------------------
     lcore::istream& operator>>(lcore::istream& is, Vertex& rhs)
     {
+        //TODO: –@ü‚ª³‹K‰»‚³‚ê‚Ä‚¢‚È‚¢AUV‚ªƒ}ƒCƒiƒX‚Ìê‡‚Ç‚¤‚·‚é‚©
+        FLOAT buffer[3];
         lcore::io::read(is, rhs.position_, sizeof(FLOAT)*3);
-        lcore::io::read(is, rhs.normal_, sizeof(FLOAT)*3);
-        lcore::io::read(is, rhs.uv_, sizeof(FLOAT)*2);
+
+        lcore::io::read(is, buffer, sizeof(FLOAT)*3);
+        rhs.normal_[0] = F32ToS16(buffer[0]);
+        rhs.normal_[1] = F32ToS16(buffer[1]);
+        rhs.normal_[2] = F32ToS16(buffer[2]);
+
+        lcore::io::read(is, buffer, sizeof(FLOAT)*2);
+        rhs.uv_[0] = F32ToS16Clamp(buffer[0]);
+        rhs.uv_[1] = F32ToS16Clamp(buffer[1]);
 
         WORD boneNo[2];
         lcore::io::read(is, boneNo, sizeof(WORD)*2);
 
-        rhs.boneNo_[0] = static_cast<BYTE>(boneNo[0]);
-        rhs.boneNo_[1] = static_cast<BYTE>(boneNo[1]);
+        rhs.element_[Vertex::Index_Bone0] = static_cast<BYTE>(boneNo[0]);
+        rhs.element_[Vertex::Index_Bone1] = static_cast<BYTE>(boneNo[1]);
 
-        lcore::io::read(is, rhs.boneWeight_);
-        lcore::io::read(is, rhs.edgeFlag_);
+        lcore::io::read(is, rhs.element_[Vertex::Index_Weight]);
+        lcore::io::read(is, rhs.element_[Vertex::Index_Edge]);
         return is;
     }
 
@@ -241,6 +156,8 @@ namespace
         lcore::io::read(is, rhs.specularColor_, sizeof(FLOAT)*3);
         lcore::io::read(is, rhs.ambient_, sizeof(FLOAT)*3);
         lcore::io::read(is, rhs.toonIndex_);
+        //0xFFU‚È‚çŒÅ’è‚ÌƒeƒNƒXƒ`ƒƒ‚É‚È‚é‚Ì‚ÅAŒÅ’è‚ğ0‚É‚µ‚Ä‘¼‚ÌƒCƒ“ƒfƒbƒNƒX‚ğ‚P‚¸‚ç‚·
+        rhs.toonIndex_ += 1;
         lcore::io::read(is, rhs.edgeFlag_);
         lcore::io::read(is, rhs.faceVertexCount_);
         lcore::io::read(is, rhs.textureFileName_, sizeof(CHAR)*FileNameSize);
@@ -252,6 +169,23 @@ namespace
     //--- Bone
     //---
     //--------------------------------------
+    void Bone::swap(Bone& rhs)
+    {
+        CHAR buffer[NameSize];
+        lcore::memcpy(buffer, name_, NameSize);
+        lcore::memcpy(name_, rhs.name_, NameSize);
+        lcore::memcpy(rhs.name_, buffer, NameSize);
+
+        lcore::swap(parentIndex_, rhs.parentIndex_);
+        lcore::swap(tailPosIndex_, rhs.tailPosIndex_);
+        lcore::swap(type_, rhs.type_);
+        lcore::swap(ikParentIndex_, rhs.ikParentIndex_);
+        lcore::swap(headPos_[0], rhs.headPos_[0]);
+        lcore::swap(headPos_[1], rhs.headPos_[1]);
+        lcore::swap(headPos_[2], rhs.headPos_[2]);
+    }
+
+
     lcore::istream& operator>>(lcore::istream& is, Bone& rhs)
     {
         lcore::io::read(is, rhs.name_, NameSize);
@@ -268,7 +202,7 @@ namespace
     //--- IK
     //---
     //----------------------------------------------------------
-    // IKãƒ‡ãƒ¼ã‚¿ç”¨ã‚¹ãƒˆãƒªãƒ¼ãƒ ãƒ­ãƒ¼ãƒ‰
+    // IKƒf[ƒ^—pƒXƒgƒŠ[ƒ€ƒ[ƒh
     IK::IK()
         :childBoneIndex_(NULL)
         ,prevNumChildren_(0)
@@ -306,9 +240,10 @@ namespace
     //--- Skin
     //---
     //----------------------------------------------------------
-    // Skinãƒ‡ãƒ¼ã‚¿ç”¨ã‚¹ãƒˆãƒªãƒ¼ãƒ ãƒ­ãƒ¼ãƒ‰
+    // Skinƒf[ƒ^—pƒXƒgƒŠ[ƒ€ƒ[ƒh
     Skin::Skin()
-        :vertices_(NULL)
+        :numVertices_(0)
+        ,vertices_(NULL)
     {
     }
 
@@ -321,18 +256,222 @@ namespace
     {
         LASSERT(rhs.vertices_ == NULL);
 
-        lcore::io::read(is, rhs.name_, NameSize);
+        CHAR name[NameSize];
+        lcore::io::read(is, name, NameSize);
         lcore::io::read(is, rhs.numVertices_);
-        lcore::io::read(is, rhs.type_);
+
+        BYTE type;
+        lcore::io::read(is, type);
+        rhs.type_ = type;
 
         rhs.vertices_ = LIME_NEW pmd::Skin::SkinVertex[rhs.numVertices_];
 
-        for(u32 i=0; rhs.numVertices_; ++i){
-            lcore::io::read(is, rhs.vertices_[i].base_.index_);
-            lcore::io::read(is, rhs.vertices_[i].base_.position_, sizeof(FLOAT)*3);
+        for(u32 i=0; i<rhs.numVertices_; ++i){
+            lcore::io::read(is, rhs.vertices_[i].index_);
+            lcore::io::read(is, rhs.vertices_[i].position_, sizeof(f32)*3);
         }
 
         return is;
+    }
+
+    void Skin::swap(Skin& rhs)
+    {
+        lcore::swap(numVertices_, rhs.numVertices_);
+        lcore::swap(vertices_, rhs.vertices_);
+        lcore::swap(type_, rhs.type_);
+
+    }
+
+
+    //----------------------------------------------------------
+    //---
+    //--- SkinPack
+    //---
+    //----------------------------------------------------------
+    SkinPack::SkinPack()
+        :numSkins_(0)
+        ,skins_(NULL)
+        ,morphBaseVertices_(NULL)
+    {
+        indexRange_[0] = 0xFFFFU;
+        indexRange_[1] = 0;
+    }
+
+    SkinPack::SkinPack(u32 numSkins)
+        :numSkins_(numSkins)
+        ,morphBaseVertices_(NULL)
+    {
+        if(numSkins_>0){
+            skins_ = LIME_NEW Skin[numSkins_];
+        }else{
+            skins_ = NULL;
+        }
+        indexRange_[0] = 0xFFFFU;
+        indexRange_[1] = 0;
+    }
+
+    SkinPack::~SkinPack()
+    {
+        LIME_DELETE_ARRAY(morphBaseVertices_);
+        LIME_DELETE_ARRAY(skins_);
+    }
+
+    void SkinPack::swap(SkinPack& rhs)
+    {
+        lcore::swap(numSkins_, rhs.numSkins_);
+        lcore::swap(skins_, rhs.skins_);
+        lcore::swap(indexRange_[0], rhs.indexRange_[0]);
+        lcore::swap(indexRange_[1], rhs.indexRange_[1]);
+        lcore::swap(morphBaseVertices_, rhs.morphBaseVertices_);
+    }
+
+    void SkinPack::createMorphBaseVertices(u32 numVertices, const Vertex* vertices)
+    {
+        LASSERT(vertices != NULL);
+        if(skins_ == NULL || morphBaseVertices_ != NULL){
+            return;
+        }
+
+        Skin& skin = skins_[0];
+
+        for(u32 i=0; i<skin.numVertices_; ++i){
+            u32 index = skin.vertices_[i].index_;
+
+            LASSERT(index<numVertices);
+            if(index<indexRange_[0]){
+                indexRange_[0] = index;
+            }
+
+            if(index>indexRange_[1]){
+                indexRange_[1] = index;
+            }
+        }
+
+        if(indexRange_[0]<=indexRange_[1]){
+            u32 size = indexRange_[1] - indexRange_[0] + 1;
+            morphBaseVertices_ = LIME_NEW Vertex[size];
+        }
+
+        u32 index = 0;
+        for(u16 i=indexRange_[0]; i<=indexRange_[1]; ++i){
+            morphBaseVertices_[index] = vertices[i];
+            ++index;
+        }
+    }
+
+    void SkinPack::sortVertexIndices()
+    {
+        Skin& skin = skins_[0];
+        u16* toIndices = LIME_NEW u16[skin.numVertices_];
+        u16 numVertices = static_cast<u16>(skin.numVertices_);
+        for(u16 i=0; i<numVertices; ++i){
+        }
+
+        LIME_DELETE_ARRAY(toIndices);
+    }
+
+
+    //----------------------------------------------------------
+    //---
+    //--- DispLabel
+    //---
+    //----------------------------------------------------------
+    DispLabel::DispLabel()
+        :numBoneGroups_(0)
+        ,buffer_(NULL)
+        ,skinIndices_(NULL)
+        ,boneLabels_(NULL)
+        ,boneMap_(NULL)
+    {
+    }
+
+    DispLabel::~DispLabel()
+    {
+        LIME_DELETE_ARRAY(buffer_);
+        LIME_DELETE_ARRAY(boneMap_);
+    }
+
+    u16 DispLabel::getSkinLabelCount() const
+    {
+        return *reinterpret_cast<u16*>(buffer_);
+    }
+
+    u16 DispLabel::getBoneLabelCount() const
+    {
+        return *reinterpret_cast<u16*>(buffer_+sizeof(u16));
+    }
+
+    void DispLabel::read(lcore::istream& is)
+    {
+        u8 skinCount = 0;
+        lcore::io::read(is, skinCount);
+
+        s32 offsetToSkin = 0; //•\îƒCƒ“ƒfƒbƒNƒXƒŠƒXƒg‚Ìæ“ª‚Ö‚ÌƒIƒtƒZƒbƒg
+
+        //•\îƒCƒ“ƒfƒbƒNƒXƒŠƒXƒgƒXƒLƒbƒv
+        s32 offset = skinCount * sizeof(u16);
+        offsetToSkin -= offset;
+        is.seekg(offset, lcore::ios::cur);
+
+        //ƒ{[ƒ“ƒ‰ƒxƒ‹–¼ƒXƒLƒbƒv
+        u8 numBoneLabelNames = 0;        
+        offsetToSkin -= sizeof(u8);
+        lcore::io::read(is, numBoneLabelNames);
+
+        numBoneGroups_ = numBoneLabelNames;
+
+        offset = LabelNameSize * numBoneLabelNames;
+        offsetToSkin -= offset;
+        is.seekg(offset, lcore::ios::cur);
+
+        offsetToSkin -= sizeof(u32);
+        u32 numBoneLabels = 0;
+        lcore::io::read(is, numBoneLabels);
+
+        is.seekg(offsetToSkin, lcore::ios::cur);
+
+        //ƒoƒbƒtƒ@ì¬
+        u32 size = 2*sizeof(u16) + skinCount * sizeof(u16) + numBoneLabels * sizeof(BoneLabel);
+        LIME_DELETE_ARRAY(buffer_);
+        buffer_ = LIME_NEW u8[size];
+
+        //Šeƒ‰ƒxƒ‹”•Û‘¶
+        *reinterpret_cast<u16*>(buffer_) = skinCount;
+        *reinterpret_cast<u16*>(buffer_+sizeof(u16)) = static_cast<u16>(numBoneLabels);
+
+        skinIndices_ = reinterpret_cast<u16*>(buffer_ + 2*sizeof(u16));
+        boneLabels_  = reinterpret_cast<BoneLabel*>(buffer_ + 2*sizeof(u16) + skinCount*sizeof(u16));
+
+        //•\îƒCƒ“ƒfƒbƒNƒXƒ[ƒh
+        lcore::io::read(is, skinIndices_, skinCount*sizeof(u16));
+
+
+        offset = sizeof(u8) + 50*numBoneLabelNames + sizeof(u32);
+        is.seekg(offset, lcore::ios::cur);
+
+        u8 label = 0;
+        u16 boneIndex = 0;
+        for(u32 i=0; i<numBoneLabels; ++i){
+            lcore::io::read(is, boneIndex);
+            lcore::io::read(is, label);
+
+            boneLabels_[i].boneIndex_ = boneIndex;
+            boneLabels_[i].labelIndex_ = label;
+        }
+    }
+
+    void DispLabel::swapBoneMap(u16*& boneMap)
+    {
+        lcore::swap(boneMap, boneMap_);
+    }
+
+    void DispLabel::swap(DispLabel& rhs)
+    {
+        lcore::swap(numBoneGroups_, rhs.numBoneGroups_);
+        lcore::swap(buffer_, rhs.buffer_);
+        lcore::swap(skinIndices_, rhs.skinIndices_);
+        lcore::swap(boneLabels_, rhs.boneLabels_);
+        lcore::swap(boneMap_, rhs.boneMap_);
     }
 
     //--------------------------------------
@@ -368,10 +507,26 @@ namespace
         ,numBones_(0)
         ,bones_(NULL)
         ,boneMap_(NULL)
-        ,numSkins_(0)
-        ,skins_(NULL)
         ,skeleton_(NULL)
         ,ikPack_(NULL)
+    {
+    }
+
+    Pack::Pack(lconverter::NameTextureMap* nameTexMap)
+        :numVertices_(0)
+        ,vertices_(NULL)
+        ,numFaceIndices_(0)
+        ,faceIndices_(NULL)
+        ,numMaterials_(0)
+        ,materials_(NULL)
+        ,numGeometries_(0)
+        ,geometries_(NULL)
+        ,numBones_(0)
+        ,bones_(NULL)
+        ,boneMap_(NULL)
+        ,skeleton_(NULL)
+        ,ikPack_(NULL)
+        ,nameTexMap_(nameTexMap)
     {
     }
 
@@ -384,7 +539,7 @@ namespace
     {
         LASSERT(filepath != NULL);
         if(false == input_.open(filepath, lcore::ios::binary|lcore::ios::in)){
-            lcore::Log("pmd fail to open file");
+            //lcore::Log("pmd fail to open %s", filepath);
             return false;
         }
 
@@ -392,17 +547,17 @@ namespace
     }
 
 
-    bool Pack::loadInternal()
+    bool Pack::loadInternal(const char* directory)
     {
         input_ >> header_;
 
         loadElements(input_, &vertices_, numVertices_);
-        if(numVertices_>MaxVertices){
+        if(numVertices_>MaxVertices){ //Å‘å’l‚ğ’´‚¦‚ê‚Î¸”s
             return false;
         }
 
         loadElements(input_, &faceIndices_, numFaceIndices_);
-        if(numVertices_>MaxIndices){
+        if(numVertices_>MaxIndices){ //Å‘å’l‚ğ’´‚¦‚ê‚Î¸”s
             return false;
         }
 
@@ -414,7 +569,51 @@ namespace
             return false;
         }
 
-        //ãƒœãƒ¼ãƒ³ã‚’ã‚½ãƒ¼ãƒˆã—ã¦ãƒãƒƒãƒ”ãƒ³ã‚°
+        
+
+
+        //IKì¬
+        //-------------------------------------------------------
+        u16 numIKs = 0;
+        lcore::io::read(input_, numIKs);
+        if(numIKs> 0){
+            LASSERT(ikPack_ == NULL);
+            IK ik;
+            lanim::IKPack *pack = LIME_NEW lanim::IKPack(numIKs);
+            for(u16 i=0; i<numIKs; ++i){
+                input_ >> ik;
+
+                lanim::IKEntry& entry = pack->get(i);
+                entry.targetJoint_ = ik.boneIndex_;
+                entry.effectorJoint_ = ik.targetBoneIndex_;
+                entry.chainLength_ = ik.chainLength_;
+                entry.numIterations_ = (MaxIKIterations<ik.numIterations_)? MaxIKIterations : ik.numIterations_;
+                //entry.numIterations_ = ik.numIterations_;
+                entry.limitAngle_ = ik.controlWeight_;
+
+                entry.children_ = LIME_NEW u8[entry.chainLength_];
+                for(u16 j=0; j<entry.chainLength_; ++j){
+                    LASSERT(ik.childBoneIndex_[j]<=MaxBones);
+                    entry.children_[j] = (0xFFU & ik.childBoneIndex_[j]);
+                }
+            }
+            ikPack_ = pack;
+        }
+
+
+        {
+            u16 numSkins = 0;
+            lcore::io::read(input_, numSkins);
+            SkinPack pack(numSkins);
+            skinPack_.swap(pack);
+            Skin* skins = skinPack_.getSkins();
+            for(u32 i=0; i<skinPack_.getNumSkins(); ++i){
+                input_ >> skins[i];
+            }
+        }
+
+
+        //ƒ{[ƒ“‚ğƒ\[ƒg‚µ‚Äƒ}ƒbƒsƒ“ƒO
         boneMap_ = LIME_NEW u16[numBones_];
         sortBones();
         Bone* tmp = LIME_NEW Bone[numBones_];
@@ -433,18 +632,20 @@ namespace
         }
 
         for(u32 i=0; i<numVertices_; ++i){
-            vertices_[i].boneNo_[0] = static_cast<BYTE>( boneMap_[ vertices_[i].boneNo_[0] ] );
-            vertices_[i].boneNo_[1] = static_cast<BYTE>( boneMap_[ vertices_[i].boneNo_[1] ] );
+            vertices_[i].element_[ Vertex::Index_Bone0 ] = static_cast<BYTE>( boneMap_[ vertices_[i].element_[ Vertex::Index_Bone0 ] ] );
+            vertices_[i].element_[ Vertex::Index_Bone1 ] = static_cast<BYTE>( boneMap_[ vertices_[i].element_[ Vertex::Index_Bone1 ] ] );
         }
 
 
-        //çµå±€ãƒœãƒ¼ãƒ³åˆ†å‰²ã™ã‚‹ã¾ã§ã€é ‚ç‚¹ãƒ»ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒ»ãƒãƒ†ãƒªã‚¢ãƒ«ã®æƒ…å ±ã¯ãƒ¡ãƒ¢ãƒªã«ãªã„ã¨ã ã‚
-        splitBone(numVertices_, vertices_, numFaceIndices_, faceIndices_, numMaterials_, materials_, numBones_, lgraphics::LIME_MAX_SKINNING_MATRICES, numGeometries_, &geometries_);
+        if(numMaterials_>0){
+            //Œ‹‹Çƒ{[ƒ“•ªŠ„‚·‚é‚Ü‚ÅA’¸“_EƒCƒ“ƒfƒbƒNƒXEƒ}ƒeƒŠƒAƒ‹‚Ìî•ñ‚Íƒƒ‚ƒŠ‚É‚È‚¢‚Æ‚¾‚ß
+            splitBone(numVertices_, vertices_, numFaceIndices_, faceIndices_, numMaterials_, materials_, skinPack_.getSkins(), numBones_, lgraphics::LIME_MAX_SKINNING_MATRICES, numGeometries_, &geometries_);
+        }
 
         numVertices_ = 0;
         LIME_DELETE_ARRAY(vertices_);
 
-        // ã‚¹ã‚±ãƒ«ãƒˆãƒ³ä½œæˆ
+        // ƒXƒPƒ‹ƒgƒ“ì¬
         //------------------------------------------------------
         {
             lmath::Vector3 headPosition;
@@ -455,7 +656,7 @@ namespace
 
                 lanim::Joint& joint = skeleton->getJoint(i);
 
-                //ã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰ãŒå…¥ã£ãŸã‚¸ãƒ§ã‚¤ãƒ³ãƒˆåãªã‚‰åˆ¶é™ã‚’è¨­ã‘ã‚‹
+                //ƒL[ƒ[ƒh‚ª“ü‚Á‚½ƒWƒ‡ƒCƒ“ƒg–¼‚È‚ç§ŒÀ‚ğİ‚¯‚é
                 for(u32 j=0; j<NumLimitJoint; ++j){
                     if(NULL != lcore::strstr(skeleton->getJointName(i).c_str(), LimitJointName[j])){
                         joint.setFlag(lanim::JointFlag_IKLimitHeading);
@@ -467,56 +668,50 @@ namespace
                 joint.setType(bones_[i].type_);
             }
             skeleton->setNameMemory(header_.name_, NameSize);
-            skeleton->recalcHash(); //å‘¼ã³å¿˜ã‚Œã‚‹ãªã‚
+            skeleton->recalcHash(); //ŒÄ‚Ñ–Y‚ê‚é‚È‚ 
             skeleton_ = skeleton;
         }
 
 
-        //IKä½œæˆ
+        //IK‚Ìƒ{[ƒ“‚ğƒ}ƒbƒsƒ“ƒO
         //-------------------------------------------------------
-        u16 numIKs = 0;
-        lcore::io::read(input_, numIKs);
         if(numIKs> 0){
-            lcore::Log("start to create IKPack");
-            LASSERT(ikPack_ == NULL);
-            IK ik;
-            lanim::IKPack *pack = LIME_NEW lanim::IKPack(numIKs);
             for(u16 i=0; i<numIKs; ++i){
-                input_ >> ik;
+                lanim::IKEntry& entry = ikPack_->get(i);
+                entry.targetJoint_ = boneMap_[ entry.targetJoint_ ];
+                entry.effectorJoint_ = boneMap_[  entry.effectorJoint_ ];
 
-                lanim::IKEntry& entry = pack->get(i);
-                entry.joint_ = boneMap_[ ik.boneIndex_ ];
-                entry.targetJoint_ = boneMap_[  ik.targetBoneIndex_ ];
-                entry.chainLength_ = ik.chainLength_;
-                entry.numIterations_ = (MaxIKIterations<ik.numIterations_)? MaxIKIterations : ik.numIterations_;
-                entry.limitAngle_ = ik.controlWeight_;
-
-                entry.children_ = LIME_NEW u8[entry.chainLength_];
                 for(u16 j=0; j<entry.chainLength_; ++j){
-                    LASSERT(ik.childBoneIndex_[j]<=MaxBones);
-
-                    ik.childBoneIndex_[j] = boneMap_[ ik.childBoneIndex_[j] ];
-                    entry.children_[j] = (0xFFU & ik.childBoneIndex_[j]);
+                    entry.children_[j] = (0xFFU & boneMap_[ entry.children_[j] ]);
                 }
             }
-            ikPack_ = pack;
-            lcore::Log("end to create IKPack");
         }
 
+        dispLabel_.read(input_);
+        dispLabel_.swapBoneMap(boneMap_);
 
-        loadElements(input_, &skins_, numSkins_);
 
+        //‰pŒê–¼ƒ[ƒh
+        loadNamesForENG();
 
+        //
+        loadToonTextures(directory);
         return true;
     }
 
     void Pack::release()
     {
+        for(NameTextureMap::size_type pos = texMapInternal_.begin();
+            pos != texMapInternal_.end();
+            pos = texMapInternal_.next(pos))
+        {
+            TextureRef *tex = texMapInternal_.getValue(pos);
+            LIME_DELETE(tex);
+        }
+
+
         LIME_DELETE(ikPack_);
         LIME_DELETE(skeleton_);
-
-        numSkins_ = 0;
-        LIME_DELETE_ARRAY(skins_);
 
         numBones_ = 0;
         LIME_DELETE_ARRAY(boneMap_);
@@ -545,106 +740,107 @@ namespace
 
     namespace
     {
-        RenderStateRef createRenderState(bool alphaBlend)
+        enum RenderStateType
         {
-            //ã‚¹ãƒ†ãƒ¼ãƒˆè¨­å®šã¯ã¦ãã¨ã†
-            RenderStateRef::begin();
-            RenderStateRef::setCullMode(lgraphics::CullMode_CCW);
+            RenderState_Default,
+            RenderState_AlphaBlend,
+            RenderState_Num,
+        };
 
-            // ã‚¢ãƒ«ãƒ•ã‚¡è¨­å®š
-            if(alphaBlend){
-                RenderStateRef::setAlphaBlendEnable(true);
-                RenderStateRef::setAlphaBlend(lgraphics::Blend_SrcAlpha, lgraphics::Blend_InvSrcAlpha);
-
-            }else{
-                RenderStateRef::setAlphaBlendEnable(false);
-            }
-
-            RenderStateRef::setAlphaTest(true);
-            RenderStateRef::setAlphaTestFunc(lgraphics::Cmp_Less);
-
-            // Zãƒãƒƒãƒ•ã‚¡è¨­å®š
-            RenderStateRef::setZEnable(true);
-            RenderStateRef::setZWriteEnable(true);
-
+        RenderStateRef createRenderState(RenderStateType type)
+        {
+            //ƒXƒe[ƒgİ’è‚Í‚Ä‚«‚Æ‚¤
             RenderStateRef state;
-            RenderStateRef::end(state);
+
+            // Zƒoƒbƒtƒ@İ’è
+            state.setZEnable(true);
+
+            //type = RenderState_Default;
+            switch(type)
+            {
+            case RenderState_Default:
+                {
+                    state.setCullMode(lgraphics::CullMode_CCW);
+
+                    state.setAlphaBlendEnable(false);
+                    state.setAlphaTest(true);
+                    state.setAlphaTestFunc(lgraphics::Cmp_Greater);
+
+                    // Zƒoƒbƒtƒ@İ’è
+                    state.setZWriteEnable(true);
+                }
+                break;
+
+            case RenderState_AlphaBlend:
+                {
+                    state.setCullMode(lgraphics::CullMode_None);
+
+                    state.setAlphaBlendEnable(true);
+                    state.setAlphaBlend(lgraphics::Blend_SrcAlpha, lgraphics::Blend_InvSrcAlpha);
+
+                    state.setAlphaTest(false);
+                    state.setAlphaTestFunc(lgraphics::Cmp_Greater);
+
+                    // Zƒoƒbƒtƒ@İ’è
+                    state.setZWriteEnable(false);
+                }
+                break;
+            };
             return state;
         }
 
         //-----------------------------------------------------------------------------
-        /// PMDã®ãƒãƒ†ãƒªã‚¢ãƒ«ã‚’lgraphics::Materialã«ä»£å…¥
+        /// ƒŒƒ“ƒ_ƒŠƒ“ƒOƒXƒe[ƒgİ’è
+        void setRenderStateToMaterial(lscene::Material& dst, lgraphics::RenderStateRef* stock, u32 createFlag, RenderStateType type)
+        {
+            //ì¬‚µ‚Ä‚¢‚È‚©‚Á‚½‚çì‚é
+            u32 flag = 0x01U << type;
+            if(0 == (createFlag & flag)){
+                stock[type] = createRenderState(type);
+                createFlag |= flag;
+            }
+            dst.setRenderState( stock[type] );
+        }
+
+
+        //-----------------------------------------------------------------------------
+        /// PMD‚Ìƒ}ƒeƒŠƒAƒ‹‚ğlgraphics::Material‚É‘ã“ü
         void setMaterial(lscene::Material& dst, const pmd::Material& src)
         {
-            dst.shading_.assign("toon", 4);
             dst.diffuse_.set(src.diffuse_[0], src.diffuse_[1], src.diffuse_[2], src.diffuse_[3]);
             dst.specular_.set(src.specularColor_[0], src.specularColor_[0], src.specularColor_[0], src.specularity_);
-            dst.ambient_.set(src.ambient_[0], src.ambient_[0], src.ambient_[0]);
+            dst.ambient_.set(src.ambient_[0], src.ambient_[1], src.ambient_[2]);
+            dst.reflectance_ = 0.05f;
 
-            dst.getFlags().setFlag(lscene::Material::MatFlag_Fresnel);
+            u32 shader = lscene::shader::ShaderName[lscene::shader::Shader_Toon];
+            dst.setShaderID( shader );
         }
 
         bool createVertexBuffer(VertexBufferRef& vb, pmd::VertexBuffer& pmdVB)
         {
-            struct VertexInternal
-            {
-                f32 position_[3];
-                f32 normal_[3];
-                f32 uv_[2];
-                u8 boneIndex_[4];
-                f32 weight_;
-            };
+            pmd::Vertex* vertices = &(pmdVB.elements_[0]);
+            u32 numVertices = pmdVB.elements_.size();
 
-
-            VertexBuffer::ElementVector& vertices = pmdVB.elements_;
-            u32 numVertices = vertices.size();
-
-            //é ‚ç‚¹ãƒãƒƒãƒ•ã‚¡ä½œæˆ
-            vb = lgraphics::VertexBuffer::create(sizeof(VertexInternal), numVertices, Pool_Default, Usage_None);
+            //’¸“_ƒoƒbƒtƒ@ì¬
+            vb = lgraphics::VertexBuffer::create(sizeof(pmd::Vertex), numVertices, Pool_Default, Usage_None);
             if(vb.valid() == false){
                 return false;
             }
 
-            VertexInternal* v = NULL;
-#if defined(LIME_GLES2)
-            v = LIME_NEW VertexInternal[numVertices];
-            if(v == NULL){
-                return false;
-            }
+#if defined(LIME_GL)
+            vb.blit(vertices, false);
 #else
-            u32 vsize = sizeof(Vertex)*numVertices;
+            pmd::Vertex* v = NULL;
+            u32 vsize = sizeof(pmd::Vertex)*numVertices;
             if(false == vb.lock(0, vsize, (void**)&v)){
                 return false;
             }
-#endif
-            for(u32 i=0; i<numVertices; ++i){
-                v[i].position_[0] = vertices[i].position_[0];
-                v[i].position_[1] = vertices[i].position_[1];
-                v[i].position_[2] = vertices[i].position_[2];
-
-                v[i].normal_[0] = vertices[i].normal_[0];
-                v[i].normal_[1] = vertices[i].normal_[1];
-                v[i].normal_[2] = vertices[i].normal_[2];
-
-                v[i].uv_[0] = vertices[i].uv_[0];
-                v[i].uv_[1] = vertices[i].uv_[1];
-
-                v[i].boneIndex_[0] = vertices[i].boneNo_[0];
-                v[i].boneIndex_[1] = vertices[i].boneNo_[1];
-                v[i].boneIndex_[2] = vertices[i].boneNo_[0];
-                v[i].boneIndex_[3] = vertices[i].boneNo_[1];
-
-                v[i].weight_ = 0.01f*vertices[i].boneWeight_;
-            }
-#if defined(LIME_GLES2)
-            vb.blit(v);
-            LIME_DELETE_ARRAY(v);
-#else
+            lcore::memcpy(v, vertices, vsize);
             vb.unlock();
 #endif
+
             return true;
         }
-
     }
 
     bool Pack::createObject(lscene::AnimObject& obj, const char* directory, bool swapOrigin)
@@ -652,100 +848,112 @@ namespace
         LASSERT(directory != NULL);
 
 
-        loadInternal();
+        loadInternal(directory);
 
-        // é ‚ç‚¹å®£è¨€ä½œæˆ
+        // ’¸“_éŒ¾ì¬
         VertexDeclarationRef decl;
-        {
-            VertexDeclCreator creator(5);
-            u16 voffset = 0;
-            voffset += creator.add(0, voffset, DeclType_Float3, DeclUsage_Position, 0);
-            voffset += creator.add(0, voffset, DeclType_Float3, DeclUsage_Normal, 0);
-            voffset += creator.add(0, voffset, DeclType_Float2, DeclUsage_Texcoord, 0);
-            voffset += creator.add(0, voffset, DeclType_UB4, DeclUsage_BlendIndicies, 0);
-            voffset += creator.add(0, voffset, DeclType_Float1, DeclUsage_BlendWeight, 0);
+        IndexBufferRef ib;
+        if(numGeometries_>0){
+            {
+                VertexDeclCreator creator(4);
+                u16 voffset = 0;
+                voffset += creator.add(0, voffset, DeclType_Float3, DeclMethod_Default, DeclUsage_Position, 0);
+                voffset += creator.add(0, voffset, DeclType_Short4N, DeclMethod_Normalize, DeclUsage_Normal, 0);
+                voffset += creator.add(0, voffset, DeclType_Short2N, DeclMethod_Normalize, DeclUsage_Texcoord, 0);
+                voffset += creator.add(0, voffset, DeclType_UB4, DeclMethod_Default, DeclUsage_BlendIndicies, 0);
 
-            creator.end(decl);
-        }
-
-        //ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ãƒãƒƒãƒ•ã‚¡ä½œæˆ
-        IndexBufferRef ib = IndexBuffer::create(numFaceIndices_, Pool_Default, Usage_None);
-        {
-            if(ib.valid() == false){
-                return false;
+                creator.end(decl);
             }
 
-            u32 count = numFaceIndices_;
-            u16* indices = NULL;
+            //ƒCƒ“ƒfƒbƒNƒXƒoƒbƒtƒ@ì¬
+            ib = IndexBuffer::create(numFaceIndices_, Pool_Default, Usage_None);
+            {
+                if(ib.valid() == false){
+                    return false;
+                }
+
 #if defined(LIME_GLES2)
-            indices = LIME_NEW u16[count];
-            if(indices == NULL){
-                return false;
-            }
+                ib.blit(faceIndices_);
 #else
-            u32 isize = sizeof(u16)*count;
-            if(false == ib.lock(0, isize, (void**)&indices)){
-                return false;
-            }
+                u16* indices = NULL;
+                u32 isize = sizeof(u16)*numFaceIndices_;
+                if(false == ib.lock(0, isize, (void**)&indices)){
+                    return false;
+                }
+                lcore::memcpy(indices, reinterpret_cast<u16*>(faceIndices_), isize);
+                ib.unlock();
 #endif
-            for(u32 i=0; i<count; ++i){
-                indices[i] = faceIndices_[i].index_;
             }
-#if defined(LIME_GLES2)
-            ib.blit(indices);
-            LIME_DELETE_ARRAY(indices);
-#else
-            ib.unlock();
-#endif
         }
 
         lscene::AnimObject tmp(numGeometries_, numMaterials_);
 
-        // ãƒãƒ†ãƒªã‚¢ãƒ«è¨­å®š
-        lgraphics::RenderStateRef renderState = createRenderState(false);
-        lgraphics::RenderStateRef renderStateAlphaBlend = createRenderState(true);
+        if(numMaterials_>0){
+            // ƒ}ƒeƒŠƒAƒ‹İ’è
+            lgraphics::RenderStateRef renderState[RenderState_Num];
+            u32 stateCreateFlag = 0;
+            RenderStateType renderStateType = RenderState_Default;
 
-        NameTextureMap texMap(numMaterials_*2);
+            TextureName texName;
 
-        for(u32 i=0; i<numMaterials_; ++i){
-            Material& material = materials_[i];
-
-            lscene::Material& dstMaterial = tmp.getMaterial(i);
-            setMaterial(dstMaterial, material);
-
-            //ã‚¢ãƒ«ãƒ•ã‚¡å€¤ãŒï¼‘ãªã‚‰ã‚¢ãƒ«ãƒ•ã‚¡ãƒ–ãƒ¬ãƒ³ãƒ‰ãªã—
-            if( lmath::isEqual(dstMaterial.diffuse_._w, 1.0f) ){
-                dstMaterial.setRenderState(renderState);
-            }else{
-                dstMaterial.setRenderState(renderStateAlphaBlend);
+            NameTextureMap *texMap = nameTexMap_;
+            if(NULL == nameTexMap_){
+                NameTextureMap tmp(numMaterials_*2);
+                texMapInternal_.swap(tmp);
+                texMap = &texMapInternal_;
             }
 
-            TextureRef* texture = loadTexture(material.textureFileName_, pmd::FileNameSize, directory, texMap);
+            for(u32 i=0; i<numMaterials_; ++i){
+                Material& material = materials_[i];
 
-            if(texture != NULL){
-                if(swapOrigin){
-                    lframework::io::swapOrigin(*texture);
+                lscene::Material& dstMaterial = tmp.getMaterial(i);
+                setMaterial(dstMaterial, material);
+
+                extractTextureName(texName, material.textureFileName_, pmd::TexNameSize);
+                TextureRef* texture = loadTexture(texName.c_str(), texName.size(), directory, *texMap);
+
+                //ƒAƒ‹ƒtƒ@’l‚ª‚P‚È‚çƒAƒ‹ƒtƒ@ƒuƒŒƒ“ƒh‚È‚µ
+                if(lmath::isEqual(dstMaterial.diffuse_._w, 1.0f)){
+                    renderStateType = RenderState_Default;
+                }else{
+                    renderStateType = RenderState_AlphaBlend;
                 }
-                dstMaterial.setTextureNum(1);
-                dstMaterial.setTexture(0, *texture);
-                //ãƒ†ã‚¯ã‚¹ãƒãƒ£ãŒã‚ã£ãŸã®ã§ãƒ•ãƒ©ã‚°ç«‹ã¦ã‚‹
-                dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_Texture0);
-            }
-        }
 
-        for(NameTextureMap::size_type pos = texMap.begin();
-            pos != texMap.end();
-            pos = texMap.next(pos))
-        {
-            TextureRef *tex = texMap.getValue(pos);
-            LIME_DELETE(tex);
+                if(texture != NULL){
+                    if(swapOrigin){
+                        lframework::io::swapOrigin(*texture);
+                    }
+                    dstMaterial.setTextureNum(1);
+                    dstMaterial.setTexture(0, *texture);
+                    //ƒeƒNƒXƒ`ƒƒ‚ª‚ ‚Á‚½‚Ì‚Åƒtƒ‰ƒO—§‚Ä‚é
+                    dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_Texture0);
+
+                }else{
+                    //ƒeƒNƒXƒ`ƒƒ‚ª‚È‚¢‚È‚çƒgƒD[ƒ“ƒeƒNƒXƒ`ƒƒ‚ğ’²‚×‚é
+                    if(material.toonIndex_<NumToonTextures){
+                        texture = toonTextures_.textures_[ material.toonIndex_ ];
+                        if(texture != NULL){
+                            dstMaterial.setTextureNum(1);
+                            dstMaterial.setTexture(0, *texture);
+                            //ƒtƒ‰ƒO—§‚Ä‚é
+                            dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_Texture0);
+                            dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_TexGrad); //ƒeƒNƒXƒ`ƒƒ‚ÅƒOƒ‰ƒfƒBƒG[ƒVƒ‡ƒ“‚Â‚¯‚é
+
+                            dstMaterial.getSamplerState(0).setAddressU( lgraphics::TexAddress_Clamp );
+                            dstMaterial.getSamplerState(0).setAddressV( lgraphics::TexAddress_Clamp );
+                        }
+                    }
+                }
+                setRenderStateToMaterial(dstMaterial, renderState, stateCreateFlag, renderStateType);
+
+            }
         }
 
 
         lanim::Skeleton::pointer skeleton( releaseSkeleton() );
         tmp.setSkeleton(skeleton);
 
-        // GeometryBufferä½œæˆ
+        // GeometryBufferì¬
         GeometryBuffer::pointer geomBuffer;
 
         u32 geomIndex = 0;
@@ -759,14 +967,16 @@ namespace
                     return false;
                 }
 
+                skinPack_.createMorphBaseVertices(bufferPtr->elements_.size(), &(bufferPtr->elements_[0]));
+
                 geomBuffer = LIME_NEW GeometryBuffer(Primitive_TriangleList, decl, vb, ib);
             }
 
             u16 count = static_cast<u16>( geometry->faceIndices_.size()/3 );
             lscene::Geometry geom(geomBuffer, count, geometry->indexOffset_, static_cast<u8>(geometry->materialIndex_));
-            geom.getFlags().setFlag(lscene::Geometry::GeomFlag_DiffuseVS);
+            //geom.getFlags().setFlag(lscene::Geometry::GeomFlag_DiffuseVS);
 
-            //ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ•ãƒ©ã‚°ã‚»ãƒƒãƒˆ
+            //ƒeƒNƒXƒ`ƒƒƒtƒ‰ƒOƒZƒbƒg
             lscene::Material& material = tmp.getMaterial( geom.getMaterialIndex() );
             if(material.getTextureNum() > 0){
                 geom.getFlags().setFlag(lscene::Geometry::GeomFlag_Texture0);
@@ -779,7 +989,7 @@ namespace
 
             tmp.getGeometry(geomIndex).swap(geom);
 
-            //ãƒ‘ãƒ¬ãƒƒãƒˆé–¢ä¿‚ã¯ã‚¹ãƒ¯ãƒƒãƒ—ã•ã‚Œãªã„ã®ã§æ³¨æ„
+            //ƒpƒŒƒbƒgŠÖŒW‚ÍƒXƒƒbƒv‚³‚ê‚È‚¢‚Ì‚Å’ˆÓ
             lscene::Geometry& tmpGeom = tmp.getGeometry(geomIndex);
             tmpGeom.setNumBonesInPalette( static_cast<u8>(geometry->palette_->size()) );
             for(u8 i=0; i<tmpGeom.getNumBonesInPalette(); ++i){
@@ -792,22 +1002,98 @@ namespace
 
         obj.swap(tmp);
 
+        lanim::IKPack::pointer ikPack( releaseIKPack() );
+        obj.setIKPack( ikPack );
+
         return true;
     }
 
 
+    //-------------------------------------
+    // ‰pŒê–¼ƒ[ƒh
+    void Pack::loadNamesForENG()
+    {
+        //•K—v‚È‚¢‚Ì‚Å“Ç‚İ”ò‚Î‚·
+        u8 enable = 0;
+        lcore::io::read(input_, enable);
+
+        if(enable != 0){
+            Char buffer[CommentSize];
+            lcore::io::read(input_, buffer, NameSize);
+            lcore::io::read(input_, buffer, CommentSize);
+            for(u16 i=0; i<numBones_; ++i){
+                lcore::io::read(input_, buffer, NameSize);
+            }
+            for(u32 i=1; i<skinPack_.getNumSkins(); ++i){
+                lcore::io::read(input_, buffer, NameSize);
+            }
+            for(u16 i=0; i<dispLabel_.getNumBoneGroups(); ++i){
+                lcore::io::read(input_, buffer, LabelNameSize);
+            }
+        }
+
+    }
+
+
+    //-------------------------------------
+    // ƒgƒD[ƒ“ƒVƒF[ƒfƒBƒ“ƒO—pƒeƒNƒXƒ`ƒƒƒ[ƒh
+    void Pack::loadToonTextures(const char* directory)
+    {
+        static const Char ToonTexDirectory[] = "../../Data/"; //ƒfƒBƒŒƒNƒgƒŠŒÅ’è
+        static const u32 ToonTexDirectorySize = sizeof(ToonTexDirectory); //ƒkƒ‹•¶šŠÜ‚Ş
+        static const Char tex0[] = "toon0.bmp"; //0”Ô–Ú‚ÍŒÅ’è‚È‚ñ‚¾‚Æ‚³
+
+        u32 dlen = lcore::strlen(directory);
+        u32 pathSize = dlen + ToonTexDirectorySize;
+        if(pathSize>FilePathSize){
+            return;
+        }
+
+        Char buffer[FilePathSize];
+        lcore::memcpy(buffer, directory, dlen);
+        lcore::memcpy(buffer + dlen, ToonTexDirectory, ToonTexDirectorySize);
+
+
+        //0”Ô–Úƒ[ƒh
+        toonTextures_.textures_[0] = loadTexture(tex0, sizeof(tex0)-1, buffer, texMapInternal_, true);
+
+        Char name[ToonTexturePathSize+1];
+
+        for(u32 i=1; i<NumToonTextures; ++i){
+            lcore::io::read(input_, name, ToonTexturePathSize);
+            name[ToonTexturePathSize] = '\0';
+
+            toonTextures_.textures_[i] = loadTexture(name, lcore::strlen(name), buffer, texMapInternal_, true);
+        }
+
+    }
+
+
+    //-------------------------------------
+    // ƒ{[ƒ“‚ğe‚ª‘O‚É‚È‚é‚æ‚¤‚Éƒ\[ƒg
     void Pack::sortBones()
     {
         LASSERT(bones_ != NULL);
         LASSERT(boneMap_ != NULL);
 
+        for(u16 i=0; i<numBones_;){
+            if(bones_[i].parentIndex_ == lanim::InvalidJointIndex
+                || bones_[i].parentIndex_ <= i){
+                boneMap_[i] = i;
+                ++i;
+            }else{
+                u16 parent = bones_[i].parentIndex_;
+                bones_[i].swap(bones_[parent]);
+            }
+        }
+#if 0
         u16 count = 0;
 
-        //å­ãƒœãƒ¼ãƒ³ã‚’é †ç•ªã«ã¤ã‚ã‚‹
+        //qƒ{[ƒ“‚ğ‡”Ô‚É‚Â‚ß‚é
         u8 stack[MaxBones];
         u32 top = 0;
         for(u16 i=0; i<numBones_; ++i){
-            //ãƒ«ãƒ¼ãƒˆã ã£ãŸã‚‰ã€ãƒãƒƒãƒ—ã«å…¥ã‚Œã¦ã‚¹ã‚¿ãƒƒã‚¯ã«ç©ã‚€
+            //ƒ‹[ƒg‚¾‚Á‚½‚çAƒ}ƒbƒv‚É“ü‚ê‚ÄƒXƒ^ƒbƒN‚ÉÏ‚Ş
             if(bones_[i].parentIndex_ == lanim::InvalidJointIndex){
                 boneMap_[i] = count;
                 ++count;
@@ -815,11 +1101,11 @@ namespace
                 stack[top++] = static_cast<u8>(i);
             }
 
-            //ã‚¹ã‚¿ãƒƒã‚¯å‡¦ç†
+            //ƒXƒ^ƒbƒNˆ—
             while(0<top){
-                //ãƒãƒƒãƒ—ã™ã‚‹
+                //ƒ|ƒbƒv‚·‚é
                 u16 bone = stack[--top];
-                //ç¾åœ¨ã®ãƒœãƒ¼ãƒ³ãŒè¦ªã®ãƒœãƒ¼ãƒ³ã‚’ã€ãƒãƒƒãƒ—ã«å…¥ã‚Œã¦ã‚¹ã‚¿ãƒƒã‚¯ã«ç©ã‚€
+                //Œ»İ‚Ìƒ{[ƒ“‚ªe‚Ìƒ{[ƒ“‚ğAƒ}ƒbƒv‚É“ü‚ê‚ÄƒXƒ^ƒbƒN‚ÉÏ‚Ş
                 for(u16 j=0; j<numBones_; ++j){
                     if(bone == bones_[j].parentIndex_){
                         boneMap_[j] = count;
@@ -830,6 +1116,7 @@ namespace
                 }
             }
         }
+#endif
 
 #if defined(LIME_LIB_CONV_DEBUG)
         // debug out

@@ -153,12 +153,64 @@
 	<References>
 	</References>
 	<Files>
+		<Filter
+			Name="charcode"
+			>
+			<File
+				RelativePath="..\charcode\conv_charcode.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\charcode\conv_charcode.h"
+				>
+			</File>
+			<File
+				RelativePath="..\charcode\jis_level1_utf16.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\charcode\jis_level1_utf16.h"
+				>
+			</File>
+			<File
+				RelativePath="..\charcode\jis_level2_utf16.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\charcode\jis_level2_utf16.h"
+				>
+			</File>
+		</Filter>
+		<File
+			RelativePath="..\converter.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\converter.h"
+			>
+		</File>
 		<File
 			RelativePath="..\Pmd.cpp"
 			>
 		</File>
 		<File
 			RelativePath="..\Pmd.h"
+			>
+		</File>
+		<File
+			RelativePath="..\Pmm.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\Pmm.h"
+			>
+		</File>
+		<File
+			RelativePath="..\PmmDef.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\PmmDef.h"
 			>
 		</File>
 		<File
@@ -175,6 +227,22 @@
 		</File>
 		<File
 			RelativePath="..\Vmd.h"
+			>
+		</File>
+		<File
+			RelativePath="..\XLoader.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\XLoader.h"
+			>
+		</File>
+		<File
+			RelativePath="..\XLoaderDef.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\XLoaderDef.h"
 			>
 		</File>
 	</Files>
