@@ -150,7 +150,8 @@ typedef TLogger<CharTraitsMultiByte, DebugOutputterStdOut<CharTraitsMultiByte> >
         va_start(ap, format);
 
 #if defined(ANDROID)
-        __android_log_vprint(ANDROID_LOG_INFO, "LIME", format, ap);
+        __android_log_vprint(ANDROID_LOG_DEBUG, "LIME", format, ap);
+        //__android_log_vprint(ANDROID_LOG_ERROR, "LIME", format, ap);
 #else
         static const u32 MaxBuffer = 64;
         Char buffer[MaxBuffer+2];

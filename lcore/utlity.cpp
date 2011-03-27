@@ -9,7 +9,7 @@
 namespace lcore
 {
     //-------------------------------------------------------------
-    // 後方から文字探索
+    // 蠕梧婿縺九ｉ譁�蟄玲爾邏｢
     const Char* rFindChr(const Char* src, Char c, u32 size)
     {
         LASSERT(src != NULL);
@@ -25,8 +25,8 @@ namespace lcore
 
 
     //-------------------------------------------------------------
-    // パスからディレクトリパス抽出
-    u32 extractDirectoryPath(CHAR* dst, const CHAR* path, u32 length)
+    // 繝代せ縺九ｉ繝�繧｣繝ｬ繧ｯ繝医Μ繝代せ謚ｽ蜃ｺ
+    u32 extractDirectoryPath(Char* dst, const Char* path, u32 length)
     {
         if(length<=0){
             return 0;
