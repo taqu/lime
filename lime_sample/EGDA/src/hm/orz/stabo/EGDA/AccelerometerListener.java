@@ -40,9 +40,8 @@ public class AccelerometerListener implements SensorEventListener
 	 */
 	public void onSensorChanged(SensorEvent event)
 	{
-		final float INV_HALF = 1.0f/180.0f;
-		final float INV_QUARTER = 1.0f/90.0f;
-		
+		final float INV_HALF = (float)Math.PI/180.0f;
+
 		switch(event.sensor.getType())
 		{
 		case Sensor.TYPE_ORIENTATION: //傾きセンサ
@@ -52,9 +51,10 @@ public class AccelerometerListener implements SensorEventListener
 				
 				boolean notDevPhone = true;
 				if(notDevPhone){ //
-					yow_ = INV_HALF*(event.values[0] - 180.0f); //(0 - 360 deg) to (-1 - 1)
-					pitch_ = INV_HALF*event.values[1]; //(-180 - 180 deg) to (-1 - 1)
-					roll_ = INV_QUARTER*event.values[2]; //(-90 - 90 deg) to (-1 - 1)
+					yow_ = INV_HALF*(event.values[0] - 180.0f); //(0 - 360 deg) to (-pi - pi)
+					pitch_ = INV_HALF*event.values[1]; //(-180 - 180 deg) to (-pi - pi)
+					roll_ = INV_HALF*event.values[2]; //(-90 - 90 deg) to (-pi/2 - pi/2)
+					//Log.d("LIME", "angle=(" + yow_ + ", " + pitch_ + ", " + roll_ + ")");
 					
 				}else{
 					// 開発機は、ピッチだけ角度センサで、残りは加速度センサらしい
@@ -68,7 +68,7 @@ public class AccelerometerListener implements SensorEventListener
 						yow_ -= 2.0f;
 					}
 					
-					v = INV_QUARTER*event.values[2];
+					v = INV_HALF*event.values[2];
 					roll_ += v;
 					if(roll_<-1.0f){
 						roll_ += 2.0f;

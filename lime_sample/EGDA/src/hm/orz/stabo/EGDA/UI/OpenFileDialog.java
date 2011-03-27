@@ -1,23 +1,42 @@
-package hm.orz.stabo.EGDA;
+package hm.orz.stabo.EGDA.UI;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 
 import android.app.AlertDialog;
-import android.app.ListActivity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
-import android.os.Bundle;
 import android.view.View;
-import android.widget.ListView;
 
 public class OpenFileDialog implements View.OnClickListener, DialogInterface.OnClickListener
 {
     public static final int Request_OpenFile = 0;
     public static final int Result_Success = 0;
     public static final int Reuslt_Fail = 1;
+    
+    public class FileConparator implements java.util.Comparator<File>
+    {
+
+		@Override
+		public int compare(File object1, File object2)
+		{
+			if(object1.isDirectory()){
+				if(object2.isFile()){
+					return -1;
+				}
+			}else if(object2.isDirectory()){
+				return 1;
+			}
+			
+			String name1 = object1.getName().toUpperCase();
+			String name2 = object2.getName().toUpperCase();
+			return name1.compareTo(name2);
+		}
+    }
+    public OpenFileDialog()
+    {
+    	comparator_ = new FileConparator();
+    }
     
     public void show(Context context, File root)
     {
@@ -47,16 +66,18 @@ public class OpenFileDialog implements View.OnClickListener, DialogInterface.OnC
         try{
             current_ = root;
             files_ = root.listFiles();
-            if(files_ == null){
-                finish();
-                return;
+            int size = 1;
+            if(files_ != null){
+                Arrays.sort(files_, comparator_);
+                size = files_.length + 1;
             }
             
-            String[] lists = new String[files_.length + 1];
+            String[] lists = new String[size];
+            
             
             lists[0] = ".."; //１番目は必ず特殊にする
             String name = "";
-            for(int i=1; i<=files_.length; ++i){
+            for(int i=1; i<size; ++i){
                 File file = files_[i-1];
                 if(file.isDirectory()){
                     name = file.getName() + "/";
@@ -65,6 +86,7 @@ public class OpenFileDialog implements View.OnClickListener, DialogInterface.OnC
                 }
                 lists[i] = name;
             }
+            
             if(dialog_ != null){
                 dialog_.dismiss();
             }
@@ -104,10 +126,17 @@ public class OpenFileDialog implements View.OnClickListener, DialogInterface.OnC
         }
         
         if(which == 0){
-            // 親ディレクトリに戻る。はじめのディレクトリより上にはいかない
-            if(level_ > 0){
-                --level_;
-                setRoot(current_.getParentFile());
+            // 親ディレクトリに戻る
+            File parent = current_.getParentFile();
+            if(parent != null){
+            	if(current_.isFile()){ //ファイルならもうひとつ上に上がる
+            		parent = parent.getParentFile();
+            		if(parent == null){
+            			return;
+            		}
+            	}
+                setRoot(parent);
+                parent = null;
             }
             return;
         }
@@ -116,7 +145,6 @@ public class OpenFileDialog implements View.OnClickListener, DialogInterface.OnC
         
         //ディレクトリなら潜る
         if(files_[which].isDirectory()){
-            ++level_;
             setRoot(files_[which]);
             return;
         }
@@ -138,10 +166,10 @@ public class OpenFileDialog implements View.OnClickListener, DialogInterface.OnC
  
     private Context context_ = null;
     private File selected_ = null;
-    private int level_ = 0;
     private File current_ = null;
     private File[] files_ = null;
 
+    FileConparator comparator_ = null;
     private AlertDialog dialog_ = null;
     private OpenFileDialogListener listener_ = null;
 }

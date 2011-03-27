@@ -5,4 +5,6 @@
 <string name="Exit">Exit</string>
 <string name="Open">Open File ...</string>
 
+<string name="BtMenu">Menu</string>
+<string name="BtCamera">Camera</string>
 </resources>

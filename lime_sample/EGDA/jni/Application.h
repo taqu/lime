@@ -1,22 +1,12 @@
 #ifndef INC_EGDA_APPLICATION_H__
 #define INC_EGDA_APPLICATION_H__
-
-namespace lanim
-{
-    class AnimationControler;
-}
-
-namespace lscene
-{
-    class AnimObject;
-}
+#include "Scene.h"
 
 namespace egda
 {
     enum ResourceType
     {
-        ResType_Model = 0,
-        ResType_Anim,
+        ResType_Pmm = 0,
         ResType_Num,
     };
 
@@ -40,16 +30,11 @@ namespace egda
 
         void setViewport(s32 left, s32 top, s32 width, s32 height);
 
-        bool openModel(const Char* path, const Char* directory);
-        bool openAnim(const Char* path);
+        bool loadPmm(const Char* filename, const Char* directory);
 
     private:
-        void initAnimControler();
-
-        f32 counter_;
-
-        lscene::AnimObject *animObj_;
-        lanim::AnimationControler *animControler_;
+        f32 aspect_;
+        Scene scene_;
     };
 }
 #endif //INC_EGDA_APPLICATION_H__

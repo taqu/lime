@@ -1,9 +1,8 @@
-package hm.orz.stabo.EGDA;
+package hm.orz.stabo.EGDA.UI;
 
 import java.util.List;
 
 import android.content.Context;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -15,8 +14,6 @@ public class ListStringAdapter extends ArrayAdapter<String>
     {
         super(context, 0, items);
         items_ = items;
-        
-        inflater_ = (LayoutInflater)context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
     }
     
     public View getView(int position, View convertView, ViewGroup parent)
@@ -29,7 +26,6 @@ public class ListStringAdapter extends ArrayAdapter<String>
         view.setText(items_.get(position));
         return convertView;
     }
-    
-    private LayoutInflater inflater_;
+
     private List<String> items_;
 }

@@ -14,12 +14,12 @@ public class InputManager
 		{
 		}
 
-		public float accelYow_;
-		public float accelPitch_;
-		public float accelRoll_;
-		public float accelX_;
-		public float accelY_;
-		public float accelZ_;
+		public float yow_;
+		public float pitch_;
+		public float roll_;
+		//public float accelX_;
+		//public float accelY_;
+		//public float accelZ_;
 	}
 	
 	public static InputManager getInstance()
@@ -50,7 +50,7 @@ public class InputManager
     	accelerometerListener_ = new AccelerometerListener(this);
     	
     	boolean registered = false;
-    	
+
     	if(sensors.size() > 0){
     		registered |= sensorManager_.registerListener(
     				accelerometerListener_,
@@ -59,18 +59,18 @@ public class InputManager
 			//SensorManager.SENSOR_DELAY_GAME );//rate suitable for games
 			//SensorManager.SENSOR_DELAY_FASTEST );//最速
     	}
-    	
+
     	// 加速度センサーの取得と登録
-     	sensors = sensorManager_.getSensorList( Sensor.TYPE_ACCELEROMETER );
-    	if( sensors.size() > 0 ){
-    		registered |= sensorManager_.registerListener(
-    				accelerometerListener_,
-    				sensors.get(0),
-    				SensorManager.SENSOR_DELAY_UI );//UI
-			//SensorManager.SENSOR_DELAY_GAME );//rate suitable for games
-			//SensorManager.SENSOR_DELAY_FASTEST );//最速
-    	}
-    	
+     	//sensors = sensorManager_.getSensorList( Sensor.TYPE_ACCELEROMETER );
+    	//if( sensors.size() > 0 ){
+    	//	registered |= sensorManager_.registerListener(
+    	//			accelerometerListener_,
+    	//			sensors.get(0),
+    	//			SensorManager.SENSOR_DELAY_UI );//UI
+		//	//SensorManager.SENSOR_DELAY_GAME );//rate suitable for games
+		//	//SensorManager.SENSOR_DELAY_FASTEST );//最速
+    	//}
+
     	if(false == registered){
     		accelerometerListener_ = null;
     	}
@@ -109,16 +109,15 @@ public class InputManager
 	public void poll()
 	{
 		// 本当はロックすべきなんだろうが、めんどい
-		info_.accelYow_ = accelerometerListener_.getYow();
-		info_.accelPitch_ = accelerometerListener_.getPitch();
-		info_.accelRoll_ = accelerometerListener_.getRoll();
+		info_.yow_ = accelerometerListener_.getYow();
+		info_.pitch_ = accelerometerListener_.getPitch();
+		info_.roll_ = accelerometerListener_.getRoll();
 		
-		info_.accelX_ = accelerometerListener_.getX();
-		info_.accelY_ = accelerometerListener_.getY();
-		info_.accelZ_ = accelerometerListener_.getZ();
+		//info_.accelX_ = accelerometerListener_.getX();
+		//info_.accelY_ = accelerometerListener_.getY();
+		//info_.accelZ_ = accelerometerListener_.getZ();
 		//Log.d("SENSOR", "angle=(" + info_.accelYow_ + ", " + info_.accelPitch_ + ", " + info_.accelRoll_ + ")");
-		nativeInputChagned(info_);
-		
+
 		accelerometerListener_.clear();
 	}
 	
@@ -127,6 +126,4 @@ public class InputManager
 	private Info info_;
 	private SensorManager sensorManager_;
 	private AccelerometerListener accelerometerListener_; //センサリスナ。
-	
-	private static native void nativeInputChagned(Info info);
 }
