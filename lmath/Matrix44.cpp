@@ -354,6 +354,25 @@ namespace lmath
         _elem[3][0] = 0.0f; _elem[3][1] = 0.0f; _elem[3][2] = znear / (znear - zfar); _elem[3][3] = 1.0f;
     }
 
+    void Matrix44::perspectiveLinearZ(f32 width, f32 height, f32 znear, f32 zfar)
+    {
+        _elem[0][0] = 2.0f * znear/width; _elem[0][1] = 0.0f; _elem[0][2] = 0.0f; _elem[0][3] = 0.0f;
+        _elem[1][0] = 0.0f; _elem[1][1] = 2.0f * znear/height; _elem[1][2] = 0.0f; _elem[1][3] = 0.0f;
+        _elem[2][0] = 0.0f; _elem[2][1] = 0.0f; _elem[2][2] = 1.0f / (zfar - znear); _elem[2][3] = 1.0f;
+        _elem[3][0] = 0.0f; _elem[3][1] = 0.0f; _elem[3][2] = znear / (znear - zfar); _elem[3][3] = 0.0f;
+    }
+
+    void Matrix44::perspectiveFovLinearZ(f32 fovy, f32 aspect, f32 znear, f32 zfar)
+    {
+        f32 yscale = 1.0f / lmath::tan(0.5f * fovy);
+        f32 xscale = yscale / aspect;
+
+        _elem[0][0] = xscale; _elem[0][1] = 0.0f; _elem[0][2] = 0.0f; _elem[0][3] = 0.0f;
+        _elem[1][0] = 0.0f; _elem[1][1] = yscale; _elem[1][2] = 0.0f; _elem[1][3] = 0.0f;
+        _elem[2][0] = 0.0f; _elem[2][1] = 0.0f; _elem[2][2] = 1.0f / (zfar - znear); _elem[2][3] = 1.0f;
+        _elem[3][0] = 0.0f; _elem[3][1] = 0.0f; _elem[3][2] = znear / (znear - zfar); _elem[3][3] = 0.0f;
+    }
+
     bool Matrix44::isNan() const
     {
         for(u32 i=0; i<4; ++i){

@@ -73,11 +73,17 @@ namespace lmath
 
         void rotateAxis(f32 x, f32 y, f32 z, f32 radian);
 
+        inline void setScale(f32 s);
+        inline void scale(f32 s);
+
         void lookAt(const Vector3& eye, const Vector3& at, const Vector3& up);
 
         void perspective(f32 width, f32 height, f32 znear, f32 zfar);
         void perspectiveFov(f32 fovy, f32 aspect, f32 znear, f32 zfar);
         void ortho(f32 width, f32 height, f32 znear, f32 zfar);
+
+        void perspectiveLinearZ(f32 width, f32 height, f32 znear, f32 zfar);
+        void perspectiveFovLinearZ(f32 fovy, f32 aspect, f32 znear, f32 zfar);
 
         void getTranslate(Vector3& trans) const
         {
@@ -122,6 +128,20 @@ namespace lmath
         _elem[3][0] = x;
         _elem[3][1] = y;
         _elem[3][2] = z;
+    }
+
+    inline void Matrix44::setScale(f32 s)
+    {
+        _elem[0][0] = s;
+        _elem[1][1] = s;
+        _elem[2][2] = s;
+    }
+
+    inline void Matrix44::scale(f32 s)
+    {
+        _elem[0][0] *= s;
+        _elem[1][1] *= s;
+        _elem[2][2] *= s;
     }
 }
 

@@ -14,7 +14,7 @@ namespace lmath
     void getEulerInertialToObject(f32& head, f32& pitch, f32& bank, const lmath::Matrix43& m)
     {
         f32 sinPitch = -m._elem[1][2];
-        if(sinPitch <= 1.0f){
+        if(sinPitch <= -1.0f){
             pitch = -PI_2;
         }else if(sinPitch >= 1.0f){
             pitch = PI_2;
@@ -58,7 +58,7 @@ namespace lmath
     void getEulerObjectToInertial(f32& head, f32& pitch, f32& bank, const lmath::Matrix43& m)
     {
         f32 sinPitch = -m._elem[2][1];
-        if(sinPitch <= 1.0f){
+        if(sinPitch <= -1.0f){
             pitch = -PI_2;
         }else if(sinPitch >= 1.0f){
             pitch = PI_2;

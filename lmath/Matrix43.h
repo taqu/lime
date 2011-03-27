@@ -112,6 +112,8 @@ namespace lmath
         /// 後から回転
         void rotateAxis(f32 x, f32 y, f32 z, f32 radian);
 
+        inline void setScale(f32 s);
+        inline void scale(f32 s);
 
         void mul(const Matrix43& m0, const Matrix43& m1);
 
@@ -157,6 +159,20 @@ namespace lmath
         _elem[3][0] = x;
         _elem[3][1] = y;
         _elem[3][2] = z;
+    }
+
+    inline void Matrix43::setScale(f32 s)
+    {
+        _elem[0][0] = s;
+        _elem[1][1] = s;
+        _elem[2][2] = s;
+    }
+
+    inline void Matrix43::scale(f32 s)
+    {
+        _elem[0][0] *= s;
+        _elem[1][1] *= s;
+        _elem[2][2] *= s;
     }
 
     inline void Matrix43::getRow4(lmath::Vector3& v) const
