@@ -27,6 +27,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lfont", "lfont\project\lfon
 		{64300411-1C4C-4EDA-A929-2F503FFAD938} = {64300411-1C4C-4EDA-A929-2F503FFAD938}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "linput", "linput\project\linput_dx.vcproj", "{6F989857-BFE8-432B-87BC-A1A8E34D10A0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -53,6 +55,10 @@ Global
 		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Debug|Win32.Build.0 = Debug|Win32
 		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Release|Win32.ActiveCfg = Release|Win32
 		{15FD3F76-CC09-4080-8BE2-B636370FBB59}.Release|Win32.Build.0 = Release|Win32
+		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Debug|Win32.ActiveCfg = Debug|Win32
+		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Debug|Win32.Build.0 = Debug|Win32
+		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Release|Win32.ActiveCfg = Release|Win32
+		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
