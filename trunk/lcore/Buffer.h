@@ -10,7 +10,7 @@
 namespace lcore
 {
     /**
-    @brief バッファ管理クラス
+    @brief 繝舌ャ繝輔ぃ邂｡逅�繧ｯ繝ｩ繧ｹ
     */
     class Buffer
     {
@@ -22,7 +22,7 @@ namespace lcore
 
         inline ~Buffer();
 
-        u32 getSize() const;
+        u32 size() const{ return size_;}
         void resize(u32 size);
 
         template<class T>
@@ -72,17 +72,20 @@ namespace lcore
 
         void swap(Buffer& rhs)
         {
+            lcore::swap(size_, rhs.size_);
             lcore::swap(buffer_, rhs.buffer_);
         }
     private:
         void construct(u32 size);
         void destruct();
 
+        u32 size_;
         u8 *buffer_;
     };
 
     inline Buffer::Buffer()
-        :buffer_(NULL)
+        :size_(0)
+        ,buffer_(NULL)
     {
     }
 

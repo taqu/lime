@@ -480,7 +480,7 @@ namespace lcore
         ~sstream_base(){}
         
         virtual u32 read(char* dst, u32 count);
-        virtual u32 write(const char* /*src*/, u32 /*count*/){return 0;}; //‰½‚à‚µ‚È‚¢
+        virtual u32 write(const char* /*src*/, u32 /*count*/){return 0;}; //ä½•ã‚‚ã—ãªã„
         
         const char* buffer_;
         s32 current_;

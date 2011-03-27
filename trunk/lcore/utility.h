@@ -10,21 +10,21 @@
 namespace lcore
 {
     /**
-    @brief Œã•û‚©‚ç•¶š’Tõ
-    @param src ... “ü—Í
-    @param c ... ’Tõ•¶š
-    @param size ... •¶š—ñ’·
+    @brief å¾Œæ–¹ã‹ã‚‰æ–‡å­—æ¢ç´¢
+    @param src ... å…¥åŠ›
+    @param c ... æ¢ç´¢æ–‡å­—
+    @param size ... æ–‡å­—åˆ—é•·
     */
     const Char* rFindChr(const Char* src, Char c, u32 size);
 
 
     /**
-    @brief ƒpƒX‚©‚çƒfƒBƒŒƒNƒgƒŠƒpƒX’Šo
-    @return dst‚Ì’·‚³Bƒkƒ‹ŠÜ‚Ü‚¸
-    @param dst ... o—Íƒoƒbƒtƒ@Bƒkƒ‹‚İ‚Å\•ª‚ÈƒTƒCƒY‚ª‚ ‚é‚±‚Æ
-    @param path ... ‰ğÍƒpƒX
-    @param length ... ‰ğÍƒpƒX‚Ì’·‚³Bƒkƒ‹ŠÜ‚Ü‚¸
+    @brief ãƒ‘ã‚¹ã‹ã‚‰ãƒ‡ã‚£ãƒ¬ã‚¯ãƒˆãƒªãƒ‘ã‚¹æŠ½å‡º
+    @return dstã®é•·ã•ã€‚ãƒŒãƒ«å«ã¾ãš
+    @param dst ... å‡ºåŠ›ãƒãƒƒãƒ•ã‚¡ã€‚ãƒŒãƒ«è¾¼ã¿ã§ååˆ†ãªã‚µã‚¤ã‚ºãŒã‚ã‚‹ã“ã¨
+    @param path ... è§£æãƒ‘ã‚¹
+    @param length ... è§£æãƒ‘ã‚¹ã®é•·ã•ã€‚ãƒŒãƒ«å«ã¾ãš
     */
-    u32 extractDirectoryPath(CHAR* dst, const CHAR* path, u32 length);
+    u32 extractDirectoryPath(Char* dst, const Char* path, u32 length);
 }
 #endif //INC_LCORE_UTILITY_H__
