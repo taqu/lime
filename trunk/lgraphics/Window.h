@@ -51,11 +51,17 @@ namespace lgraphics
 
         void setShow(bool enable);
 
+        u32 getViewWidth() const{ return viewWidth_;}
+        u32 getViewHeight() const{ return viewHeight_;}
+
  // X Window System用
 #if defined(__CYGWIN__) || defined(__linux__)
         bool initialize(const WindowHandle& handle, WNDPROC wndProc);
 #endif
     private:
+        u32 viewWidth_;
+        u32 viewHeight_;
+
         static const char* CLASS_NAME_;
         WindowHandle handle_;
 

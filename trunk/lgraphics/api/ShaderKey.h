@@ -16,11 +16,14 @@ namespace lgraphics
     public:
         inline ShaderKey();
 
-        inline ShaderKey(u32 inputFlags, u32 featureFlags);
+        inline ShaderKey(u32 shaderID, u32 inputFlags, u32 featureFlags);
 
         inline ShaderKey(const ShaderKey&);
 
         inline ~ShaderKey();
+
+        inline u32 getShaderID() const;
+        inline void setShaderID(u32 id);
 
         inline u32 getInputFlags() const;
         inline void setInputFlags(u32 flags);
@@ -41,31 +44,45 @@ namespace lgraphics
         inline bool operator==(const ShaderKey& rhs) const;
         inline bool operator!=(const ShaderKey& rhs) const;
     private:
+        u32 shaderID_;
         u32 inputFlags_;   //入力フラグ
         u32 featureFlags_; //フラグ
     };
 
     //-------------------------------------------------
     inline ShaderKey::ShaderKey()
-        :inputFlags_(0)
+        :shaderID_(0)
+        ,inputFlags_(0)
         ,featureFlags_(0)
     {
     }
 
-    inline ShaderKey::ShaderKey(u32 inputFlags, u32 featureFlags)
-        :inputFlags_(inputFlags)
+    inline ShaderKey::ShaderKey(u32 shaderID, u32 inputFlags, u32 featureFlags)
+        :shaderID_(shaderID)
+        ,inputFlags_(inputFlags)
         ,featureFlags_(featureFlags)
     {
     }
 
     inline ShaderKey::ShaderKey(const ShaderKey& rhs)
-        :inputFlags_(rhs.inputFlags_)
+        :shaderID_(rhs.shaderID_)
+        ,inputFlags_(rhs.inputFlags_)
         ,featureFlags_(rhs.featureFlags_)
     {
     }
 
     inline ShaderKey::~ShaderKey()
     {
+    }
+
+    inline u32 ShaderKey::getShaderID() const
+    {
+        return shaderID_;
+    }
+
+    inline void ShaderKey::setShaderID(u32 id)
+    {
+        shaderID_ = id;
     }
 
     inline u32 ShaderKey::getInputFlags() const
@@ -120,6 +137,7 @@ namespace lgraphics
 
     inline ShaderKey& ShaderKey::operator=(const ShaderKey& rhs)
     {
+        shaderID_ = rhs.shaderID_;
         inputFlags_ = rhs.inputFlags_;
         featureFlags_ = rhs.featureFlags_;
         return *this;
@@ -127,12 +145,12 @@ namespace lgraphics
 
     inline bool ShaderKey::operator==(const ShaderKey& rhs) const
     {
-        return (inputFlags_ == rhs.inputFlags_) && (featureFlags_ == rhs.featureFlags_);
+        return (shaderID_ == rhs.shaderID_) && (inputFlags_ == rhs.inputFlags_) && (featureFlags_ == rhs.featureFlags_);
     }
 
     inline bool ShaderKey::operator!=(const ShaderKey& rhs) const
     {
-        return (inputFlags_ != rhs.inputFlags_) || (featureFlags_ != rhs.featureFlags_);
+        return (shaderID_ != rhs.shaderID_) || (inputFlags_ != rhs.inputFlags_) || (featureFlags_ != rhs.featureFlags_);
     }
 }
 

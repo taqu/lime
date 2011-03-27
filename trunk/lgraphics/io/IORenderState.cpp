@@ -51,32 +51,28 @@ namespace io
     {
         RenderStateInfo info;
         lcore::io::read(is, info);
-        
-        RenderStateRef::begin();
 
-        RenderStateRef::setAlphaTest(        test(info.flag_, BitFlag_AlphaTest) );
+        state.setAlphaTest(        test(info.flag_, BitFlag_AlphaTest) );
         //RenderStateRef::setLighting(         test(info.flag_, BitFlag_Lighting) );
-        RenderStateRef::setMultiSampleAlias( test(info.flag_, BitFlag_MultiSampleAlias) );
-        RenderStateRef::setZEnable(          test(info.flag_, BitFlag_ZEnable) );
-        RenderStateRef::setZWriteEnable(     test(info.flag_, BitFlag_ZWriteEnable) );
-        RenderStateRef::setAlphaBlendEnable( test(info.flag_, BitFlag_AlphaBlendEnable) );
+        state.setMultiSampleAlias( test(info.flag_, BitFlag_MultiSampleAlias) );
+        state.setZEnable(          test(info.flag_, BitFlag_ZEnable) );
+        state.setZWriteEnable(     test(info.flag_, BitFlag_ZWriteEnable) );
+        state.setAlphaBlendEnable( test(info.flag_, BitFlag_AlphaBlendEnable) );
 
-        RenderStateRef::setCullMode( decodeCullMode(static_cast<CodeCullMode>( info.cullMode_ )) );
+        state.setCullMode( decodeCullMode(static_cast<CodeCullMode>( info.cullMode_ )) );
 
 #if defined(LIME_GLES1)
         RenderStateRef::setAlphaTestFunc( decodeCmpFunc(static_cast<CodeCmpFunc>( info.alphaTestFunc_ )), info.alphaTestRef_);
         RenderStateRef::setAlphaBlend( decodeBlendType(static_cast<CodeBlendType>( info.alphaBlendSrc_ )), decodeBlendType(static_cast<CodeBlendType>( info.alphaBlendDst_ )));
 
 #else
-        RenderStateRef::setAlphaTestFunc( decodeCmpFunc(static_cast<CodeCmpFunc>( info.alphaTestFunc_ )) );
-        RenderStateRef::setAlphaTestRef( info.alphaTestRef_ );
+        state.setAlphaTestFunc( decodeCmpFunc(static_cast<CodeCmpFunc>( info.alphaTestFunc_ )) );
+        state.setAlphaTestRef( info.alphaTestRef_ );
 
         BlendType blendSrc = decodeBlendType(static_cast<CodeBlendType>( info.alphaBlendSrc_ ));
         BlendType blendDst = decodeBlendType(static_cast<CodeBlendType>( info.alphaBlendDst_ ));
-        RenderStateRef::setAlphaBlend(blendSrc, blendDst);
+        state.setAlphaBlend(blendSrc, blendDst);
 #endif
-
-        RenderStateRef::end(state);
 
         return true;
     }

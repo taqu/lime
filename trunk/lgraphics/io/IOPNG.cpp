@@ -35,7 +35,7 @@ namespace io
 
     bool IOPNG::read(lcore::istream& is, TextureRef& texture)
     {
-        //ƒVƒOƒlƒ`ƒƒƒ`ƒFƒbƒN
+        //ã‚·ã‚°ãƒãƒãƒ£ãƒã‚§ãƒƒã‚¯
         static const u32 SigSize = 8;
         u8 signature[SigSize];
         lcore::memset(signature, 0, SigSize);
@@ -45,8 +45,8 @@ namespace io
             return false;
         }
 
-        // \‘¢‘Ì‰Šú‰»B
-        //TODO:ŠeƒR[ƒ‹ƒoƒbƒNİ’è
+        // æ§‹é€ ä½“åˆæœŸåŒ–ã€‚
+        //TODO:å„ã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯è¨­å®š
         png_structp png_ptr = png_create_read_struct(
             PNG_LIBPNG_VER_STRING,
             NULL,
@@ -63,11 +63,11 @@ namespace io
         }
 
 
-        //Œã‚Åg‚¤ƒf[ƒ^
+        //å¾Œã§ä½¿ã†ãƒ‡ãƒ¼ã‚¿
         u8* buffer = NULL;
         u8** rowPointers = NULL;
 
-        // ƒGƒ‰[‚ÌƒWƒƒƒ“ƒvİ’è
+        // ã‚¨ãƒ©ãƒ¼æ™‚ã®ã‚¸ãƒ£ãƒ³ãƒ—è¨­å®š
         if(setjmp(png_jmpbuf(png_ptr))){
             LIME_DELETE_ARRAY(buffer);
             LIME_DELETE_ARRAY(rowPointers);
@@ -76,10 +76,10 @@ namespace io
             return false;
         }
 
-        // Å‰‚Éƒ[ƒh‚µ‚½ƒTƒCƒY‚ğƒZƒbƒg
+        // æœ€åˆã«ãƒ­ãƒ¼ãƒ‰ã—ãŸã‚µã‚¤ã‚ºã‚’ã‚»ãƒƒãƒˆ
         png_set_sig_bytes(png_ptr, SigSize);
 
-        // readƒR[ƒ‹ƒoƒbƒN
+        // readã‚³ãƒ¼ãƒ«ãƒãƒƒã‚¯
         png_set_read_fn(png_ptr, &is, read_callback);
 
         u32 result = 0;
@@ -101,16 +101,16 @@ namespace io
             return false;
         }
 
-        png_set_strip_16(png_ptr);  //‚P‚Uƒrƒbƒg‚ğ‚Wƒrƒbƒg‚É•ÏŠ·
-        png_set_palette_to_rgb(png_ptr); //ƒpƒŒƒbƒg‚ğRGB‚É•ÏŠ·
-        png_set_packing(png_ptr); //1,2,4ƒrƒbƒg‚Ì[“x‚Ìê‡A8bit/pixel‚É
-        png_set_swap_alpha(png_ptr); //BGRA‚ğARGB‚É
+        png_set_strip_16(png_ptr);  //ï¼‘ï¼–ãƒ“ãƒƒãƒˆã‚’ï¼˜ãƒ“ãƒƒãƒˆã«å¤‰æ›
+        png_set_palette_to_rgb(png_ptr); //ãƒ‘ãƒ¬ãƒƒãƒˆã‚’RGBã«å¤‰æ›
+        png_set_packing(png_ptr); //1,2,4ãƒ“ãƒƒãƒˆã®æ·±åº¦ã®å ´åˆã€8bit/pixelã«
+        png_set_swap_alpha(png_ptr); //BGRAã‚’ARGBã«
         f64 gamma = 0.0;
         if(png_get_gAMA(png_ptr, info_ptr, &gamma)){
             png_set_gamma(png_ptr, 2.2, gamma);
         }
 
-        //ƒJƒ‰[ƒ^ƒCƒvƒ`ƒFƒbƒNBƒeƒNƒXƒ`ƒƒƒtƒH[ƒ}ƒbƒg
+        //ã‚«ãƒ©ãƒ¼ã‚¿ã‚¤ãƒ—ãƒã‚§ãƒƒã‚¯ã€‚ãƒ†ã‚¯ã‚¹ãƒãƒ£ãƒ•ã‚©ãƒ¼ãƒãƒƒãƒˆ
         BufferFormat format = Buffer_Unknown;
         switch(color_type)
         {
@@ -119,9 +119,9 @@ namespace io
             break;
 
         case PNG_COLOR_TYPE_GRAY_ALPHA:
-            png_set_gray_to_rgb(png_ptr); //ƒOƒŒ[ƒXƒP[ƒ‹‚ğRGB‚É•ÏŠ·
+            png_set_gray_to_rgb(png_ptr); //ã‚°ãƒ¬ãƒ¼ã‚¹ã‚±ãƒ¼ãƒ«ã‚’RGBã«å¤‰æ›
 #if defined(LIME_GL)
-            png_set_bgr(png_ptr); //RGB‚ğBGR‚É
+            png_set_bgr(png_ptr); //RGBã‚’BGRã«
             format= Buffer_A8B8G8R8;
 #else
             format= Buffer_A8R8G8B8;
@@ -138,7 +138,7 @@ namespace io
 
         case PNG_COLOR_TYPE_RGB_ALPHA:
 #if defined(LIME_GL)
-            png_set_bgr(png_ptr); //RGB‚ğBGR‚É
+            png_set_bgr(png_ptr); //RGBã‚’BGRã«
             format= Buffer_A8B8G8R8;
 #else
             format= Buffer_A8R8G8B8;
@@ -152,7 +152,7 @@ namespace io
         };
 
 
-        // ƒoƒbƒtƒ@Šm•ÛBŠes‚²‚Æ‚Ìæ“ªƒ|ƒCƒ“ƒ^”z—ñì¬
+        // ãƒãƒƒãƒ•ã‚¡ç¢ºä¿ã€‚å„è¡Œã”ã¨ã®å…ˆé ­ãƒã‚¤ãƒ³ã‚¿é…åˆ—ä½œæˆ
         png_uint_32 rowbytes = png_get_rowbytes(png_ptr, info_ptr);
         buffer = LIME_NEW u8[rowbytes*height];
         rowPointers = LIME_NEW u8*[height];

@@ -142,7 +142,6 @@ namespace lgraphics
             GLchar *infoLog = LIME_NEW GLchar[length+1];
             glGetProgramInfoLog(program, length, &length, infoLog);
             infoLog[length] = '\0';
-            Debug_LogError(infoLog);
             lcore::Log("Shader fail to link program: %s", infoLog);
             LIME_DELETE_ARRAY(infoLog);
             return false;
@@ -177,7 +176,6 @@ namespace lgraphics
         glGetBooleanv(GL_SHADER_COMPILER, &hasCompiler);
         if(hasCompiler == GL_FALSE){
             static const char* msg = "Shader have no comiler";
-            Debug_LogError(msg);
             lcore::Log(msg);
             return false;
         }
@@ -207,7 +205,6 @@ namespace lgraphics
             GLchar *infoLog = LIME_NEW GLchar[length+1];
             glGetShaderInfoLog(shader, length, &length, infoLog);
             infoLog[length] = '\0';
-            Debug_LogError(infoLog);
 
 #if defined(ANDROID)
             lcore::Log("Shader fail to compile:(%d)%s", length, infoLog);
@@ -261,7 +258,7 @@ namespace lgraphics
 
     void ShaderRefBase::setFloat(HANDLE handle, f32 value)
     {
-        LASSERT(handle >=0);
+        //LASSERT(handle >=0);
         LASSERT(programID_ != NULL);
         glUniform1f(handle, value);
     }

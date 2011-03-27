@@ -12,9 +12,15 @@ struct IDirect3DStateBlock9;
 
 namespace lgraphics
 {
-    class RenderStateRef
+    //----------------------------------------------------------
+    //---
+    //--- RenderState
+    //---
+    //----------------------------------------------------------
+    class RenderState
     {
     public:
+
         static void setAlphaTest(bool enable);
         static bool getAlphaTest();
 
@@ -51,9 +57,38 @@ namespace lgraphics
         static void setViewPort(u32 x, u32 y, u32 width, u32 height, f32 minz, f32 maxz);
         static void getViewPort(u32& x, u32& y, u32& width, u32& height, f32& minz, f32& maxz);
 
-        static bool begin();
-        static void end(RenderStateRef& renderState);
+    };
 
+    class RenderStateRef
+    {
+    public:
+        void setAlphaTest(bool enable);
+        bool getAlphaTest() const;
+
+        void setAlphaTestFunc(CmpFunc func);
+        CmpFunc getAlphaTestFunc() const;
+
+        void setAlphaTestRef(s32 refValue);
+        s32 getAlphaTestRef() const;
+
+        void setCullMode(CullMode mode);
+        CullMode getCullMode() const;
+
+        void setMultiSampleAlias(bool enable);
+        bool getMultiSampleAlias() const;
+
+        void setZEnable(bool enable);
+        bool getZEnable() const;
+
+        void setZWriteEnable(bool enable);
+        bool getZWriteEnable() const;
+
+        void setAlphaBlendEnable(bool enable);
+        bool getAlphaBlendEnable() const;
+
+        void setAlphaBlend(BlendType src, BlendType dst);
+        BlendType getAlphaBlendSrc() const;
+        BlendType getAlphaBlendDst() const;
 
         RenderStateRef();
         RenderStateRef(const RenderStateRef& rhs);
@@ -74,7 +109,10 @@ namespace lgraphics
             lcore::swap(stateBlock_, rhs.stateBlock_);
         }
     private:
-        IDirect3DStateBlock9 *stateBlock_;
+        class StateBlock;
+
+        RenderStateRef(StateBlock *stateBlock);
+        StateBlock *stateBlock_;
     };
 }
 

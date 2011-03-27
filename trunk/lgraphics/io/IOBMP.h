@@ -54,7 +54,7 @@ namespace io
         IOBMP();
         ~IOBMP();
 
-        static bool read(lcore::istream& is, TextureRef& texture);
+        static bool read(lcore::istream& is, TextureRef& texture, bool transpose =false);
     };
 }
 }

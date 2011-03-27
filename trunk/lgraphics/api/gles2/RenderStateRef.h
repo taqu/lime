@@ -11,7 +11,12 @@
 
 namespace lgraphics
 {
-    class RenderStateRef
+    //----------------------------------------------------------
+    //---
+    //--- RenderState
+    //---
+    //----------------------------------------------------------
+    class RenderState
     {
     public:
         static void setAlphaTest(bool enable);
@@ -47,8 +52,45 @@ namespace lgraphics
         static void setViewPort(s32 x, s32 y, s32 width, s32 height, f32 minz, f32 maxz);
         static void getViewPort(s32& x, s32& y, s32& width, s32& height, f32& minz, f32& maxz);
 
-        static bool begin();
-        static void end(RenderStateRef& renderState);
+    };
+
+
+    //----------------------------------------------------------
+    //---
+    //--- RenderStateRef
+    //---
+    //----------------------------------------------------------
+    class RenderStateRef
+    {
+    public:
+
+        void setAlphaTest(bool enable);
+        bool getAlphaTest() const;
+
+        void setAlphaTestFunc(CmpFunc func);
+        CmpFunc getAlphaTestFunc() const;
+
+        void setAlphaTestRef(s32 refValue);
+        s32 getAlphaTestRef() const;
+
+        void setCullMode(CullMode mode);
+        CullMode getCullMode() const;
+
+        void setMultiSampleAlias(bool enable);
+        bool getMultiSampleAlias() const;
+
+        void setZEnable(bool enable);
+        bool getZEnable() const;
+
+        void setZWriteEnable(bool enable);
+        bool getZWriteEnable() const;
+
+        void setAlphaBlendEnable(bool enable);
+        bool getAlphaBlendEnable() const;
+
+        void setAlphaBlend(BlendType src, BlendType dst);
+        BlendType getAlphaBlendSrc() const;
+        BlendType getAlphaBlendDst() const;
 
 
         RenderStateRef();
@@ -69,10 +111,6 @@ namespace lgraphics
         {
             lcore::swap(stateBlock_, rhs.stateBlock_);
         }
-
-        bool getStateAlphaTest() const;
-        CmpFunc getStateAlphaTestFunc() const;
-        f32 getStateAlphaTestRef() const;
     private:
         class StateBlock;
 

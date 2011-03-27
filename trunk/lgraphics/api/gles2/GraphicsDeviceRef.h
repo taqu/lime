@@ -150,6 +150,7 @@ namespace lgraphics
     inline void GraphicsDeviceRef::present()
     {
 #if defined(ANDROID)
+        glFlush();
 #else
         glFlush();
         eglSwapBuffers(display_, surface_);

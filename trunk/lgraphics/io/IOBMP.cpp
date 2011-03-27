@@ -43,7 +43,7 @@ namespace io
 #else
             //DX版
             u32 pitch = width * 4;
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             if(dst.lock(0, rect) == false){
                 return;
             }
@@ -108,7 +108,7 @@ namespace io
             u32 pitch = width * 4;
             u32 diff = (width*3) & 0x03U;
 
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             if(dst.lock(0, rect) == false){
                 return;
             }
@@ -150,7 +150,7 @@ namespace io
     {
     }
 
-    bool IOBMP::read(lcore::istream& is, TextureRef& texture)
+    bool IOBMP::read(lcore::istream& is, TextureRef& texture, bool transpose)
     {
         u16 magic;
         lcore::io::read(is, magic);
@@ -174,19 +174,24 @@ namespace io
             return false;
         }
 
+        bool leftTop = (header.height_<0);
+        if(transpose){
+            leftTop = !leftTop;
+        }
+
         BufferFormat format;
         switch(header.bitCount_)
         {
         case 32:
             format = Buffer_A8R8G8B8;
             texture = Texture::create(header.width_, header.height_, 1, Usage_None, format, Pool_Managed);
-            read32(texture, is, header.width_, header.height_, (header.height_<0));
+            read32(texture, is, header.width_, header.height_, leftTop);
             break;
 
         case 24:
             format = Buffer_X8R8G8B8;
             texture = Texture::create(header.width_, header.height_, 1, Usage_None, format, Pool_Managed);
-            read24(texture, is, header.width_, header.height_, (header.height_<0));
+            read24(texture, is, header.width_, header.height_, leftTop);
             break;
 
         default:

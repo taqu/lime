@@ -39,6 +39,10 @@ namespace lgraphics
         return device.getRenderTargetData(surface_,  offscreen.surface_);
     }
 
+    bool SurfaceRef::getDesc(SurfaceDesc& desc)
+    {
+        return SUCCEEDED( surface_->GetDesc((D3DSURFACE_DESC*)&desc) );
+    }
 
     //-----------------------------------------------
     //---

@@ -1,17 +1,36 @@
-#ifndef INC_LGRAPHICS_DX9_SURFACEREF_H__
-#define INC_LGRAPHICS_DX9_SURFACEREF_H__
+#ifndef INC_LGRAPHICS_ES2_SURFACEREF_H__
+#define INC_LGRAPHICS_ES2_SURFACEREF_H__
 /**
 @file SurfaceRef.h
 @author t-sakai
 @date 2009/05/01 create
 */
 #include "../../lgraphicscore.h"
+#include "Enumerations.h"
 
 struct IDirect3DSurface9;
 
 namespace lgraphics
 {
     class SurfaceOffscreenRef;
+
+    struct SurfaceDesc
+    {
+        BufferFormat format_;
+        ResourceType type_;
+        u32 usage_;
+        Pool pool_;
+        MutiSampleType multiSampleType_;
+        u32 multiSampleQuality_;
+        u32 width_;
+        u32 height_;
+    };
+
+    struct LockedRect
+    {
+        s32 pitch_;
+        void* bits_;
+    };
 
     //-----------------------------------------------
     //---
@@ -21,13 +40,6 @@ namespace lgraphics
     class SurfaceRef
     {
     public:
-        struct LockedRect
-        {
-            s32 pitch_;
-            void *bits_;
-        };
-
-
         SurfaceRef()
             :surface_(NULL)
         {
@@ -102,8 +114,6 @@ namespace lgraphics
     class SurfaceOffscreenRef : private SurfaceRef
     {
     public:
-        using SurfaceRef::LockedRect;
-
         SurfaceOffscreenRef()
         {
         }
@@ -177,4 +187,4 @@ namespace lcore
         l.swap(r);
     }
 }
-#endif //INC_LGRAPHICS_DX9_SURFACEREF_H__
+#endif //INC_LGRAPHICS_ES2_SURFACEREF_H__
