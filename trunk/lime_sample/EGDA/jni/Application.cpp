@@ -1,16 +1,14 @@
 #include "stdafx.h"
 #include "Application.h"
-
+#include "Scene.h"
 
 #include <lcore/liostream.h>
 #include <lgraphics/lgraphics.h>
 #include <lgraphics/api/InitParam.h>
 #include <lgraphics/api/Enumerations.h>
 
-#include <Pmd.h>
-#include <Vmd.h>
+#include <Pmm.h>
 
-#include <lframework/scene/AnimObject.h>
 #include <lframework/System.h>
 #include <lframework/anim/AnimationSystem.h>
 #include <lframework/render/RenderingSystem.h>
@@ -19,27 +17,12 @@
 #include <lframework/scene/Camera.h>
 #include <lframework/scene/LightEnvironment.h>
 
-#include <lframework/anim/AnimationControlerPartial.h>
-#include <lframework/anim/JointAnimation.h>
-#include <lframework/anim/IKPack.h>
-
-#include "AnimationControlerIK.h"
-#include "AnimationControlerImpl.h"
-namespace
-{
-    typedef lanim::AnimCtrlSimple<
-                    lanim::AnimationControlerResource,
-                    lanim::AnimationControlerPartial,
-                    lanim::AnimationControlerIK
-                > AnimCtrl;
-}
+#include "Input.h"
 
 namespace egda
 {
     Application::Application()
-        :counter_(0.0f)
-        ,animObj_(NULL)
-        ,animControler_(NULL)
+        :aspect_(400.0f/300.0f)
     {
     }
 
@@ -75,10 +58,8 @@ namespace egda
             // カメラ設定
             lscene::Camera& camera = scene.getCamera();
             lmath::Matrix44 mat;
-            mat.lookAt(lmath::Vector3(0.0f, 10.0f, -25.0f), lmath::Vector3(0.0f, 10.0f, 0.0f), lmath::Vector3(0.0f, 1.0f, 0.0f));
-            camera.setViewMatrix(mat);
 
-            mat.perspectiveFov(45.0f, 600.0f/400.0f, 0.01f, 100.0f);
+            mat.perspectiveFovLinearZ((45.0f/180.0f*PI), aspect_, 1.0f, 200.0f);
             camera.setProjMatrix(mat);
 
             camera.updateMatrix();
@@ -87,25 +68,15 @@ namespace egda
             lscene::LightEnvironment& lightEnv = scene.getLightEnv();
             lightEnv.getDirectionalLight().setColor(lmath::Vector3(1.0f, 1.0f, 1.0f), 1.0f);
             lightEnv.getDirectionalLight().setDirection(lmath::Vector3(0.0f, 1.0f, 0.0f));
-
-            lgraphics::Graphics::getDevice().setClearColor(0xFF808080U);
         }
 
-        counter_ = 0.0f;
         return true;
     }
 
     //----------------------------------------------
     void Application::terminate()
     {
-        lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
-        if(animControler_ != NULL){
-            animSys.remove(animControler_);
-            LIME_DELETE(animControler_);
-        }
-
-        LIME_DELETE(animObj_);
-
+        scene_.release();
         lframework::System::terminate();
         lgraphics::Graphics::terminate();
     }
@@ -114,30 +85,74 @@ namespace egda
     void Application::update()
     {
         lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
-        lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
+        //lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
 
-        animSys.update();
+        //animSys.update();
+
+        scene_.update();
 
         renderSys.beginDraw();
         renderSys.draw();
         renderSys.endDraw();
+
+        lframework::System::debugDrawClear();
     }
 
     //----------------------------------------------
     void Application::setViewport(s32 left, s32 top, s32 width, s32 height)
     {
+        if(width<2){
+            width = 2;
+        }
+        if(height<2){
+            height = 2;
+        }
         lgraphics::Graphics::getDevice().setViewport(left, top, width, height);
 
         lscene::Scene& scene = lframework::System::getRenderSys().getScene();
 
         // カメラ設定
+        aspect_ = static_cast<f32>(width)/height;
         lscene::Camera& camera = scene.getCamera();
         lmath::Matrix44 mat;
-        mat.perspectiveFov(45.0f, static_cast<f32>(width)/height, 0.01f, 100.0f);
+        mat.perspectiveFovLinearZ((45.0f/180.0f*PI), aspect_, 1.0f, 200.0f);
         camera.setProjMatrix(mat);
         camera.updateMatrix();
+
+        Input::initialize(width, height);
+        lcore::Log("viewport %d, %d", width, height);
     }
 
+    //----------------------------------------------
+    //PMMロード
+    bool Application::loadPmm(const Char* filename, const Char* directory)
+    {
+        scene_.release(); //携帯機ではメモリが少ないので先に解放する。ロード失敗すれば元には戻らない
+        pmm::Loader pmmLoader;
+        pmmLoader.load(filename, directory);
+        if(pmm::Loader::Error_None != pmmLoader.getErrorCode()){
+            return false;
+        }
+
+        egda::Scene scene(
+            pmmLoader.getNumModels(),
+            pmmLoader.releaseModelPacks(),
+            pmmLoader.getCameraAnimPack(),
+            pmmLoader.getLightAnimPack(),
+            pmmLoader.getNumAccessories(),
+            pmmLoader.releaseAccessoryPacks()
+            );
+
+        scene_.swap(scene);
+
+        scene_.initialize(aspect_);
+#if defined(_DEBUG)
+        lframework::System::attachDebugDraw();
+#endif
+        return true;
+    }
+
+#if 0
     //----------------------------------------------
     bool Application::openModel(const Char* path, const Char* directory)
     {
@@ -231,4 +246,5 @@ namespace egda
         }
         animControler_->initialize();
     }
+#endif
 }

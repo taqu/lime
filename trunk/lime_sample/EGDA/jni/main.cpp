@@ -57,12 +57,8 @@ jboolean JNICALL Java_hm_orz_stabo_EGDA_EGDALib_load(JNIEnv *env, jclass, jbyteA
 
     switch(resourceType)
     {
-    case egda::ResType_Model:
-        ret = app.openModel( path.getData(), directory.getData() );
-        break;
-
-    case egda::ResType_Anim:
-        ret = app.openAnim(path.getData());
+    case egda::ResType_Pmm:
+        ret = app.loadPmm( path.getData(), directory.getData() );
         break;
 
     default:

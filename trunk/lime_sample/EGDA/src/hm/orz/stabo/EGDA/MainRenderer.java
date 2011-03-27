@@ -9,10 +9,8 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 
-import android.opengl.GLSurfaceView;
-import android.view.MotionEvent;
-
 public class MainRenderer implements GLSurfaceView.Renderer
+//public class MainRenderer implements android.opengl.GLSurfaceView.Renderer
 {
     //private static final String Encode = "EUC-JP";
     private static final String Encode = "UTF-8";
@@ -45,6 +43,11 @@ public class MainRenderer implements GLSurfaceView.Renderer
       //ÉâÉCÉuÉâÉäèâä˙âª
       EGDALib.initialize();
     }
+    
+    public void onDestroy()
+    {
+        EGDALib.terminate();
+    }
 
     public CommandManager getCommandManager()
     {
@@ -64,22 +67,17 @@ public class MainRenderer implements GLSurfaceView.Renderer
     private void fileLoad(CommandFileLoad command)
     {
         try{
-            String str = command.getPath() + "\0";
-            byte[] path = str.getBytes(Encode);
+            String str = command.getFilename() + "\0";
+            byte[] filename = str.getBytes(Encode);
 
             str = command.getDirectory() + "\0";
             byte[] directory = str.getBytes(Encode);
-            EGDALib.load(path, directory, command.getResourceType());
-            
+            EGDALib.load(filename, directory, command.getResourceType());
+
         }catch(UnsupportedEncodingException e){
         }
     }
-    
-    public void onTouchEvent(final MotionEvent event)
-    {
-    	
-    }
-    
+
     private CommandManager commandManager_ = null;
 }
 

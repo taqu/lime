@@ -3,14 +3,16 @@ package hm.orz.stabo.EGDA;
 public class Resource
 {
     public static final int Type_None = -1;
-    public static final int Type_Model = 0;
-    public static final int Type_Anim = 1;
-    public static final int Type_Num = 2;
+    //public static final int Type_Model = 0;
+    //public static final int Type_Anim = 1;
+    public static final int Type_Pmm = 0;
+    public static final int Type_Num = 1;
     
     public static final String Type_Ext[] =
     {
-        "pmd",
-        "vmd",
+        //"pmd",
+        //"vmd",
+    	"pmm",
     };
     
     public static int getTypeFromExtension(String path)

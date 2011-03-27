@@ -1,23 +1,21 @@
 package hm.orz.stabo.EGDA;
 
 import hm.orz.stabo.EGDA.CommandManager.Command;
-import hm.orz.stabo.EGDA.CommandManager.CommandFileLoad;
+import hm.orz.stabo.EGDA.UI.MenuBar;
+import hm.orz.stabo.EGDA.UI.OpenFileDialog;
 
 import java.io.File;
 
-import hm.orz.stabo.EGDA.R;
-
 import android.app.Activity;
-import android.content.Intent;
+import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
 import android.view.ViewGroup.LayoutParams;
-import android.widget.Button;
 import android.widget.FrameLayout;
-import android.widget.TextView;
 
 public class Main extends Activity implements OpenFileDialog.OpenFileDialogListener
 {
@@ -26,37 +24,41 @@ public class Main extends Activity implements OpenFileDialog.OpenFileDialogListe
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
-        
-        mainView_ = new MainView(getApplication(),
-        		false,
-        		5,
-        		6,
-        		5,
-        		0,
-        		24,
-        		8);
+
+        renderer_ = new MainRenderer();
+        mainView_ = new GLSurfaceView(this);
+        mainView_.setRenderer(renderer_);
+
+        View menuBarView = this.getLayoutInflater().inflate(R.layout.meubar_layout, null);
+        menuBar_ = new MenuBar(menuBarView);
 
         frameLayout_ = new FrameLayout(this);
 
-        frameLayout_.setLayoutParams( new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-        frameLayout_.addView(mainView_);
+        //frameLayout_.setLayoutParams( new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        //frameLayout_.addView(mainView_);
+        //frameLayout_.addView(menuBarView);
 
-        setContentView(frameLayout_);
-        //setContentView(mainView_);
+        //setContentView(frameLayout_);
+        setContentView(mainView_);
+        
+        
+        //設定初期化
+        Config.initialize();
+        Config.getInstance().load( getResources().getString(R.string.app_name) ); //設定ファイルロード
     }
 
 	@Override
 	protected void onPause()
 	{
+	    //mainView_.onPause();
 		super.onPause();
-		mainView_.onPause();
 	}
 
 	@Override
 	protected void onResume()
 	{
+	    //mainView_.onResume();
 		super.onResume();
-		mainView_.onResume();
 	}
 	
 	protected void onStop()
@@ -65,6 +67,9 @@ public class Main extends Activity implements OpenFileDialog.OpenFileDialogListe
 		mainView_ = null;
 		frameLayout_ = null;
 		menu_ = null;
+		menuBar_ = null;
+		
+		Config.getInstance().save(getResources().getString(R.string.app_name));
 		finish();
 	}
 	
@@ -105,16 +110,15 @@ public class Main extends Activity implements OpenFileDialog.OpenFileDialogListe
             return;
         }
         
-        File root = Environment.getExternalStorageDirectory();
+        Config config = Config.getInstance();
+        File root = new File(config.getLastDirectory());
+        if(false == root.exists()){
+        	root = Environment.getExternalStorageDirectory();
+        }
+        
         OpenFileDialog dialog = new OpenFileDialog();
         dialog.setListener(this);
         dialog.show(this, root);
-        
-        //Intent intent = new Intent(this, OpenFileDialog.class);
-        //intent.putExtra("root", root);
-        //startActivityForResult(intent, OpenFileDialog.Request_OpenFile);
-        
-        
     }
     
     private void loadFile(File file)
@@ -122,14 +126,22 @@ public class Main extends Activity implements OpenFileDialog.OpenFileDialogListe
         if(file == null){
             return;
         }
+        {
+        	String parent = file.getParent();
+        	if(parent != null){
+        		Config.getInstance().setLastDirectory(parent);
+        		parent = null;
+        	}
+        }
+        
         InfoToast.info(this, file.getName());
         int resourceType = Resource.getTypeFromExtension(file.getName());
         if(resourceType == Resource.Type_None){
-            InfoToast.info(this, "Cannot open file type");
+            InfoToast.info(this, "Cannot open file");
             return;
         }
-        CommandManager manager = mainView_.getCommandManager();
-        Command command = CommandManager.createFileLoad(manager, file.getPath(), resourceType);
+        CommandManager manager = renderer_.getCommandManager();
+        Command command = CommandManager.createFileLoad(manager, file, resourceType);
         
         manager.push(command);
     }
@@ -140,7 +152,9 @@ public class Main extends Activity implements OpenFileDialog.OpenFileDialogListe
         loadFile(selected);
     }
     
-    private Menu menu_;
-    private FrameLayout frameLayout_;
-	private MainView mainView_;
+    private Menu menu_ = null;
+    private FrameLayout frameLayout_ = null;
+    private MainRenderer renderer_ = null;
+	private GLSurfaceView mainView_ = null;
+	private MenuBar menuBar_ = null;
 }

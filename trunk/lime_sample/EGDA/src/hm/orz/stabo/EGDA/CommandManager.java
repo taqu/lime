@@ -1,5 +1,6 @@
 package hm.orz.stabo.EGDA;
 
+import java.io.File;
 import java.util.LinkedList;
 
 public class CommandManager
@@ -28,14 +29,14 @@ public class CommandManager
             type_ = Command_FileLoad;
         }
         
-        public String getPath()
+        public String getFilename()
         {
-            return path_;
+            return filename_;
         }
         
-        public void setPath(String path)
+        public void setFilename(String filename)
         {
-            path_ = path;
+        	filename_ = filename;
         }
 
         public String getDirectory()
@@ -59,16 +60,16 @@ public class CommandManager
         }
         
         private int resourceType_ = 0;
-        private String path_ = null;
+        private String filename_ = null;
         private String dir_ = null;
     }
     
-    public static Command createFileLoad(CommandManager parent, String path, int type)
+    public static Command createFileLoad(CommandManager parent, File file, int type)
     {
-        String directory = Resource.getDirectoryPath(path);
+        String directory = Resource.getDirectoryPath(file.getPath());
         
         CommandFileLoad command = parent.new CommandFileLoad();
-        command.setPath(path);
+        command.setFilename(file.getName());
         command.setDirectory(directory);
         command.setResourceType(type);
         return command;
