@@ -12,17 +12,17 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/,
 
     lcore::System system;
 
-    app::Application myApp;
+    viewer::Application myApp;
 
     lgraphics::InitParam param;
 
-    param.backBufferWidth_ = app::Application::Width;
-    param.backBufferHeight_ = app::Application::Height;
+    param.backBufferWidth_ = viewer::Application::Width;
+    param.backBufferHeight_ = viewer::Application::Height;
 
     param.interval_ = lgraphics::PresentInterval_Immediate;
     param.refreshRate_ = 60;
 
-    if(myApp.create(param, "viewer")){
+    if(myApp.create(param, "viewer", viewer::WndProc)){
         myApp.run();
     }
     return 0;

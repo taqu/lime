@@ -10,7 +10,7 @@
 #include "splitBone.h"
 
 #if defined(_WIN32) && defined(_DEBUG)
-#define LIME_LIB_CONV_DEBUG (1)
+//#define LIME_LIB_CONV_DEBUG (1)
 #endif
 
 #if defined(LIME_LIB_CONV_DEBUG)
@@ -74,7 +74,7 @@ namespace
 
     //----------------------------------------------------------------------
     /**
-    @brief ãƒœãƒ¼ãƒ³ã‚³ãƒ³ãƒ“ãƒãƒ¼ã‚·ãƒ§ãƒ³ã‚»ãƒƒãƒˆå†…ã®ãƒœãƒ¼ãƒ³ã‚’ã€ãƒ‘ãƒ¬ãƒƒãƒˆã«è¿½åŠ 
+    @brief ƒ{[ƒ“ƒRƒ“ƒrƒl[ƒVƒ‡ƒ“ƒZƒbƒg“à‚Ìƒ{[ƒ“‚ğAƒpƒŒƒbƒg‚É’Ç‰Á
     @param boneCombinationSet
     @param bonePalette
     @param addedBones
@@ -110,7 +110,7 @@ namespace
 
     //----------------------------------------------------------------------
     /**
-    @brief ãƒ‘ãƒ¬ãƒƒãƒˆä½œæˆ
+    @brief ƒpƒŒƒbƒgì¬
     */
     u32 createPalette(BoneCombinationSet& boneCombinationSet, CombinationPaletteMap& combinationPaletteMap, u32* boneCombinationCount, u32 maxBones)
     {
@@ -129,7 +129,7 @@ namespace
             bonePalette = LIME_NEW Palette;
             while(bonePalette->size() < maxBones){
 
-                //æœ€ã‚‚å‚ç…§ã•ã‚Œã¦ã„ã‚‹æ•°ã®å°‘ãªã„ãƒœãƒ¼ãƒ³ã‚’æ¢ç´¢
+                //Å‚àQÆ‚³‚ê‚Ä‚¢‚é”‚Ì­‚È‚¢ƒ{[ƒ“‚ğ’Tõ
                 s32 index = -1;
                 u32 count = 0xFFFFFFFFU;
                 for(u32 j=0; j<MaxBones; ++j){
@@ -140,7 +140,7 @@ namespace
                         index = j;
                     }
                 }
-                //å‚ç…§ã•ã‚Œã¦ã„ã‚‹ãƒœãƒ¼ãƒ³ãŒãªã‹ã£ãŸã®ã§çµ‚äº†
+                //QÆ‚³‚ê‚Ä‚¢‚éƒ{[ƒ“‚ª‚È‚©‚Á‚½‚Ì‚ÅI—¹
                 if(index<0){
                     return numPalettes;
                 }
@@ -153,7 +153,7 @@ namespace
                     addedBones[targetIndex] = true;
                 }
 
-                //ãƒ‘ãƒ¬ãƒƒãƒˆã«ãƒœãƒ¼ãƒ³ã‚’è¿½åŠ 
+                //ƒpƒŒƒbƒg‚Éƒ{[ƒ“‚ğ’Ç‰Á
                 if(bonePalette->size() < maxBones){
                     addBoneToPalette(boneCombinationSet, bonePalette, addedBones, maxBones);
                 }
@@ -200,7 +200,7 @@ namespace
 
     //----------------------------------------------------------------------
     /**
-    @brief ãƒãƒ†ãƒªã‚¢ãƒ«å†…ã§ãƒœãƒ¼ãƒ³åˆ†å‰²
+    @brief ƒ}ƒeƒŠƒAƒ‹“à‚Åƒ{[ƒ“•ªŠ„
     */
     void splitBone(
         Vertex* vertices,
@@ -223,7 +223,7 @@ namespace
         BoneCombinationSet boneCombinationSet(numTriangles, emptyBoneCombination);
 
         //-------------------------------------------------------------------
-        // ä¸‰è§’å½¢æ¯ã®ä½¿ç”¨ãƒœãƒ¼ãƒ³çµ„ã¿åˆã‚ã›ã‚’èª¿æŸ»ã€‚é‡è¤‡ãŒãªã„ã‚ˆã†ã«Setã«ä¿å­˜
+        // OŠpŒ`–ˆ‚Ìg—pƒ{[ƒ“‘g‚İ‡‚í‚¹‚ğ’²¸Bd•¡‚ª‚È‚¢‚æ‚¤‚ÉSet‚É•Û‘¶
         bool boneUsed[MaxBones];
 
         for(u32 i=0; i<numTriangles; ++i){
@@ -235,10 +235,10 @@ namespace
 
             u32 triangle = 3*i;
             for(u32 j=0; j<3; ++j){
-                BYTE index = vertices[ faceIndices[triangle + j].index_ ].boneNo_[0];
+                BYTE index = vertices[ faceIndices[triangle + j].index_ ].element_[ Vertex::Index_Bone0 ];
                 boneUsed[index] = true;
 
-                index = vertices[ faceIndices[triangle + j].index_ ].boneNo_[1];
+                index = vertices[ faceIndices[triangle + j].index_ ].element_[ Vertex::Index_Bone1 ];
                 boneUsed[index] = true;
             }
 
@@ -252,7 +252,7 @@ namespace
         }
 
         //----------------------------------------------------------------------
-        // å„ãƒœãƒ¼ãƒ³ãŒçµ„ã¿åˆã‚ã›ã‹ã‚‰å‚ç…§ã•ã‚Œã¦ã„ã‚‹å›æ•°ã‚’ã‚«ã‚¦ãƒ³ãƒˆ
+        // Šeƒ{[ƒ“‚ª‘g‚İ‡‚í‚¹‚©‚çQÆ‚³‚ê‚Ä‚¢‚é‰ñ”‚ğƒJƒEƒ“ƒg
         u32 boneCombinationCount[MaxBones];
         lcore::memset(boneCombinationCount, 0, sizeof(u32)*MaxBones);
         for(BoneCombinationSet::size_type pos = boneCombinationSet.begin();
@@ -269,19 +269,19 @@ namespace
             }
         }
 
-        // ãƒ‘ãƒ¬ãƒƒãƒˆä½œæˆ
+        // ƒpƒŒƒbƒgì¬
         //----------------------------------------------------------------------
         CombinationPaletteMap combinationPaletteMap(boneCombinationSet.size()*2, emptyBoneCombination);
 
         u32 numPalettes = createPalette(boneCombinationSet, combinationPaletteMap, boneCombinationCount, maxBones);
 
 
-        //ãƒ‘ãƒ¬ãƒƒãƒˆã‹ã‚‰ã‚¸ã‚ªãƒ¡ãƒˆãƒªã¸ã®ãƒãƒƒãƒ—
+        //ƒpƒŒƒbƒg‚©‚çƒWƒIƒƒgƒŠ‚Ö‚Ìƒ}ƒbƒv
         typedef lcore::HashMap<Palette::pointer, Geometry*> PaletteGeometryMap;
         Palette::pointer emptyPalette;
         PaletteGeometryMap paletteGeometryMap(numPalettes*2, emptyPalette);
 
-        //é¢ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’ã‚¸ã‚ªãƒ¡ãƒˆãƒªã«å…¥ã‚Œã‚‹
+        //–ÊƒCƒ“ƒfƒbƒNƒX‚ğƒWƒIƒƒgƒŠ‚É“ü‚ê‚é
         //-----------------------------------------
         Geometry* top = NULL;
         numGeometries = 0;
@@ -293,7 +293,7 @@ namespace
             Palette::pointer& palette = combinationPaletteMap.getValue(palettePos);
             LASSERT(palette->size()<=maxBones);
 
-            //ãƒ‘ãƒ¬ãƒƒãƒˆã«å¯¾å¿œã™ã‚‹ã‚¸ã‚ªãƒ¡ãƒˆãƒªãŒãªã‹ã£ãŸã‚‰è¿½åŠ 
+            //ƒpƒŒƒbƒg‚É‘Î‰‚·‚éƒWƒIƒƒgƒŠ‚ª‚È‚©‚Á‚½‚ç’Ç‰Á
             Geometry* geometry = NULL;
             PaletteGeometryMap::size_type pos = paletteGeometryMap.find(palette);
             if(paletteGeometryMap.isEnd(pos)){
@@ -306,7 +306,7 @@ namespace
 
                 if(top == NULL){
                     top = geometry;
-                    *geometries = geometry; //æœ€åˆãªã®ã§æˆ»ã‚Šå€¤è¨­å®š
+                    *geometries = geometry; //Å‰‚È‚Ì‚Å–ß‚è’lİ’è
                 }else{
                     top->next_ = geometry;
                     top = geometry;
@@ -318,8 +318,8 @@ namespace
                 geometry = paletteGeometryMap.getValue(pos);
             }
 
-            //ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹è¿½åŠ 
-            //ä¸‰è§’å½¢ã®ï¼“é ‚ç‚¹ã¯åŒã˜ãƒœãƒ¼ãƒ³ã®çµ„ã¿åˆã‚ã›ã«ãªã‚‹
+            //ƒCƒ“ƒfƒbƒNƒX’Ç‰Á
+            //OŠpŒ`‚Ì‚R’¸“_‚Í“¯‚¶ƒ{[ƒ“‚Ì‘g‚İ‡‚í‚¹‚É‚È‚é
             u32 triangle = 3*i;
             for(u32 j=0; j<3; ++j){
                 geometry->faceIndices_.push_back( faceIndices[triangle + j].index_ );
@@ -327,6 +327,16 @@ namespace
         }
 
         LIME_DELETE_ARRAY(combinations);
+    }
+
+
+    void setSkinIndex(Skin& skin, u16* toIndices, u16 from, u16 to)
+    {
+        for(u32 i=0; i<skin.numVertices_; ++i){
+            if(skin.vertices_[i].index_ == from){
+                toIndices[i] = to;
+            }
+        }
     }
 }
 
@@ -337,6 +347,7 @@ namespace
         FaceIndex* faceIndices,
         u32 numMaterials,
         Material* materials,
+        Skin* skins,
         u32 numBones,
         u32 maxBones,
         u32& numGeometries,
@@ -369,14 +380,14 @@ namespace
                 maxNumIndices = materials[i].faceVertexCount_;
             }
 
-            //æ–°ã—ã„ãƒªã‚¹ãƒˆã‚’å¾Œå°¾ã«ç¹‹ã’ã‚‹
+            //V‚µ‚¢ƒŠƒXƒg‚ğŒã”ö‚ÉŒq‚°‚é
             if(nextTop != NULL){
                 nextTop->next_ = geometriesInMaterial;
             }else{
                 nextTop = geometriesInMaterial;
-                *geometries = geometriesInMaterial; //æœ€åˆãªã®ã§æˆ»ã‚Šå€¤è¨­å®š
+                *geometries = geometriesInMaterial; //Å‰‚È‚Ì‚Å–ß‚è’lİ’è
             }
-            //å¾Œå°¾ã‚’æ¢ç´¢
+            //Œã”ö‚ğ’Tõ
             while(nextTop != NULL){
                 if(nextTop->next_ == NULL){
                     break;
@@ -397,6 +408,15 @@ namespace
         VertexKey key;
         VKeyIndexMap indexIndexMap(numVertices*2, key);
 
+        u16* skinIndices = NULL;
+        if(skins != NULL){
+            Skin& skin = skins[0];
+            skinIndices = LIME_NEW u16[skin.numVertices_];
+            for(u32 i=0; i<skin.numVertices_; ++i){
+                skinIndices[i] = skin.vertices_[i].index_;
+            }
+        }
+
         pmd::Vertex vertex;
         u32 indexOffset = 0;
         while(top != NULL){
@@ -414,12 +434,18 @@ namespace
 
                 VKeyIndexMap::size_type pos = indexIndexMap.find( key );
                 if(indexIndexMap.isEnd(pos)){
-                    //ãªã‹ã£ãŸã‹ã‚‰é ‚ç‚¹è¿½åŠ 
+                    //‚È‚©‚Á‚½‚©‚ç’¸“_’Ç‰Á
                     u16 index = static_cast<u16>( vb->elements_.size() );
+
+                    //•\î—p’¸“_‚ÌƒCƒ“ƒfƒbƒNƒX‚ğ•ÏŠ·
+                    if(skins != NULL){
+                        setSkinIndex(skins[0], skinIndices, top->faceIndices_[i], index);
+                    }
+
                     faceIndices[ indexOffset+i ].index_ = index;
 
-                    vertex.boneNo_[0] = top->palette_->getGlobalToLocal( vertex.boneNo_[0] );
-                    vertex.boneNo_[1] = top->palette_->getGlobalToLocal( vertex.boneNo_[1] );
+                    vertex.element_[ Vertex::Index_Bone0 ] = top->palette_->getGlobalToLocal( vertex.element_[ Vertex::Index_Bone0 ] );
+                    vertex.element_[ Vertex::Index_Bone1 ] = top->palette_->getGlobalToLocal( vertex.element_[ Vertex::Index_Bone1 ] );
 
                     vb->elements_.push_back( vertex );
                     indexIndexMap.insert( key, index );
@@ -432,6 +458,15 @@ namespace
             indexOffset += top->faceIndices_.size();
             top = top->next_;
         }
+
+
+        if(skins != NULL){
+            Skin& skin = skins[0];
+            for(u32 i=0; i<skin.numVertices_; ++i){
+                skin.vertices_[i].index_ = skinIndices[i];
+            }
+        }
+        LIME_DELETE_ARRAY(skinIndices);
 
 #if defined(LIME_LIB_CONV_DEBUG)
         // debug out

@@ -10,9 +10,9 @@
 namespace pmd
 {
     /**
-    @brief ãƒœãƒ¼ãƒ³ã®çµ„ã¿åˆã‚ã›
+    @brief ƒ{[ƒ“‚Ì‘g‚İ‡‚í‚¹
 
-    ï¼‘ä¸‰è§’å½¢ã®ãƒœãƒ¼ãƒ³ã®çµ„ã¿åˆã‚ã›ã€‚ï¼‘é ‚ç‚¹è¾ºã‚Šï¼”ãƒœãƒ¼ãƒ³ã¾ã§Ã—ï¼“é ‚ç‚¹åˆ†ã€‚
+    ‚POŠpŒ`‚Ìƒ{[ƒ“‚Ì‘g‚İ‡‚í‚¹B‚P’¸“_•Ó‚è‚Sƒ{[ƒ“‚Ü‚Å~‚R’¸“_•ªB
     */
     class BoneCombination
     {
@@ -85,7 +85,7 @@ namespace pmd
         {}
 
         /**
-        æ„å›³ã—ã¦explicitã˜ã‚ƒãªã„
+        ˆÓ}‚µ‚Äexplicit‚¶‚á‚È‚¢
         */
         BoneCombinationWrapper(BoneCombination* impl)
             :impl_(impl)
@@ -151,6 +151,7 @@ namespace pmd
         FaceIndex* faceIndices,
         u32 numMaterials,
         Material* materials,
+        Skin* skins,
         u32 numBones,
         u32 maxBones,
         u32& numGeometries,

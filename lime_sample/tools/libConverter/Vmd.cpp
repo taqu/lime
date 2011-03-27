@@ -12,8 +12,11 @@
 #include <lframework/anim/JointPose.h>
 #include <lframework/anim/JointAnimation.h>
 
+
+#include "converter.h"
+
 #if defined(_WIN32) && defined(_DEBUG)
-#define LIME_LIB_CONV_DEBUG (1)
+//#define LIME_LIB_CONV_DEBUG (1)
 #endif
 
 
@@ -34,10 +37,19 @@ namespace
     static const u32 SortStackSize = 32;
     static const u32 SortThreshold = 10;
 
+    struct CompJointFrameOp
+    {
+        bool operator()(lanim::JointPoseWithFrame* p0, lanim::JointPoseWithFrame* p1) const
+        {
+            return (p0->frameNo_ < p1->frameNo_);
+        }
+    };
+
+#if 0
     /**
     @brief ë}ì¸É\Å[Ég
     */
-    void insersionSort(
+    void insertionSort(
         u32 numPoses,
         lanim::JointPoseWithFrame** poses)
     {
@@ -122,8 +134,9 @@ namespace
             }
         }
 
-        insersionSort(numPoses, poses);
+        insertionSort(numPoses, poses);
     }
+#endif
 }
 
     //--------------------------------------
@@ -291,8 +304,6 @@ namespace
             typedef lcore::vector_arena<lanim::JointPoseWithFrame*> SortBuffer;
             SortBuffer sortBuffer(sortBufferSize>>1);
             sortBuffer.reserve(sortBufferSize);
-            u32 leftStack[SortStackSize];
-            u32 rightStack[SortStackSize];
 
             for(u32 i=0; i<jointAnimPtrVec.size(); ++i){
                 lanim::JointAnimation& jointAnim = animClip->getJointAnimation(i);
@@ -306,8 +317,10 @@ namespace
                 for(u32 j=0; j<jointAnim.getNumPoses(); ++j){
                     sortBuffer.push_back( &((*ptr)[j]) );
                 }
-                quickSort(jointAnim.getNumPoses(), &(sortBuffer[0]), leftStack, rightStack);
+                //quickSort(jointAnim.getNumPoses(), &(sortBuffer[0]), leftStack, rightStack);
 
+                lconverter::quickSort<lanim::JointPoseWithFrame*, u32, CompJointFrameOp, 10, 32>
+                    (jointAnim.getNumPoses(), &(sortBuffer[0]), CompJointFrameOp());
 #if defined(LIME_LIB_CONV_DEBUG)
                 for(u32 j=1; j<jointAnim.getNumPoses(); ++j){
                     if(sortBuffer[j-1]->frameNo_ > sortBuffer[j]->frameNo_){

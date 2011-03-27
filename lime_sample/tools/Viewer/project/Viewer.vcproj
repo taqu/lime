@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../;../../libConverter"
+				AdditionalIncludeDirectories="../../../../;../../libConverter;../../../lib/anim"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;LIME_DX9"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../../../;../../libConverter"
+				AdditionalIncludeDirectories="../../../../;../../libConverter;../../../lib/anim"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;LIME_DX9"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -187,13 +187,65 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\Camera.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Camera.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Input.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Input.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Light.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Light.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\main.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Scene.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\Scene.h"
 				>
 			</File>
 			<File
 				RelativePath="..\src\stdafx.h"
 				>
 			</File>
+		</Filter>
+		<Filter
+			Name="lib"
+			>
+			<Filter
+				Name="anim"
+				>
+				<File
+					RelativePath="..\..\..\lib\anim\AnimationControlerIK.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\lib\anim\AnimationControlerIK.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\lib\anim\AnimationControlerImpl.h"
+					>
+				</File>
+			</Filter>
 		</Filter>
 	</Files>
 	<Globals>

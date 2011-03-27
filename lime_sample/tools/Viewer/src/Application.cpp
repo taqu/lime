@@ -7,9 +7,13 @@
 #include "Application.h"
 #include <Pmd.h>
 #include <Vmd.h>
+#include <Pmm.h>
+#include <XLoader.h>
+
 #include <lgraphics/lgraphics.h>
 
 #include <lframework/scene/AnimObject.h>
+#include <lframework/scene/Object.h>
 #include <lframework/System.h>
 #include <lframework/anim/AnimationSystem.h>
 #include <lframework/render/RenderingSystem.h>
@@ -25,7 +29,10 @@
 
 #include "AnimationControlerIK.h"
 #include "AnimationControlerImpl.h"
-namespace app
+
+#include "Input.h"
+
+namespace viewer
 {
     Application::Application()
         :animObj_(NULL)
@@ -54,24 +61,73 @@ namespace app
             // カメラ設定
             lscene::Camera& camera = scene.getCamera();
             lmath::Matrix44 mat;
-            //mat.lookAt(lmath::Vector3(0.0f, 18.0f, -5.0f), lmath::Vector3(0.0f, 18.0f, 0.0f), lmath::Vector3(0.0f, 1.0f, 0.0f));
-            mat.lookAt(lmath::Vector3(0.0f, 18.0, -30.0f), lmath::Vector3(0.0f, 18.0f, 0.0f), lmath::Vector3(0.0f, 1.0f, 0.0f));
+            mat.lookAt(lmath::Vector3(0.0f, 13.0f, -30.0f), lmath::Vector3(0.0f, 13.0f, 0.0f), lmath::Vector3(0.0f, 1.0f, 0.0f));
+            //mat.lookAt(lmath::Vector3(0.0f, 0.0f, -2.0f), lmath::Vector3(0.0f, 0.0f, 0.0f), lmath::Vector3(0.0f, 1.0f, 0.0f));
             camera.setViewMatrix(mat);
 
-            mat.perspectiveFov(45.0f, static_cast<lcore::f32>(Width)/Height, 0.01f, 100.0f);
+            mat.perspectiveFovLinearZ(45.0f/180.0f*PI, static_cast<lcore::f32>(Width)/Height, 1.0f, 200.0f);
             camera.setProjMatrix(mat);
 
             camera.updateMatrix();
 
             // ライト設定
             lscene::LightEnvironment& lightEnv = scene.getLightEnv();
-            lightEnv.getDirectionalLight().setColor(lmath::Vector3(1.0f, 1.0f, 1.0f), 3.0f);
+            lightEnv.getDirectionalLight().setColor(lmath::Vector3(1.0f, 1.0f, 1.0f), 2.0f);
             lightEnv.getDirectionalLight().setDirection(lmath::Vector3(0.0f, 1.0f, 0.0f));
+            //lightEnv.getDirectionalLight().setDirection(lmath::Vector3(0.0f, -1.0f, 0.0f));
 
             lgraphics::Graphics::getDevice().setClearColor(0xFF808080U);
+
+
+            Input::initialize( window_.getHandle().hWnd_, window_.getViewWidth(), window_.getViewHeight() );
         }
+#if 0
+        {
+            lx::XLoader xLoader;
+            animObj_ = LIME_NEW lscene::Object;
+            if(xLoader.open("data/pmm/Accessory/negi.x")){
+            xLoader.load(*animObj_, "data/pmm/Accessory/", 10.0f, false);
+            animObj_->initializeShader();
+            animObj_->addDraw();
+            }
+            return;
+        }
+#endif
 
+#if 1
+        {//PMMロード
+            scene_.release(); //携帯機ではメモリが少ないので先に解放する。ロード失敗すれば元には戻らない
+            pmm::Loader pmmLoader;
+            pmmLoader.load("Sample.pmm", "data/pmm/");
+            //pmmLoader.load("sample2.pmm", "data/pmm/");
+            //pmmLoader.load("SampleAllStar.pmm", "data/pmm/");
+            if(pmm::Loader::Error_None == pmmLoader.getErrorCode()){
 
+                //release時に0になるので先に取得
+                u32 numModels = pmmLoader.getNumModels();
+                u32 numAccessories = pmmLoader.getNumAccessories();
+                viewer::Scene scene(
+                    numModels,
+                    pmmLoader.releaseModelPacks(),
+                    pmmLoader.getCameraAnimPack(),
+                    pmmLoader.getLightAnimPack(),
+                    numAccessories,
+                    pmmLoader.releaseAccessoryPacks()
+                    );
+
+                scene_.swap(scene);
+
+                f32 aspect = static_cast<f32>( window_.getViewWidth() ) / window_.getViewHeight();
+                scene_.initialize(aspect);
+#if defined(_DEBUG)
+                lframework::System::attachDebugDraw();
+#endif
+            }
+            return;
+        }
+#endif
+
+#if 0
         //モデルロード
         {
             pmd::Pack pack;
@@ -155,13 +211,15 @@ namespace app
 
             }
         }
-
+#endif
     }
 
     void Application::update()
     {
+        Input::update();
+
         lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
-        lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
+        //lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
 
         lframework::System::debugPrint(10.0f, 10.0f, "test");
 
@@ -177,7 +235,9 @@ namespace app
             //animObj_->getWorldMatrix().setTranslate(0.0f, -5.0f, 0.0f);
         }
 
-        animSys.update();
+        //animSys.update();
+
+        scene_.update();
 
         renderSys.beginDraw();
         renderSys.draw();
@@ -200,6 +260,8 @@ namespace app
 
     void Application::terminate()
     {
+        Input::terminate();
+
         lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
         if(animControler_ != NULL){
             animSys.remove(animControler_);
@@ -208,6 +270,61 @@ namespace app
 
         LIME_DELETE(animObj_);
 
+        scene_.release();
+
         lframework::System::terminate();
+    }
+
+
+
+    
+    LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    {
+        switch(msg)
+        {
+        case WM_SYSCOMMAND:
+            {
+                switch(wParam)
+                {
+                case SC_SCREENSAVE:
+                case SC_MONITORPOWER:
+                    return 0;
+                }
+                return DefWindowProc(hWnd, msg, wParam, lParam);
+            }
+            break;
+
+            //     case WM_CLOSE:
+            //DestroyWindow(hWnd);
+            //         break;
+
+        case WM_PAINT:
+            {
+                ValidateRect(hWnd, NULL);
+            }
+
+            break;
+
+        case WM_ACTIVATE:
+            {
+                if(WA_INACTIVE == wParam){
+                    Input::unacquire();
+                }else{
+                    Input::acquire();
+                }
+            }
+			break;
+
+
+        case WM_DESTROY:
+            PostQuitMessage(0);
+            return 1;
+            break;
+
+        default:
+            return DefWindowProc(hWnd, msg, wParam, lParam);
+            break;
+        }
+        return 0;
     }
 }

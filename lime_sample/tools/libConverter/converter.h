@@ -1,0 +1,153 @@
+#ifndef INC_CONVERTER_H__
+#define INC_CONVERTER_H__
+/**
+@file converter.h
+@author t-sakai
+@date 2011/01/25 create
+
+*/
+#include <lcore/lcore.h>
+#include <lcore/HashMap.h>
+#include <lcore/vector.h>
+#include <lcore/String.h>
+
+namespace lgraphics
+{
+    class TextureRef;
+}
+
+namespace lconverter
+{
+    using lcore::s8;
+    using lcore::s16;
+    using lcore::s32;
+
+    using lcore::u8;
+    using lcore::u16;
+    using lcore::u32;
+
+    using lcore::f32;
+
+    using lcore::Char;
+
+    s16 F32ToS16(f32 value);
+    s16 F32ToS16Clamp(f32 value);
+    u16 F32ToU16(f32 value);
+
+    typedef lcore::HashMapCharArray<lgraphics::TextureRef*> NameTextureMap;
+    lgraphics::TextureRef* loadTexture(const Char* path, u32 size, const Char* directory, NameTextureMap& texMap, bool transpose=false);
+
+
+    enum TextureAddress
+    {
+        TexAddress_Wrap,
+        //TexAddress_Mirror,
+        TexAddress_Clamp,
+    };
+
+    f32 texAddress(f32 value, TextureAddress op);
+
+    void extractFileNameUTF8(Char* dst);
+
+    typedef lcore::vector_arena<Char> S8Vector;
+    typedef lcore::vector_arena<s16> S16Vector;
+    typedef lcore::vector_arena<u16> U16Vector;
+    typedef lcore::vector_arena<u32> U32Vector;
+
+    typedef lcore::String<256> StringBuffer;
+
+
+    /**
+    @brief 挿入ソート
+    */
+    template<class T, class U, class LessThan>
+    void insertionSort(U num, T* elems, LessThan lessThan)
+    {
+        T tmp;
+        U j;
+        for(U i=1; i<num; ++i){
+            tmp = elems[i];
+            for(j=i-1; 0<=j; --j){
+                if(! lessThan(tmp, elems[j])){
+                    break;
+                }
+                elems[j+1] = elems[j];
+            }
+            elems[j+1] = tmp;
+        }
+    }
+
+    /**
+    @brief クイックソート
+    */
+    template<class T, class U, class LessThan, unsigned int Threshold, unsigned int StackSize>
+    void quickSort(U num, T* elems, LessThan lessThan)
+    {
+        U leftStack[StackSize];
+        U rightStack[StackSize];
+
+        U left = 0;
+        U right = num - 1;
+        U p = 0;
+        U i, j;
+        T elem;
+        T tmp;
+        u32 leftNum, rightNum;
+
+        for(;;){
+            if((right - left) <= Threshold){
+                if(p==0){
+                    break;
+                }
+                --p;
+                left = leftStack[p];
+                right = rightStack[p];
+            }
+
+            elem = elems[(left+right)>>1]; //真ん中選ぶ
+            i = left;
+            j = right;
+
+            for(;;){
+                while(lessThan(elems[i], elem)){
+                    ++i;
+                }
+
+                while(lessThan(elem, elems[j])){
+                    --j;
+                }
+
+                if(i>=j){
+                    break;
+                }
+                tmp = elems[i];
+                elems[i] = elems[j];
+                elems[j] = tmp;
+                ++i;
+                --j;
+            }
+
+            leftNum = (i-left);
+            rightNum = (right-j);
+            if(leftNum>rightNum){
+                if(leftNum>Threshold){
+                    leftStack[p] = left;
+                    rightStack[p] = i-1;
+                    ++p;
+                }
+                left = j + 1;
+            }else{
+                if(rightNum>Threshold){
+                    leftStack[p] = j + 1;
+                    rightStack[p] = right;
+                    ++p;
+                }
+                right = i-1;
+            }
+        }
+
+        lconverter::insertionSort(num, elems, lessThan);
+    }
+}
+
+#endif //INC_CONVERTER_H__

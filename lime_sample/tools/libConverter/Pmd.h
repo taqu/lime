@@ -5,11 +5,12 @@
 @author t-sakai
 @date 2010/05/16 create
 */
-#include <lcore/lcore.h>
-#include <lcore/liofwd.h>
+#include <lcore/liostream.h>
 #include <lcore/Vector.h>
 #include <lcore/smart_ptr/intrusive_ptr.h>
 #include <lframework/scene/lscene.h>
+#include "converter.h"
+
 
 namespace lscene
 {
@@ -43,14 +44,20 @@ namespace pmd
 
     static const u32 NameSize = 20;
     static const u32 FileNameSize = 20;
+    static const u32 CommentSize = 256;
+    static const u32 LabelNameSize = 50;
+    static const u32 ToonTexturePathSize = 100;
+    static const u32 FilePathSize = 256;
+    static const u32 NumToonTextures = 11;
+
     static const u8 MaxBones = lscene::MAX_BONES;
     static const u8 BoneFreeSlot = 0xFFU;
     static const u32 MaxIndices = 0xFFFFFFFEU;
     static const u32 MaxVertices = 0xFFFEU;
-    static const u16 MaxIKIterations = 15;
+    static const u16 MaxIKIterations = 16;
 
-    static const u32 NumLimitJoint = 1; ///å‹•ãåˆ¶é™ã™ã‚‹ã‚¸ãƒ§ã‚¤ãƒ³ãƒˆã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰æ•°
-    extern const Char* LimitJointName[NumLimitJoint]; ///å‹•ãåˆ¶é™ã™ã‚‹ã‚¸ãƒ§ã‚¤ãƒ³ãƒˆã‚­ãƒ¼ãƒ¯ãƒ¼ãƒ‰
+    static const u32 NumLimitJoint = 1; ///“®‚«§ŒÀ‚·‚éƒWƒ‡ƒCƒ“ƒgƒL[ƒ[ƒh”
+    extern const Char* LimitJointName[NumLimitJoint]; ///“®‚«§ŒÀ‚·‚éƒWƒ‡ƒCƒ“ƒgƒL[ƒ[ƒh
 
     //--------------------------------------
     //---
@@ -60,7 +67,6 @@ namespace pmd
     struct Header
     {
         static const s32 MagicSize = 3;
-        static const s32 CommentSize = 256;
 
         CHAR magic_[MagicSize];
         FLOAT version_;
@@ -82,12 +88,21 @@ namespace pmd
     //--------------------------------------
     struct Vertex
     {
+        enum Index
+        {
+            Index_Bone0 =0,
+            Index_Bone1,
+            Index_Weight,
+            Index_Edge,
+            Index_Num,
+        };
+
         FLOAT position_[3];
-        FLOAT normal_[3];
-        FLOAT uv_[2];
-        BYTE boneNo_[2];
-        BYTE boneWeight_;//min:0-max:100
-        BYTE edgeFlag_; //0:on, 1:off
+        s16 normal_[4];//normal (x, y, z) padding
+        s16 uv_[2];
+        BYTE element_[Index_Num]; //bone0, bone1
+                                  //boneWeight min:0-max:100 ƒVƒF[ƒ_‚Å³‹K‰»‚³‚ê‚Ä‚¢‚È‚¢‚Ì‚Å’ˆÓ
+                                  //edgeFlag 0:on, 1:off
 
         friend lcore::istream& operator>>(lcore::istream& is, Vertex& rhs);
     };
@@ -139,13 +154,15 @@ namespace pmd
     struct Bone
     {
         CHAR name_[NameSize];
-        WORD parentIndex_; //è¦ªã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã€‚ç„¡ã„å ´åˆã¯0xFFFFU
-        WORD tailPosIndex_;//æœ«ç«¯ã¯0xFFFFU
-        BYTE type_; //0:å›è»¢ã€1:å›è»¢ãƒ»ç§»å‹•ã€2:IKã€3:ã€4:IKå½±éŸ¿ä¸‹ã€5:å›è»¢å½±éŸ¿ä¸‹ã€6:IKæ¥ç¶šå…ˆã€7:éè¡¨ç¤ºã€8:æ»ã‚Šã€9:å›è»¢é‹å‹•
-        WORD ikParentIndex_; //å½±éŸ¿ã‚’å—ã‘ã‚‹IKãƒœãƒ¼ãƒ³ç•ªå·ã€‚ç„¡ã„å ´åˆ0
+        WORD parentIndex_; //e‚ÌƒCƒ“ƒfƒbƒNƒXB–³‚¢ê‡‚Í0xFFFFU
+        WORD tailPosIndex_;//––’[‚Í0xFFFFU
+        BYTE type_; //0:‰ñ“]A1:‰ñ“]EˆÚ“®A2:IKA3:A4:IK‰e‹¿‰ºA5:‰ñ“]‰e‹¿‰ºA6:IKÚ‘±æA7:”ñ•\¦A8:”P‚èA9:‰ñ“]‰^“®
+        WORD ikParentIndex_; //‰e‹¿‚ğó‚¯‚éIKƒ{[ƒ“”Ô†B–³‚¢ê‡0
         FLOAT headPos_[3];
 
-        //ã‚¹ãƒˆãƒªãƒ¼ãƒ ãƒ­ãƒ¼ãƒ‰
+        void swap(Bone& rhs);
+
+        //ƒXƒgƒŠ[ƒ€ƒ[ƒh
         friend lcore::istream& operator>>(lcore::istream& is, Bone& rhs);
     };
 
@@ -325,15 +342,15 @@ namespace pmd
         IK();
         ~IK();
 
-        WORD boneIndex_; /// IKãƒœãƒ¼ãƒ³
-        WORD targetBoneIndex_; /// ã‚¿ãƒ¼ã‚²ãƒƒãƒˆãƒœãƒ¼ãƒ³
-        BYTE chainLength_; /// å­ã®æ•°
-        WORD numIterations_; /// åå¾©å›æ•°
-        FLOAT controlWeight_; /// PIã«å¯¾ã™ã‚‹å€ç‡ï¼Ÿåˆ¶é™è§’åº¦ï¼Ÿ
+        WORD boneIndex_; /// IKƒ{[ƒ“
+        WORD targetBoneIndex_; /// ƒ^[ƒQƒbƒgƒ{[ƒ“
+        BYTE chainLength_; /// q‚Ì”
+        WORD numIterations_; /// ”½•œ‰ñ”
+        FLOAT controlWeight_; /// PI‚É‘Î‚·‚é”{—¦H§ŒÀŠp“xH
         WORD *childBoneIndex_;
 
         WORD prevNumChildren_;
-        //ã‚¹ãƒˆãƒªãƒ¼ãƒ ãƒ­ãƒ¼ãƒ‰
+        //ƒXƒgƒŠ[ƒ€ƒ[ƒh
         friend lcore::istream& operator>>(lcore::istream& is, IK& rhs);
     };
 
@@ -347,38 +364,152 @@ namespace pmd
     //--------------------------------------
     struct Skin
     {
-        struct BaseVertex
+        struct SkinVertex
         {
-            DWORD index_; //é ‚ç‚¹é…åˆ—ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
-            FLOAT position_[3];
-        };
-
-        struct OffsetVertex
-        {
-            DWORD baseIndex_; //BaseVertexé…åˆ—ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
-            FLOAT offset_[3]; //
-        };
-
-        union SkinVertex
-        {
-            BaseVertex base_;
-            OffsetVertex offset_;
+            u32 index_; //’¸“_”z—ñ‚ÌƒCƒ“ƒfƒbƒNƒX
+                        //type‚ªbase‚Ìê‡’¸“_”z—ñ‚ÌƒCƒ“ƒfƒbƒNƒXA‚»‚êˆÈŠO‚Íbase‚Ì”z—ñ‚ÌƒCƒ“ƒfƒbƒNƒX
+            f32 position_[3]; //type‚ªbase‚Ìê‡’¸“_À•WA‚»‚êˆÈŠO‚Íbase‚©‚ç‚ÌƒIƒtƒZƒbƒg
         };
 
         Skin();
         ~Skin();
 
-        CHAR name_[NameSize];
-        DWORD numVertices_;
-        BYTE type_; //0:base, 1:blow, 2:eye, 3:rip, 4:other
-        SkinVertex* vertices_;
+        void swap(Skin& rhs);
 
-        //ã‚¹ãƒˆãƒªãƒ¼ãƒ ãƒ­ãƒ¼ãƒ‰
+        //CHAR name_[NameSize];
+        u32 numVertices_; //À¿’¸“_‚Í16ƒrƒbƒg‚ğ‰z‚¦‚È‚¢
+        SkinVertex* vertices_;
+        u32 type_; //0:base, 1:blow, 2:eye, 3:rip, 4:other
+        //u16 dispIndex_;
+
+        //ƒXƒgƒŠ[ƒ€ƒ[ƒh
         friend lcore::istream& operator>>(lcore::istream& is, Skin& rhs);
     };
 
     lcore::istream& operator>>(lcore::istream& is, Skin& rhs);
 
+
+    //--------------------------------------
+    //---
+    //--- SkinPack
+    //---
+    //--------------------------------------
+    class SkinPack
+    {
+    public:
+        SkinPack();
+        SkinPack(u32 numSkins);
+        ~SkinPack();
+
+        inline u32 getNumSkins() const;
+
+        inline Skin* getSkins();
+
+        inline Skin& getSkin(u32 index);
+
+        void swap(SkinPack& rhs);
+
+        void createMorphBaseVertices(u32 numVertices, const Vertex* vertices);
+
+        u16 getMinIndex() const{ return indexRange_[0];}
+        u16 getMaxIndex() const{ return indexRange_[1];}
+
+        Vertex* getMorphBaseVertices(){ return morphBaseVertices_;}
+    private:
+        SkinPack(const SkinPack&);
+        SkinPack& operator=(SkinPack&);
+
+        void sortVertexIndices();
+
+        struct Batch
+        {
+            u32 numVertices_;
+            Vertex* vertices_;
+        };
+
+        u32 numSkins_;
+        Skin* skins_;
+        u16 indexRange_[2];
+        Vertex* morphBaseVertices_;
+    };
+
+    inline u32 SkinPack::getNumSkins() const
+    {
+        return numSkins_;
+    }
+
+    inline Skin* SkinPack::getSkins()
+    {
+        return skins_;
+    }
+
+    inline Skin& SkinPack::getSkin(u32 index)
+    {
+        LASSERT(0<=index && index<numSkins_);
+        return skins_[index];
+    }
+
+
+    //--------------------------------------
+    //---
+    //--- DispLabel
+    //---
+    //--------------------------------------
+    /**
+    @brief •\¦˜g
+
+    •\¦˜g‚ÌƒCƒ“ƒfƒbƒNƒX‚ÍA0‚ªƒZƒ“ƒ^[ŒÅ’èB
+    */
+    class DispLabel
+    {
+    public:
+        struct BoneLabel
+        {
+            WORD boneIndex_;
+            WORD labelIndex_;
+        };
+
+        DispLabel();
+        ~DispLabel();
+
+        u32 getNumBoneGroups() const{ return numBoneGroups_;}
+
+        u16 getSkinLabelCount() const;
+        inline u16 getSkinIndex(u16 labelIndex) const;
+
+        u16 getBoneLabelCount() const;
+        inline const BoneLabel& getBoneLabel(u16 labelIndex) const;
+
+        const u16* getBoneMap() const{ return boneMap_;}
+
+        void read(lcore::istream& is);
+
+        void swapBoneMap(u16*& boneMap);
+
+        void swap(DispLabel& rhs);
+    private:
+        u32 numBoneGroups_;
+
+        u8* buffer_;
+
+        u16* skinIndices_;
+        BoneLabel* boneLabels_;
+
+        u16* boneMap_;
+
+    };
+
+    inline u16 DispLabel::getSkinIndex(u16 labelIndex) const
+    {
+        LASSERT(skinIndices_ != NULL);
+        return skinIndices_[labelIndex];
+    }
+
+    inline const DispLabel::BoneLabel& DispLabel::getBoneLabel(u16 labelIndex) const
+    {
+        LASSERT(boneLabels_ != NULL);
+        return boneLabels_[labelIndex];
+    }
 
     //--------------------------------------
     //---
@@ -412,6 +543,7 @@ namespace pmd
     {
     public:
         Pack();
+        Pack(lconverter::NameTextureMap* nameTexMap);
         ~Pack();
 
         bool open(const Char* filepath);
@@ -433,16 +565,31 @@ namespace pmd
         inline u16 getNumIKs() const;
         inline const IK& getIK(u32 index) const;
 
-        inline u16 getNumSkins() const;
-        inline const Skin& getSkin(u32 index) const;
-
 
         bool createObject(lscene::AnimObject& obj, const char* directory, bool swapOrigin);
 
         inline lanim::Skeleton* releaseSkeleton();
-        inline lanim::IKPack* releaseIKPack();
+
+        inline SkinPack& getSkinPack();
+
+        inline DispLabel& getDispLabel();
     private:
-        bool loadInternal();
+
+        class ToonTexturePack
+        {
+        public:
+            ToonTexturePack()
+            {
+                for(u32 i=0; i<NumToonTextures; ++i){
+                    textures_[i] = NULL;
+                }
+            }
+
+            lgraphics::TextureRef* textures_[NumToonTextures];
+        };
+
+        inline lanim::IKPack* releaseIKPack();
+        bool loadInternal(const char* directory);
 
         void release();
 
@@ -451,14 +598,22 @@ namespace pmd
         {
             LASSERT(elements != NULL);
             lcore::io::read(in, numElements);
-            *elements = LIME_NEW T[numElements];
-            T* ptr = *elements;
-            for(u32 i=0; i<numElements; ++i){
-                in >> ptr[i];
+            if(numElements>0){
+                *elements = LIME_NEW T[numElements];
+                T* ptr = *elements;
+                for(u32 i=0; i<numElements; ++i){
+                    in >> ptr[i];
+                }
             }
         }
 
-        /// ãƒœãƒ¼ãƒ³ã‚’è¦ªãŒå‰ã«ãªã‚‹ã‚ˆã†ã«ã‚½ãƒ¼ãƒˆ
+        /// ‰pŒê–¼ƒ[ƒh
+        void loadNamesForENG();
+
+        /// ƒgƒD[ƒ“ƒVƒF[ƒfƒBƒ“ƒO—pƒeƒNƒXƒ`ƒƒƒ[ƒh
+        void loadToonTextures(const char* directory);
+
+        /// ƒ{[ƒ“‚ğe‚ª‘O‚É‚È‚é‚æ‚¤‚Éƒ\[ƒg
         void sortBones();
 
         lcore::ifstream input_;
@@ -481,12 +636,16 @@ namespace pmd
         Bone *bones_;
         u16* boneMap_;
 
-        u16 numSkins_;
-        Skin *skins_;
+        SkinPack skinPack_;
 
         lanim::Skeleton* skeleton_;
         lanim::IKPack* ikPack_;
 
+        lconverter::NameTextureMap *nameTexMap_;
+        lconverter::NameTextureMap texMapInternal_;
+        DispLabel dispLabel_;
+
+        ToonTexturePack toonTextures_;
     };
 
     inline const Header& Pack::getHeader() const
@@ -538,17 +697,6 @@ namespace pmd
         return bones_[index];
     }
 
-    inline u16 Pack::getNumSkins() const
-    {
-        return numSkins_;
-    }
-
-    inline const Skin& Pack::getSkin(u32 index) const
-    {
-        LASSERT(0<=index && index<numSkins_);
-        return skins_[index];
-    }
-
     inline lanim::Skeleton* Pack::releaseSkeleton()
     {
         lanim::Skeleton* skeleton = skeleton_;
@@ -561,6 +709,16 @@ namespace pmd
         lanim::IKPack* ikPack = ikPack_;
         ikPack_ = NULL;
         return ikPack;
+    }
+
+    inline SkinPack& Pack::getSkinPack()
+    {
+        return skinPack_;
+    }
+
+    inline DispLabel& Pack::getDispLabel()
+    {
+        return dispLabel_;
     }
 }
 #endif //INC_PMD_H__
