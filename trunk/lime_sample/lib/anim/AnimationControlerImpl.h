@@ -11,8 +11,13 @@
 
 namespace lanim
 {
+    //-----------------------------------------------
+    //---
+    //--- AnimCtrlSimpleIK
+    //---
+    //-----------------------------------------------
     template<class Resource, class Ctrl, class CtrlIK>
-    class AnimCtrlSimple : public AnimationControler
+    class AnimCtrlSimpleIK : public AnimationControler
     {
     public:
         typedef lframework::Flags Flags;
@@ -22,7 +27,7 @@ namespace lanim
         typedef CtrlIK ctrl_ik_type;
 
 
-        virtual ~AnimCtrlSimple()
+        virtual ~AnimCtrlSimpleIK()
         {
         }
 
@@ -82,19 +87,20 @@ namespace lanim
     };
 
     //-----------------------------------------------
-    //---
-    //---
-    //---
+    //--- AnimCtrlSimpleIK実装
     //-----------------------------------------------
     template<class Resource, class Ctrl, class CtrlIK>
-    void AnimCtrlSimple<Resource, Ctrl, CtrlIK>::initialize()
+    void AnimCtrlSimpleIK<Resource, Ctrl, CtrlIK>::initialize()
     {
         controler_.initialize();
+        controler_.getPose();
+        controler_.updateMatrix();
+        controlerIK_.blendPose( resource_.getSkeletonPose() );
     }
 
 
     template<class Resource, class Ctrl, class CtrlIK>
-    void AnimCtrlSimple<Resource, Ctrl, CtrlIK>::update()
+    void AnimCtrlSimpleIK<Resource, Ctrl, CtrlIK>::update()
     {
         if(controler_.getClip() != NULL){
             controler_.updateFrame( resource_.getFrameDuration() );
@@ -107,6 +113,101 @@ namespace lanim
 
             controler_.updateMatrix();
             controlerIK_.blendPose( resource_.getSkeletonPose() );
+        }
+    }
+
+
+    //-----------------------------------------------
+    //---
+    //--- AnimCtrlSimple
+    //---
+    //-----------------------------------------------
+    template<class Resource, class Ctrl>
+    class AnimCtrlSimple : public AnimationControler
+    {
+    public:
+        typedef lframework::Flags Flags;
+
+        typedef Resource resource_type;
+        typedef Ctrl ctrl_type;
+
+
+        virtual ~AnimCtrlSimple()
+        {
+        }
+
+        virtual void initialize();
+        virtual void update();
+
+        /// スケルトンセット
+        inline void setSkeleton(Skeleton::pointer& skeleton)
+        {
+            resource_.setSkeleton(skeleton);
+            controler_.setSkeleton(skeleton);
+
+            //更新対象のポーズをセット
+            controler_.setSkeletonPose(resource_.getSkeletonPose());
+        }
+
+        /// クリップ登録
+        inline bool setClip(AnimationClip::pointer& clip)
+        {
+            return controler_.setClip(clip);
+        }
+
+        /// クリップ登録
+        inline bool resetClip()
+        {
+            return controler_.resetClip();
+        }
+
+        /// ポーズ取得
+        inline const SkeletonPose& getSkeletonPose() const
+        {
+            return resource_.getSkeletonPose();
+        }
+
+        /// フラグセット取得
+        inline const Flags& getFlags() const
+        {
+            return controler_.getFlags();
+        }
+
+        /// フラグセット取得
+        inline Flags& getFlags()
+        {
+            return controler_.getFlags();
+        }
+
+        resource_type resource_;
+        ctrl_type controler_;
+    };
+
+    //-----------------------------------------------
+    //--- AnimCtrlSimpleIK実装
+    //-----------------------------------------------
+    template<class Resource, class Ctrl>
+    void AnimCtrlSimple<Resource, Ctrl>::initialize()
+    {
+        controler_.initialize();
+        controler_.getPose();
+        controler_.updateMatrix();
+    }
+
+
+    template<class Resource, class Ctrl>
+    void AnimCtrlSimple<Resource, Ctrl>::update()
+    {
+        if(controler_.getClip() != NULL){
+            controler_.updateFrame( resource_.getFrameDuration() );
+
+            if(controler_.getFlags().checkFlag(AnimFlag_Loop)){
+                controler_.getPoseLoop();
+            }else{
+                controler_.getPose();
+            }
+
+            controler_.updateMatrix();
         }
     }
 }

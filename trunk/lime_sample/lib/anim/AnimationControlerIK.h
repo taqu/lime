@@ -38,8 +38,8 @@ namespace lanim
         inline void setSkeleton(Skeleton::pointer& skeleton);
 
         /**
-        @brief IK登録
-        @param iks ... IKパック
+        @brief IK逋ｻ骭ｲ
+        @param iks ... IK繝代ャ繧ｯ
         */
         bool setIKPack(IKPack::pointer& iks)
         {
@@ -53,13 +53,19 @@ namespace lanim
         AnimationControlerIK(const AnimationControlerIK&);
         AnimationControlerIK& operator=(const AnimationControlerIK&);
 
-        inline void updateMatrices(SkeletonPose& pose, u8 childIndex);
+        void updateMatrix(const JointPose& jointPose, lmath::Matrix43* matrices, u8 jointIndex);
+
+        void updateMatrices(SkeletonPose& pose, u8 childIndex);
+
+        void updateChildMatrices(SkeletonPose& pose, u8 jointIndex);
+
+        inline void updateMatrices(SkeletonPose& pose, const IKEntry& entry, u16 ikIndex);
 
         Skeleton::pointer skeleton_;
         IKPack::pointer ikPack_;
     };
 
-    // スケルトンセット
+    // 繧ｹ繧ｱ繝ｫ繝医Φ繧ｻ繝�繝�
     inline void AnimationControlerIK::setSkeleton(Skeleton::pointer& skeleton)
     {
         skeleton_ = skeleton;
