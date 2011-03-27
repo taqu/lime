@@ -29,10 +29,7 @@ namespace lgraphics
         {
             return device_;
         }
-
     private:
-
-        u32 clearTarget_;
         static GraphicsDeviceRef device_;
     };
 }

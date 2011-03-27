@@ -30,7 +30,7 @@ namespace io
         //-------------------------------------------------------------------------
         void read32DX(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
         {
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             if(dst.lock(0, rect) == false){
                 return;
             }
@@ -48,7 +48,7 @@ namespace io
 
         void read32RLEDX(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
         {
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             if(dst.lock(0, rect) == false){
                 return;
             }
@@ -90,7 +90,7 @@ namespace io
 
         void read24DX(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
         {
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             if(dst.lock(0, rect) == false){
                 return;
             }
@@ -115,7 +115,7 @@ namespace io
             static const u32 bpp = 3;
             static const u32 dstBpp = 4;
 
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             if(dst.lock(0, rect) == false){
                 return;
             }

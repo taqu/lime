@@ -362,7 +362,7 @@ namespace io
 #else
             //DX版
             bool ret = false;
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             for(u32 i=0; i<mipmapLevel; ++i){
                 ret = dst.lock(i, rect);
                 LASSERT(ret);
@@ -448,7 +448,7 @@ namespace io
             LIME_DELETE_ARRAY(buffer);
 #else
             //DX版
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             bool ret = false;
             for(u32 i=0; i<mipmapLevel; ++i){
                 ret = dst.lock(i, rect);
@@ -475,7 +475,7 @@ namespace io
 #else
         void writeUncompressed(lcore::ostream& dst, TextureRef& src, u32 mipmapLevel, IODDS::DDS_HEADER& header)
         {
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             bool ret = false;
             s32 diff = 0;
             char tmp[4] = {0,0,0,0};
@@ -527,7 +527,7 @@ namespace io
 #else
         void writeFourCC(lcore::ostream& dst, TextureRef& src, u32 mipmapLevel, IODDS::DDS_HEADER& header, BufferFormat format)
         {
-            TextureRef::LockedRect rect;
+            LockedRect rect;
             bool ret = false;
 
             u32 minSize = 0;
@@ -604,7 +604,7 @@ namespace io
     {
         u32 magic = DDS_MAGIC;
 
-        TextureRef::SurfaceDesc desc;
+        SurfaceDesc desc;
         texture.getLevelDesc(0, desc);
 
 

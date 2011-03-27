@@ -167,8 +167,7 @@ namespace lgraphics
         LASSERT(declaration_ != NULL);
 
         VertexElement *elements = declaration_->elements_;
-        u32 size = numElements_-1;
-        for(u32 i=0; i<size; ++i){
+        for(u32 i=0; i<numElements_; ++i){
             s32 size = DeclTypeSizeTable[elements[i].element_[VertexElement::Elem_Type] ];
             GLenum type = DeclTypeTable[elements[i].element_[VertexElement::Elem_Type] ];
             GLboolean normalized = DeclMethodNormalizedTable[ elements[i].element_[VertexElement::Elem_Method] ];
@@ -180,8 +179,7 @@ namespace lgraphics
 
     void VertexDeclarationRef::detach() const
     {
-        u32 size = numElements_-1;
-        for(u32 i=0; i<size; ++i){
+        for(u32 i=0; i<numElements_; ++i){
             glDisableVertexAttribArray(i);
         }
     }
@@ -192,8 +190,7 @@ namespace lgraphics
         char name[MaxUageNameLength];
 
         VertexElement *elements = declaration_->elements_;
-        u32 size = numElements_-1;
-        for(u32 i=0; i<size; ++i){
+        for(u32 i=0; i<numElements_; ++i){
             u8 usage = elements[i].element_[VertexElement::Elem_Usage];
             u32 size = DeclUsageNameSizeTable[usage];
             lcore::memcpy(name, DeclUsageNameTable[usage], size);
@@ -210,7 +207,7 @@ namespace lgraphics
             return false;
         }
 
-        for(u32 i=0; i<numElements_; ++i){
+        for(u32 i=0; i<=numElements_; ++i){
             decl[i] = declaration_->elements_[i];
         }
         return true;
@@ -289,7 +286,7 @@ namespace lgraphics
         decl->addRef();
         elements_ = NULL;
 
-        VertexDeclarationRef tmp(vertexSize_, size_, decl);
+        VertexDeclarationRef tmp(vertexSize_, size_-1, decl);
         declaration.swap(tmp);
     }
 

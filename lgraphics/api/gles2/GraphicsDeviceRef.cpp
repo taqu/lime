@@ -56,6 +56,18 @@ namespace lgraphics
     {
         //Direct3Dベースなので座標系は逆、カリングを逆にしておく
         glCullFace(GL_FRONT);
+        glEnable(GL_CULL_FACE);
+        glFrontFace(GL_CCW);
+
+
+        setClearColor(0);
+        setClearDepth(1.0f);
+        setClearStencil(0);
+
+        glBlendEquation(GL_FUNC_ADD);
+        glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LESS);
+        glDepthMask(GL_TRUE);
 
         //s32 numUnits = 0;
         //glGetIntegerv(GL_MAX_TEXTURE_UNITS, reinterpret_cast<GLint*>(&numUnits));

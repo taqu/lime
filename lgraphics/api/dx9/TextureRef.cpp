@@ -92,7 +92,7 @@ namespace lgraphics
         texture_->UnlockRect(level);
     }
 
-    // ƒf[ƒ^“]‘—
+    // ãƒ‡ãƒ¼ã‚¿è»¢é€
     void TextureRef::blit(u32 level, u8* data)
     {
         LASSERT(data != NULL);
@@ -109,10 +109,10 @@ namespace lgraphics
             return;
         }
 
-        //ƒ~ƒbƒvƒ}ƒbƒvƒTƒCƒYŒvŽZ
+        //ãƒŸãƒƒãƒ—ãƒžãƒƒãƒ—ã‚µã‚¤ã‚ºè¨ˆç®—
         u32 size = desc.Width * desc.Height;
 
-        //TODO:‚¿‚á‚ñ‚Æƒsƒbƒ`‚âƒTƒCƒY‚ð‚Ý‚È‚¢‚Æ
+        //TODO:ã¡ã‚ƒã‚“ã¨ãƒ”ãƒƒãƒã‚„ã‚µã‚¤ã‚ºã‚’ã¿ãªã„ã¨
         lcore::memcpy(lockedRect.bits_, data, size);
 
         texture_->UnlockRect(level);

@@ -99,6 +99,8 @@ namespace lgraphics
             u32 multiSampleQuality,
             bool lockable);
 
+        inline bool getRenderTarget(u32 index, IDirect3DSurface9** target);
+
         inline bool getRenderTargetData(IDirect3DSurface9* src, IDirect3DSurface9* dst);
         inline void setRenderTarget(u32 index, IDirect3DSurface9* target);
         inline bool getFrontBufferData(u32 swapChain, IDirect3DSurface9* surface);
@@ -282,6 +284,12 @@ namespace lgraphics
 
     // Render Target
     //------------------------------------------------------------------------------------------
+    inline bool GraphicsDeviceRef::getRenderTarget(u32 index, IDirect3DSurface9** target)
+    {
+        HRESULT hr = d3dDevice_->GetRenderTarget(index, target);
+        return SUCCEEDED(hr);
+    }
+
     inline IDirect3DSurface9* GraphicsDeviceRef::createRenderTarget(
         u32 width,
         u32 height,

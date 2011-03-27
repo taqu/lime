@@ -51,7 +51,6 @@ namespace lgraphics
 
     static const u32 INVALID_SAMPLER_INDEX = 0xFFFFFFFFU;
 
-
 //----------------------------------------------------------
 //---
 //--- プラットフォーム、API依存のdefine

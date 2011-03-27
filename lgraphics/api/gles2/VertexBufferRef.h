@@ -74,6 +74,9 @@ namespace lgraphics
 
         /*
         @brief データ転送。GL的インターフェイス
+        @param data
+        @param offset ... バイトオフセット
+        @param size ... バイトサイズ
         */
         void blit(void* data, u32 offset, u32 size);
 

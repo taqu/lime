@@ -23,6 +23,8 @@ namespace lgraphics
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wPara, LPARAM lParam);
 
     Window::Window()
+        :viewWidth_(1)
+        ,viewHeight_(1)
     {
         handle_.hWnd_ = NULL;
     }
@@ -103,6 +105,9 @@ namespace lgraphics
         }
         UpdateWindow(handle_.hWnd_);
         SetFocus(handle_.hWnd_);
+
+        viewWidth_ = param.width_;
+        viewHeight_ = param.height_;
         return true;
     }
 

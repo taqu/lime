@@ -6,7 +6,7 @@
 @date 2010/06/08 create
 */
 #include "../../lgraphicscore.h"
-#include "Enumerations.h"
+#include "SurfaceRef.h"
 
 namespace lgraphics
 {
@@ -22,24 +22,6 @@ namespace lgraphics
     {
     public:
         struct TextureDesc;
-
-        struct LockedRect
-        {
-            s32 pitch_;
-            void* bits_;
-        };
-
-        struct SurfaceDesc
-        {
-            BufferFormat format_;
-            ResourceType type_;
-            u32 usage_;
-            Pool pool_;
-            MutiSampleType multiSampleType_;
-            u32 multiSampleQuality_;
-            u32 width_;
-            u32 height_;
-        };
 
         TextureRef()
             :texDesc_(NULL)
@@ -147,9 +129,6 @@ namespace lgraphics
     class TextureSystemMemRef : private TextureRef
     {
     public:
-        using TextureRef::LockedRect;
-        using TextureRef::SurfaceDesc;
-
         TextureSystemMemRef()
         {
         }
