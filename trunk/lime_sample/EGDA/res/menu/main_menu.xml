@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu
   xmlns:android="http://schemas.android.com/apk/res/android">
-<item android:id="@+id/exit" android:title="@string/Exit"></item>
-<item android:title="@string/Open" android:id="@+id/open"></item>
+<item android:title="@string/Exit" android:id="@+id/menu_exit"></item>
+<item android:title="@string/Open" android:id="@+id/menu_open"></item>
 </menu>
