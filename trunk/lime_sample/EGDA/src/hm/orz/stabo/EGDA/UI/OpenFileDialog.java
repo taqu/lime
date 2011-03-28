@@ -16,7 +16,7 @@ public class OpenFileDialog implements View.OnClickListener, DialogInterface.OnC
     
     public class FileConparator implements java.util.Comparator<File>
     {
-
+        
 		@Override
 		public int compare(File object1, File object2)
 		{
