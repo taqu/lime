@@ -4,7 +4,11 @@
     <string name="app_name">EGDA</string>
 <string name="Exit">Exit</string>
 <string name="Open">Open File ...</string>
-
-<string name="BtMenu">Menu</string>
-<string name="BtCamera">Camera</string>
+<string name="screen">screen</string>
+<string name="screen_vertical">vertical</string>
+<string name="screen_horizontal">horizontal</string>
+<string name="camera">camera</string>
+<string name="camera_anim">animation</string>
+<string name="camera_manual">manual</string>
+<string name="restart">at restart</string>
 </resources>
