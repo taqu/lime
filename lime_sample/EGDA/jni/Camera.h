@@ -20,6 +20,9 @@ namespace egda
     class Camera
     {
     public:
+        static const f32 TickZoomRatio;
+        static const f32 TickRotationRatio;
+        
         enum Mode
         {
             Mode_Manual =0,
@@ -38,8 +41,10 @@ namespace egda
         inline void reset();
         inline void reset(Mode mode);
 
-        void setInitial(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov, f32 asect);
-        void setCameraAnim(pmm::CameraAnimPack* pack, f32 aspect);
+        void resetProjection();
+
+        void setInitial(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov);
+        void setCameraAnim(pmm::CameraAnimPack* pack);
     private:
         Camera(const Camera&);
         Camera& operator=(const Camera&);
@@ -51,6 +56,7 @@ namespace egda
         {
         public:
             virtual ~Base(){}
+            virtual void initialize() = 0;
             virtual void update(u32 counter) =0;
             virtual void reset() =0;
         };

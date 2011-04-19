@@ -1,10 +1,15 @@
-#ifndef INC_VIEWER_SCENE_H__
-#define INC_VIEWER_SCENE_H__
+#ifndef INC_EGDA_SCENE_H__
+#define INC_EGDA_SCENE_H__
 /**
 @file Scene.h
 @author t-sakai
 @date 2011/02/06 create
 */
+namespace lmath
+{
+    class Matrix44;
+}
+
 namespace pmm
 {
     class ModelPack;
@@ -37,13 +42,17 @@ namespace egda
 
         void release();
 
-        void initialize(f32 aspect);
+        void initialize();
 
         void update();
 
         void setState(State state);
+        void setCameraMode(s32 mode);
+        s32 getCameraMode() const;
 
         void swap(Scene& rhs);
+
+        void resetProjection();
     private:
         struct Impl;
 
@@ -53,4 +62,4 @@ namespace egda
         Impl *impl_;
     };
 }
-#endif //INC_VIEWER_SCENE_H__
+#endif //INC_EGDA_SCENE_H__

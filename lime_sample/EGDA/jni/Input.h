@@ -36,9 +36,9 @@ namespace egda
 
         enum AngularSensorAxis
         {
-            Axis_Yaw =0,
-            Axis_Pitch,
-            Axis_Roll,
+            Axis_X =0,
+            Axis_Y,
+            Axis_Z,
             Axis_Num,
         };
 
@@ -61,6 +61,9 @@ namespace egda
 
         inline static bool* getOnFlags(){ return impl_.isOn_;}
         inline static bool* getClickFlags(){ return impl_.isClick_;}
+
+        inline static void updateOrientation(f32 x, f32 y, f32 z);
+        inline static void updateTouch(bool isOn, f32 x, f32 y);
     private:
         class Impl
         {
@@ -81,6 +84,32 @@ namespace egda
 
         static Impl impl_;
     };
+
+    inline void Input::updateOrientation(f32 x, f32 y, f32 z)
+    {
+        impl_.angles_[Axis_X] = x;
+        impl_.angles_[Axis_Y] = y;
+        impl_.angles_[Axis_Z] = z;
+    }
+
+    inline void Input::updateTouch(bool isOn, f32 x, f32 y)
+    {
+        impl_.durations_[Analog_X] = 0.0f;
+        impl_.durations_[Analog_Y] = 0.0f;
+
+        if(impl_.isOn_[Button_1]){
+            impl_.isClick_[Button_1] = !isOn;
+
+            if(isOn){
+                impl_.durations_[Analog_X] = x - impl_.positions_[Analog_X];
+                impl_.durations_[Analog_Y] = y - impl_.positions_[Analog_Y];
+            }
+        }
+
+        impl_.isOn_[Button_1] = isOn;
+        impl_.positions_[Analog_X] = x;
+        impl_.positions_[Analog_Y] = y;
+    }
 }
 
 #endif //INC_EGDA_INPUT_H__

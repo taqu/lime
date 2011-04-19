@@ -1,6 +1,7 @@
 #ifndef INC_EGDA_APPLICATION_H__
 #define INC_EGDA_APPLICATION_H__
 #include "Scene.h"
+#include "TextRenderer.h"
 
 namespace egda
 {
@@ -14,6 +15,17 @@ namespace egda
     class Application
     {
     public:
+        static const u32 MaxChars = 256;
+        static const u32 CharW = 9;
+        static const u32 CharH = 20;
+
+        static const u32 Rows = 6;
+        static const u32 Cols = 16;
+        static const u32 RowsRatio = 2;
+        static const u32 ColsRatio = 2;
+
+        static const u32 MSecPerFrame = 32; //1フレームあたりの時間
+
         Application();
         ~Application();
 
@@ -23,7 +35,7 @@ namespace egda
             return instance;
         }
 
-        bool initialize();
+        bool initialize(const Char* textTexture, u32 size);
         void terminate();
 
         void update();
@@ -32,9 +44,15 @@ namespace egda
 
         bool loadPmm(const Char* filename, const Char* directory);
 
+        void setState(s32 state){ scene_.setState( static_cast<Scene::State>(state) );}
+        void setCameraMode(s32 mode){ scene_.setCameraMode(mode);}
+
+        void resetProjection(){ scene_.resetProjection(); }
     private:
-        f32 aspect_;
         Scene scene_;
+        TextRenderer textRenderer_;
+        u32 prevMSec_;
+        u32 currentMSec_;
     };
 }
 #endif //INC_EGDA_APPLICATION_H__

@@ -54,6 +54,7 @@ LOCAL_SRC_FILES := $(LIME_DIR)/lgraphics/lgraphics.cpp\
                    $(LIME_DIR)/lgraphics/api/gles2/VertexDeclarationRef.cpp\
                    $(LIME_DIR)/lgraphics/io/IOBMP.cpp\
                    $(LIME_DIR)/lgraphics/io/IODDS.cpp\
+                   $(LIME_DIR)/lgraphics/io/IOJPEG.cpp\
                    $(LIME_DIR)/lgraphics/io/IOTGA.cpp\
                    $(LIME_DIR)/lgraphics/io/IOPNG.cpp\
                    $(LIME_DIR)/lgraphics/io/IOGeometryBuffer.cpp\
@@ -157,6 +158,8 @@ LOCAL_SRC_FILES:= $(LIBANIM_DIR)/AnimationControlerIK.cpp\
                   ./Camera.cpp\
                   ./Light.cpp\
                   ./Input.cpp\
+                  ./Config.cpp\
+                  ./TextRenderer.cpp\
 
 LOCAL_C_INCLUDES := $(APP_C_INCLUDES) $(LIBCONVERTER_DIR)
 LOCAL_LDLIBS    := -lGLESv2 -ldl -llog -lz

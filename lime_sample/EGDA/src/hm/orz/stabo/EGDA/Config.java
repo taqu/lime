@@ -14,27 +14,38 @@ import android.os.Environment;
 import android.util.Xml;
 
 /**
- * 設定データクラス。シングルトン 
+ * 設定データクラス。シングルトン
  * @author taqu
  *
  */
 public class Config
 {
-	private final String FileName = "config.xml";
-	private final String XmlEncoding = "UTF-8";
-	private final String Empty = "";
-	
-	private final String TagConfig = "config";
-	private final String TagLastDirectory = "last_directory";
-	private final String TagCameraMode = "camera_mode";
-	private final String TagScreenMode = "screen_mode";
+	private static final String FileName = "config.xml";
+	private static final String XmlEncoding = "UTF-8";
+	private static final String Empty = "";
 
-	public final int Camera_Animation = 0;
-	public final int Camera_Manual = 1;
-	
-	public final int Screen_Vertical = 0;
-	public final int Screen_Horizontal = 1;
-	
+	private static final String TagConfig = "config";
+	private static final String TagLastDirectory = "last_directory";
+	private static final String TagCameraMode = "camera_mode";
+	private static final String TagScreenMode = "screen_mode";
+
+	public static final int Camera_Manual = 0;
+	public static final int Camera_Animation = 1;
+
+	public static final int Screen_Rot0 = 0;
+	public static final int Screen_Rot90 = 1;
+	public static final int Screen_Rot180 = 2;
+	public static final int Screen_Rot270 = 3;
+
+	private static final int NumResolutions = 4;
+
+	//320×240 //QVGA 4:3
+	//400×240 //WQVGA 16:9
+	//800×480 //WVGA 15:9
+	//854×480 //FWVGA 16:9
+	//800×600 //SVGA 4:3
+	//1024×576 //WSVGA 16:9
+
 	private int clamp(int v, int min, int max)
 	{
 	    if(v<min){
@@ -44,7 +55,7 @@ public class Config
 	    }
 	    return v;
 	}
-	
+
 	/**
 	 * @return 実体
 	 */
@@ -62,7 +73,7 @@ public class Config
 			instance_ = new Config();
 		}
 	}
-	
+
 	/**
 	 * 終了
 	 */
@@ -70,7 +81,7 @@ public class Config
 	{
 		instance_ = null;
 	}
-	
+
 	public String getLastDirectory()
 	{
 		if(lastDirectory_.length() == 0){
@@ -78,12 +89,11 @@ public class Config
 				lastDirectory_ = Environment.getExternalStorageDirectory().getAbsolutePath();
 			}
         }
-		
+
 		return lastDirectory_;
 	}
 	public void setLastDirectory(String directory)
 	{
-	    changed_ = true;
 		lastDirectory_ = directory;
 	}
 
@@ -91,30 +101,39 @@ public class Config
 	{
 	    return cameraMode_;
 	}
-	
+
 	public void setCameraMode(int mode)
 	{
-	    changed_ = true;
 	    cameraMode_ = mode;
 	}
-	
+
 	public int getScreenMode()
 	{
 	    return screenMode_;
 	}
-	
+
 	public void setScreenMode(int mode)
 	{
-	    changed_ = true;
 	    screenMode_ = mode;
 	}
-	
+
 	private String createPath(String appName)
 	{
 		File root = Environment.getExternalStorageDirectory();
-        return root.getAbsolutePath() + "/" + appName + "/" + FileName;
+
+		//ディレクトリがなかったら作成
+		String appDirPath = root.getAbsolutePath() + "/" + appName + "/";
+		File appDirectory = new File(appDirPath);
+		if(appDirectory.exists()){
+		    return appDirPath + FileName;
+		}
+
+		if(appDirectory.mkdir()){
+		    return appDirPath + FileName;
+		}
+		return null;
 	}
-	
+
 	/**
 	 * 設定ファイルから値ロード。ファイルがない、又は外部ストレージがない場合は、デフォルト値を設定。
 	 * @param appName ... アプリケーション名
@@ -122,18 +141,17 @@ public class Config
 	public void load(String appName)
 	{
 	    setDefault();
-        changed_ = true;
 		if(false == Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
             return;
         }
- 
+
         File config = new File(createPath(appName));
         if(config.exists()){
         	try{
         		FileInputStream is = new FileInputStream(config);
         		XmlPullParser xmlPullParser = Xml.newPullParser();
         		xmlPullParser.setInput(is, XmlEncoding);
-        		
+
         		for(int event = XmlPullParser.START_DOCUMENT;
         			event != XmlPullParser.END_DOCUMENT;
         			event = xmlPullParser.next())
@@ -150,12 +168,11 @@ public class Config
 
                         }else if(xmlPullParser.getName().equals(TagScreenMode)){
                             screenMode_ = Integer.parseInt( xmlPullParser.nextText() );
-                            screenMode_ = clamp(cameraMode_, 0, 1);
+                            screenMode_ = clamp(screenMode_, 0, 3);
                         }
         				break;
         			}
         		}
-        		changed_ = false;
         	}catch(FileNotFoundException e)
         	{
         	} catch (XmlPullParserException e) {
@@ -164,72 +181,68 @@ public class Config
 			}
         }
 	}
-	
+
 	/**
 	 * 設定ファイルをセーブ。
 	 * @param appName ... アプリケーション名
 	 */
 	public void save(String appName)
 	{
-	    if(false == changed_){
-	        return;
-	    }
-	    
 		if(false == Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
             return;
         }
-		
+
         try{
         	String path = createPath(appName);
+        	if(path == null){
+        	    return;
+        	}
         	FileOutputStream os = new FileOutputStream(path, false);
-        	
+
         	XmlSerializer xmlSerializer = Xml.newSerializer();
         	xmlSerializer.setOutput(os, XmlEncoding);
-        	
+
         	xmlSerializer.startDocument(XmlEncoding, true);
-        	
+
         	xmlSerializer.startTag(Empty, TagConfig);
-        	
+
         	xmlSerializer.startTag(Empty, TagLastDirectory);
         	xmlSerializer.text(lastDirectory_);
         	xmlSerializer.endTag(Empty, TagLastDirectory);
-        	
+
         	xmlSerializer.startTag(Empty, TagCameraMode);
             xmlSerializer.text( Integer.toString(cameraMode_) );
             xmlSerializer.endTag(Empty, TagCameraMode);
-            
+
             xmlSerializer.startTag(Empty, TagScreenMode);
             xmlSerializer.text( Integer.toString(screenMode_) );
             xmlSerializer.endTag(Empty, TagScreenMode);
-        	
+
             xmlSerializer.endTag(Empty, TagConfig);
-            
+
         	xmlSerializer.endDocument();
 
         	os.close();
-        	changed_ = false;
-        	
+
         }catch(FileNotFoundException e)
         {
         }catch(IOException e)
         {
         }
 	}
-	
+
 	private void setDefault()
 	{
 		lastDirectory_ = Empty;
 		cameraMode_ = Camera_Animation;
-	    screenMode_ = Screen_Vertical;
+	    screenMode_ = Screen_Rot0;
 	}
-	
+
 	private Config(){}
 
 	private static Config instance_ = null; /** 実体 */
-	
-	private boolean changed_ = false;
-	
+
 	private String lastDirectory_; /** 最後に選択したディレクトリ */
 	private int cameraMode_ = Camera_Animation;
-	private int screenMode_ = Screen_Vertical;
+	private int screenMode_ = Screen_Rot0;
 }

@@ -5,10 +5,23 @@
 <string name="Exit">Exit</string>
 <string name="Open">Open File ...</string>
 <string name="screen">screen</string>
-<string name="screen_vertical">vertical</string>
-<string name="screen_horizontal">horizontal</string>
 <string name="camera">camera</string>
 <string name="camera_anim">animation</string>
 <string name="camera_manual">manual</string>
 <string name="restart">at restart</string>
+<string-array name="screen_rotate">
+    <item>rotate 0</item>
+    <item>rotate 90</item>
+    <item>rotate 180</item>
+    <item>rotate 270</item>
+</string-array>
+<string name="screen_spinner_title">Select Screen Rotation</string>
+<string name="Preferences">Preferences</string>
+<string name="menu_dialog_title">Preferences</string>
+<string name="OK">OK</string>
+<string name="Cancel">Cancel</string>
+<string name="about">About</string>
+<string name="copyright_google">Copyright (c) 2005, Google Inc. All rights reserved.</string>
+<string name="copyright_libpng">libpng version 1.5.0 - January 6, 2011\n    Copyright (c) 1998-2011 Glenn Randers-Pehrson\n    Copyright (c) 1996-1997 Andreas Dilger\n    Copyright (c) 1995-1996 Guy Eric Schalnat, Group 42, Inc.</string>
+<string name="copyright_libjpeg">This software is based in part on the work of the Independent JPEG Group.\n    Copyright (c) 1991-2010, Thomas G. Lane, Guido Vollbeding.</string>
 </resources>
