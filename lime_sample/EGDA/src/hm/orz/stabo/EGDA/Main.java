@@ -1,6 +1,5 @@
 package hm.orz.stabo.EGDA;
 
-
 import hm.orz.stabo.EGDA.CommandManager.Command;
 import hm.orz.stabo.EGDA.UI.MenuDialog;
 import hm.orz.stabo.EGDA.UI.OpenFileDialog;
@@ -223,13 +222,13 @@ public class Main extends Activity
         switch(state)
         {
         case State_Stop:
-        	playButton_.setImageResource(android.R.drawable.ic_media_pause);
+            playButton_.setImageResource(android.R.drawable.ic_media_play);
 
         	command = CommandManager.createChangeState(manager, State_Stop);
         	manager.push(command);
         	break;
         case State_Play:
-        	playButton_.setImageResource(android.R.drawable.ic_media_play);
+        	playButton_.setImageResource(android.R.drawable.ic_media_pause);
 
         	command = CommandManager.createChangeState(manager, State_Play);
         	manager.push(command);
