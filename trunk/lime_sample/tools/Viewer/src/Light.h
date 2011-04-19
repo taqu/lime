@@ -23,6 +23,7 @@ namespace viewer
         Light();
         ~Light();
 
+        void initialize();
         void update();
 
         void setLightAnim(pmm::LightAnimPack* pack, u32 lastFrame);

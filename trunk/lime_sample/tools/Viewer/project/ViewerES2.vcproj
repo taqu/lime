@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../;../../libConverter;../../../lib/anim;&quot;$(POWERVRSDK)\Include&quot;"
+				AdditionalIncludeDirectories="../../../../;../../libConverter;../../../lib/anim"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;LIME_GLES2"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -65,7 +65,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="lframework_gles2_vc90_d.lib linput_vc90_d.lib libConverter_gles2_vc90_d.lib libEGL.lib libGLESv2.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../../../../lib;../../libConverter/lib;&quot;$(POWERVRSDK)\WindowsPC\Lib&quot;"
+				AdditionalLibraryDirectories="../../../../lib;../../libConverter/lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../../../;../../libConverter;../../../lib/anim;&quot;$(POWERVRSDK)\Include&quot;"
+				AdditionalIncludeDirectories="../../../../;../../libConverter;../../../lib/anim"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;LIME_GLES2"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -142,7 +142,7 @@
 				Name="VCLinkerTool"
 				AdditionalDependencies="lframework_gles2_vc90.lib linput_vc90.lib libConverter_gles2_vc90.lib libEGL.lib libGLESv2.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../../../lib;../../libConverter/lib;&quot;$(POWERVRSDK)\WindowsPC\Lib&quot;"
+				AdditionalLibraryDirectories="../../../../lib;../../libConverter/lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -224,6 +224,14 @@
 			</File>
 			<File
 				RelativePath="..\src\stdafx.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\TextRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\TextRenderer.h"
 				>
 			</File>
 		</Filter>

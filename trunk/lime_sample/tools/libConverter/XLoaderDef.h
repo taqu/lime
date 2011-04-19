@@ -12,6 +12,8 @@
 
 namespace lx
 {
+//#define LX_UV_TYPE_PACKED_S16 (1)
+
 #define LX_NEW LIME_NEW
 #define LX_PLACEMENT_NEW(ptr) LIME_PLACEMENT_NEW(ptr)
 #define LX_DELETE(ptr) LIME_DELETE(ptr)
@@ -34,10 +36,20 @@ namespace lx
         s16 elem_[4];
     };
 
+#if defined(LX_UV_TYPE_PACKED_S16)
     struct UV
     {
         s16 elem_[2];
     };
+    typedef lconverter::S16Vector UVVector;
+
+#else
+    struct UV
+    {
+        f32 elem_[2];
+    };
+    typedef lconverter::F32Vector UVVector;
+#endif
 
     // Xファイルヘッダ情報
     //--------------------------------------------------------------
@@ -119,6 +131,7 @@ namespace lx
         XToken_Dot,
         XToken_Comma,
         XToken_Semicolon,
+        XToken_DoubleQuot,
 
         XToken_Template,
         XToken_WORD,

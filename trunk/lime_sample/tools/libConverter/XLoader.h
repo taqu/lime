@@ -149,8 +149,13 @@ namespace lx
         f32 getFloat();
         f32 getFloatMember();
 
+        s32 skipSpace();
+
         /// 次トークン取得
         void getNextToken();
+
+        /// 文字列リテラル取得
+        void getStringLiteral();
 
         /// １行読み飛ばす
         void skipLine();
@@ -177,7 +182,7 @@ namespace lx
 
         Vec3Vector vertices_; //頂点リスト
         NormalVector normals_; //法線リスト
-        lconverter::S16Vector uvs_; //ＵＶリスト
+        UVVector uvs_; //ＵＶリスト
 
         FaceArray faces_; //面リスト
         FaceArray normalFaces_; //法線用面リスト
@@ -190,6 +195,12 @@ namespace lx
 
         const char* directory_;
         lscene::Object* animObj_;
+
+//デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+    public:
+        lconverter::DebugLog debugLog_;
+#endif
 
 #if defined(_DEBUG)
         void debugOut(const char* file);

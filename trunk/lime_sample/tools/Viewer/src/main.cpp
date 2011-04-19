@@ -21,6 +21,7 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/,
 
     param.interval_ = lgraphics::PresentInterval_Immediate;
     param.refreshRate_ = 60;
+    //param.format_ = lgraphics::Display_X8R8G8B8;
 
     if(myApp.create(param, "viewer", viewer::WndProc)){
         myApp.run();

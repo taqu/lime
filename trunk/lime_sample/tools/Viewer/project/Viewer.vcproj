@@ -226,6 +226,14 @@
 				RelativePath="..\src\stdafx.h"
 				>
 			</File>
+			<File
+				RelativePath="..\src\TextRenderer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\TextRenderer.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="lib"

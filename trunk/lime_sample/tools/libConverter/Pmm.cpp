@@ -128,6 +128,11 @@ namespace pmm
         LASSERT(filename != NULL);
         filename_ = filename;
         directory_ = directory;
+        
+        //デバッグ情報初期化
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+        debugLog_.reset();
+#endif
 
         lenFilename_ = lcore::strlen(filename_);
         {
@@ -243,24 +248,8 @@ namespace pmm
                 endFrame_ = modelInfo.endFrame_;
             }
 
-#if 0
-            {
-            u32 numSkinFrames = 0;
-            SkinFrame skinFrame;
-            u32 numSkins = modelPacks_[i].getSkinPack().getNumSkins();
-
-            for(u32 j=0; j<numSkins; ++j){
-                SkinFrame::readInit(file_, skinFrame);
-            }
-
-            io::read(file_, numSkinFrames);
-            for(u32 j=0; j<numSkinFrames; ++j){
-                file_ >> skinFrame;
-            }
-            }
-#else
             readSkinMorphPoses(i);
-#endif
+
             u32 numIKs = (modelPacks_[i].getObject()->getIKPack())? modelPacks_[i].getObject()->getIKPack()->getNumIKs() : 0;
             IKFrame::readInit(file_, ikFrame, numIKs);
 
@@ -282,6 +271,10 @@ namespace pmm
             for(u32 j=0; j<numIKs; ++j){
                 IKFrame::readInit2(file_);
             }
+
+            u16* boneMap = NULL;
+            dispLabel.swapBoneMap(boneMap);
+            modelPacks_[i].setBoneMap(boneMap);
         }
     }
 
@@ -336,6 +329,10 @@ namespace pmm
             }
             pmdPack.getDispLabel().swap(dispLabel);
 
+            //デバッグ情報追加
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+            debugLog_ += pmdPack.debugLog_;
+#endif
         }
 
         modelPack.set(object);
@@ -441,7 +438,7 @@ namespace pmm
 
         //名前セット
         if(numJoints>0){
-            animClip->getJointAnimation(0).setName(  skeleton->getJointName(0) ); //センターは0で固定
+            animClip->getJointAnimation(0).setName(  skeleton->getJointName( boneMap[0] ) ); //センターは0で固定
 
             u16 numBoneLabels = dispLabel.getBoneLabelCount();
             for(u16 i=0; i<numBoneLabels; ++i){
@@ -603,6 +600,17 @@ namespace pmm
 
                 ++index;
             }
+
+            for(u32 i=0; i<accPack.getNumPoses(); ++i){
+                AccessoryPose& pose = accPack.getPose(i);
+
+                if(pose.getBindModel() < numModels_){
+                    const u16* boneMap = modelPacks_[ pose.getBindModel() ].getBoneMap();
+                    u8 boneIndex = pose.getBindBone();
+                    pose.setBindBone( boneMap[boneIndex] );
+                }
+            }
+
         }
         numAccessories_ = index;
     }
@@ -648,6 +656,11 @@ namespace pmm
             lcore::Log("fail to load %s", info.path_);
             return false;
         }
+
+        //デバッグ情報追加
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+        debugLog_ += xloader.debugLog_;
+#endif
 
         accessoryPacks_[index].setObject(object);
         return true;
@@ -785,12 +798,15 @@ namespace pmm
 
         static const f32 toRad = (PI/180.0f);
         matrix.identity();
+        //vacの設定は無視
+#if 0
         matrix.setScale(scale);
         matrix.rotateX(f[3]*toRad);
         matrix.rotateY(f[4]*toRad);
         matrix.rotateZ(f[5]*toRad);
 
         matrix.translate(f[0], f[1], f[2]);
+#endif
         return true;
     }
 }
