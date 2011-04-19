@@ -88,6 +88,7 @@ namespace lgraphics
         }
 
         this->setRenderState(D3DRS_ALPHAREF, Default_AlphaTestRef);
+        this->setRenderState(D3DRS_ALPHAFUNC, Cmp_Greater);
 
         return true;
     }

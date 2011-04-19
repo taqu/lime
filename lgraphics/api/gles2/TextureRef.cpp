@@ -117,6 +117,10 @@ namespace lgraphics
             texDesc_->bpp_ = sizeof(u8)*3;
             break;
 
+        case Buffer_B8G8R8:
+            texDesc_->bpp_ = sizeof(u8)*3;
+            break;
+
         case Buffer_X8B8G8R8:
             texDesc_->bpp_ = sizeof(u8)*4;
             break;
@@ -239,6 +243,11 @@ namespace lgraphics
             }
             break;
 
+        case Buffer_B8G8R8:
+            internalFormat = GL_RGB;
+            type = GL_UNSIGNED_BYTE;
+            break;
+
         case Buffer_A8R8G8B8: //バイト並び反転の必要あり
             internalFormat = GL_RGBA;
             type = GL_UNSIGNED_BYTE;
@@ -289,10 +298,13 @@ namespace lgraphics
         glBindTexture(GL_TEXTURE_2D, NULL);
     }
 
-    void TextureRef::attach(u32 /*index*/) const
+    //------------------------------------------------
+    // シェーダにセット
+    void TextureRef::attach(u32 index, u32 location) const
     {
-        //glClientActiveTexture(index);
+        //glActiveTexture(GL_TEXTURE0 + index);
         glBindTexture(GL_TEXTURE_2D, texID_->id_);
+        glUniform1i( location, index ); //シェーダのuniform変数にバインド
     }
 
     void TextureRef::detach() const
@@ -363,6 +375,11 @@ namespace lgraphics
         LASSERT(texDesc_ != NULL);
 
         return texDesc_->bpp_;
+    }
+
+    u32 TextureRef::getTextureID() const
+    {
+        return texID_->id_;
     }
 
     //--------------------------------------------

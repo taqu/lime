@@ -7,6 +7,8 @@
 #include "GraphicsDeviceRef.h"
 #include "InitParam.h"
 #include "../../lgraphics.h"
+#include "RenderStateRef.h"
+#include "../SamplerState.h"
 
 namespace lgraphics
 {
@@ -52,38 +54,9 @@ namespace lgraphics
         glClearStencil(static_cast<GLint>(stencil));
     }
 
-    void GraphicsDeviceRef::enableState()
-    {
-        //Direct3Dベースなので座標系は逆、カリングを逆にしておく
-        glCullFace(GL_FRONT);
-        glEnable(GL_CULL_FACE);
-        glFrontFace(GL_CCW);
-
-
-        setClearColor(0);
-        setClearDepth(1.0f);
-        setClearStencil(0);
-
-        glBlendEquation(GL_FUNC_ADD);
-        glEnable(GL_DEPTH_TEST);
-        glDepthFunc(GL_LESS);
-        glDepthMask(GL_TRUE);
-
-        //s32 numUnits = 0;
-        //glGetIntegerv(GL_MAX_TEXTURE_UNITS, reinterpret_cast<GLint*>(&numUnits));
-        //maxMultiTextures_ =  (maxMultiTextures_ < static_cast<u32>(numUnits))? maxMultiTextures_ : numUnits;
-        //for(u32 i=0; i<maxMultiTextures_; ++i){
-        //    glActiveTexture(GL_TEXTURE0 + i);
-        //    glEnable(GL_TEXTURE_2D);
-        //}
-    }
-
 #if defined(ANDROID)
     GraphicsDeviceRef::GraphicsDeviceRef()
-        :state_(0)
-        ,alphaTestRef_(DefaultAlphaTestRef)
-        ,alphaTestFunc_(DefaultAlphaTestFunc)
-        ,descAllocator_(128)
+        :descAllocator_(128)
     {
     }
 
@@ -96,13 +69,9 @@ namespace lgraphics
     {
         initializeGLES2();
 
-        setClearColor(0);
-        setClearDepth(1.0f);
-        setClearStencil(0);
-
         glViewport(0, 0, param.backBufferWidth_, param.backBufferHeight_);
 
-        enableState();
+        initializeRenderState();
         return true;
     }
 
@@ -191,11 +160,6 @@ namespace lgraphics
         ,context_(EGL_NO_CONTEXT)
         ,surface_(EGL_NO_SURFACE)
         ,window_(NULL)
-
-        ,state_(0)
-        ,alphaTestRef_(DefaultAlphaTestRef)
-        ,alphaTestFunc_(DefaultAlphaTestFunc)
-
         ,descAllocator_(128)
     {
     }
@@ -226,6 +190,8 @@ namespace lgraphics
         if(!eglInitialize(display.get(), &major, &minor)){
             return false;
         }
+
+        eglBindAPI(EGL_OPENGL_ES_API);
 
         // サーフェス属性設定
         //------------------------------------
@@ -289,8 +255,17 @@ namespace lgraphics
         //configAttr[i++] = EGL_MIN_SWAP_INTERVAL;
         //configAttr[i++] = param.interval_;
 
+        configAttr[i++] = EGL_LEVEL;
+        configAttr[i++] = 0;
+
         configAttr[i++] = EGL_SURFACE_TYPE;
         configAttr[i++] = EGL_WINDOW_BIT;
+
+        configAttr[i++] = EGL_RENDERABLE_TYPE;
+        configAttr[i++] = EGL_OPENGL_ES2_BIT;
+
+        configAttr[i++] = EGL_NATIVE_RENDERABLE;
+        configAttr[i++] = EGL_FALSE;
         configAttr[i++] = EGL_NONE;
 
         EGLConfig config = NULL;
@@ -309,8 +284,8 @@ namespace lgraphics
         }
 
         // コンテキスト作成
-        //EGLint apiVersion[] = { EGL_CONTEXT_CLIENT_VERSION, 1, EGL_NONE };
-        context_ = eglCreateContext(display.get(), config, NULL, NULL);
+        EGLint apiVersion[] = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL_NONE };
+        context_ = eglCreateContext(display.get(), config, NULL, apiVersion);
         if(context_ == EGL_NO_CONTEXT){
             return false;
         }
@@ -331,7 +306,7 @@ namespace lgraphics
 
         glViewport(0, 0, param.backBufferWidth_, param.backBufferHeight_);
 
-        enableState();
+        initializeRenderState();
 
 #if defined(_DEBUG)
         dumpEGLExtensions("eglext.txt");
@@ -364,4 +339,267 @@ namespace lgraphics
     }
 
 #endif
+
+    // Rendering State系
+    //------------------------------------------------------------------------------------------
+
+    void GraphicsDeviceRef::initializeRenderState()
+    {
+        setClearColor(0);
+        setClearDepth(1.0f);
+        setClearStencil(0);
+
+        glDepthFunc(GL_LESS);
+        glBlendEquation(GL_FUNC_ADD);
+
+        state_.flags_[State::Flag_AlphaTest] = true;
+        state_.alphaTestRef_ = 128;
+        state_.alphaTestFunc_ = Cmp_Greater;
+
+        state_.flags_[State::Flag_MultiSampleAlias] = false;
+
+        glEnable(GL_DEPTH_TEST);
+        state_.flags_[State::Flag_ZEnable] = true;
+
+        glDepthMask(GL_TRUE);
+        state_.flags_[State::Flag_ZWriteEnable] = true;
+
+        //Direct3Dベースなので座標系は逆、カリングを逆にしておく
+        glCullFace(GL_FRONT);
+        glEnable(GL_CULL_FACE);
+        glFrontFace(CullMode_CCW);
+
+        //state_.flags_[State::Flag_CullingEnable] = true;
+        state_.cullMode_ = CullMode_CCW;
+
+        glDisable(GL_BLEND);
+        state_.flags_[State::Flag_AlphaBlendEnable] = false;
+
+        glBlendFuncSeparate(Blend_SrcAlpha, Blend_InvSrcAlpha, Blend_SrcAlpha, Blend_DestAlpha);
+        state_.alphaBlendSrc_ = Blend_SrcAlpha;
+        state_.alphaBlendDst_ = Blend_InvSrcAlpha;
+
+        //テクスチャサンプラ初期化
+        for(u32 i=0; i<MAX_TEXTURES; ++i){
+            state_.samplerStates_[i].id_ = INVALID_TEXTURE_ID;
+            state_.samplerStates_[i].addressU_ = TexAddress_Wrap;
+            state_.samplerStates_[i].addressV_ = TexAddress_Wrap;
+
+            state_.samplerStates_[i].magFilter_ = TexFilter_Linear;
+            state_.samplerStates_[i].minFilter_ = TexFilter_Linear;
+
+            glActiveTexture(GL_TEXTURE0 + i);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, TexAddress_Wrap);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, TexAddress_Wrap);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, TexFilter_Linear);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TexFilter_Linear);
+        }
+    }
+
+    namespace
+    {
+        inline void lglSetDepthTest(bool enable)
+        {
+            if(enable){
+                glEnable(GL_DEPTH_TEST);
+            }else{
+                glDisable(GL_DEPTH_TEST);
+            }
+        }
+
+        inline void lglSetZWrite(bool enable)
+        {
+            if(enable){
+                glDepthMask(GL_TRUE);
+            }else{
+                glDepthMask(GL_FALSE);
+            }
+        }
+
+        //inline void lglSetCulling(bool enable)
+        //{
+        //    if(enable){
+        //        glEnable(GL_CULL_FACE);
+        //    }else{
+        //        glDisable(GL_CULL_FACE);
+        //    }
+        //}
+
+        inline void lglSetAlphaBlend(bool enable)
+        {
+            if(enable){
+                glEnable(GL_BLEND);
+            }else{
+                glDisable(GL_BLEND);
+            }
+        }
+    }
+
+    void GraphicsDeviceRef::setAlphaTest(bool enable)
+    {
+        if(state_.flags_[State::Flag_AlphaTest] != enable){
+            state_.flags_[State::Flag_AlphaTest] = enable;
+        }
+    }
+
+    void GraphicsDeviceRef::setAlphaTestFunc(CmpFunc func)
+    {
+        if(state_.alphaTestFunc_ != func){
+            state_.alphaTestFunc_ = func;
+        }
+    }
+
+    void GraphicsDeviceRef::setAlphaTestRef(s32 ref)
+    {
+        if(state_.alphaTestRef_ != ref){
+            state_.alphaTestRef_ = ref;
+        }
+    }
+
+    //void GraphicsDeviceRef::setCullingEnable(bool enable)
+    //{
+    //    if(state_.flags_[State::Flag_CullingEnable] != enable){
+    //        state_.flags_[State::Flag_CullingEnable] = enable;
+    //        lglSetCulling(enable);
+    //    }
+    //}
+
+    void GraphicsDeviceRef::setCullMode(CullMode mode)
+    {
+        if(state_.cullMode_ != mode){
+            state_.cullMode_ = mode;
+
+            if(CullMode_None == state_.cullMode_){
+                glDisable(GL_CULL_FACE);
+            }else{
+                glEnable(GL_CULL_FACE);
+                glFrontFace(state_.cullMode_);
+            }
+        }
+    }
+
+    void GraphicsDeviceRef::setMultiSampleAlias(bool enable)
+    {
+        if(state_.flags_[State::Flag_MultiSampleAlias] != enable){
+            state_.flags_[State::Flag_MultiSampleAlias] = enable;
+        }
+    }
+
+    void GraphicsDeviceRef::setZEnable(bool enable)
+    {
+        if(state_.flags_[State::Flag_ZEnable] != enable){
+            state_.flags_[State::Flag_ZEnable] = enable;
+            lglSetDepthTest(enable);
+        }
+    }
+
+    void GraphicsDeviceRef::setZWriteEnable(bool enable)
+    {
+        if(state_.flags_[State::Flag_ZWriteEnable] != enable){
+            state_.flags_[State::Flag_ZWriteEnable] = enable;
+            lglSetZWrite(enable);
+        }
+    }
+
+    void GraphicsDeviceRef::setAlphaBlendEnable(bool enable)
+    {
+        if(state_.flags_[State::Flag_AlphaBlendEnable] != enable){
+            state_.flags_[State::Flag_AlphaBlendEnable] = enable;
+            lglSetAlphaBlend(enable);
+        }
+    }
+
+    void GraphicsDeviceRef::setAlphaBlend(BlendType src, BlendType dst)
+    {
+        bool change = false;
+        if(state_.alphaBlendSrc_ != src){
+            change = true;
+            state_.alphaBlendSrc_ = src;
+        }
+
+        if(state_.alphaBlendDst_ != dst){
+            change = true;
+            state_.alphaBlendDst_ = dst;
+        }
+
+        if(change){
+            glBlendFuncSeparate(state_.alphaBlendSrc_, state_.alphaBlendDst_, Blend_SrcAlpha, Blend_DestAlpha);
+        }
+    }
+
+    void GraphicsDeviceRef::setRenderState(const RenderStateRef& rhs)
+    {
+        bool enable;
+
+        enable = rhs.check(RenderStateRef::Bit_ZEnable);
+        if( state_.flags_[State::Flag_ZEnable] != enable ){
+            state_.flags_[State::Flag_ZEnable] = enable;
+            lglSetDepthTest(enable);
+        }
+
+        enable = rhs.check(RenderStateRef::Bit_ZWriteEnable);
+        if( state_.flags_[State::Flag_ZWriteEnable] != enable ){
+            state_.flags_[State::Flag_ZWriteEnable] = enable;
+            lglSetZWrite(enable);
+        }
+
+
+        setCullMode(rhs.getCullMode());
+
+        enable = rhs.check(RenderStateRef::Bit_AlphaBlendEnable);
+        if( state_.flags_[State::Flag_AlphaBlendEnable] != enable ){
+            state_.flags_[State::Flag_AlphaBlendEnable] = enable;
+            lglSetAlphaBlend(enable);
+        }
+
+        setAlphaBlend(rhs.getAlphaBlendSrc(), rhs.getAlphaBlendDst());
+    }
+
+
+    void GraphicsDeviceRef::clearActiveTextures()
+    {
+        for(u32 i=0; i<MAX_TEXTURES; ++i){
+            state_.samplerStates_[i].id_ = INVALID_TEXTURE_ID;
+        }
+    }
+
+    // テクスチャセット
+    void GraphicsDeviceRef::setTexture(u32 index, u32 id, u32 location, const lgraphics::SamplerState& samplerState)
+    {
+        LASSERT(0<=index && index<MAX_TEXTURES);
+
+        glActiveTexture(GL_TEXTURE0 + index);
+
+        //if(state_.samplerStates_[index].addressU_ != samplerState.getAddressU()){
+        //    state_.samplerStates_[index].addressU_ = samplerState.getAddressU();
+        //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, samplerState.getAddressU());
+        //}
+        //if(state_.samplerStates_[index].addressV_ != samplerState.getAddressV()){
+        //    state_.samplerStates_[index].addressV_ = samplerState.getAddressV();
+        //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, samplerState.getAddressV());
+        //}
+
+        //if(state_.samplerStates_[index].magFilter_ != samplerState.getMagFilter()){
+        //    state_.samplerStates_[index].magFilter_ = samplerState.getMagFilter();
+        //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, samplerState.getMagFilter());
+        //}
+        //if(state_.samplerStates_[index].minFilter_ != samplerState.getMinFilter()){
+        //    state_.samplerStates_[index].minFilter_ = samplerState.getMinFilter();
+        //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, samplerState.getMinFilter());
+        //}
+
+
+        if(state_.samplerStates_[index].id_ != id){
+            state_.samplerStates_[index].id_ = id;
+            glBindTexture(GL_TEXTURE_2D, id);
+
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, samplerState.getAddressU());
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, samplerState.getAddressV());
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, samplerState.getMagFilter());
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, samplerState.getMinFilter());
+        }
+        glUniform1i( location, index );
+    }
 }

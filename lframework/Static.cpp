@@ -13,5 +13,6 @@ namespace lframework
         "tga",
         "dds",
         "png",
+        "jpg",
     };
 }

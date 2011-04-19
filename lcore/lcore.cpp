@@ -207,6 +207,9 @@ typedef TLogger<CharTraitsMultiByte, DebugOutputterStdOut<CharTraitsMultiByte> >
         clock_t t = 0;
         t = clock();
         return static_cast<u32>( (t * (1000*1000))/CLOCKS_PER_SEC );
+        //rusage t;
+        //getrusage(RUSAGE_SELF, &t);
+        //return static_cast<u32>(t.ru_utime.tv_usec);
 #endif
     }
 
@@ -217,9 +220,25 @@ typedef TLogger<CharTraitsMultiByte, DebugOutputterStdOut<CharTraitsMultiByte> >
         DWORD time = timeGetTime();
         return static_cast<u32>(time);
 #else
-        rusage t;
-        getrusage(RUSAGE_SELF, &t);
-        return static_cast<u32>(t.ru_utime.tv_usec);
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+
+        return static_cast<u32>(tv.tv_sec*1000 + tv.tv_usec/1000);
 #endif
     }
+
+    namespace
+    {
+        inline u32 getUsageMSec()
+        {
+#if defined(_WIN32)
+            return 1;
+#else
+            rusage t;
+            getrusage(RUSAGE_SELF, &t);
+            return static_cast<u32>(t.ru_utime.tv_sec * 1000 + t.ru_utime.tv_usec/1000);
+#endif
+        }
+    }
+
 }

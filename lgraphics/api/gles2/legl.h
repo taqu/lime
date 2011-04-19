@@ -7,7 +7,7 @@
 
 */
 #include <EGL/egl.h>
-#include <EGL/eglext.h>
+//#include <EGL/eglext.h>
 #include "../../lgraphicscore.h"
 
 #ifdef __cplusplus

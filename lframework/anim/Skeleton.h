@@ -62,7 +62,7 @@ namespace lanim
         const Joint* findJoint(const char* name) const;
 
         /// ジョイントインデックス計算
-        u32 calcJointIndex(const Joint* joint) const;
+        u16 calcJointIndex(const Joint* joint) const;
 
         /// スワップ
         void swap(Skeleton& rhs);
@@ -164,7 +164,7 @@ namespace lanim
     }
 
     // ジョイントインデックス計算
-    inline u32 Skeleton::calcJointIndex(const Joint* joint) const
+    inline u16 Skeleton::calcJointIndex(const Joint* joint) const
     {
         LASSERT(joint != NULL);
         LASSERT(joints_ != NULL);
@@ -172,7 +172,7 @@ namespace lanim
         ptrdiff_t diff = joint - joints_;
         LASSERT(0<=diff && diff<numJoints_);
 
-        return static_cast<u32>(diff);
+        return static_cast<u16>(diff);
     }
 
     inline void intrusive_ptr_addref(Skeleton* ptr)

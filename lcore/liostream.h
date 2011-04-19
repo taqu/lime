@@ -54,9 +54,9 @@ namespace lcore
         
         static int ModeInt[Mode_Num];
         
-        static const char* ModeString[Mode_Num];
+        static const Char* ModeString[Mode_Num];
         
-        static const char* getModeString(int mode);
+        static const Char* getModeString(int mode);
     };
     
     //----------------------------------------------------------
@@ -73,7 +73,7 @@ namespace lcore
         virtual bool seekg(s32 offset, int dir) =0;
         virtual s32 tellg() =0;
         
-        virtual u32 read(char* dst, u32 count) =0;
+        virtual u32 read(Char* dst, u32 count) =0;
         
     protected:
         istream(){}
@@ -88,7 +88,7 @@ namespace lcore
     template<class T>
     inline istream& operator>>(istream& strm, T& t)
     {
-        strm.read((char*)&t, sizeof(T));
+        strm.read((Char*)&t, sizeof(T));
         return strm;
     }
     
@@ -106,7 +106,7 @@ namespace lcore
         virtual bool seekg(s32 offset, int dir) =0;
         virtual s32 tellg() =0;
         
-        virtual u32 write(const char* src, u32 count) =0;
+        virtual u32 write(const Char* src, u32 count) =0;
     protected:
         ostream(){}
         ~ostream(){}
@@ -139,13 +139,13 @@ namespace lcore
         }
     protected:
         fstream_base();
-        fstream_base(const char* filepath, int mode);
+        fstream_base(const Char* filepath, int mode);
         ~fstream_base();
 
-        bool open(const char* filepath, int mode);
+        bool open(const Char* filepath, int mode);
         
-        virtual u32 read(char* dst, u32 count);
-        virtual u32 write(const char* src, u32 count);
+        virtual u32 read(Char* dst, u32 count);
+        virtual u32 write(const Char* src, u32 count);
         
         FILE *file_;
     };
@@ -157,7 +157,7 @@ namespace lcore
     }
 
     template<class Base>
-    fstream_base<Base>::fstream_base(const char* filepath, int mode)
+    fstream_base<Base>::fstream_base(const Char* filepath, int mode)
         :file_(NULL)
     {
         open(filepath, mode);
@@ -170,11 +170,11 @@ namespace lcore
     }
 
     template<class Base>
-    bool fstream_base<Base>::open(const char* filepath, int mode)
+    bool fstream_base<Base>::open(const Char* filepath, int mode)
     {
         LASSERT(filepath != NULL);
         close();
-        const char* modeStr = ios::getModeString(mode);
+        const Char* modeStr = ios::getModeString(mode);
         LASSERT(modeStr != NULL);
 #if defined(_WIN32)
         errno_t e = fopen_s(&file_, filepath, modeStr);
@@ -227,14 +227,14 @@ namespace lcore
     }
 
     template<class Base>
-    inline u32 fstream_base<Base>::read(char* dst, u32 count)
+    inline u32 fstream_base<Base>::read(Char* dst, u32 count)
     {
         LASSERT(file_ != NULL);
         return fread((void*)dst, count, 1, file_);
     }
 
     template<class Base>
-    inline u32 fstream_base<Base>::write(const char* src, u32 count)
+    inline u32 fstream_base<Base>::write(const Char* src, u32 count)
     {
         return fwrite((void*)src, count, 1, file_);
     }
@@ -251,17 +251,17 @@ namespace lcore
         typedef fstream_base<istream> super_type;
         
         ifstream(){}
-        ifstream(const char* filepath, int mode=ios::in)
+        ifstream(const Char* filepath, int mode=ios::in)
             :super_type(filepath, mode|ios::in)
         {
         }
         
-        bool open(const char* filepath, int mode=ios::in)
+        bool open(const Char* filepath, int mode=ios::in)
         {
             return super_type::open(filepath, mode|ios::in);
         }
         
-        virtual u32 read(char* dst, u32 count){ return super_type::read(dst, count);}
+        virtual u32 read(Char* dst, u32 count){ return super_type::read(dst, count);}
 
         s32 get(){ return fgetc(file_);}
     private:
@@ -281,19 +281,19 @@ namespace lcore
         typedef fstream_base<ostream> super_type;
     
         ofstream(){}
-        ofstream(const char* filepath, int mode=ios::out)
+        ofstream(const Char* filepath, int mode=ios::out)
             :super_type(filepath, mode|ios::out)
         {
         }
         
-        bool open(const char* filepath, int mode=ios::out)
+        bool open(const Char* filepath, int mode=ios::out)
         {
             return super_type::open(filepath, mode|ios::out);
         }
         
-        virtual u32 write(const char* src, u32 count){ return super_type::write(src, count);}
+        virtual u32 write(const Char* src, u32 count){ return super_type::write(src, count);}
 
-        int print(const char* format, ... );
+        int print(const Char* format, ... );
     private:
         ofstream(const ofstream&);
         ofstream& operator=(const ofstream&);
@@ -318,15 +318,15 @@ namespace lcore
         
     protected:
         sstream_base();
-        sstream_base(char* buffer, u32 size);
+        sstream_base(Char* buffer, u32 size);
         ~sstream_base(){}
         
-        virtual u32 read(char* dst, u32 count);
-        virtual u32 write(const char* src, u32 count);
+        virtual u32 read(Char* dst, u32 count);
+        virtual u32 write(const Char* src, u32 count);
 
         void expand();
         
-        char* buffer_;
+        Char* buffer_;
         s32 current_;
         s32 capacity_;
     };
@@ -340,7 +340,7 @@ namespace lcore
     }
 
     template<class Base>
-    sstream_base<Base>::sstream_base(char* buffer, u32 size)
+    sstream_base<Base>::sstream_base(Char* buffer, u32 size)
         :buffer_(buffer)
         ,current_(0)
         ,capacity_(size)
@@ -412,7 +412,7 @@ namespace lcore
     }
 
     template<class Base>
-    u32 sstream_base<Base>::read(char* dst, u32 count)
+    u32 sstream_base<Base>::read(Char* dst, u32 count)
     {
         s32 end = current_ + count;
         end = (end>capacity_)? capacity_ : end;
@@ -427,7 +427,7 @@ namespace lcore
     }
 
     template<class Base>
-    u32 sstream_base<Base>::write(const char* src, u32 count)
+    u32 sstream_base<Base>::write(const Char* src, u32 count)
     {
         s32 end = current_ + count;
         if(end > capacity_){
@@ -448,7 +448,7 @@ namespace lcore
         u32 newSize = capacity_ << 1;
         //printf("size %d => %d\n", capacity_, newSize);
         
-        char* newBuffer = LIME_NEW char[newSize];
+        Char* newBuffer = LIME_NEW Char[newSize];
         
         if(buffer_ != NULL){
             lcore::memcpy(newBuffer, buffer_, capacity_);
@@ -476,13 +476,13 @@ namespace lcore
         
     protected:
         sstream_base();
-        sstream_base(const char* buffer, u32 size);
+        sstream_base(const Char* buffer, u32 size);
         ~sstream_base(){}
         
-        virtual u32 read(char* dst, u32 count);
-        virtual u32 write(const char* /*src*/, u32 /*count*/){return 0;}; //何もしない
+        virtual u32 read(Char* dst, u32 count);
+        virtual u32 write(const Char* /*src*/, u32 /*count*/){return 0;}; //何もしない
         
-        const char* buffer_;
+        const Char* buffer_;
         s32 current_;
         s32 capacity_;
     };
@@ -499,7 +499,7 @@ namespace lcore
         typedef sstream_base<istream> super_type;
         
         isstream(){}
-        isstream(const char* buffer, u32 size)
+        isstream(const Char* buffer, u32 size)
             :super_type(buffer, size)
         {
         }
@@ -511,7 +511,7 @@ namespace lcore
             capacity_ = 0;
         }
         
-        virtual u32 read(char* dst, u32 count){ return super_type::read(dst, count);}
+        virtual u32 read(Char* dst, u32 count){ return super_type::read(dst, count);}
     private:
         isstream(const isstream&);
         isstream& operator=(const isstream&);
@@ -532,7 +532,7 @@ namespace lcore
         osstream(u32 size)
         {
             LASSERT(size>0);
-            buffer_ = LIME_NEW char[size];
+            buffer_ = LIME_NEW Char[size];
             current_ = 0;
             capacity_ = size;
         }
@@ -544,9 +544,9 @@ namespace lcore
             capacity_ = 0;
         }
         
-        virtual u32 write(const char* src, u32 count){ return super_type::write(src, count);}
+        virtual u32 write(const Char* src, u32 count){ return super_type::write(src, count);}
         
-        const char* c_str() const{ return buffer_;}
+        const Char* c_str() const{ return buffer_;}
     private:
         osstream(const osstream&);
         osstream& operator=(const osstream&);
@@ -557,25 +557,25 @@ namespace io
     template<class T>
     inline u32 write(lcore::ostream& of, const T& value)
     {
-        return of.write(reinterpret_cast<const char*>(&value), sizeof(T));
+        return of.write(reinterpret_cast<const Char*>(&value), sizeof(T));
     }
 
     template<class T>
     inline u32 write(lcore::ostream& of, const T* value, u32 size)
     {
-        return of.write(reinterpret_cast<const char*>(value), size);
+        return of.write(reinterpret_cast<const Char*>(value), size);
     }
 
     template<class T>
     inline u32 read(lcore::istream& in, T& value)
     {
-        return in.read(reinterpret_cast<char*>(&value), sizeof(T));
+        return in.read(reinterpret_cast<Char*>(&value), sizeof(T));
     }
 
     template<class T>
     inline u32 read(lcore::istream& in, T* value, u32 size)
     {
-        return in.read(reinterpret_cast<char*>(value), size);
+        return in.read(reinterpret_cast<Char*>(value), size);
     }
 }
 }

@@ -16,6 +16,7 @@ namespace lframework
         Img_TGA,
         Img_DDS,
         Img_PNG,
+        Img_JPG,
 
         Img_Num,
         Img_None = 0xFFU,

@@ -20,7 +20,7 @@ namespace io
         IOJPEG();
         ~IOJPEG();
 
-        static bool read(lcore::istream& is, TextureRef& texture);
+        static bool read(const Char* filepath, TextureRef& texture);
     };
 }
 }

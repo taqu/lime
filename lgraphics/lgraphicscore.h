@@ -36,6 +36,8 @@ namespace lgraphics
     using lcore::f32;
     using lcore::f64;
 
+    using lcore::Char;
+
     static const u32 LIME_MAX_PALLET_MATRICES = 256;
 
     static const u32 LIME_MAX_NAME_SIZE = (24 - 1);
@@ -50,6 +52,9 @@ namespace lgraphics
     typedef lcore::String<MAX_NAME_BUFFER_SIZE> NameString;
 
     static const u32 INVALID_SAMPLER_INDEX = 0xFFFFFFFFU;
+    static const u32 INVALID_TEXTURE_ID = 0xFFFFFFFFU;
+
+    static const u32 MAX_TEXTURES = 2;
 
 //----------------------------------------------------------
 //---

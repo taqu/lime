@@ -3,6 +3,7 @@
 @author t-sakai
 @date 2009/01/26 create
 */
+#include <lcore/liostream.h>
 #include <lmath/Matrix44.h>
 #include "../../lgraphicsAPIInclude.h"
 #include "../../lgraphics.h"
@@ -257,6 +258,17 @@ namespace lgraphics
                 const char* message = (const char*)errorMsg->GetBufferPointer();
                 Debug_LogError( message );
                 SAFE_RELEASE(errorMsg);
+
+                {
+                    lcore::ofstream out("vs_failed.hlsl", lcore::ios::binary);
+                    if(out.is_open()){
+                        for(s32 i=0; i<numDefines; ++i){
+                            out.print("#define %s\n", macro[i]);
+                        }
+                        out.write(memory, size);
+                        out.close();
+                    }
+                }
             }
             return false;
         }

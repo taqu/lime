@@ -7,14 +7,14 @@
 
 #include <lgraphics/lgraphics.h>
 #include <lgraphics/lgraphicsAPIInclude.h>
+#include <lgraphics/api/SamplerState.h>
+#include <lgraphics/api/TextureRef.h>
+#include <lgraphics/api/GraphicsDeviceRef.h>
 
 #include <lframework/scene/Scene.h>
 #include <lframework/scene/Material.h>
 #include <lframework/scene/Geometry.h>
 
-#include <lgraphics/api/SamplerState.h>
-#include <lgraphics/api/TextureRef.h>
-#include <lgraphics/api/GraphicsDeviceRef.h>
 #include <lframework/render/Drawable.h>
 #include <lframework/render/Batch.h>
 
@@ -95,32 +95,72 @@ namespace lscene
         const lscene::Geometry* geometry = batch.getGeometry();
         const lscene::Material* material = batch.getMaterial();
 
+
         lmath::Matrix44 mat( drawable->getWorldMatrix() );
         mat *= scene.getViewProjMatrix();
 
         shader_.setMatrix(params_[ParamVS_WVP], mat);
 
-        if( geometry->getFlags().checkFlag(Geometry::GeomFlag_DiffuseVS) ){
+        if(geometry->getFlags().checkFlag( Geometry::GeomFlag_LightingVS )){
+            const lscene::LightEnvironment& lightEnv = scene.getLightEnv();
+
             lmath::Matrix43 toLocal = drawable->getWorldMatrix();
             toLocal.invert();
-
-            const lscene::LightEnvironment& lightEnv = scene.getLightEnv();
 
             // ライト方向をローカルへ変換
             lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
             lightDirection.mul33(lightDirection, toLocal);
 
             shader_.setVector3(params_[ParamVS_DLightDirection], lightDirection);
+            //shader_.setVector4(params_[ParamVS_DLightColor], lightEnv.getDirectionalLight().getColor());
 
-            shader_.setVector4(params_[ParamVS_DLightColor], lightEnv.getDirectionalLight().getColor());
+            lmath::Matrix43 cameraToLocal = drawable->getWorldMatrix();
+            cameraToLocal *= scene.getViewMatrix();
+            cameraToLocal.invert();
+
+            // カメラ位置をローカルへ変換
+            lmath::Vector3 cameraPos(0.0f,0.0f,0.0f);
+            cameraPos.mul(cameraPos, cameraToLocal);
+
+            shader_.setVector3(params_[ParamVS_CameraPosition], cameraPos);
+
+
+            if( material->getFlags().checkFlag(Material::MatFlag_TexGrad) ){
+
+            }
 
             //マテリアル
-            shader_.setVector3(params_[ParamVS_Ambient], material->ambient_);
+            //shader_.setVector4(params_[ParamVS_Diffuse], material->diffuse_);
+            shader_.setVector4(params_[ParamVS_Specular], material->specular_);
+            //shader_.setVector3(params_[ParamVS_Ambient], material->ambient_);
+            //shader_.setVector3(params_[ParamVS_Emissive], material->emissive_);
+
+        }else{
+
+
+            if( geometry->getFlags().checkFlag(Geometry::GeomFlag_DiffuseVS) ){
+                lmath::Matrix43 toLocal = drawable->getWorldMatrix();
+                toLocal.invert();
+
+                const lscene::LightEnvironment& lightEnv = scene.getLightEnv();
+
+                // ライト方向をローカルへ変換
+                lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
+                lightDirection.mul33(lightDirection, toLocal);
+
+                shader_.setVector3(params_[ParamVS_DLightDirection], lightDirection);
+
+                shader_.setVector4(params_[ParamVS_DLightColor], lightEnv.getDirectionalLight().getColor());
+
+                //マテリアル
+                shader_.setVector3(params_[ParamVS_Ambient], material->ambient_);
+            }
         }
 
         //スキニング。マトリックスセット
         if(geometry->getFlags().checkFlag(lscene::Geometry::GeomFlag_Skinning)){
             if(drawable->getNumJointPoses()>0){
+            //if(false){
                 const lmath::Matrix43* poses = drawable->getGlobalJointPoses();
 
                 u8 count = geometry->getNumBonesInPalette();
@@ -178,55 +218,71 @@ namespace lscene
         const lscene::Material* material = batch.getMaterial();
         const lscene::LightEnvironment& lightEnv = scene.getLightEnv();
 
-        lmath::Matrix43 toLocal = drawable->getWorldMatrix();
-        toLocal.invert();
+        if(material->getFlags().checkFlag( lscene::Material::MatFlag_LightingVS )){
+            shader_.setVector4(params_[ParamPS_DLightColor], lightEnv.getDirectionalLight().getColor());
 
-        // ライト方向をローカルへ変換
-        lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
-        lightDirection.mul33(lightDirection, toLocal);
-
-        shader_.setVector3(params_[ParamPS_DLightDirection], lightDirection);
-        shader_.setVector4(params_[ParamPS_DLightColor], lightEnv.getDirectionalLight().getColor());
-
-        lmath::Matrix43 cameraToLocal = drawable->getWorldMatrix();
-        cameraToLocal *= scene.getViewMatrix();
-        cameraToLocal.invert();
-
-        // カメラ位置をローカルへ変換
-        lmath::Vector3 cameraPos(0.0f,0.0f,0.0f);
-        cameraPos.mul(cameraPos, cameraToLocal);
-
-        shader_.setVector3(params_[ParamPS_CameraPosition], cameraPos);
-
-
-        if( material->getFlags().checkFlag(Material::MatFlag_Fresnel) ){
-
-            shader_.setVector4(params_[ParamPS_Specular], material->specular_);
-
-            shader_.setFloat(params_[ParamPS_Fresnel], material->reflectance_);
-
+            //マテリアル
+            shader_.setVector4(params_[ParamPS_Diffuse], material->diffuse_);
+            shader_.setVector3(params_[ParamPS_Ambient], material->ambient_);
             shader_.setVector3(params_[ParamPS_Emissive], material->emissive_);
 
-        }else if( material->getFlags().checkFlag(Material::MatFlag_TexGrad) ){
+        }else{
 
+            lmath::Matrix43 toLocal = drawable->getWorldMatrix();
+            toLocal.invert();
+
+            // ライト方向をローカルへ変換
+            lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
+            lightDirection.mul33(lightDirection, toLocal);
+
+            shader_.setVector3(params_[ParamPS_DLightDirection], lightDirection);
+            shader_.setVector4(params_[ParamPS_DLightColor], lightEnv.getDirectionalLight().getColor());
+
+            lmath::Matrix43 cameraToLocal = drawable->getWorldMatrix();
+            cameraToLocal *= scene.getViewMatrix();
+            cameraToLocal.invert();
+
+            // カメラ位置をローカルへ変換
+            lmath::Vector3 cameraPos(0.0f,0.0f,0.0f);
+            cameraPos.mul(cameraPos, cameraToLocal);
+
+            shader_.setVector3(params_[ParamPS_CameraPosition], cameraPos);
+
+
+            if( material->getFlags().checkFlag(Material::MatFlag_Fresnel) ){
+
+                shader_.setFloat(params_[ParamPS_Fresnel], material->reflectance_);
+
+            }else if( material->getFlags().checkFlag(Material::MatFlag_TexGrad) ){
+
+            }
+
+            //マテリアル
+            shader_.setVector4(params_[ParamPS_Diffuse], material->diffuse_);
+            shader_.setVector4(params_[ParamPS_Specular], material->specular_);
+            shader_.setVector3(params_[ParamPS_Ambient], material->ambient_);
+            shader_.setVector3(params_[ParamPS_Emissive], material->emissive_);
         }
 
-        //マテリアル
-        shader_.setVector4(params_[ParamPS_Diffuse], material->diffuse_);
-        shader_.setVector3(params_[ParamPS_Ambient], material->ambient_);
-        shader_.setVector3(params_[ParamPS_Emissive], material->emissive_);
-
         //TODO:なんかもういろいろ
+        lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
+
         //テクスチャ
         for(u32 i=0; i<material->getTextureNum(); ++i){
-            const lgraphics::SamplerState& samplerState = material->getSamplerState(i);
             const lgraphics::TextureRef& tex = material->getTexture(i);
+            if(tex.valid() == false){
+                continue;
+            }
+            const lgraphics::SamplerState& samplerState = material->getSamplerState(i);
 #if defined(LIME_GLES2)
-            samplerState.apply(i);
+            device.setTexture(i, tex.getTextureID(), textures_[i], samplerState);
+            //glActiveTexture(GL_TEXTURE0 + i);
+            //samplerState.apply(i);
+            //tex.attach( i, textures_[i] );
 #else
             samplerState.apply( textures_[i] );
+            tex.attach( i );
 #endif
-            tex.attach( textures_[i] );
         }
     }
 
@@ -275,7 +331,11 @@ namespace shader
         "mwvp",
         "dlDir",
         "dlColor",
+        "camPos",
+        "diffuse",
         "ambient",
+        "specular",
+        "emissive",
         "palette",
     };
 
@@ -296,6 +356,7 @@ namespace shader
     const char* TexPSNames[TexPS_Num] =
     {
         "texAlbedo",
+        "texAlbedo2",
     };
 
     // マクロ名
@@ -316,9 +377,13 @@ namespace shader
         "#define FRESNEL\n",
         "#define SKINNING\n",
 
+        "#define TEXALBEDO\n",
         "#define TEXSHADE\n",
 
         "#define EMISSIVE\n",
+
+        "#define ALPHATEST\n",
+        "#define LIGHTVS\n",
     };
 #else
     const char* MacroNames[Macro_Num] =
@@ -337,9 +402,13 @@ namespace shader
         "FRESNEL",
         "SKINNING",
 
+        "TEXALBEDO",
         "TEXSHADE",
 
         "EMISSIVE",
+
+        "ALPHATEST",
+        "LIGHTVS",
     };
 #endif
 

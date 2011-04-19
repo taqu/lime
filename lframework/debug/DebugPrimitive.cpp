@@ -16,7 +16,7 @@
 #include <lframework/scene/shader/DefaultShader.h>
 
 #include "../System.h"
-#include "../render/Batch.h"
+#include "../render/Drawable.h"
 #include "../render/RenderingSystem.h"
 #include "../scene/Geometry.h"
 #include "../scene/Material.h"
@@ -267,7 +267,7 @@ namespace debug
     //--- DebugPrimitive::PrimitiveBatch
     //---
     //------------------------------------------
-    class DebugPrimitive::PrimitiveBatch : public lrender::Batch
+    class DebugPrimitive::PrimitiveBatch : public lrender::Drawable
     {
     public:
         PrimitiveBatch(u16 numMaxTriangles);
@@ -319,8 +319,10 @@ namespace debug
         geometryInstance_.setShaderVS(&shaderVS_);
         geometryInstance_.setShaderPS(&shaderPS_);
 
-        geometry_ = &geometryInstance_;
-        material_ = &materialInstance_;
+        numGeometries_ = 1;
+        geometries_ = &geometryInstance_;
+        numMaterials_ = 1;
+        materials_ = &materialInstance_;
     }
 
     DebugPrimitive::PrimitiveBatch::~PrimitiveBatch()
@@ -377,13 +379,13 @@ namespace debug
 
     void DebugPrimitive::initialize(u16 numMaxTriangles)
     {
-        batch_ = LIME_NEW PrimitiveBatch(numMaxTriangles);
+        //batch_ = LIME_NEW PrimitiveBatch(numMaxTriangles);
     }
 
     void DebugPrimitive::terminate()
     {
         //lframework::System::getRenderSys().remove(lrender::Pass_Main, batch_);
-        LIME_DELETE(batch_);
+        //LIME_DELETE(batch_);
     }
 
     void DebugPrimitive::attach()
@@ -398,13 +400,13 @@ namespace debug
 
     void DebugPrimitive::draw(const lmath::Vector3& v0, const lmath::Vector3& v1, const lmath::Vector3& v2, u32 color)
     {
-        LASSERT(batch_ != NULL);
-        batch_->draw(v0, v1, v2, color);
+        //LASSERT(batch_ != NULL);
+        //batch_->draw(v0, v1, v2, color);
     }
 
     void DebugPrimitive::clear()
     {
-        LASSERT(batch_ != NULL);
-        batch_->clear();
+        //LASSERT(batch_ != NULL);
+        //batch_->clear();
     }
 }

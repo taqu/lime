@@ -30,7 +30,7 @@ namespace lscene
         /// マテリアル機能フラグ
         enum MaterialFlag
         {
-            MatFlag_Texture0 = (0x01U<<0),
+            MatFlag_TexAlbedo = (0x01U<<0),
             MatFlag_Texture1 = (0x01U<<1),
             MatFlag_TextureN = (0x01U<<2),
             MatFlag_TextureS = (0x01U<<3),
@@ -38,6 +38,8 @@ namespace lscene
             MatFlag_Fresnel = (0x01U<<5),
             MatFlag_TexGrad = (0x01U<<6),
             MatFlag_Emissive = (0x01U<<7),
+            MatFlag_AlphaTest = (0x01U<<8),
+            MatFlag_LightingVS = (0x01U<<9),
             MatFlag_Valid = (0x01U<<31),
             MatFlag_Num = 5,
         };

@@ -59,7 +59,12 @@ namespace lgraphics
         u16 getLevels();
         bool getLevelDesc(u32 level, SurfaceDesc& desc);
 
-        void attach(u32 index) const;
+        /**
+        @brief シェーダにセット
+        @param index ... テクスチャユニットインデックス
+        @param location ... シェーダ内ロケーション
+        */
+        void attach(u32 index, u32 location) const;
 
         void detach()const;
 
@@ -98,6 +103,8 @@ namespace lgraphics
         u32 getLevelSize(u32 level, u32 bpp) const;
 
         u16 getBytePerPixel() const;
+
+        u32 getTextureID() const;
     private:
         friend class Texture;
 
@@ -169,9 +176,9 @@ namespace lgraphics
         u32 getLevels(){ return TextureRef::getLevels(); }
         bool getLevelDesc(u32 level, SurfaceDesc& desc){ return TextureRef::getLevelDesc(level, desc);}
 
-        void attach(u32 index) const
+        void attach(u32 index, u32 location) const
         {
-            TextureRef::attach(index);
+            TextureRef::attach(index, location);
         }
 
         void swap(TextureSystemMemRef& rhs)

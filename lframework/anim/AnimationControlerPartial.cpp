@@ -2,7 +2,7 @@
 @file AnimationControlerPartial.cpp
 @author t-sakai
 @date 2010/11/17 create
-
+@date 2011/04/07 更新単位を整数化。フレーム検索方法を汎用アルゴリズムから一時変更
 */
 #include <lmath/lmath.h>
 #include "AnimationControlerPartial.h"
@@ -91,7 +91,7 @@ namespace lanim
     void AnimationControlerPartial::updateFrame(f32 duration)
     {
         frame_ += duration;
-        f32 last = clip_->getLastFrame();
+        u32 last = static_cast<u32>( clip_->getLastFrame() );
         if(frame_>last){
             if(flags_.checkFlag(AnimFlag_AutoDisactive)){
                 frame_ = 0.0f;
@@ -100,7 +100,7 @@ namespace lanim
                 initialize();
             }else{
                 if(flags_.checkFlag(AnimFlag_Loop)){
-                    last += 1.0f;
+                    last += 1;
                     if(frame_>=last){
                         frame_ -= last;
                         //ボーン初期化しておく
@@ -151,6 +151,17 @@ namespace lanim
             LASSERT(false == jointPose.translation_.isNan());
             LASSERT(false == jointPose.rotation_.isNan());
         }
+#if 0
+        for(u32 i=0; i<jointMap_.size(); ++i){
+            JointMap& map = jointMap_[i];
+
+            LASSERT(0<=map.joint_ && map.joint_<skeleton_->getNumJoints());
+            LASSERT(0<=map.clipJoint_ && map.clipJoint_<clip_->getNumJoints());
+
+            JointAnimation& jointAnim = clip_->getJointAnimation( map.clipJoint_ );
+            jointAnim.initialize();
+        }
+#endif
     }
 
     void AnimationControlerPartial::getPose()
@@ -167,7 +178,7 @@ namespace lanim
             LASSERT(0<=map.joint_ && map.joint_<skeleton_->getNumJoints());
             LASSERT(0<=map.clipJoint_ && map.clipJoint_<clip_->getNumJoints());
 
-            const JointAnimation& jointAnim = clip_->getJointAnimation( map.clipJoint_ );
+            JointAnimation& jointAnim = clip_->getJointAnimation( map.clipJoint_ );
             JointPose& jointPose = poses[ map.joint_ ];
             Joint& joint = skeleton_->getJoint( map.joint_ );
 
@@ -176,8 +187,9 @@ namespace lanim
                 //先端からの捻りの影響を受ける
             }else{
                 //普通にスキニング
-                u32 frame = static_cast<u32>(frame_);
+                u32 frame = frame_;
                 u32 animIndex = jointAnim.binarySearchIndex(frame);
+                //u32 animIndex = jointAnim.getNextIndex(frame_);
                 const JointPoseWithFrame& animPose = jointAnim.getPose(animIndex);
 
                 if(animIndex == jointAnim.getNumPoses() - 1){
