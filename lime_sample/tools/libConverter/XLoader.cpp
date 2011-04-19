@@ -123,7 +123,7 @@ namespace
 
             state.setAlphaBlendEnable(true);
             state.setAlphaBlend(lgraphics::Blend_SrcAlpha, lgraphics::Blend_InvSrcAlpha);
-
+            
             // Zバッファ設定
             state.setZWriteEnable(false);
             state.setAlphaTest(false);
@@ -199,7 +199,7 @@ namespace
         @param parent ... 親ローダ
         @param v ... ロード先配列。個数のチェックはしないので十分なサイズがあること
         */
-        ProcessUVFunc(XLoader* parent, S16Vector* v)
+        ProcessUVFunc(XLoader* parent, UVVector* v)
             :parent_(parent)
             ,v_(v)
         {
@@ -212,15 +212,24 @@ namespace
             f32 tmp;
             for(u32 i=0; i<2; ++i){
                 parent_->getNextToken();
+                if(XToken_Comma == parent_->currentToken_){ //カンマならもうひとつ
+                    parent_->getNextToken();
+                }
+
                 LX_XTOKEN_CHECK_RETURN(
                     parent_->currentToken_,
                     XToken_Other,
                     parent_->errorCode_,
                     XLoader::Error_ParsingVector);
                 tmp = static_cast<f32>( atof(parent_->currentStr_) );
+
+#if defined(LX_UV_TYPE_PACKED_S16)
                 tmp = texAddress(tmp, lconverter::TexAddress_Wrap);
 
                 v_->push_back( F32ToS16Clamp( tmp ) );
+#else
+                v_->push_back( tmp );
+#endif
 
                 parent_->getNextToken();
                 LX_XTOKEN_CHECK_RETURN(
@@ -232,7 +241,7 @@ namespace
         }
 
         XLoader* parent_;
-        S16Vector* v_;
+        UVVector* v_;
     };
 
     /**
@@ -430,6 +439,7 @@ namespace
     {
         LASSERT(filepath != NULL);
         file_.open(filepath, lcore::ios::binary);
+
         return file_.is_open();
     }
 
@@ -593,12 +603,21 @@ namespace
         u32 shader = lscene::shader::ShaderName[lscene::shader::Shader_Phong];
         material.setShaderID( shader );
 
-        //透過で発光が0でなければ、フラグ立てる
+#if defined(LIME_GLES2)
+        //頂点でライティング計算
+        //material.getFlags().setFlag(lscene::Material::MatFlag_LightingVS);
+#endif
+        //透過
         f32 emissivePower = material.emissive_.lengthSqr();
-        if( material.diffuse_._w < 0.99f
-            && false == lmath::isEqual(emissivePower, 0.0f))
-        {
-            material.getFlags().setFlag(lscene::Material::MatFlag_Emissive);
+        if( material.diffuse_._w < 0.999f){
+
+            //発光が0でなければ、フラグ立てる
+            if(false == lmath::isEqual(emissivePower, 0.0f))
+            {
+                material.getFlags().setFlag(lscene::Material::MatFlag_Emissive);
+            }
+        }else{
+            material.getFlags().setFlag(lscene::Material::MatFlag_AlphaTest);
         }
 
         ++currentMaterial_;
@@ -834,26 +853,18 @@ namespace
         processTemplateHeader();
         LX_CODE_CHECK_RETURN(Error_None, errorCode_);
 
-        getNextToken();
-        if(currentToken_ != XToken_Other){
+        getStringLiteral();
+        if(currentToken_ != XToken_CString){
             LX_RETURN(errorCode_, Error_ParsingTextureFilename);
         }
 
         //文字列はエスケープ文字等ちゃんと解析すべきか？
         LASSERT(currentStr_ != NULL);
-        //文字列なので、"をとる
-        u32 length = 0;
+
         Char* texName = currentStr_;
-        while(*texName == '"'){
-            if(*texName == '\0'){
-                break;
-            }
-            ++texName;
-        }
-        while(texName[length] != '"' && texName[length] != '\0'){
-            ++length;
-        }
-        texName[length] = '\0';
+
+        strSJISToUTF8(texName); //UTF8へ変換
+        u32 length = lcore::strlen(texName); //何度もstrlenしている
 
         lgraphics::TextureRef* texRef = lconverter::loadTexture(texName, length, directory_, nameTexMap_);
         if(texRef){
@@ -861,7 +872,7 @@ namespace
             material.setTextureNum(1);
             material.setTexture(0, *texRef);
             //テクスチャがあったのでフラグ立てる
-            material.getFlags().setFlag(lscene::Material::MatFlag_Texture0);
+            material.getFlags().setFlag(lscene::Material::MatFlag_TexAlbedo);
         }
 
         getNextToken();
@@ -1016,11 +1027,8 @@ namespace
     }
 
     //-----------------------------------------------------------
-    // 次トークン取得
-    void XLoader::getNextToken()
+    s32 XLoader::skipSpace()
     {
-        buffer_.clear();
-
         s32 c = 0;
 
         // 空白スキップ
@@ -1045,6 +1053,16 @@ namespace
                 }
             }
         }
+        return c;
+    }
+
+    //-----------------------------------------------------------
+    // 次トークン取得
+    void XLoader::getNextToken()
+    {
+        buffer_.clear();
+
+        s32 c = skipSpace();
 
         // 1文字のトークン処理
         //-------------------------------------
@@ -1086,6 +1104,45 @@ namespace
             currentToken_ = getTokenType(currentStr_);
 
             LX_DEBUG_OUT(currentStr_);
+        }
+    }
+
+    //-----------------------------------------------------------
+    void XLoader::getStringLiteral()
+    {
+        buffer_.clear();
+
+        s32 c = skipSpace();
+
+        buffer_.clear();
+
+        // 1文字のトークン処理
+        //-------------------------------------
+        if('\"' != c){
+            currentToken_ = XToken_None;
+            return;
+        }
+
+
+        // 区切り文字まで文字列ロード
+        //--------------------------------------
+        while(!file_.eof()){
+            c = file_.get();
+
+            if(c == '\"'){
+                break;
+            }
+
+            buffer_.push_back( static_cast<Char>(c) );
+        }
+
+        buffer_.push_back('\0');
+        if(buffer_.size() <= 0){
+            currentToken_ = XToken_None;
+            currentStr_ = NULL;
+        }else{
+            currentStr_ = &(buffer_[0]);
+            currentToken_ = XToken_CString;
         }
     }
 
@@ -1143,7 +1200,13 @@ namespace
                 lgraphics::VertexDeclCreator creator(2);
                 u16 offset = 0;
                 offset += creator.add(0, offset, lgraphics::DeclType_Float3, lgraphics::DeclMethod_Default, lgraphics::DeclUsage_Position, 0);
+
+#if defined(LX_UV_TYPE_PACKED_S16)
                 offset += creator.add(0, offset, lgraphics::DeclType_Short2N, lgraphics::DeclMethod_Normalize, lgraphics::DeclUsage_Texcoord, 0);
+#else
+                offset += creator.add(0, offset, lgraphics::DeclType_Float2, lgraphics::DeclMethod_Default, lgraphics::DeclUsage_Texcoord, 0);
+#endif
+
                 creator.end( decl );
             }
             break;
@@ -1154,7 +1217,13 @@ namespace
                 u16 offset = 0;
                 offset += creator.add(0, offset, lgraphics::DeclType_Float3, lgraphics::DeclMethod_Default, lgraphics::DeclUsage_Position, 0);
                 offset += creator.add(0, offset, lgraphics::DeclType_Short4N, lgraphics::DeclMethod_Normalize, lgraphics::DeclUsage_Normal, 0);
+
+#if defined(LX_UV_TYPE_PACKED_S16)
                 offset += creator.add(0, offset, lgraphics::DeclType_Short2N, lgraphics::DeclMethod_Normalize, lgraphics::DeclUsage_Texcoord, 0);
+#else
+                offset += creator.add(0, offset, lgraphics::DeclType_Float2, lgraphics::DeclMethod_Default, lgraphics::DeclUsage_Texcoord, 0);
+#endif
+
                 creator.end( decl );
             }
             break;
@@ -1254,7 +1323,6 @@ namespace
             }
         }
 
-        u32 numVertices = 0;
         lgraphics::VertexBufferRef vb;
         lgraphics::IndexBufferRef ib;
 
@@ -1264,6 +1332,7 @@ namespace
         createVertexDecl(decl, declType);
         createIndexBuffer(ib, obj);
 
+        bool hasNormal = false;
         switch(declType)
         {
         case VertexDecl_P:
@@ -1276,6 +1345,8 @@ namespace
 
         case VertexDecl_PN:
             {
+                hasNormal = true;
+
                 vb = lgraphics::VertexBuffer::create(sizeof(VertexPN), vertices_.size(), lgraphics::Pool_Default, lgraphics::Usage_None);
                 VertexPN *vertices = LIME_NEW VertexPN[ vertices_.size() ];
 
@@ -1330,8 +1401,10 @@ namespace
 
         case VertexDecl_PNT:
             {
-                vb = lgraphics::VertexBuffer::create(sizeof(VertexPNT), numVertices, lgraphics::Pool_Default, lgraphics::Usage_None);
-                VertexPNT *vertices = LIME_NEW VertexPNT[numVertices];
+                hasNormal = true;
+
+                vb = lgraphics::VertexBuffer::create(sizeof(VertexPNT), vertices_.size(), lgraphics::Pool_Default, lgraphics::Usage_None);
+                VertexPNT *vertices = LIME_NEW VertexPNT[vertices_.size()];
                 //頂点コピー
                 for(u32 i=0; i<vertices_.size(); ++i){
                     vertices[i].pos_ = vertices_[i];
@@ -1376,6 +1449,13 @@ namespace
         for(u32 i=0; i<obj.getNumGeometries(); ++i){
             obj.getGeometry(i).setGeometryBuffer(geomBufferPtr);
         }
+
+//デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+        debugLog_.addNumVertices(vertices_.size());
+        debugLog_.addNumBatches( obj.getNumGeometries() );
+#endif
+
 
 #undef LIME_XLOADER_CREATEOBJECT_BLIT_BUFFER
     }

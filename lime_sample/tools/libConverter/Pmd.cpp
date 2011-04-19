@@ -38,6 +38,7 @@
 
 #include <lframework/scene/shader/DefaultShader.h>
 
+#include "charcode/conv_charcode.h"
 #include "converter.h"
 #include "SplitBone.h"
 
@@ -161,6 +162,13 @@ namespace
         lcore::io::read(is, rhs.edgeFlag_);
         lcore::io::read(is, rhs.faceVertexCount_);
         lcore::io::read(is, rhs.textureFileName_, sizeof(CHAR)*FileNameSize);
+
+        strSJISToUTF8(rhs.textureFileName_); //UTF8へ変換
+
+        //シェーダのpow関数の値域におさめるために補正
+        if(rhs.specularity_ < 0.01f){
+            rhs.specularity_ = 0.01f;
+        }
         return is;
     }
 
@@ -183,6 +191,21 @@ namespace
         lcore::swap(headPos_[0], rhs.headPos_[0]);
         lcore::swap(headPos_[1], rhs.headPos_[1]);
         lcore::swap(headPos_[2], rhs.headPos_[2]);
+    }
+
+    Bone& Bone::operator=(const Bone& rhs)
+    {
+        lcore::memcpy(name_, rhs.name_, NameSize);
+
+        parentIndex_ = rhs.parentIndex_;
+        tailPosIndex_ = rhs.tailPosIndex_;
+        type_ = rhs.type_;
+        ikParentIndex_ = rhs.ikParentIndex_;
+
+        headPos_[0] = rhs.headPos_[0];
+        headPos_[1] = rhs.headPos_[1];
+        headPos_[2] = rhs.headPos_[2];
+        return *this;
     }
 
 
@@ -569,9 +592,6 @@ namespace
             return false;
         }
 
-        
-
-
         //IK作成
         //-------------------------------------------------------
         u16 numIKs = 0;
@@ -616,19 +636,19 @@ namespace
         //ボーンをソートしてマッピング
         boneMap_ = LIME_NEW u16[numBones_];
         sortBones();
-        Bone* tmp = LIME_NEW Bone[numBones_];
-        for(u16 i=0; i<numBones_; ++i){
-            tmp[ boneMap_[i] ] = bones_[i];
-        }
-        LIME_DELETE_ARRAY(bones_);
-        bones_ = tmp;
-        tmp = NULL;
 
         for(u16 i=0; i<numBones_; ++i){
             if(bones_[i].parentIndex_ != lanim::InvalidJointIndex){
                 bones_[i].parentIndex_ = boneMap_[ bones_[i].parentIndex_ ];
             }
-            bones_[i].tailPosIndex_ = boneMap_[ bones_[i].tailPosIndex_ ];
+
+            if(bones_[i].tailPosIndex_ != lanim::InvalidJointIndex){
+                bones_[i].tailPosIndex_ = boneMap_[ bones_[i].tailPosIndex_ ];
+            }
+
+            if(bones_[i].ikParentIndex_ != 0){
+                bones_[i].ikParentIndex_ = boneMap_[ bones_[i].ikParentIndex_ ];
+            }
         }
 
         for(u32 i=0; i<numVertices_; ++i){
@@ -761,6 +781,7 @@ namespace
             case RenderState_Default:
                 {
                     state.setCullMode(lgraphics::CullMode_CCW);
+                    //state.setCullMode(lgraphics::CullMode_None);
 
                     state.setAlphaBlendEnable(false);
                     state.setAlphaTest(true);
@@ -782,7 +803,7 @@ namespace
                     state.setAlphaTestFunc(lgraphics::Cmp_Greater);
 
                     // Zバッファ設定
-                    state.setZWriteEnable(false);
+                    state.setZWriteEnable(true); //普通は書き込み禁止にするが、ソートしないかわりに書き込みしてるらしい
                 }
                 break;
             };
@@ -791,7 +812,7 @@ namespace
 
         //-----------------------------------------------------------------------------
         /// レンダリングステート設定
-        void setRenderStateToMaterial(lscene::Material& dst, lgraphics::RenderStateRef* stock, u32 createFlag, RenderStateType type)
+        void setRenderStateToMaterial(lscene::Material& dst, lgraphics::RenderStateRef* stock, u32& createFlag, RenderStateType type)
         {
             //作成していなかったら作る
             u32 flag = 0x01U << type;
@@ -808,7 +829,7 @@ namespace
         void setMaterial(lscene::Material& dst, const pmd::Material& src)
         {
             dst.diffuse_.set(src.diffuse_[0], src.diffuse_[1], src.diffuse_[2], src.diffuse_[3]);
-            dst.specular_.set(src.specularColor_[0], src.specularColor_[0], src.specularColor_[0], src.specularity_);
+            dst.specular_.set(src.specularColor_[0], src.specularColor_[1], src.specularColor_[2], src.specularity_);
             dst.ambient_.set(src.ambient_[0], src.ambient_[1], src.ambient_[2]);
             dst.reflectance_ = 0.05f;
 
@@ -913,37 +934,44 @@ namespace
                 TextureRef* texture = loadTexture(texName.c_str(), texName.size(), directory, *texMap);
 
                 //アルファ値が１ならアルファブレンドなし
-                if(lmath::isEqual(dstMaterial.diffuse_._w, 1.0f)){
+                if(dstMaterial.diffuse_._w > 0.999f){
                     renderStateType = RenderState_Default;
+                    dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_AlphaTest);
+
                 }else{
                     renderStateType = RenderState_AlphaBlend;
                 }
 
+                //テクスチャはどちらかひとつにする。やはり２枚いけるかもしれない
+                dstMaterial.setTextureNum(2);
+                    
                 if(texture != NULL){
                     if(swapOrigin){
                         lframework::io::swapOrigin(*texture);
                     }
-                    dstMaterial.setTextureNum(1);
                     dstMaterial.setTexture(0, *texture);
                     //テクスチャがあったのでフラグ立てる
-                    dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_Texture0);
+                    dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_TexAlbedo);
+                    dstMaterial.getSamplerState(0).setAddressU( lgraphics::TexAddress_Clamp );
+                    dstMaterial.getSamplerState(0).setAddressV( lgraphics::TexAddress_Clamp );
+                }
+                if(material.toonIndex_<NumToonTextures){ //トゥーンテクスチャを調べる
+                    texture = toonTextures_.textures_[ material.toonIndex_ ];
+                    if(texture != NULL){
+                        dstMaterial.setTexture(1, *texture);
+                        //フラグ立てる
+                        dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_TexGrad); //テクスチャでグラディエーションつける
 
-                }else{
-                    //テクスチャがないならトゥーンテクスチャを調べる
-                    if(material.toonIndex_<NumToonTextures){
-                        texture = toonTextures_.textures_[ material.toonIndex_ ];
-                        if(texture != NULL){
-                            dstMaterial.setTextureNum(1);
-                            dstMaterial.setTexture(0, *texture);
-                            //フラグ立てる
-                            dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_Texture0);
-                            dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_TexGrad); //テクスチャでグラディエーションつける
-
-                            dstMaterial.getSamplerState(0).setAddressU( lgraphics::TexAddress_Clamp );
-                            dstMaterial.getSamplerState(0).setAddressV( lgraphics::TexAddress_Clamp );
-                        }
+                        dstMaterial.getSamplerState(1).setAddressU( lgraphics::TexAddress_Clamp );
+                        dstMaterial.getSamplerState(1).setAddressV( lgraphics::TexAddress_Clamp );
                     }
                 }
+
+#if defined(LIME_GLES2)
+                //頂点でライティング計算
+                dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_LightingVS);
+#endif
+
                 setRenderStateToMaterial(dstMaterial, renderState, stateCreateFlag, renderStateType);
 
             }
@@ -959,6 +987,7 @@ namespace
         u32 geomIndex = 0;
         Geometry *geometry = geometries_;
         VertexBuffer* bufferPtr = NULL;
+        numVertices_ = 0;
         while(geometry != NULL){
             if(bufferPtr != geometry->vertexBuffer_.get()){
                 bufferPtr = geometry->vertexBuffer_.get();
@@ -966,7 +995,9 @@ namespace
                 if(false == createVertexBuffer(vb, *bufferPtr)){
                     return false;
                 }
-
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+                numVertices_ += bufferPtr->elements_.size();
+#endif
                 skinPack_.createMorphBaseVertices(bufferPtr->elements_.size(), &(bufferPtr->elements_[0]));
 
                 geomBuffer = LIME_NEW GeometryBuffer(Primitive_TriangleList, decl, vb, ib);
@@ -1005,6 +1036,11 @@ namespace
         lanim::IKPack::pointer ikPack( releaseIKPack() );
         obj.setIKPack( ikPack );
 
+//デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+        debugLog_.addNumVertices( numVertices_ );
+        debugLog_.addNumBatches( numGeometries_ );
+#endif
         return true;
     }
 
@@ -1057,13 +1093,28 @@ namespace
         //0番目ロード
         toonTextures_.textures_[0] = loadTexture(tex0, sizeof(tex0)-1, buffer, texMapInternal_, true);
 
+        u32 utf8size = 0;
         Char name[ToonTexturePathSize+1];
+        Char tmp[ToonTexturePathSize+1];
 
         for(u32 i=1; i<NumToonTextures; ++i){
             lcore::io::read(input_, name, ToonTexturePathSize);
             name[ToonTexturePathSize] = '\0';
 
+            utf8size = charcode::strSJISToUTF8(NULL, reinterpret_cast<const u8*>(name));
+            if(utf8size>ToonTexturePathSize){
+                //変換後がToonTexturePathSizeを超える場合サポートしない
+            }else{
+                lcore::memcpy(tmp, name, ToonTexturePathSize+1);
+
+                charcode::strSJISToUTF8(reinterpret_cast<u8*>(name), reinterpret_cast<const u8*>(tmp));
+                name[utf8size] = '\0';        
+            }
+
             toonTextures_.textures_[i] = loadTexture(name, lcore::strlen(name), buffer, texMapInternal_, true);
+            if(toonTextures_.textures_[i] == NULL){ //なければモデルのディレクトリも調べる
+                toonTextures_.textures_[i] = loadTexture(name, lcore::strlen(name), directory, texMapInternal_, true);
+            }
         }
 
     }
@@ -1076,47 +1127,40 @@ namespace
         LASSERT(bones_ != NULL);
         LASSERT(boneMap_ != NULL);
 
-        for(u16 i=0; i<numBones_;){
-            if(bones_[i].parentIndex_ == lanim::InvalidJointIndex
-                || bones_[i].parentIndex_ <= i){
-                boneMap_[i] = i;
-                ++i;
-            }else{
-                u16 parent = bones_[i].parentIndex_;
-                bones_[i].swap(bones_[parent]);
-            }
-        }
-#if 0
-        u16 count = 0;
-
-        //子ボーンを順番につめる
-        u8 stack[MaxBones];
-        u32 top = 0;
         for(u16 i=0; i<numBones_; ++i){
-            //ルートだったら、マップに入れてスタックに積む
-            if(bones_[i].parentIndex_ == lanim::InvalidJointIndex){
-                boneMap_[i] = count;
-                ++count;
+            boneMap_[i] = lanim::InvalidJointIndex;
+        }
 
-                stack[top++] = static_cast<u8>(i);
+        Bone *stack = LIME_NEW Bone[numBones_];
+        u32 stackIndex = 0;
+
+        for(u16 i=0; i<numBones_; ++i){
+
+            //自分の親をすべてスタックに積む
+            u16 j = i;
+            while(bones_[j].parentIndex_ != lanim::InvalidJointIndex){
+                u16 parent = bones_[j].parentIndex_;
+                if(boneMap_[parent] == lanim::InvalidJointIndex){
+                    boneMap_[parent] = stackIndex;
+                    stack[stackIndex] = bones_[parent];
+                    ++stackIndex;
+                }
+                j = parent;
             }
 
-            //スタック処理
-            while(0<top){
-                //ポップする
-                u16 bone = stack[--top];
-                //現在のボーンが親のボーンを、マップに入れてスタックに積む
-                for(u16 j=0; j<numBones_; ++j){
-                    if(bone == bones_[j].parentIndex_){
-                        boneMap_[j] = count;
-                        ++count;
-
-                        stack[top++] = static_cast<u8>(j);
-                    }
-                }
+            //自分をスタックに積む
+            if(boneMap_[i] == lanim::InvalidJointIndex){
+                boneMap_[i] = stackIndex;
+                stack[stackIndex] = bones_[i];
+                ++stackIndex;
             }
         }
-#endif
+
+        for(u16 i=0; i<numBones_; ++i){
+            bones_[i] = stack[i];
+        }
+
+        LIME_DELETE_ARRAY(stack);
 
 #if defined(LIME_LIB_CONV_DEBUG)
         // debug out

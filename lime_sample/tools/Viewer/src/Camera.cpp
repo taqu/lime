@@ -2,6 +2,7 @@
 @file Camera.cpp
 @author t-sakai
 @date 2011/02/18
+@date 2011/04/07 フレーム検索方法を汎用アルゴリズムから一時変更
 */
 #include "stdafx.h"
 #include "Camera.h"
@@ -32,6 +33,7 @@ namespace viewer
         Manual();
         virtual ~Manual();
 
+        virtual void initialize(){}
         virtual void update(u32 counter);
         virtual void reset();
         void set(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov, f32 asect);
@@ -165,6 +167,11 @@ namespace viewer
         FrameAnim();
         virtual ~FrameAnim();
 
+        virtual void initialize()
+        {
+            cameraAnimPack_->initialize();
+        }
+
         virtual void update(u32 counter);
         virtual void reset();
 
@@ -201,7 +208,8 @@ namespace viewer
     {
         LASSERT(cameraAnimPack_ != NULL);
 
-        u32 animIndex = cameraAnimPack_->binarySearchIndex(counter);
+        //u32 animIndex = cameraAnimPack_->binarySearchIndex(counter);
+        u32 animIndex = cameraAnimPack_->getNextIndex(counter);
         const pmm::CameraPose& cameraPose = cameraAnimPack_->getPose(animIndex);
 
         if(animIndex == cameraAnimPack_->getNumPoses() - 1){
@@ -232,6 +240,8 @@ namespace viewer
 
     void Camera::FrameAnim::reset()
     {
+        cameraAnimPack_->initialize();
+
         const pmm::CameraPose& cameraPose = cameraAnimPack_->getPose(0);
         position_ = cameraPose.position_;
         target_ = cameraPose.target_;

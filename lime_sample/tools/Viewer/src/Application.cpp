@@ -32,6 +32,14 @@
 
 #include "Input.h"
 
+namespace
+{
+    //デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+        lconverter::DebugLog g_debugLog;
+#endif
+}
+
 namespace viewer
 {
     Application::Application()
@@ -53,6 +61,9 @@ namespace viewer
 
         lframework::System::InitParam sysParam("data/evac-fh.otf", 32);
         lframework::System::initialize(sysParam, animInitParam);
+
+        textRenderer_.initialize(256, 9, 20, 6, 16);
+        textRenderer_.setTextureFromFile("data/M_plus_1m_regular10.tga");
 
         // シーン初期化
         {
@@ -81,26 +92,15 @@ namespace viewer
 
             Input::initialize( window_.getHandle().hWnd_, window_.getViewWidth(), window_.getViewHeight() );
         }
-#if 0
-        {
-            lx::XLoader xLoader;
-            animObj_ = LIME_NEW lscene::Object;
-            if(xLoader.open("data/pmm/Accessory/negi.x")){
-            xLoader.load(*animObj_, "data/pmm/Accessory/", 10.0f, false);
-            animObj_->initializeShader();
-            animObj_->addDraw();
-            }
-            return;
-        }
-#endif
 
 #if 1
         {//PMMロード
             scene_.release(); //携帯機ではメモリが少ないので先に解放する。ロード失敗すれば元には戻らない
             pmm::Loader pmmLoader;
-            pmmLoader.load("Sample.pmm", "data/pmm/");
-            //pmmLoader.load("sample2.pmm", "data/pmm/");
+            //pmmLoader.load("Sample.pmm", "data/pmm/");
+            //pmmLoader.load("StrobeNights.pmm", "data/StrobeNights/");
             //pmmLoader.load("SampleAllStar.pmm", "data/pmm/");
+            pmmLoader.load("HelloP.pmm", "data/HelloP/");
             if(pmm::Loader::Error_None == pmmLoader.getErrorCode()){
 
                 //release時に0になるので先に取得
@@ -119,99 +119,21 @@ namespace viewer
 
                 f32 aspect = static_cast<f32>( window_.getViewWidth() ) / window_.getViewHeight();
                 scene_.initialize(aspect);
+
+
 #if defined(_DEBUG)
                 lframework::System::attachDebugDraw();
+#endif
+
+                //デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+                g_debugLog = pmmLoader.debugLog_;
 #endif
             }
             return;
         }
 #endif
 
-#if 0
-        //モデルロード
-        {
-            pmd::Pack pack;
-#if 1
-            static const char* name = "data/Lat/Lat_miku2.2_Sailor_NoEdge.pmd";
-            static const char* dir = "data/Lat/";
-#elif 0
-            static const char* name = "data/1052/1052.pmd";
-            static const char* dir = "data/1052/";
-#elif 1
-            static const char* name = "data/1052C-Re0710/1052C-ReB.pmd";
-            static const char* dir = "data/1052C-Re0710/";
-#endif
-
-            if(true == pack.open(name)){
-                animObj_ = LIME_NEW lscene::AnimObject;
-                if(false == pack.createObject(*animObj_, dir, false)){
-                    LIME_DELETE(animObj_);
-                }else{
-
-                    lanim::IKPack::pointer ikPack( pack.releaseIKPack() );
-                    animObj_->setIKPack(ikPack);
-
-                    animObj_->initializeShader();
-                    animObj_->addDraw();
-#if defined(_DEBUG)
-                    lframework::System::attachDebugDraw();
-#endif
-                }
-            }
-        }
-
-        //アニメーションロード
-        {
-#if 0
-            static const char* name = "data/Lat/Lat式ミクVer2.2_Normal.pmd";
-#elif 1
-            static const char* name = "data/Dance_ver_B/hinsou.vmd";
-#endif
-            lanim::AnimationClip::pointer animClip = vmd::Pack::loadFromFile(name);
-
-
-            //スケルトンあったらアニメーションセットアップ
-            if(animClip != NULL
-                && animObj_ != NULL
-                && animObj_->getSkeleton() != NULL)
-            {
-                typedef lanim::AnimCtrlSimple<
-                    lanim::AnimationControlerResource,
-                    lanim::AnimationControlerPartial,
-                    lanim::AnimationControlerIK
-                > AnimCtrl;
-                AnimCtrl* animCtrl = LIME_NEW AnimCtrl;
-                animCtrl->setSkeleton(animObj_->getSkeleton());
-                animObj_->setSkeletonPose( &(animCtrl->getSkeletonPose()) );
-
-                animControler_ = animCtrl;
-                animControler_->initialize();
-
-                animCtrl->setClip(animClip);
-
-                if(animObj_->getIKPack() != NULL){
-                    animCtrl->setIKPack(animObj_->getIKPack());
-                }
-#if 0
-                {//少しテスト
-                    lanim::JointAnimation& jointAnim = animClip->getJointAnimation( animClip->getNumJoints() / 3 );
-
-                    const lanim::JointPoseWithFrame* pose0 = &(jointAnim.binarySearch(0));
-                    const lanim::JointPoseWithFrame& last = jointAnim.getPose( jointAnim.getNumPoses() - 1);
-                    const lanim::JointPoseWithFrame* pose1 = &(jointAnim.binarySearch(1));
-                    const lanim::JointPoseWithFrame* pose2 = &(jointAnim.binarySearch(last.frameNo_));
-                    const lanim::JointPoseWithFrame* pose3 = &(jointAnim.binarySearch(last.frameNo_-1));
-                    const lanim::JointPoseWithFrame* pose4 = &(jointAnim.binarySearch(last.frameNo_+1));
-                    const lanim::JointPoseWithFrame* pose5 = &(jointAnim.binarySearch(last.frameNo_+2));
-
-                }
-#endif
-                lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
-                animSys.add(animControler_);
-
-            }
-        }
-#endif
     }
 
     void Application::update()
@@ -221,7 +143,6 @@ namespace viewer
         lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
         //lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
 
-        lframework::System::debugPrint(10.0f, 10.0f, "test");
 
         static lcore::s32 count = 0;
         static const lcore::s32 max_count = 180;
@@ -239,8 +160,26 @@ namespace viewer
 
         scene_.update();
 
+        //textRenderer_.print(0, 0, " !\"#$%&\'()*+,-./");
+        //textRenderer_.print(1, 0, "0123456789:;<=>?");
+        //textRenderer_.print(2, 0, "@ABCDEFGHIJKLMNO");
+        //textRenderer_.print(3, 0, "PQRSTUVWXYZ[\\]^_");
+        //textRenderer_.print(4, 0, "`abcdefghijklmno");
+        //textRenderer_.print(5, 0, "pqrstuvwxyz{|}");
+
+        char str[128];
+//デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+        sprintf(str, "vertices: %d", g_debugLog.getNumVertices());
+        textRenderer_.print(3, 0, str);
+
+        sprintf(str, "batches: %d", g_debugLog.getNumBatches());
+        textRenderer_.print(4, 0, str);
+#endif
         renderSys.beginDraw();
         renderSys.draw();
+
+        textRenderer_.draw();
         renderSys.endDraw();
 
         lframework::System::debugDrawClear();
@@ -252,7 +191,6 @@ namespace viewer
 
         t = 60 * (16.67*1000.0/t);
 
-        char str[128];
         sprintf(str, "%d", t);
         SetWindowText(window_.getHandle().hWnd_, str);
 
@@ -272,6 +210,7 @@ namespace viewer
 
         scene_.release();
 
+        textRenderer_.terminate();
         lframework::System::terminate();
     }
 

@@ -30,6 +30,8 @@ namespace viewer
         Camera();
         ~Camera();
 
+        inline void initialize();
+
         inline Mode getMode() const;
         inline void setMode(Mode mode);
         inline void changeMode();
@@ -51,6 +53,7 @@ namespace viewer
         {
         public:
             virtual ~Base(){}
+            virtual void initialize() = 0;
             virtual void update(u32 counter) =0;
             virtual void reset() =0;
         };
@@ -58,6 +61,11 @@ namespace viewer
         Mode mode_;
         Base* impl_[Mode_Num];
     };
+
+    inline void Camera::initialize()
+    {
+        impl_[Mode_FrameAnim]->initialize();
+    }
 
     inline Camera::Mode Camera::getMode() const
     {

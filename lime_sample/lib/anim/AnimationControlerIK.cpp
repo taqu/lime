@@ -8,7 +8,7 @@
 #include <lframework/System.h>
 #include "AnimationControlerIK.h"
 
-#define LIME_ANIM_IK_DEBUG (1)
+//#define LIME_ANIM_IK_DEBUG (1)
 
 namespace lanim
 {
@@ -135,7 +135,7 @@ namespace lanim
 
                     static const f32 IKThreshold = (1.0f-IKEpsilon);
                     if(dotProduct>IKThreshold){
-                        radian = 0.0f;
+                        continue;
                     }else if(dotProduct< -IKThreshold){
                         radian = lmath::acos(-IKThreshold);
                     }else{
@@ -157,17 +157,17 @@ namespace lanim
                         lmath::getEulerObjectToInertial(head, pitch, bank, rotation);
 
                         //エフェクタの方が遠くにある場合、曲げをプラス
-                        if(ltot<ltoe){
-                            f32 cs = ltot/ltoe;//ltot/ltoeは、およそcosになるのではないかな
-                            pitch -= lmath::acos(cs);
-                        }
+                        //if(ltot<ltoe){
+                        //    f32 cs = ltot/ltoe;//ltot/ltoeは、およそcosになるのではないかな
+                        //    pitch -= lmath::acos(cs);
+                        //}
 
                         f32 sum = totalXRot + pitch;
 
                         if(sum > 0.0f){ //プラス方向に曲がらないように
                             pitch = -totalXRot;
                         }else if(sum<(-PI)){
-                            pitch = -PI - totalXRot;
+                            pitch = -entry.limitAngle_ - totalXRot;
                         }
 
                         rotation.setRotateAxis(1.0f, 0.0f, 0.0f, pitch);

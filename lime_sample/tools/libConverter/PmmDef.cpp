@@ -442,6 +442,7 @@ namespace pmm
     ModelPack::ModelPack()
         :object_(NULL)
         ,animControler_(NULL)
+        ,boneMap_(NULL)
     {
     }
 
@@ -449,6 +450,7 @@ namespace pmm
     {
         LIME_DELETE(animControler_);
         LIME_DELETE(object_);
+        LIME_DELETE_ARRAY(boneMap_);
     }
 
     void ModelPack::set(lscene::AnimObject* object)
@@ -637,7 +639,7 @@ namespace pmm
     }
 
 
-    void AccessoryPack::reset(u32 numModels, ModelPack* models)
+    void AccessoryPack::reset(u32 /*numModels*/, ModelPack* models)
     {
         LASSERT(models != NULL);
         LASSERT(getNumPoses()>=1);
@@ -645,9 +647,16 @@ namespace pmm
 
         const AccessoryPose& pose = getPose(0);
 
+        matrix_.scale( pose.scale_ );
+        //matrix_.rotateX( pose.rotation_._x );
+        //matrix_.rotateY( pose.rotation_._y );
+        //matrix_.rotateZ( pose.rotation_._z );
+
+        matrix_.translate( pose.translation_ );
+
+
         lmath::Matrix43& mat = object_->getWorldMatrix();
         mat = matrix_;
-        mat.scale( pose.scale_ );
 
         u8 bindModel = pose.getBindModel();
 
@@ -674,7 +683,7 @@ namespace pmm
         targetMat_ = &targetMatrices[bindBone_];
     }
 
-    void AccessoryPack::update(u32 frame)
+    void AccessoryPack::update(u32 /*frame*/)
     {
         if(targetObject_ == NULL){
             return;
@@ -684,7 +693,6 @@ namespace pmm
 
         lmath::Matrix43& mat = object_->getWorldMatrix();
         mat = matrix_;
-        mat.scale( getPose(0).scale_ );
         mat.translate( joint.getPosition() );
 
         mat.mul(mat, targetObject_->getWorldMatrix());

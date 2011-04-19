@@ -34,7 +34,7 @@ namespace charcode
             return 1;
         }
 
-        //”¼ŠpƒJƒi‚à‚»‚Ì‚Ü‚Ü•Ô‚·
+        //”¼ŠpƒJƒi‚Í‚»‚Ì‚Ü‚Ü•Ô‚·
         if(sjis[0]>=0xA1U && sjis[0]<=0xDFU){
             jis[0] = sjis[0];
             return 1;
@@ -162,9 +162,26 @@ namespace charcode
             sjis += byte;
 
             if(byte<=1){
-                if(utf){
-                    utf[0] = jis[0];
-                    utf += 1;
+                //”¼ŠpƒJƒi‚Ì”ÍˆÍ
+                if(0xA1U<=jis[0] && jis[0]<=0xDFU){
+                    byte = 3;
+                    if(utf){
+                        utf[0] = 0xEFU;
+                        if(jis[0]>=0xC0U){
+                            utf[1] = 0xBEU;
+                            utf[2] = jis[0] - 0x40U;
+                        }else{
+                            utf[1] = 0xBDU;
+                            utf[2] = jis[0];
+                        }
+                        utf += 3;
+                    }
+
+                }else{
+                    if(utf){
+                        utf[0] = jis[0];
+                        utf += 1;
+                    }
                 }
             }else{
                 byte = JISToUTF8(utf, jis);

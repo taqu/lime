@@ -141,6 +141,12 @@ namespace pmm
         lconverter::NameTextureMap nameTexMap_;
 
         lcore::Buffer buffer_; //ロード用テンポラリバッファ
+
+        //デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+    public:
+        lconverter::DebugLog debugLog_;
+#endif
     };
 
     inline Loader::ErrorCode Loader::getErrorCode() const

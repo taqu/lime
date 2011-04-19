@@ -2,6 +2,7 @@
 @file Light.cpp
 @author t-sakai
 @date 2011/02/26
+@date 2011/04/07 フレーム検索方法を汎用アルゴリズムから一時変更
 */
 #include "stdafx.h"
 #include "Light.h"
@@ -48,19 +49,26 @@ namespace viewer
     {
     }
 
+    void Light::initialize()
+    {
+        frame_ = 0;
+        lightAnimPack_->initialize();
+    }
+
     void Light::update()
     {
         LASSERT(lightAnimPack_ != NULL);
 
         if(++frame_ > lastFrame_){
-            frame_ = 0;
+            initialize();
         }
 
         lscene::Scene& scene = lframework::System::getRenderSys().getScene();
         lscene::LightEnvironment& lightEnv = scene.getLightEnv();
         lscene::DirectionalLight& dlight = lightEnv.getDirectionalLight();
 
-        u32 animIndex = lightAnimPack_->binarySearchIndex(frame_);
+        //u32 animIndex = lightAnimPack_->binarySearchIndex(frame_);
+        u32 animIndex = lightAnimPack_->getNextIndex(frame_);
         const pmm::LightPose& lightPose = lightAnimPack_->getPose(animIndex);
 
         if(animIndex == lightAnimPack_->getNumPoses() - 1){
@@ -95,7 +103,7 @@ namespace viewer
     {
         LASSERT(lightAnimPack_ != NULL);
 
-        frame_ = 0;
+        initialize();
 
         lscene::Scene& scene = lframework::System::getRenderSys().getScene();
         lscene::LightEnvironment& lightEnv = scene.getLightEnv();

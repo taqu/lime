@@ -54,7 +54,7 @@ namespace pmd
     static const u8 BoneFreeSlot = 0xFFU;
     static const u32 MaxIndices = 0xFFFFFFFEU;
     static const u32 MaxVertices = 0xFFFEU;
-    static const u16 MaxIKIterations = 16;
+    static const u16 MaxIKIterations = 8;
 
     static const u32 NumLimitJoint = 1; ///動き制限するジョイントキーワード数
     extern const Char* LimitJointName[NumLimitJoint]; ///動き制限するジョイントキーワード
@@ -161,6 +161,8 @@ namespace pmd
         FLOAT headPos_[3];
 
         void swap(Bone& rhs);
+
+        Bone& operator=(const Bone& rhs);
 
         //ストリームロード
         friend lcore::istream& operator>>(lcore::istream& is, Bone& rhs);
@@ -646,6 +648,12 @@ namespace pmd
         DispLabel dispLabel_;
 
         ToonTexturePack toonTextures_;
+
+//デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+    public:
+        lconverter::DebugLog debugLog_;
+#endif
     };
 
     inline const Header& Pack::getHeader() const

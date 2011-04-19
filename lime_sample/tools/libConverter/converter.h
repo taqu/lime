@@ -11,6 +11,8 @@
 #include <lcore/vector.h>
 #include <lcore/String.h>
 
+#define LIME_LIBCONVERTER_DEBUGLOG_ENABLE (1)
+
 namespace lgraphics
 {
     class TextureRef;
@@ -47,10 +49,12 @@ namespace lconverter
 
     f32 texAddress(f32 value, TextureAddress op);
 
+    void strSJISToUTF8(Char* dst);
     void extractFileNameUTF8(Char* dst);
 
     typedef lcore::vector_arena<Char> S8Vector;
     typedef lcore::vector_arena<s16> S16Vector;
+    typedef lcore::vector_arena<f32> F32Vector;
     typedef lcore::vector_arena<u16> U16Vector;
     typedef lcore::vector_arena<u32> U32Vector;
 
@@ -147,6 +151,97 @@ namespace lconverter
         }
 
         lconverter::insertionSort(num, elems, lessThan);
+    }
+
+
+    //----------------------------------------------------------------------
+    //---
+    //--- DebugLog
+    //---
+    //----------------------------------------------------------------------
+    class DebugLog
+    {
+    public:
+        inline DebugLog();
+        inline ~DebugLog();
+
+        inline void reset();
+
+        inline u32 getNumVertices() const;
+        inline u32 getNumBatches() const;
+
+        inline void setNumVertices(u32 num);
+        inline void setNumBatches(u32 num);
+
+        inline void addNumVertices(u32 num);
+        inline void addNumBatches(u32 num);
+
+        inline DebugLog& operator=(const DebugLog& rhs);
+        inline DebugLog& operator+=(const DebugLog& rhs);
+
+    private:
+        u32 numVertices_;
+        u32 numBatches_;
+    };
+
+    inline DebugLog::DebugLog()
+        :numVertices_(0)
+        ,numBatches_(0)
+    {
+    }
+
+    inline DebugLog::~DebugLog()
+    {
+    }
+
+    inline void DebugLog::reset()
+    {
+        numVertices_ = 0;
+        numBatches_ = 0;
+    }
+
+    inline u32 DebugLog::getNumVertices() const
+    {
+        return numVertices_;
+    }
+
+    inline u32 DebugLog::getNumBatches() const
+    {
+        return numBatches_;
+    }
+
+    inline void DebugLog::setNumVertices(u32 num)
+    {
+        numVertices_ = num;
+    }
+
+    inline void DebugLog::setNumBatches(u32 num)
+    {
+        numBatches_ = num;
+    }
+
+    inline void DebugLog::addNumVertices(u32 num)
+    {
+        numVertices_ += num;
+    }
+
+    inline void DebugLog::addNumBatches(u32 num)
+    {
+        numBatches_ += num;
+    }
+
+    inline DebugLog& DebugLog::operator=(const DebugLog& rhs)
+    {
+        numVertices_ = rhs.numVertices_;
+        numBatches_ = rhs.numBatches_;
+        return *this;
+    }
+
+    inline DebugLog& DebugLog::operator+=(const DebugLog& rhs)
+    {
+        numVertices_ += rhs.numVertices_;
+        numBatches_ += rhs.numBatches_;
+        return *this;
     }
 }
 

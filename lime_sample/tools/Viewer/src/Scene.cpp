@@ -240,6 +240,7 @@ namespace viewer
             camera_.setCameraAnim(&cameraAnimPack_, aspect);
 
             camera_.setMode(Camera::Mode_FrameAnim);
+            //camera_.setMode(Camera::Mode_Manual);
         }
 
         {
@@ -249,6 +250,9 @@ namespace viewer
 
         lastFrame_ = static_cast<u32>(lastFrame);
         state_ = State_Play;
+        //state_ = State_Stop;
+
+        frameCounter_ = 0;
     }
 
 
@@ -280,8 +284,25 @@ namespace viewer
                 lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
                 animSys.update();
 
+                //if(frameCounter_>=369){
+                //    if(Input::isClick(Input::Key_0)){
+                //        animSys.update();
+                //        ++frameCounter_;
+                //    }
+
+                //}else{
+                //    animSys.update();
+                //    ++frameCounter_;
+                //}
                 if(++frameCounter_>lastFrame_){
+                //if(frameCounter_>lastFrame_){
                     frameCounter_ = 0;
+                    for(u32 i=1; i<numAccessories_; ++i){
+                        accPacks_[i].initialize();
+                    }
+
+                    camera_.initialize();
+                    light_.initialize();
                 }
 
                 for(u32 i=0; i<numModels_; ++i){
@@ -289,7 +310,7 @@ namespace viewer
                 }
 
                 //アクセサリ更新
-                for(u32 i=1; i<numAccessories_; ++i){
+                for(u32 i=0; i<numAccessories_; ++i){
                     accPacks_[i].update(frameCounter_);
                 }
 
@@ -298,6 +319,7 @@ namespace viewer
             }
             break;
         };
+
     }
 
     void Scene::Impl::setState(Scene::State state)
@@ -362,4 +384,5 @@ namespace viewer
     {
         lcore::swap(impl_, rhs.impl_);
     }
+
 }

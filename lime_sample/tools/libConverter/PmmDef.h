@@ -295,6 +295,8 @@ namespace pmm
     public:
         typedef BinarySearchInterface<T> this_type;
 
+        inline void initialize();
+
         void create(u32 numPoses);
 
         inline u32 getNumPoses() const;
@@ -305,17 +307,21 @@ namespace pmm
 
         void swap(this_type& rhs);
 
+        /// 次のフレームのインデックスを探索。順方向のみ
+        u32 getNextIndex(u32 frame);
     protected:
         BinarySearchInterface();
         ~BinarySearchInterface();
 
         u32 numPoses_;
+        u32 currentIndex_;
         T* poses_;
     };
 
     template<class T>
     BinarySearchInterface<T>::BinarySearchInterface()
         :numPoses_(0)
+        ,currentIndex_(0)
         ,poses_(NULL)
     {
     }
@@ -324,6 +330,12 @@ namespace pmm
     BinarySearchInterface<T>::~BinarySearchInterface()
     {
         LIME_DELETE_ARRAY(poses_);
+    }
+
+    template<class T>
+    inline void BinarySearchInterface<T>::initialize()
+    {
+        currentIndex_ = 0;
     }
 
     template<class T>
@@ -381,6 +393,21 @@ namespace pmm
     {
         lcore::swap(numPoses_, rhs.numPoses_);
         lcore::swap(poses_, rhs.poses_);
+    }
+
+    // 次のフレームのインデックスを探索。順方向のみ
+    template<class T>
+    u32 BinarySearchInterface<T>::getNextIndex(u32 frame)
+    {
+        for(u32 i=currentIndex_; i<numPoses_; ++i){
+            if(frame==poses_[i].frameNo_){
+                break;
+            }else if(frame<poses_[i].frameNo_){
+                currentIndex_ = (i == 0)? 0 : i-1;
+                break;
+            }
+        }
+        return currentIndex_;
     }
 
     //----------------------------------------------------------------------
@@ -479,6 +506,10 @@ namespace pmm
 
         void resetMorph();
         void updateMorph(u32 frame);
+
+        inline const u16* getBoneMap();
+        inline void setBoneMap(u16* boneMap);
+
     private:
         friend class Loader;
 
@@ -490,8 +521,19 @@ namespace pmm
 
         lanim::AnimationClip::pointer animClip_;
         lanim::AnimationControler* animControler_;
+
+        u16* boneMap_;
     };
 
+    inline const u16* ModelPack::getBoneMap()
+    {
+        LASSERT(boneMap_ != NULL);
+        return boneMap_;
+    }
+    inline void ModelPack::setBoneMap(u16* boneMap)
+    {
+        boneMap_ = boneMap;
+    }
 
     //----------------------------------------------------------------------
     //---
@@ -565,6 +607,8 @@ namespace pmm
         u8 getBindBone() const{ return elements_[Elem_BindBone];}
         u8 getShadow() const{ return elements_[Elem_Shadow];}
 
+        void setBindBone(u8 boneIndex){ elements_[Elem_BindBone] = boneIndex;}
+
         u32 frameNo_;
         lmath::Vector3 translation_;
         lmath::Vector3 rotation_;
@@ -605,7 +649,6 @@ namespace pmm
         bool alphaBlendEnable_;
         bool isDisp_;
     };
-
 }
 
 #endif //INC_PMMDEF_H__

@@ -18,8 +18,10 @@
 #include <lgraphics/io/IODDS.h>
 #include <lgraphics/io/IOTGA.h>
 #include <lgraphics/io/IOPNG.h>
+#include <lgraphics/io/IOJPEG.h>
 
 #include <lframework/IOUtil.h>
+
 using namespace lgraphics;
 
 namespace lconverter
@@ -29,6 +31,12 @@ namespace lconverter
 
     s16 F32ToS16(f32 value)
     {
+        //if(value>1.0f){
+        //    value = 1.0f;
+        //}else if(value<-1.0f){
+        //    value = -1.0f;
+        //}
+
         if(value>=0.0f){
             return static_cast<s16>(SHRT_MAX*value);
         }else{
@@ -92,41 +100,59 @@ namespace lconverter
             lcore::memcpy(filepath+dlen, path, size + 1);
         }
 
-        lcore::ifstream is(filepath, lcore::ios::in|lcore::ios::binary);
-        if(is.is_open() == false){
-            lcore::Log("pmd failt to open tex(%s)", filepath);
-            LIME_DELETE_ARRAY(filepath);
-            return NULL;
-        }
-
-        TextureRef *texture = LIME_NEW TextureRef;
-        if(texture == NULL){
-            LIME_DELETE_ARRAY(filepath);
-            return NULL;
-        }
-
+        TextureRef *texture = NULL;
         bool ret = false;
-        switch(format)
-        {
-        case lframework::Img_BMP:
-            ret = lgraphics::io::IOBMP::read(is, *texture, transpose);
-            break;
 
-        case lframework::Img_TGA:
-            ret = lgraphics::io::IOTGA::read(is, *texture);
-            break;
+        //jpegのロードのみ特殊
+        if(format == lframework::Img_JPG){
+            texture = LIME_NEW TextureRef;
+            if(texture == NULL){
+                LIME_DELETE_ARRAY(filepath);
+                return NULL;
+            }
+            ret = lgraphics::io::IOJPEG::read(filepath, *texture);
 
-        case lframework::Img_DDS:
-            ret = lgraphics::io::IODDS::read(is, *texture);
-            break;
+        }else{
 
-        case lframework::Img_PNG:
-            ret = lgraphics::io::IOPNG::read(is, *texture);
-            break;
+            lcore::ifstream is(filepath, lcore::ios::in|lcore::ios::binary);
+            if(is.is_open() == false){
+                lcore::Log("pmd failt to open tex(%s)", filepath);
+                LIME_DELETE_ARRAY(filepath);
+                return NULL;
+            }
 
-        default:
-            break;
-        };
+            texture = LIME_NEW TextureRef;
+            if(texture == NULL){
+                LIME_DELETE_ARRAY(filepath);
+                return NULL;
+            }
+
+            switch(format)
+            {
+            case lframework::Img_BMP:
+                ret = lgraphics::io::IOBMP::read(is, *texture, transpose);
+                break;
+
+            case lframework::Img_TGA:
+#if defined(LIME_GL)
+                ret = lgraphics::io::IOTGA::read(is, *texture, false);
+#else
+                ret = lgraphics::io::IOTGA::read(is, *texture, true);
+#endif
+                break;
+
+            case lframework::Img_DDS:
+                ret = lgraphics::io::IODDS::read(is, *texture);
+                break;
+
+            case lframework::Img_PNG:
+                ret = lgraphics::io::IOPNG::read(is, *texture);
+                break;
+
+            default:
+                break;
+            };
+        }
 
         if(ret){
             texture->setName(path, size);
@@ -170,6 +196,38 @@ namespace lconverter
         return value;
     }
 
+#if defined(_WIN32)
+    void strSJISToUTF8(Char* )
+    {
+    }
+#else
+    void strSJISToUTF8(Char* dst)
+    {
+
+        LASSERT(dst);
+        StringBuffer path;
+
+        u32 pathLen = lcore::strlen(dst);
+        if(pathLen<=0 || StringBuffer::MAX_LENGTH<= pathLen){
+            return;
+        }
+
+        path.resize(pathLen);
+
+        //SJISをUTF-8へ変換
+        for(u32 i=0; i<pathLen; ++i){
+            path[i] = dst[i];
+        }
+
+        u32 utf8size = charcode::strSJISToUTF8(NULL, reinterpret_cast<const u8*>(&path[0]));
+        if(utf8size>255){
+            //変換後が255バイトを超える場合サポートしない
+        }else{
+            charcode::strSJISToUTF8(reinterpret_cast<u8*>(dst), reinterpret_cast<const u8*>(&path[0]));
+            dst[utf8size] = '\0';
+        }
+    }
+#endif
 
     void extractFileNameUTF8(Char* dst)
     {
@@ -203,13 +261,9 @@ namespace lconverter
             }
             dst[lenFilename] = '\0';
         }else{
-            for(u32 i=0; i<lenFilename; ++i){
-                path[i] = filename[i];
-            }
-            path[lenFilename] = '\0';
 
             charcode::strSJISToUTF8(reinterpret_cast<u8*>(dst), reinterpret_cast<const u8*>(&path[0]));
-            dst[utf8size] = '\0';
+            dst[utf8size] = '\0';            
         }
 #endif
     }
