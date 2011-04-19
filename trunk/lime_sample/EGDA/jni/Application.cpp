@@ -18,12 +18,26 @@
 #include <lframework/scene/LightEnvironment.h>
 
 #include "Input.h"
+#include "Config.h"
+
+#include <time.h>
+#include <unistd.h>
+
+namespace
+{
+    //デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+        //lconverter::DebugLog g_debugLog;
+#endif
+}
 
 namespace egda
 {
     Application::Application()
-        :aspect_(400.0f/300.0f)
+        :prevMSec_(0)
+        ,currentMSec_(0)
     {
+        Config::initialize();
     }
 
     Application::~Application()
@@ -31,7 +45,7 @@ namespace egda
     }
 
     //----------------------------------------------
-    bool Application::initialize()
+    bool Application::initialize(const Char* textTexture, u32 size)
     {
         lgraphics::InitParam param;
         param.backBufferWidth_ = 300;
@@ -48,8 +62,12 @@ namespace egda
         animInitParam.maxNumClip_ = 32;
         animInitParam.maxNumSkeleton_ = 16;
 
-        lframework::System::InitParam sysParam("data/evac-fh.otf", 32);
+        lframework::System::InitParam sysParam("", 32);
         lframework::System::initialize(sysParam, animInitParam);
+
+        textRenderer_.initialize(MaxChars, CharW, CharH, Rows, Cols);
+        textRenderer_.setTextureFromMemory(textTexture, size);
+
 
         // シーン初期化
         {
@@ -59,7 +77,10 @@ namespace egda
             lscene::Camera& camera = scene.getCamera();
             lmath::Matrix44 mat;
 
-            mat.perspectiveFovLinearZ((45.0f/180.0f*PI), aspect_, 1.0f, 200.0f);
+            Config& config = Config::getInstance();
+
+            config.perspectiveFovLinearZ(mat, (45.0f/180.0f*PI));
+
             camera.setProjMatrix(mat);
 
             camera.updateMatrix();
@@ -70,6 +91,8 @@ namespace egda
             lightEnv.getDirectionalLight().setDirection(lmath::Vector3(0.0f, 1.0f, 0.0f));
         }
 
+        prevMSec_ = lcore::getTime();
+        currentMSec_ = prevMSec_;
         return true;
     }
 
@@ -77,6 +100,7 @@ namespace egda
     void Application::terminate()
     {
         scene_.release();
+        textRenderer_.terminate();
         lframework::System::terminate();
         lgraphics::Graphics::terminate();
     }
@@ -84,18 +108,48 @@ namespace egda
     //----------------------------------------------
     void Application::update()
     {
-        lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
-        //lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
+        static char buffer[128];
 
-        //animSys.update();
+        lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
 
         scene_.update();
 
+
         renderSys.beginDraw();
+
+        currentMSec_ = lcore::getTime();
+
+        u32 d = (prevMSec_>currentMSec_)? (currentMSec_ - prevMSec_) : (0xFFFFFFFFU-prevMSec_+currentMSec_);
+        prevMSec_ = currentMSec_;
+
+//デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+        //sprintf(buffer, "total %d msec", d);
+        //textRenderer_.print(0, 0, buffer);
+
+        //u32 fps = (6000 * 1667)/(d*10000);
+
+        //sprintf(buffer, "%d fps", fps);
+        //textRenderer_.print(1, 0, buffer);
+
+
+        //sprintf(buffer, "vertices: %d", g_debugLog.getNumVertices());
+        //textRenderer_.print(2, 0, buffer);
+
+        //sprintf(buffer, "batches: %d", g_debugLog.getNumBatches());
+        //textRenderer_.print(3, 0, buffer);
+#endif
+
         renderSys.draw();
+
+        textRenderer_.draw();
+
         renderSys.endDraw();
 
-        lframework::System::debugDrawClear();
+        if(d<MSecPerFrame){ //1フレームの時間が短ければ眠る
+            d = (MSecPerFrame - d)*1000;
+            usleep(d);//マイクロ秒単位で眠る
+        }
     }
 
     //----------------------------------------------
@@ -109,17 +163,26 @@ namespace egda
         }
         lgraphics::Graphics::getDevice().setViewport(left, top, width, height);
 
+        Config& config = Config::getInstance();
+
         lscene::Scene& scene = lframework::System::getRenderSys().getScene();
 
         // カメラ設定
-        aspect_ = static_cast<f32>(width)/height;
+        config.setViewportSize(width, height);
+
         lscene::Camera& camera = scene.getCamera();
         lmath::Matrix44 mat;
-        mat.perspectiveFovLinearZ((45.0f/180.0f*PI), aspect_, 1.0f, 200.0f);
+
+        config.perspectiveFovLinearZ(mat, (45.0f/180.0f*PI));
         camera.setProjMatrix(mat);
         camera.updateMatrix();
 
         Input::initialize(width, height);
+
+        u32 rows = width/(CharW*RowsRatio);
+        u32 cols = height/(CharH*ColsRatio);
+        textRenderer_.setViewSize(rows, cols);
+
         lcore::Log("viewport %d, %d", width, height);
     }
 
@@ -143,108 +206,20 @@ namespace egda
             pmmLoader.releaseAccessoryPacks()
             );
 
+        scene.setCameraMode( scene_.getCameraMode() );
+
         scene_.swap(scene);
 
-        scene_.initialize(aspect_);
+        scene_.initialize();
+
+        //デバッグ用ログ
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+        //g_debugLog = pmmLoader.debugLog_;
+#endif
+
 #if defined(_DEBUG)
         lframework::System::attachDebugDraw();
 #endif
         return true;
     }
-
-#if 0
-    //----------------------------------------------
-    bool Application::openModel(const Char* path, const Char* directory)
-    {
-        lcore::ifstream infile(path);
-        if(false == infile.is_open()){
-            return false;
-        }
-
-        bool ret = false;
-        pmd::Pack pack;
-        if(true == pack.open(path)){
-            lscene::AnimObject* animObj = LIME_NEW lscene::AnimObject;
-            if(false == pack.createObject(*animObj, directory, false)){
-                LIME_DELETE(animObj);
-            }else{
-                lanim::IKPack::pointer ikPack( pack.releaseIKPack() );
-                animObj->setIKPack(ikPack);
-
-                animObj->initializeShader();
-                LIME_DELETE(animObj_);
-                animObj->addDraw();
-                
-                animObj_ = animObj;
-
-                if(animControler_){
-                    initAnimControler();
-
-                    AnimCtrl* animCtrl = reinterpret_cast<AnimCtrl*>(animControler_);
-                    if(animObj_->getIKPack() != NULL){
-                        animCtrl->setIKPack(animObj_->getIKPack());
-                    }else{
-                        lanim::IKPack::pointer nullIK;
-                        animCtrl->setIKPack(nullIK);
-                    }
-                }
-
-                ret = true;
-            }
-        }
-
-        infile.close();
-        return ret;
-    }
-
-    //----------------------------------------------
-    bool Application::openAnim(const Char* path)
-    {
-        if(animObj_ == NULL){
-            lcore::Log("need a model to load anim");
-            return false;
-        }
-
-        //スケルトンなかったらロードしない
-        if(animObj_->getSkeleton() == NULL){
-            lcore::Log("need a skeleton of model to load anim");
-            return false;
-        }
-
-        lanim::AnimationClip::pointer animClip = vmd::Pack::loadFromFile(path);
-        if(animClip == NULL){
-            lcore::Log("fail to load clip");
-            return false;
-        }
-
-        if(animControler_ == NULL){
-            lcore::Log("start to create anim controler");
-            animControler_ = LIME_NEW AnimCtrl;
-
-            initAnimControler();
-
-            lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
-            animSys.add(animControler_);
-        }else{
-            initAnimControler();
-        }
-
-        AnimCtrl* animCtrl = reinterpret_cast<AnimCtrl*>(animControler_);
-        animCtrl->setClip(animClip);
-        return true;
-    }
-
-    void Application::initAnimControler()
-    {
-        animControler_->setSkeleton(animObj_->getSkeleton());
-        animObj_->setSkeletonPose( &(animControler_->getSkeletonPose()) );
-
-        if(animObj_->getIKPack() != NULL){
-            lcore::Log("set ik to anim controler");
-            AnimCtrl* animCtrl = reinterpret_cast<AnimCtrl*>(animControler_);
-            animCtrl->setIKPack(animObj_->getIKPack());
-        }
-        animControler_->initialize();
-    }
-#endif
 }

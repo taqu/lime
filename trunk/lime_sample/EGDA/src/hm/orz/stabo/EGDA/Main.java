@@ -1,87 +1,102 @@
 package hm.orz.stabo.EGDA;
 
-import hm.orz.stabo.EGDA.CommandManager.Command;
-import hm.orz.stabo.EGDA.UI.OpenFileDialog;
-import hm.orz.stabo.EGDA.UI.Recognizer;
-import hm.orz.stabo.EGDA.UI.ScrollView;
+
 import hm.orz.stabo.EGDA.UI.OpenFileDialog.OpenFileDialogListener;
 
 import java.io.File;
 
 import android.app.Activity;
+import android.app.AlertDialog;
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
-import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.Window;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
+import android.widget.ImageButton;
 
-public class Main extends Activity implements OpenFileDialogListener
+public class Main extends Activity
+    implements OpenFileDialogListener, OnClickListener
 {
-    /** Called when the activity is first created. */
-    @Override
+    static final int State_Stop = 0;
+    static final int State_Play = 1;
+    
+    /**
+     * Called when the activity is first created.
+     */
     public void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
 
-        renderer_ = new MainRenderer();
-        mainView_ = new GLSurfaceView(this);
-        mainView_.setRenderer(renderer_);
+        requestWindowFeature(Window.FEATURE_NO_TITLE); //タイトルバー非表示
 
-        ScrollView menuView = (ScrollView)this.getLayoutInflater().inflate(R.layout.menu_view, null);
-        menuView_ = new MenuView(menuView);
-
-        frameLayout_ = new FrameLayout(this);
-
-        frameLayout_.setLayoutParams( new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-        frameLayout_.addView(mainView_);
-        frameLayout_.addView(menuView);
-
-        setContentView(frameLayout_);
-        //setContentView(mainView_);
-        
-        
-        //設定初期化
+      //設定初期化
         Config.initialize();
         Config.getInstance().load( getResources().getString(R.string.app_name) ); //設定ファイルロード
-        
-        recognizer_ = new Recognizer();
+
+        //GL用ビュー
+        renderer_ = new MainRenderer();
+        mainView_ = new GLSurfaceView(this, renderer_);
+        mainView_.setLayoutParams( new FrameLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+
+        //メインHUD
+        View hud = this.getLayoutInflater().inflate(R.layout.hud, null);
+
+        playButton_ = (ImageButton)hud.findViewById(R.id.play_button);
+        playButton_.setOnClickListener(this);
+
+
+        //GL->HUDの順に重ねる
+        frameLayout_ = new FrameLayout(this);
+        frameLayout_.setLayoutParams( new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+
+        frameLayout_.addView(mainView_);
+        frameLayout_.addView(hud);
+
+        setContentView(frameLayout_);
+
+        state_ = State_Stop;
     }
 
-	@Override
 	protected void onPause()
 	{
-	    //mainView_.onPause();
 		super.onPause();
+
+		mainView_.onPause();
+		LogOut.d("onPause");
 	}
 
-	@Override
 	protected void onResume()
 	{
-	    //mainView_.onResume();
 		super.onResume();
+
+		mainView_.onResume();
+		LogOut.d("onResume");
 	}
-	
+
 	protected void onStop()
-	{
-		super.onStop();
-		mainView_ = null;
-		frameLayout_ = null;
-		menuView_ = null;
-		recognizer_ = null;
-		
-		Config.getInstance().save(getResources().getString(R.string.app_name));
-		finish();
-	}
-	
-	protected void onDestroy()
     {
-        super.onDestroy();
+	    super.onStop();
+	    LogOut.d("onStop");
+        finish();
     }
-	
-	
+
+	protected void onDestroy()
+	{
+		super.onDestroy();
+
+		LogOut.d("onDestroy");
+		frameLayout_ = null;
+
+		Config.getInstance().save(getResources().getString(R.string.app_name));
+	}
+
 	public boolean onCreateOptionsMenu(Menu menu)
     {
         MenuInflater inflater = this.getMenuInflater();
@@ -90,7 +105,7 @@ public class Main extends Activity implements OpenFileDialogListener
     }
 
     public boolean onOptionsItemSelected(MenuItem item)
-    {        
+    {
         switch(item.getItemId())
         {
         case R.id.menu_exit:
@@ -100,28 +115,54 @@ public class Main extends Activity implements OpenFileDialogListener
         case R.id.menu_open:
             openFile();
             return true;
+
+        case R.id.menu_preferences:
+            {
+                MenuDialog dialog = new MenuDialog(this, renderer_.getCommandManager());
+                dialog.setOwnerActivity(this);
+                dialog.show();
+            }
+            return true;
+        case R.id.menu_about:
+            {
+                View aboutView = this.getLayoutInflater().inflate(R.layout.about, null);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(this);
+                builder.setView(aboutView)
+                .setCancelable(false)
+                .setPositiveButton("OK", new DialogInterface.OnClickListener()
+                {
+                    public void onClick(DialogInterface dialog, int which)
+                    {
+                        dialog.dismiss();
+                    }
+                });
+                
+                AlertDialog alert = builder.create();
+                alert.show();
+            }
         }
         return false;
     }
-    
+
     private void openFile()
     {
         if(false == Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
             InfoToast.info(this, "Any storages are not mounted.");
             return;
         }
-        
+
         Config config = Config.getInstance();
         File root = new File(config.getLastDirectory());
         if(false == root.exists()){
         	root = Environment.getExternalStorageDirectory();
         }
-        
+
         OpenFileDialog dialog = new OpenFileDialog();
         dialog.setListener(this);
         dialog.show(this, root);
     }
-    
+
     private void loadFile(File file)
     {
         if(file == null){
@@ -134,7 +175,7 @@ public class Main extends Activity implements OpenFileDialogListener
         		parent = null;
         	}
         }
-        
+
         InfoToast.info(this, file.getName());
         int resourceType = ResourceManager.getTypeFromExtension(file.getName());
         if(resourceType == ResourceManager.Type_None){
@@ -143,35 +184,62 @@ public class Main extends Activity implements OpenFileDialogListener
         }
         CommandManager manager = renderer_.getCommandManager();
         Command command = CommandManager.createFileLoad(manager, file, resourceType);
-        
+
         manager.push(command);
+        changeState(State_Stop); //ロード後は停止状態
     }
-    
-    @Override
+
     public void onClick(File selected)
     {
         loadFile(selected);
     }
-    
-    public boolean onTouchEvent(MotionEvent event)
+
+    public void onClick(View v)
     {
-        recognizer_.update(event);
-        switch(recognizer_.getMoveType())
-        {            
-        case Recognizer.MoveLeft:
-            menuView_.startScrollIn(true);
-            break;
-            
-        case Recognizer.MoveRight:
-            menuView_.startScrollIn(false);
+        switch(v.getId())
+        {
+        case R.id.play_button:
+            {
+            	if(state_ == State_Play){
+            		changeState(State_Stop);
+            	}else{
+            		changeState(State_Play);
+            	}
+            }
             break;
         }
-        return true;
     }
-    
+
+    public void changeState(int state)
+    {
+    	CommandManager manager = renderer_.getCommandManager();
+        Command command = null;
+
+        manager.push(command);
+
+        switch(state)
+        {
+        case State_Stop:
+        	playButton_.setImageResource(android.R.drawable.ic_media_pause);
+
+        	command = CommandManager.createChangeState(manager, State_Stop);
+        	manager.push(command);
+        	break;
+        case State_Play:
+        	playButton_.setImageResource(android.R.drawable.ic_media_play);
+
+        	command = CommandManager.createChangeState(manager, State_Play);
+        	manager.push(command);
+        	break;
+        default:
+        	return;
+        }
+        state_ = state;
+    }
+
+    private int state_ = State_Stop;
     private FrameLayout frameLayout_ = null;
     private MainRenderer renderer_ = null;
 	private GLSurfaceView mainView_ = null;
-	private MenuView menuView_ = null;
-	private Recognizer recognizer_ = null;
+	private ImageButton playButton_ = null;
 }

@@ -2,6 +2,7 @@
 @file Camera.cpp
 @author t-sakai
 @date 2011/02/18
+@date 2011/04/07 フレーム検索方法を汎用アルゴリズムから一時変更
 */
 #include "stdafx.h"
 #include "Camera.h"
@@ -16,11 +17,22 @@
 #include <PmmDef.h>
 
 #include "Input.h"
+#include "Config.h"
 
 using namespace lmath;
 
 namespace egda
 {
+    namespace
+    {
+        f32 LimitMax = PI_2*0.99f;
+        f32 LimitMin = -PI_2*0.99f;
+
+    }
+    
+    const f32 Camera::TickZoomRatio = 0.1f;
+    const f32 Camera::TickRotationRatio = (1.0f/180.0f);
+    
     //------------------------------------------------
     //---
     //--- Camera::Manual
@@ -32,14 +44,18 @@ namespace egda
         Manual();
         virtual ~Manual();
 
+        virtual void initialize(){}
+
         virtual void update(u32 counter);
         virtual void reset();
-        void set(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov, f32 asect);
+        void set(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov);
+
+        void resetProjection();
 
         lmath::Vector3 initPosition_;
         lmath::Vector3 initTarget_;
         f32 initFov_;
-        f32 initAspect_;
+        f32 angleY_;
 
         lmath::Vector3 up_;
         lmath::Vector3 position_;
@@ -48,11 +64,11 @@ namespace egda
     };
 
     Camera::Manual::Manual()
-        :up_(0.0f, 1.0f, 0.0f)
-        ,initPosition_(0.0f, 0.0f, 1.0f)
+        :initPosition_(0.0f, 0.0f, 1.0f)
         ,initTarget_(0.0f, 0.0f, 0.0f)
         ,initFov_((45.0f/180.0f*PI))
-        ,initAspect_(1.0f)
+        ,angleY_(0.0f)
+        ,up_(0.0f, 1.0f, 0.0f)
         ,position_(0.0f, 0.0f, 1.0f)
         ,target_(0.0f, 0.0f, 0.0f)
     {
@@ -65,6 +81,8 @@ namespace egda
 
     void Camera::Manual::update(u32)
     {
+        Config& config = Config::getInstance();
+
         lscene::Scene& scene = lframework::System::getRenderSys().getScene();
         lscene::Camera& camera = scene.getCamera();
 
@@ -73,28 +91,72 @@ namespace egda
         Vector3 camZ(0.0f, 0.0f, -1.0f);
 
         f32 zoomLength = target_.distance(position_);
-        Vector3 rotation(0.0f, 0.0f, 0.0f);
 #if 1
-        // 回転
-        {
-            f32 angleX = Input::getAngle(Input::Axis_Pitch);
-            f32 angleY = Input::getAngle(Input::Axis_Roll);
-            rotation._x = angleX;
-            rotation._y = angleY;
-        }
+        f32 zoomTick;
+        f32 angleX;
+        f32 angleYTick;
 
+
+        switch(config.getScreeMode())
+        {
+        case ScreenMode_Rot0:
+            angleX = Input::getAngle(Input::Axis_X) + PI_2;
+            angleYTick = Input::getAnalogDuration(Input::Analog_X);
+            zoomTick = -Input::getAnalogDuration(Input::Analog_Y);
+
+            break;
+
+        case ScreenMode_Rot90:
+            angleX = -Input::getAngle(Input::Axis_Y) + PI_2;
+            angleYTick = -Input::getAnalogDuration(Input::Analog_Y);
+            zoomTick = -Input::getAnalogDuration(Input::Analog_X);
+            break;
+
+        case ScreenMode_Rot180:
+            angleX = Input::getAngle(Input::Axis_X);
+            if(angleX >= 0.0f){
+                angleX = -angleX + PI_2;
+            }else{
+                angleX = -angleX - PI_2;
+            }
+            angleYTick = -Input::getAnalogDuration(Input::Analog_X);
+            zoomTick = Input::getAnalogDuration(Input::Analog_Y);
+            break;
+
+        case ScreenMode_Rot270:
+            angleX = -Input::getAngle(Input::Axis_Y);
+            angleYTick = -Input::getAnalogDuration(Input::Analog_Y);
+            zoomTick = Input::getAnalogDuration(Input::Analog_X);
+            break;
+        };
+#if 1
+        if(angleX>LimitMax){
+            angleX = LimitMax;
+        }else if(angleX<LimitMin){
+            angleX = LimitMin;
+        }
+#endif
+        //lcore::Log("rot %2.3f, %2.3f", angleX, angleY);
         // 視線方向移動
         if(Input::isOn(Input::Button_1)){
 
-            f32 zoomTick = Input::getAnalogDuration(Input::Analog_X);
+            zoomTick *= TickZoomRatio;
 
-            if(lmath::isEqual(zoomTick, 0.0f) == false){
-                zoomLength -= zoomTick;
-                if(zoomLength > 100.0f){
-                    zoomLength = 100.0f;
-                }else if(zoomLength < 1.0f){
-                    zoomLength = 1.0f;
-                }
+            zoomLength -= zoomTick;
+            if(zoomLength > 100.0f){
+                zoomLength = 100.0f;
+            }else if(zoomLength < 1.0f){
+                zoomLength = 1.0f;
+            }
+
+            angleYTick *= TickRotationRatio;
+            angleY_ += angleYTick;
+
+            while(angleY_ > PI2){
+                angleY_ -= PI2;
+            }
+            while(angleY_ < (-PI2)){
+                angleY_ += PI2;
             }
         }
 
@@ -102,9 +164,9 @@ namespace egda
         // カメラをセット
 
         Quaternion rot;
-        rot.setRotateAxis(camY, rotation._y);
+        rot.setRotateAxis(camY, angleY_);
         Quaternion rotX;
-        rotX.setRotateAxis(camX, rotation._x);
+        rotX.setRotateAxis(camX, angleX);
 
         rot *= rotX;
 
@@ -134,20 +196,37 @@ namespace egda
         lscene::Camera& camera = scene.getCamera();
         camera.setViewMatrix(viewMat_);
 
+        Config& config = Config::getInstance();
+
         lmath::Matrix44 mat;
-        mat.perspectiveFovLinearZ(initFov_, initAspect_, 1.0f, 200.0f);
+        config.perspectiveFovLinearZ(mat, initFov_);
+
         camera.setProjMatrix(mat);
 
         camera.updateMatrix();
     }
 
-    void Camera::Manual::set(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov, f32 aspect)
+    void Camera::Manual::set(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov)
     {
         initPosition_ = position;
         initTarget_ = target;
         initFov_ = fov;
-        initAspect_ = aspect;
         reset();
+    }
+
+    void Camera::Manual::resetProjection()
+    {
+        lscene::Scene& scene = lframework::System::getRenderSys().getScene();
+        lscene::Camera& camera = scene.getCamera();
+
+        Config& config = Config::getInstance();
+
+        lmath::Matrix44 mat;
+        config.perspectiveFovLinearZ(mat, initFov_);
+
+        camera.setProjMatrix(mat);
+
+        camera.updateMatrix();
     }
 
     //------------------------------------------------
@@ -161,18 +240,22 @@ namespace egda
         FrameAnim();
         virtual ~FrameAnim();
 
+        virtual void initialize()
+        {
+            cameraAnimPack_->initialize();
+        }
+
         virtual void update(u32 counter);
         virtual void reset();
 
         void setMatrix();
 
-        void set(pmm::CameraAnimPack* pack, f32 aspect);
+        void set(pmm::CameraAnimPack* pack);
 
         lmath::Vector3 up_;
         lmath::Vector3 position_;
         lmath::Vector3 target_;
         f32 fov_;
-        f32 aspect_;
 
         lmath::Matrix44 matrix_;
 
@@ -180,12 +263,11 @@ namespace egda
     };
 
     Camera::FrameAnim::FrameAnim()
-        :cameraAnimPack_(NULL)
-        ,up_(0.0f, 1.0f, 0.0f)
+        :up_(0.0f, 1.0f, 0.0f)
         ,position_(0.0f, 0.0f, 1.0f)
         ,target_(0.0f, 0.0f, 0.0f)
         ,fov_((45.0f/180.0f*PI))
-        ,aspect_(1.0f)
+        ,cameraAnimPack_(NULL)
     {
     }
 
@@ -197,7 +279,8 @@ namespace egda
     {
         LASSERT(cameraAnimPack_ != NULL);
 
-        u32 animIndex = cameraAnimPack_->binarySearchIndex(counter);
+        //u32 animIndex = cameraAnimPack_->binarySearchIndex(counter);
+        u32 animIndex = cameraAnimPack_->getNextIndex(counter);
         const pmm::CameraPose& cameraPose = cameraAnimPack_->getPose(animIndex);
 
         if(animIndex == cameraAnimPack_->getNumPoses() - 1){
@@ -228,6 +311,8 @@ namespace egda
 
     void Camera::FrameAnim::reset()
     {
+        cameraAnimPack_->initialize();
+
         const pmm::CameraPose& cameraPose = cameraAnimPack_->getPose(0);
         position_ = cameraPose.position_;
         target_ = cameraPose.target_;
@@ -244,22 +329,22 @@ namespace egda
         matrix_.lookAt(position_, target_, up_);
         camera.setViewMatrix(matrix_);
 
-        matrix_.perspectiveFovLinearZ(fov_, aspect_, 1.0f, 200.0f);
-        //matrix_.perspectiveFov(fov_, aspect_, 1.0f, 200.0f);
+        Config& config = Config::getInstance();
+
+        config.perspectiveFovLinearZ(matrix_, fov_);
+
         camera.setProjMatrix(matrix_);
 
         camera.updateMatrix();
     }
 
-    void Camera::FrameAnim::set(pmm::CameraAnimPack* pack, f32 aspect)
+    void Camera::FrameAnim::set(pmm::CameraAnimPack* pack)
     {
         LASSERT(pack != NULL);
         cameraAnimPack_ = pack;
-        aspect_ = aspect;
 
         reset();
     }
-
 
     //------------------------------------------------
     //---
@@ -267,7 +352,7 @@ namespace egda
     //---
     //------------------------------------------------
     Camera::Camera()
-        :mode_(Mode_Manual)
+        :mode_(Mode_FrameAnim)
     {
         impl_[Mode_Manual] = LIME_NEW Manual;
         impl_[Mode_FrameAnim] = LIME_NEW FrameAnim;
@@ -280,16 +365,28 @@ namespace egda
         }
     }
 
-    void Camera::setInitial(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov, f32 aspect)
+    void Camera::setInitial(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov)
     {
         Manual* manual = reinterpret_cast<Manual*>(impl_[Mode_Manual]);
-        manual->set(position, target, fov, aspect);
+        manual->set(position, target, fov);
 
     }
 
-    void Camera::setCameraAnim(pmm::CameraAnimPack* pack, f32 aspect)
+    void Camera::setCameraAnim(pmm::CameraAnimPack* pack)
     {
         FrameAnim* frameAnim = reinterpret_cast<FrameAnim*>(impl_[Mode_FrameAnim]);
-        frameAnim->set(pack, aspect);
+        frameAnim->set(pack);
+    }
+
+    void Camera::resetProjection()
+    {
+        if(mode_ == Mode_FrameAnim){
+            FrameAnim* frameAnim = reinterpret_cast<FrameAnim*>(impl_[Mode_FrameAnim]);
+
+            frameAnim->setMatrix();
+        }else{
+            Manual* manual = reinterpret_cast<Manual*>(impl_[Mode_Manual]);
+            manual->resetProjection();
+        }
     }
 }

@@ -68,7 +68,7 @@ namespace egda
 
         void release();
 
-        void initialize(f32 aspect);
+        void initialize();
 
         void update();
 
@@ -157,9 +157,11 @@ namespace egda
     }
 
     // シーン初期化
-    void Scene::Impl::initialize(f32 aspect)
+    void Scene::Impl::initialize()
     {
+        state_ = State_Stop;
         frameCounter_ = 0;
+        lastFrame_ = 0;
 
         lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
 
@@ -234,10 +236,8 @@ namespace egda
         {
             // カメラ初期化
             const pmm::CameraPose& cameraPose = cameraAnimPack_.getPose(0);
-            camera_.setInitial(cameraPose.position_, cameraPose.target_, cameraPose.fov_, aspect);
-            camera_.setCameraAnim(&cameraAnimPack_, aspect);
-
-            camera_.setMode(Camera::Mode_FrameAnim);
+            camera_.setInitial(cameraPose.position_, cameraPose.target_, cameraPose.fov_);
+            camera_.setCameraAnim(&cameraAnimPack_);
         }
 
         {
@@ -253,23 +253,6 @@ namespace egda
 
     void Scene::Impl::update()
     {
-        //if(Input::isClick(Input::Key_0)){
-        //    State trans[State_Num] = 
-        //    {
-        //        State_Play,
-        //        State_Stop,
-        //    };
-        //    state_ = trans[state_];
-        //}
-
-        //if(Input::isClick(Input::Key_1)){
-        //    camera_.changeMode();
-        //}
-
-        if(++frameCounter_>lastFrame_){
-            frameCounter_ = 0;
-        }
-
         switch(state_)
         {
         case State_Stop:
@@ -285,6 +268,13 @@ namespace egda
 
                 if(++frameCounter_>lastFrame_){
                     frameCounter_ = 0;
+
+                    for(u32 i=1; i<numAccessories_; ++i){
+                        accPacks_[i].initialize();
+                    }
+
+                    camera_.reset(Camera::Mode_FrameAnim);
+                    light_.initialize();
                 }
 
                 for(u32 i=0; i<numModels_; ++i){
@@ -292,13 +282,12 @@ namespace egda
                 }
 
                 //アクセサリ更新
-                for(u32 i=1; i<numAccessories_; ++i){
+                for(u32 i=0; i<numAccessories_; ++i){
                     accPacks_[i].update(frameCounter_);
                 }
 
                 camera_.update(frameCounter_);
                 light_.update();
-
             }
             break;
         default:
@@ -349,9 +338,9 @@ namespace egda
         impl_->release();
     }
 
-    void Scene::initialize(f32 aspect)
+    void Scene::initialize()
     {
-        impl_->initialize(aspect);
+        impl_->initialize();
     }
 
     void Scene::update()
@@ -364,8 +353,25 @@ namespace egda
         impl_->setState(state);
     }
 
+    void Scene::setCameraMode(s32 mode)
+    {
+        LASSERT(0<=mode && mode<Camera::Mode_Num);
+
+        impl_->camera_.setMode( static_cast<Camera::Mode>(mode) );
+    }
+
+    s32 Scene::getCameraMode() const
+    {
+        return static_cast<s32>( impl_->camera_.getMode() );
+    }
+
     void Scene::swap(Scene& rhs)
     {
         lcore::swap(impl_, rhs.impl_);
+    }
+
+    void Scene::resetProjection()
+    {
+        impl_->camera_.resetProjection();
     }
 }

@@ -15,12 +15,27 @@ usb_driver\android_winusb.inf を編集して、以下の記述をそれぞれのカテゴリへ入れま
 %SingleAdbInterface% = USB_Install, USB\VID_0955&PID_7000
 %CompositeAdbInterface% = USB_Install, USB\VID_0955&PID_7100&MI_01
 
+; Xperia X10
+%SingleAdbInterface%        = USB_Install, USB\VID_0FCE&PID_D12E
+%CompositeAdbInterface%     = USB_Install, USB\VID_0FCE&PID_D12E&MI_01
+
+; HTC Dream
+%SingleAdbInterface%        = USB_Install, USB\VID_0BB4&PID_0C01
+%CompositeAdbInterface%     = USB_Install, USB\VID_0BB4&PID_0C02&MI_01
+
 [Google.NTamd64]
 ;
 ;NVIDIA Tegra
 %SingleAdbInterface% = USB_Install, USB\VID_0955&PID_7000
 %CompositeAdbInterface% = USB_Install, USB\VID_0955&PID_7100&MI_01
 
+; Xperia X10
+%SingleAdbInterface%        = USB_Install, USB\VID_0FCE&PID_D12E
+%CompositeAdbInterface%     = USB_Install, USB\VID_0FCE&PID_D12E&MI_01
+
+; HTC Dream
+%SingleAdbInterface%        = USB_Install, USB\VID_0BB4&PID_0C01
+%CompositeAdbInterface%     = USB_Install, USB\VID_0BB4&PID_0C02&MI_01
 
 3. LuvPad AD100 を接続
 
@@ -44,3 +59,10 @@ ViewFlipper
 
 QuickAction
 http://y-anz-m.blogspot.com/2010/11/androidquick-action.html 
+
+
+・OpenGLのステート設定変更は自前で管理
+・テクスチャでソート⇒マテリアルでソート
+・VSからPSへのデータ受け渡しはパックして補間を少なくする
+・分岐命令は遅すぎるので、discardできるピクセル数が多いことがわかっている場合以外使わない
+・スペキュラ計算も重いのでオミット
