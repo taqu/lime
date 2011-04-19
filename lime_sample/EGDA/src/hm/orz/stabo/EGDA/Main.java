@@ -1,6 +1,9 @@
 package hm.orz.stabo.EGDA;
 
 
+import hm.orz.stabo.EGDA.CommandManager.Command;
+import hm.orz.stabo.EGDA.UI.MenuDialog;
+import hm.orz.stabo.EGDA.UI.OpenFileDialog;
 import hm.orz.stabo.EGDA.UI.OpenFileDialog.OpenFileDialogListener;
 
 import java.io.File;
