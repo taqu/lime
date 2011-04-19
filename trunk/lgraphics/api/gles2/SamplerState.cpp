@@ -47,14 +47,13 @@ namespace lgraphics
 
     void SamplerState::apply(u32 sampler) const
     {
-        glActiveTexture(GL_TEXTURE0 + sampler);
-
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter_);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter_);
-
+        //glActiveTexture(GL_TEXTURE0 + sampler);
 
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, addressU_);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, addressV_);
+
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, magFilter_);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, minFilter_);
 
     }
 

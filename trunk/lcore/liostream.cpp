@@ -28,7 +28,7 @@ namespace lcore
         (ios::in | ios::out| ios::app|ios::binary),
     };
 
-    const char* ios::ModeString[] =
+    const Char* ios::ModeString[] =
     {
         "r",
         "w",
@@ -44,7 +44,7 @@ namespace lcore
         "ab+",
     };
 
-    const char* ios::getModeString(int mode)
+    const Char* ios::getModeString(int mode)
     {
         for(int i=0; i<Mode_Num; ++i){
             if(mode == ModeInt[i]){
@@ -59,7 +59,7 @@ namespace lcore
     //--- ofstream
     //---
     //----------------------------------------------------------
-    int ofstream::print(const char* format, ... )
+    int ofstream::print(const Char* format, ... )
     {
         LASSERT(file_ != NULL);
         LASSERT(format != NULL);
@@ -85,7 +85,7 @@ namespace lcore
     {
     }
 
-    sstream_base<istream>::sstream_base(const char* buffer, u32 size)
+    sstream_base<istream>::sstream_base(const Char* buffer, u32 size)
         :buffer_(buffer)
         ,current_(0)
         ,capacity_(size)
@@ -152,7 +152,7 @@ namespace lcore
         return current_;
     }
 
-    u32 sstream_base<istream>::read(char* dst, u32 count)
+    u32 sstream_base<istream>::read(Char* dst, u32 count)
     {
         s32 end = current_ + count;
         end = (end>capacity_)? capacity_ : end;

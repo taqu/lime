@@ -4,7 +4,7 @@
 @file AnimControlerPartial.h
 @author t-sakai
 @date 2010/11/17 create
-
+@date 2011/04/07 更新単位を整数化
 */
 #include <lcore/Vector.h>
 #include "AnimationControler.h"
@@ -73,7 +73,7 @@ namespace lanim
         inline Flags& getFlags();
 
         /// 現在のフレーム時間取得
-        inline float getFrame() const;
+        inline f32 getFrame() const;
 
         /// 現在のフレーム時間セット
         inline void setFrame(f32 frame);
@@ -157,13 +157,13 @@ namespace lanim
 
 
     // 現在のフレーム時間取得
-    inline float AnimationControlerPartial::getFrame() const
+    inline f32 AnimationControlerPartial::getFrame() const
     {
         return frame_;
     }
 
     // 現在のフレーム時間セット
-    inline void AnimationControlerPartial::setFrame(float frame)
+    inline void AnimationControlerPartial::setFrame(f32 frame)
     {
         frame_ = frame;
     }

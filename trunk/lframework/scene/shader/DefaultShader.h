@@ -66,7 +66,11 @@ namespace lscene
             ParamVS_WVP =0,
             ParamVS_DLightDirection,
             ParamVS_DLightColor,
+            ParamVS_CameraPosition,
+            ParamVS_Diffuse,
             ParamVS_Ambient,
+            ParamVS_Specular,
+            ParamVS_Emissive,
             ParamVS_MatrixPalette,
             ParamVS_Num,
         };
@@ -89,6 +93,7 @@ namespace lscene
         enum TexPS
         {
             TexPS_Albedo,
+            TexPS_Albedo2,
             TexPS_Num,
         };
 
@@ -113,8 +118,12 @@ namespace lscene
             Macro_FRESNEL,
             Macro_SKINNING,
 
+            Macro_TEXALBEDO,
             Macro_TEXSHADE,
             Macro_EMISSIVE,
+            Macro_ALPHATEST,
+
+            Macro_LightingVS,
             Macro_Num,
         };
 

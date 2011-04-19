@@ -163,6 +163,7 @@ namespace lgraphics
 
         Buffer_A8,
         Buffer_R8G8B8,
+        Buffer_B8G8R8,
         Buffer_A8R8G8B8,
         Buffer_X8R8G8B8,
         Buffer_A8B8G8R8,

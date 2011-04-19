@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="..\..\;..\..\ext\win32\include\;&quot;$(POWERVRSDK)\Include&quot;"
+				AdditionalIncludeDirectories="..\..\;..\..\ext\win32\include\"
 				PreprocessorDefinitions="WIN32;_DEBUG;_LIB;LIME_GLES2"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -111,7 +111,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="..\..\;..\..\ext\win32\include\;&quot;$(POWERVRSDK)\Include&quot;"
+				AdditionalIncludeDirectories="..\..\;..\..\ext\win32\include\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;LIME_GLES2"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"

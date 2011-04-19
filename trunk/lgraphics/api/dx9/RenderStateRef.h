@@ -68,8 +68,8 @@ namespace lgraphics
         void setAlphaTestFunc(CmpFunc func);
         CmpFunc getAlphaTestFunc() const;
 
-        void setAlphaTestRef(s32 refValue);
-        s32 getAlphaTestRef() const;
+        void setAlphaTestRef(u32 refValue);
+        u32 getAlphaTestRef() const;
 
         void setCullMode(CullMode mode);
         CullMode getCullMode() const;

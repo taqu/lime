@@ -206,9 +206,8 @@ namespace lgraphics
             glGetShaderInfoLog(shader, length, &length, infoLog);
             infoLog[length] = '\0';
 
-#if defined(ANDROID)
             lcore::Log("Shader fail to compile:(%d)%s", length, infoLog);
-#endif
+
             LIME_DELETE_ARRAY(infoLog);
             return false;
         }

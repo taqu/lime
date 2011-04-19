@@ -60,7 +60,7 @@ namespace io
         IOTGA();
         ~IOTGA();
 
-        static bool read(lcore::istream& is, TextureRef& texture);
+        static bool read(lcore::istream& is, TextureRef& texture, bool transpose = false);
     };
 }
 }

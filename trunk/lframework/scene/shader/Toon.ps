@@ -46,18 +46,30 @@ void calc_fresnel(out float fd, out float fs, float F, float eh, float nl)
   fd = F + F2*pow((c_fone - nl), c_ffive);
 }
 
-#else
-
-#if defined(TEXSHADE)
+#elif defined(TEXSHADE) || defined(PNORMAL)
 static const float c_fhalf = 0.5;
 static const float c_fratio = 0.75;
 
-#elif defined(P_NORMAL)
-static const float c_ftwo = 2.0
+static const float c_ffive = 5.0;
+static const float c_fresnel0 = 0.0397436;
+static const float c_fresnel1 = 0.0856832;
+static const float c_fresnel = 1.5;
+
 uniform float4 specular;
+
+// calculate fresnel term for diffuse and specular
+void calc_fresnel(out float fd, out float fs, float eh, float nl)
+{
+  float F2 = c_fone - c_fresnel;
+  fs = c_fresnel + F2*pow((c_fone - eh), c_ffive);
+  fd = c_fresnel + F2*pow((c_fone - nl), c_ffive);
+}
+
+//#elif defined(P_NORMAL)
+//static const float c_ftwo = 2.0
+//uniform float4 specular;
 #endif
 
-#endif
 
 //マテリアル設定
 uniform float4 diffuse;
@@ -67,21 +79,18 @@ uniform float3 eimissive;
 //テクスチャ
 #ifdef PTEX0
 sampler texAlbedo;
+sampler texAlbedo2;
 #endif
-
-#ifdef PTEX1
-sampler texToon;
-#endif
-
 
 float4 main(VS_OUTPUT input) : COLOR
 {
     // 色計算
     //-------------
     float4 color;
-#if defined(PTEX0) && !defined(TEXSHADE)
+#if defined(TEXALBEDO)
     //ディフューズテクスチャ参照
     color = tex2D(texAlbedo, input.tex0);
+    color *= diffuse;
 #else
     color = diffuse;
 #endif
@@ -90,8 +99,8 @@ float4 main(VS_OUTPUT input) : COLOR
 
     float3 L = dlDir;
     float3 N = normalize(input.normal);
-    float3 E = normalize(camPos - input.pos0); //視線ベクトル
-    float3 H = normalize(L+V); //ハーフベクトル
+    float3 E = normalize(camPos - input.pos0);
+    float3 H = normalize(L+E); //ハーフベクトル
 
     float cosNL = max(c_fzero, dot(N,L));
     float cosEH = max(c_fzero, dot(E,H));
@@ -106,20 +115,54 @@ float4 main(VS_OUTPUT input) : COLOR
     float3 rd = (float3(c_fone, c_fone, c_fone) - specular.xyz*fd) * INV_PI;
     color.xyz = (color.xyz * rd * cosNL + specular.xyz * rs) * dlColor.xyz + ambient * rd;
 
+#elif defined(TEXSHADE)
+    float3 N = normalize(input.normal);
+    float3 L = dlDir;
+    float3 E = normalize(camPos - input.pos0);
+    //float3 E = normalize(input.pos0 - camPos);
+    float3 H = normalize(L+E); //ハーフベクトル
+
+    float cosNL = max(c_fzero, dot(N,L));
+    float cosEH = max(c_fzero, dot(E,H));
+    float cosNH = max(c_fzero, dot(N,H));
+    float cosNE = max(c_fzero, dot(N,E));
+
+    float2 sample;
+    sample.x = cosNE;
+    sample.y = cosNL;
+
+    float3 c = tex2D(texAlbedo2, sample).xyz;
+
+    float fd, fs;
+    calc_fresnel(fd, fs, cosEH, cosNL);
+
+    float shininess = specular.w;
+
+    float rs = (c_fresnel0 * shininess + c_fresnel1) * fs * pow(cosNH, shininess);
+    float3 rd = (float3(c_fone, c_fone, c_fone) - specular.xyz*fd);
+
+    color.xyz = (color.xyz * c * rd + specular.xyz * rs) * dlColor.xyz + ambient * color.xyz;
+
 #elif defined(PNORMAL)
-    //Rd * (1/pi) cosNL + Rs * (shininess+2)/(2*pi) * NH^shininess
-    //float3 L = dlDir;
-    //float3 N = normalize(input.normal);
-    //float3 E = normalize(camPos - input.pos0);
-    //float3 H = normalize(L+E);
+    float3 N = normalize(input.normal);
+    float3 L = dlDir;
+    float3 E = normalize(camPos - input.pos0);
+    float3 H = normalize(L+E); //ハーフベクトル
 
-    //float cosNL = max(c_fzero, dot(N,L));
-    //float cosNH = max(c_fzero, dot(N,H));
+    float cosNL = max(c_fzero, dot(N,L));
+    float cosEH = max(c_fzero, dot(E,H));
+    float cosNH = max(c_fzero, dot(N,H));
 
-    //float shininess = specular.w;
-    //float rs = (shininess+c_ftwo) * PI2 * pow(cosNH, shininess);
+    float fd, fs;
+    calc_fresnel(fd, fs, cosEH, cosNL);
 
-    //color.xyz = (color.xyz * cosNL * INV_PI + specular.xyz * rs ) * dlColor.xyz + ambient * INV_PI;
+    float shininess = specular.w;
+
+    float rs = (c_fresnel0 * shininess + c_fresnel1) * fs * pow(cosNH, shininess);
+    float3 rd = (float3(c_fone, c_fone, c_fone) - specular.xyz*fd);
+    color.xyz = (color.xyz * rd * cosNH + specular.xyz * rs) * dlColor.xyz + ambient * color.xyz;
+#else
+    color.xyz *= dlColor.xyz;
 #endif
 
 #ifdef PCOLOR

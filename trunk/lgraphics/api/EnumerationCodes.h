@@ -186,6 +186,7 @@ namespace lgraphics
 
         CodeBuffer_A8,
         CodeBuffer_R8G8B8,
+        CodeBuffer_B8G8R8,
         CodeBuffer_A8R8G8B8,
         CodeBuffer_X8R8G8B8,
         CodeBuffer_A8B8G8R8,

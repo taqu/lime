@@ -49,21 +49,33 @@ namespace lrender
     void RenderingSystem::beginDraw()
     {
         lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
+
 #if defined(LIME_GLES2)
         device.present();
 #else
         device.present(NULL, NULL, NULL);
 #endif
 
-        device.clear(clearTarget_);
-
         device.beginScene();
     }
 
     void RenderingSystem::draw()
     {
+        lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
+#if defined(LIME_GLES2)
+        device.clearActiveTextures();
+
+        if(clearTarget_ != 0){
+            device.setZWriteEnable(true); //Œ³‚É–ß‚³‚È‚¢‚ÆglClear‚àŒø‚©‚È‚¢
+            device.clear(clearTarget_);
+        }
+#else
+        device.clear(clearTarget_);
+#endif
+        //device.beginScene();
+
         passMain_.draw();
-        lframework::System::drawDebugString();
+        //lframework::System::drawDebugString();
     }
 
     void RenderingSystem::endDraw()

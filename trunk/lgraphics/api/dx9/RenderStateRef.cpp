@@ -188,8 +188,8 @@ namespace lgraphics
         inline void setAlphaTestFuc(CmpFunc func);
 
 
-        inline f32 getAlphaTestRef() const;
-        inline void setAlphaTestRef(f32 ref);
+        inline u32 getAlphaTestRef() const;
+        inline void setAlphaTestRef(u32 ref);
 
         inline CullMode getCullMode() const;
         inline void setCullMode(CullMode mode);
@@ -219,7 +219,7 @@ namespace lgraphics
         u32 flag_; //ON・OFFフラッグ
 
         CmpFunc alphaTestFunc_;
-        f32 alphaTestRef_;
+        u32 alphaTestRef_;
         CullMode cullMode_;
         BlendType alphaBlendSrc_;
         BlendType alphaBlendDst_;
@@ -229,7 +229,7 @@ namespace lgraphics
         :counter_(0)
         ,flag_(0)
         ,alphaTestFunc_(Cmp_Less)
-        ,alphaTestRef_(0.0f)
+        ,alphaTestRef_(128)
         ,cullMode_(CullMode_CCW)
         ,alphaBlendSrc_(Blend_InvDestAlpha)
         ,alphaBlendDst_(Blend_DestAlpha)
@@ -270,12 +270,12 @@ namespace lgraphics
         alphaTestFunc_ = func;
     }
 
-    inline f32 RenderStateRef::StateBlock::getAlphaTestRef() const
+    inline u32 RenderStateRef::StateBlock::getAlphaTestRef() const
     {
         return alphaTestRef_;
     }
 
-    inline void RenderStateRef::StateBlock::setAlphaTestRef(f32 ref)
+    inline void RenderStateRef::StateBlock::setAlphaTestRef(u32 ref)
     {
         alphaTestRef_ = ref;
     }
@@ -312,13 +312,13 @@ namespace lgraphics
 
     inline void RenderStateRef::StateBlock::apply()
     {
-        u32 enable = check(Bit_ZEnable)? TRUE : FALSE;
+        GraphicsDeviceRef& device = Graphics::getDevice();
 
-        Graphics::getDevice().setRenderState(D3DRS_ZENABLE, enable );
+        u32 enable = check(Bit_ZEnable)? D3DZB_TRUE : D3DZB_FALSE;
 
-        CullMode cullMode = check(Bit_CullingEnable)? CullMode_CCW : CullMode_None;
+        device.setRenderState(D3DRS_ZENABLE, enable);
 
-        Graphics::getDevice().setRenderState(D3DRS_CULLMODE, cullMode);
+        device.setRenderState(D3DRS_CULLMODE, cullMode_);
 
         //アルファブレンド有効、無効の設定はレンダリングパスで行う
         if(check(Bit_AlphaBlendEnable)){
@@ -326,7 +326,10 @@ namespace lgraphics
         }
 
         enable = check(Bit_ZWriteEnable)? TRUE : FALSE;
-        Graphics::getDevice().setRenderState(D3DRS_ZWRITEENABLE, enable );
+        device.setRenderState(D3DRS_ZWRITEENABLE, enable );
+
+        enable = check(Bit_AlphaTest)? TRUE : FALSE;
+        device.setRenderState(D3DRS_ALPHATESTENABLE, enable);
     }
 
 
@@ -388,14 +391,14 @@ namespace lgraphics
         return stateBlock_->getAlphaTestFunc();
     }
 
-    void RenderStateRef::setAlphaTestRef(s32 refValue)
+    void RenderStateRef::setAlphaTestRef(u32 refValue)
     {
-        stateBlock_->setAlphaTestRef( (1.0f/255.0f) * refValue );
+        stateBlock_->setAlphaTestRef( refValue );
     }
 
-    s32 RenderStateRef::getAlphaTestRef() const
+    u32 RenderStateRef::getAlphaTestRef() const
     {
-        return static_cast<s32>( 255.0f * stateBlock_->getAlphaTestRef() );
+        return stateBlock_->getAlphaTestRef();
     }
 
 
@@ -451,7 +454,7 @@ namespace lgraphics
     void RenderStateRef::setAlphaBlend(BlendType src, BlendType dst)
     {
         stateBlock_->setAlphaBlendSrc(src);
-        stateBlock_->setAlphaBlendSrc(dst);
+        stateBlock_->setAlphaBlendDst(dst);
     }
 
     BlendType RenderStateRef::getAlphaBlendSrc() const

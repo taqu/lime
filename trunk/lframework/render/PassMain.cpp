@@ -113,7 +113,7 @@ namespace lrender
         lscene::Material* material = NULL;
 
         //アルファブレンド無効
-        lgraphics::RenderState::setAlphaBlendEnable(false);
+        lgraphics::Graphics::getDevice().setAlphaBlendEnable(false);
 
         for(BatchVector::iterator itr = batches_.begin();
             itr != batches_.end();
@@ -140,7 +140,7 @@ namespace lrender
         }
 
         //アルファブレンド有効
-        lgraphics::RenderState::setAlphaBlendEnable(true);
+        lgraphics::Graphics::getDevice().setAlphaBlendEnable(true);
         geomBuffer = NULL;
         material = NULL;
 
@@ -171,9 +171,7 @@ namespace lrender
         if(geomBuffer){
             geomBuffer->detach();
         }
-#if defined(LIME_GLES2)
-        glDepthMask( GL_TRUE ); //元に戻さないとglClearも効かない
-#endif
+
     }
 
 

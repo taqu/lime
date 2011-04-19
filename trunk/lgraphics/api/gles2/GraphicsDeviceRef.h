@@ -20,6 +20,9 @@ namespace lmath
 
 namespace lgraphics
 {
+    class RenderStateRef;
+    class SamplerState;
+
     struct InitParam;
 
     struct Descriptor
@@ -86,37 +89,106 @@ namespace lgraphics
 
         void checkError();
 
-        inline void setAlphaTest(bool enable);
+        //-------------------------------------
+        //--- RenderState
+        //-------------------------------------
+        void setAlphaTest(bool enable);
         inline bool getAlphaTest() const;
 
-        inline void setAlphaTestRef(s32 ref);
+        void setAlphaTestFunc(CmpFunc func);
+        inline CmpFunc getAlphaTestFunc() const;
+        
+        void setAlphaTestRef(s32 ref);
         inline s32 getAlphaTestRef() const;
 
-        inline void setAlphaTestFunc(CmpFunc func);
-        inline CmpFunc getAlphaTestFunc() const;
+        //void setCullingEnable(bool enable);
+        //inline bool getCullingEnable() const;
+
+        void setCullMode(CullMode mode);
+        inline CullMode getCullMode() const;
+
+        void setMultiSampleAlias(bool enable);
+        inline bool getMultiSampleAlias() const;
+
+        void setZEnable(bool enable);
+        inline bool getZEnable() const;
+
+        void setZWriteEnable(bool enable);
+        inline bool getZWriteEnable() const;
+
+        void setAlphaBlendEnable(bool enable);
+        inline bool getAlphaBlendEnable() const;
+
+        void setAlphaBlend(BlendType src, BlendType dst);
+        inline BlendType getAlphaBlendSrc() const;
+        inline BlendType getAlphaBlendDst() const;
+
+        void setRenderState(const RenderStateRef& rhs);
+
+        // テクスチャサンプラステート関係
+        //-------------------------------------
+        void clearActiveTextures();
+
+        /**
+        @brief テクスチャセット
+        @param index ... テクスチャユニットインデックス
+        @param id ... テクスチャオブジェクトハンドル
+        @param location ... シェーダのuniform変数ハンドル
+        @param samplerState ... サンプラステート
+        */
+        void setTexture(u32 index, u32 id, u32 location, const lgraphics::SamplerState& samplerState);
     private:
         friend struct Descriptor;
 
         typedef lcore::Stack<Descriptor> DescriptorAllocator;
 
-        void enableState();
-
-        //他のGLバージョンと合わせるためのステート
-        //----------------------------------------------------
-        /// ステートフラグ
-        enum StateFlag
-        {
-            Flag_AlphaTest = 0x01U << 0,
-        };
+        void initializeRenderState();
 
         static const s32 DefaultAlphaTestRef = 128;
         static const CmpFunc DefaultAlphaTestFunc = Cmp_Less;
 
+        /// サンプラステート
+        struct Sampler
+        {
+            u32 id_;
+            TextureAddress addressU_;
+            TextureAddress addressV_;
+            TextureFilterType magFilter_;
+            TextureFilterType minFilter_;
+            //TextureFilterType mipFilter_;
+            //u32 mipmapLODBias_;
+            //u32 maxMipLevel_;
+            //u32 maxAnisotropy_;
+        };
 
-        u32 state_;
+        /// レンダリングステート
+        struct State
+        {
+            enum Flag
+            {
+                Flag_AlphaTest = 0,
+                Flag_MultiSampleAlias,
+                Flag_ZEnable,
+                Flag_ZWriteEnable,
+                //Flag_CullingEnable,
+                Flag_AlphaBlendEnable,
+                Flag_Num,
+            };
 
-        s32 alphaTestRef_; //アルファテスト参照値
-        CmpFunc alphaTestFunc_; //アルファテスト比較関数
+            Sampler samplerStates_[MAX_TEXTURES];
+
+            s32 alphaTestRef_;      //アルファテスト参照値
+            CmpFunc alphaTestFunc_; //アルファテスト比較関数
+
+            CullMode cullMode_; //カリングモード
+
+            BlendType alphaBlendSrc_; //srcブレンド設定
+            BlendType alphaBlendDst_; //dstブレンド設定
+
+            bool flags_[Flag_Num];
+        };
+
+        State state_; // レンダリングステート
 
 #if defined(ANDROID)
 #else
@@ -177,39 +249,61 @@ namespace lgraphics
         glDrawElements(type, numIndices, GL_UNSIGNED_SHORT, LBUFFER_OFFSET(offsetIndex));
     }
 
-
-    inline void GraphicsDeviceRef::setAlphaTest(bool enable)
-    {
-        if(enable){
-            state_ |= Flag_AlphaTest;
-        }else{
-            state_ &= ~Flag_AlphaTest;
-        }
-    }
-
+    // Rendering State系
+    //------------------------------------------------------------------------------------------
     inline bool GraphicsDeviceRef::getAlphaTest() const
     {
-        return ((state_ & Flag_AlphaTest) != 0);
-    }
-
-    inline void GraphicsDeviceRef::setAlphaTestRef(s32 ref)
-    {
-        alphaTestRef_ = ref;
+        return state_.flags_[State::Flag_AlphaTest];
     }
 
     inline s32 GraphicsDeviceRef::getAlphaTestRef() const
     {
-        return alphaTestRef_;
-    }
-
-    inline void GraphicsDeviceRef::setAlphaTestFunc(CmpFunc func)
-    {
-        alphaTestFunc_ = func;
+        return state_.alphaTestRef_;
     }
 
     inline CmpFunc GraphicsDeviceRef::getAlphaTestFunc() const
     {
-        return alphaTestFunc_;
+        return state_.alphaTestFunc_;
+    }
+
+    //inline bool GraphicsDeviceRef::getCullingEnable() const
+    //{
+    //    return state_.flags_[State::Flag_CullingEnable];
+    //}
+
+    inline CullMode GraphicsDeviceRef::getCullMode() const
+    {
+        return state_.cullMode_;
+    }
+
+    inline bool GraphicsDeviceRef::getMultiSampleAlias() const
+    {
+        return state_.flags_[State::Flag_MultiSampleAlias];
+    }
+
+    inline bool GraphicsDeviceRef::getZEnable() const
+    {
+        return state_.flags_[State::Flag_ZEnable];
+    }
+
+    inline bool GraphicsDeviceRef::getZWriteEnable() const
+    {
+        return state_.flags_[State::Flag_ZWriteEnable];
+    }
+
+    inline bool GraphicsDeviceRef::getAlphaBlendEnable() const
+    {
+        return state_.flags_[State::Flag_AlphaBlendEnable];
+    }
+
+    inline BlendType GraphicsDeviceRef::getAlphaBlendSrc() const
+    {
+        return state_.alphaBlendSrc_;
+    }
+
+    inline BlendType GraphicsDeviceRef::getAlphaBlendDst() const
+    {
+        return state_.alphaBlendDst_;
     }
 }
 #endif //INC_LGRAPHICS_ES2_GRAPHICSDEVICEREF_H__

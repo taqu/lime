@@ -18,6 +18,8 @@ namespace lanim
         inline JointAnimation(u32 numPoses);
         inline ~JointAnimation();
 
+        inline void initialize();
+
         /// ポーズ数取得
         inline u32 getNumPoses() const;
 
@@ -38,6 +40,10 @@ namespace lanim
         inline void setPose(u32 index, JointPoseWithFrame& pose);
 
         u32 binarySearchIndex(u32 frame) const;
+
+        /// 次のフレームのインデックスを探索。順方向のみ
+        inline u32 getNextIndex(u32 frame);
+
         inline const JointPoseWithFrame& binarySearch(u32 frame) const
         {
             return poses_[ binarySearchIndex(frame) ];
@@ -45,11 +51,13 @@ namespace lanim
     private:
         Name name_;
         u32 numPoses_;
+        u32 currentIndex_;
         JointPoseWithFrame *poses_;
     };
 
     inline JointAnimation::JointAnimation()
         :numPoses_(0)
+        ,currentIndex_(0)
         ,poses_(NULL)
     {
     }
@@ -57,6 +65,7 @@ namespace lanim
 
     inline JointAnimation::JointAnimation(u32 numPoses)
         :numPoses_(numPoses)
+        ,currentIndex_(0)
         ,poses_(NULL)
     {
         LASSERT(numPoses_>=0);
@@ -66,6 +75,11 @@ namespace lanim
     inline JointAnimation::~JointAnimation()
     {
         LIME_DELETE_ARRAY(poses_);
+    }
+
+    inline void JointAnimation::initialize()
+    {
+        currentIndex_ = 0;
     }
 
     // ポーズ数取得
@@ -118,6 +132,20 @@ namespace lanim
     {
         LASSERT(0<=index && index<numPoses_);
         poses_[index] = pose;
+    }
+
+    // 次のフレームのインデックスを探索。順方向のみ
+    inline u32 JointAnimation::getNextIndex(u32 frame)
+    {
+        for(u32 i=currentIndex_; i<numPoses_; ++i){
+            if(frame==poses_[i].frameNo_){
+                break;
+            }else if(frame<poses_[i].frameNo_){
+                currentIndex_ = (i == 0)? 0 : i-1;
+                break;
+            }
+        }
+        return currentIndex_;
     }
 }
 #endif //INC_JOINTANIMATION_H__
