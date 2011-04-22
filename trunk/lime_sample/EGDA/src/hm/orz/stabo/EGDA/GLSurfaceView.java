@@ -161,8 +161,10 @@ public class GLSurfaceView extends SurfaceView implements
         // }
         // }
 
-        for(int i = 0; i < 2; ++i){
-            attribs16[7] = 8 * (2 - i);
+        //デプスバッファのサイズを小さくしながら検索
+        final int DepthDecMax = 2;
+        for(int i = 0; i < DepthDecMax; ++i){
+            attribs16[7] = 8 * (DepthDecMax - i);
             ret = egl.eglChooseConfig(display, attribs16, configs, 1,
                     numConfigs);
             if(ret && numConfigs[0] > 0){
