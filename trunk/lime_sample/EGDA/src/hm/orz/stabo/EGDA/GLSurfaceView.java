@@ -1,6 +1,6 @@
 package hm.orz.stabo.EGDA;
 
-import hm.orz.stabo.EGDA.io.SensorSystem;
+//import hm.orz.stabo.EGDA.io.SensorSystem;
 
 import javax.microedition.khronos.egl.EGL10;
 import javax.microedition.khronos.egl.EGL11;
@@ -13,6 +13,7 @@ import javax.microedition.khronos.opengles.GL10;
 import android.app.Activity;
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.FloatMath;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -36,9 +37,6 @@ public class GLSurfaceView extends SurfaceView implements
     public static final int EGL_OPENVG_BIT = 0x0002;
     public static final int EGL_OPENGL_ES2_BIT = 0x0004;
     public static final int EGL_OPENGL_BIT = 0x0008;
-
-    private static final int WaitCountForThreadTermination = 5;
-    private static final int WaitTimeForThreadTermination = 1000;
 
     public interface Renderer
     {
@@ -76,7 +74,7 @@ public class GLSurfaceView extends SurfaceView implements
             renderer_.onCreate(context);
         }
 
-        sensorSys_ = new SensorSystem(context);
+        //sensorSys_ = new SensorSystem(context);
     }
 
     /**
@@ -112,7 +110,7 @@ public class GLSurfaceView extends SurfaceView implements
     {
         stop();
     }
-    
+
     private synchronized void stop()
     {
         thread_ = null;
@@ -281,10 +279,12 @@ public class GLSurfaceView extends SurfaceView implements
                 }
                 renderer_.onSurfaceChanged(gl, width, height);
             }
-            
-            EGDALib.updateTouch(touchOn_, touchX_, touchY_);
 
-            EGDALib.updateOrientation( sensorSys_.rots_[1], sensorSys_.rots_[2], sensorSys_.rots_[0]); //渡す時にマッピングしなおす
+            EGDALib.updateTouch(touchOn_, multiTouch_, touchX_, touchY_, touchZ_);
+            //LogOut.d("z: " + touchZ_);
+
+
+            //EGDALib.updateOrientation( sensorSys_.rots_[1], sensorSys_.rots_[2], sensorSys_.rots_[0]); //渡す時にマッピングしなおす
 
             renderer_.onDrawFrame(gl);
 
@@ -296,7 +296,7 @@ public class GLSurfaceView extends SurfaceView implements
                     activity.finish();
                 }
             }
-            
+
             //ポーズ処理
             try{
                 synchronized(this){
@@ -305,7 +305,7 @@ public class GLSurfaceView extends SurfaceView implements
                     }
                 }
             }catch(InterruptedException e){
-                
+
             }
         }
 
@@ -315,12 +315,21 @@ public class GLSurfaceView extends SurfaceView implements
 
     public boolean onTouchEvent(MotionEvent event)
     {
-        switch(event.getAction())
+    	int action = event.getAction() & MotionEvent.ACTION_MASK;
+        switch(action)
         {
         case MotionEvent.ACTION_MOVE:
-            touchX_ = event.getX();
-            touchY_ = event.getY();
+        	if(multiTouch_){
+        		float dx = event.getX(0) - event.getX(1);
+        		float dy = event.getY(0) - event.getY(1);
+        		touchZ_ = FloatMath.sqrt(dx*dx + dy*dy);
+
+        	}else{
+        	    touchX_ = event.getX();
+                touchY_ = event.getY();
+        	}
             break;
+
         case MotionEvent.ACTION_DOWN:
             touchX_ = event.getX();
             touchY_ = event.getY();
@@ -328,10 +337,21 @@ public class GLSurfaceView extends SurfaceView implements
             break;
 
         case MotionEvent.ACTION_UP:
+        case MotionEvent.ACTION_POINTER_UP:
             touchX_ = event.getX();
             touchY_ = event.getY();
             touchOn_ = false;
+            multiTouch_ = false;
             break;
+
+        case MotionEvent.ACTION_POINTER_DOWN: //複数が押された
+        	multiTouch_ = true;
+        	touchOn_ = true;
+        	float dx = event.getX(0) - event.getX(1);
+    		float dy = event.getY(0) - event.getY(1);
+    		touchZ_ = FloatMath.sqrt(dx*dx + dy*dy);
+        	break;
+
         }
 
         return true;
@@ -340,14 +360,14 @@ public class GLSurfaceView extends SurfaceView implements
 
     public synchronized void onResume()
     {
-    	sensorSys_.onResume();
+    	//sensorSys_.onResume();
     	suspended_ = false;
     	notify();
     }
 
     public synchronized void onPause()
     {
-    	sensorSys_.onPause();
+    	//sensorSys_.onPause();
     	suspended_ = true;
     }
 
@@ -367,7 +387,9 @@ public class GLSurfaceView extends SurfaceView implements
 
     private float touchX_ = 0.0f;
     private float touchY_ = 0.0f;
+    private float touchZ_ = 0.0f;
     private boolean touchOn_ = false;
+    private boolean multiTouch_ = false;
 
-    private SensorSystem sensorSys_ = null;
+    //private SensorSystem sensorSys_ = null;
 }

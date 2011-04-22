@@ -345,10 +345,10 @@ namespace
         createVertexDecl(decl);
 
         createVertexBuffer(vb_, numMaxCharacters<<2);
+
 #if defined(LIME_GLES2)
         vb_.blit(NULL, true); //バッファ予約
 #endif
-
         //インデックスバッファ作成
         IndexBufferRef ib;
 
@@ -373,7 +373,6 @@ namespace
 
         ib.blit((void*)indices);
         LIME_DELETE_ARRAY(indices);
-
 
         GeometryBuffer::pointer geomBuffer( LIME_NEW GeometryBuffer(lgraphics::Primitive_TriangleList, decl, vb_, ib));
 
@@ -578,7 +577,7 @@ namespace
         texture.getLevelDesc(0, desc);
         batch_->setTextureSize(desc.width_, desc.height_);
 
-        lcore::Log("success to create text texture (%d, %d)", desc.width_, desc.height_);
+        //lcore::Log("success to create text texture (%d, %d)", desc.width_, desc.height_);
         return true;
     }
 }

@@ -9,7 +9,6 @@ import java.io.File;
 
 import android.app.Activity;
 import android.app.AlertDialog;
-import android.app.Dialog;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.os.Environment;
@@ -28,7 +27,7 @@ public class Main extends Activity
 {
     static final int State_Stop = 0;
     static final int State_Play = 1;
-    
+
     /**
      * Called when the activity is first created.
      */
@@ -64,6 +63,8 @@ public class Main extends Activity
         setContentView(frameLayout_);
 
         state_ = State_Stop;
+
+        LogOut.d("onCreate");
     }
 
 	protected void onPause()
@@ -85,19 +86,9 @@ public class Main extends Activity
 	protected void onStop()
     {
 	    super.onStop();
+	    Config.getInstance().save(getResources().getString(R.string.app_name));
 	    LogOut.d("onStop");
-        finish();
     }
-
-	protected void onDestroy()
-	{
-		super.onDestroy();
-
-		LogOut.d("onDestroy");
-		frameLayout_ = null;
-
-		Config.getInstance().save(getResources().getString(R.string.app_name));
-	}
 
 	public boolean onCreateOptionsMenu(Menu menu)
     {
@@ -139,7 +130,7 @@ public class Main extends Activity
                         dialog.dismiss();
                     }
                 });
-                
+
                 AlertDialog alert = builder.create();
                 alert.show();
             }

@@ -56,7 +56,6 @@ namespace lgraphics
 
 #if defined(ANDROID)
     GraphicsDeviceRef::GraphicsDeviceRef()
-        :descAllocator_(128)
     {
     }
 
@@ -67,6 +66,8 @@ namespace lgraphics
 
     bool GraphicsDeviceRef::initialize(const InitParam& param)
     {
+        descAllocator_.initialize(InitialIDAllocatorSize); //IDアロケータ初期化
+
         initializeGLES2();
 
         glViewport(0, 0, param.backBufferWidth_, param.backBufferHeight_);
@@ -78,6 +79,9 @@ namespace lgraphics
     void GraphicsDeviceRef::terminate()
     {
         terminateGLES2();
+        lcore::Log("desc cout: %d", descAllocator_.getCount());
+
+        descAllocator_.terminate(); //IDアロケータ終了
     }
 
 
@@ -160,7 +164,6 @@ namespace lgraphics
         ,context_(EGL_NO_CONTEXT)
         ,surface_(EGL_NO_SURFACE)
         ,window_(NULL)
-        ,descAllocator_(128)
     {
     }
 
@@ -171,6 +174,8 @@ namespace lgraphics
 
     bool GraphicsDeviceRef::initialize(const InitParam& param)
     {
+        descAllocator_.initialize(InitialIDAllocatorSize); //IDアロケータ初期化
+
         initializeEGL();
 
         window_ = param.windowHandle_;
@@ -336,6 +341,9 @@ namespace lgraphics
 
         terminateGLES2();
         terminateEGL();
+
+        lcore::Log("desc cout: %d", descAllocator_.getCount());
+        descAllocator_.terminate(); //IDアロケータ終了
     }
 
 #endif

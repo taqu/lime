@@ -41,6 +41,8 @@ namespace lgraphics
     class GraphicsDeviceRef
     {
     public:
+        static const u32 InitialIDAllocatorSize = 128;
+
         GraphicsDeviceRef();
         ~GraphicsDeviceRef();
 

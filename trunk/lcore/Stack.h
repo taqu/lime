@@ -18,61 +18,149 @@ namespace lcore
     class Stack
     {
     public:
-        Stack(u32 size);
+        Stack();
+
+        /**
+        @param size ... バッファブロック１個のエントリ数。0より大きい
+
+        initializeを行う
+        */
+        explicit Stack(u32 size);
+
+        /// デストラクタ
         ~Stack();
 
+        /**
+        @brief 初期化
+        @param size ... バッファブロック１個のエントリ数。0より大きい
+
+        何度呼んでもよいが、その都度新しく確保するブロックエントリ数が変わる
+        */
+        void initialize(u32 size);
+
+        /**
+        @brief 終了
+
+        これ以降initializeを再度呼ぶまで、popとpushを呼んではいけない。
+        すでにpopされているエントリのポインタは無効になる。
+        */
+        void terminate();
+
+        /// エントリ取得
         T* pop();
+
+        /// エントリをスタックに戻す
         void push(T* ptr);
 
+        /// スワップ
         void swap(Stack<T>& rhs)
         {
             lcore::swap(size_, rhs.size_);
+            lcore::swap(count_, rhs.count_);
             lcore::swap(numBuffers_, rhs.numBuffers_);
             lcore::swap(top_, rhs.top_);
             lcore::swap(buffers_, rhs.buffers_);
         }
+
+        /// pop数-push数
+        u32 getCount() const{ return count_;}
     private:
+        /// 単方向リストのエントリ。ポインタと内容のメモリ共有
         union Entry
         {
             T element_;
             Entry *next_;
         };
 
+        /// バッファブロック内に、新規エントリリスト作成
         Entry* initialize(Entry* buffer);
 
+        /// バッファブロック追加
         void incBuffers();
 
+        /// ポインタがスタック管理内かチェック
         bool check(T* ptr);
 
-        u32 size_;
-        u32 numBuffers_;
-        Entry *top_;
-        Entry **buffers_;
+        u32 size_; /// バッファブロック内エントリ数
+        u32 count_; /// pop数-push数
+        u32 numBuffers_; /// バッファブロック数
+        Entry *top_; /// エントリ先頭
+        Entry **buffers_; /// バッファブロック配列
     };
 
 
+    //----------------------------------------------------
+    template<class T>
+    Stack<T>::Stack()
+        :size_(0)
+        ,count_(0)
+        ,numBuffers_(0)
+        ,top_(NULL)
+        ,buffers_(NULL)
+    {
+    }
+
+    //----------------------------------------------------
     template<class T>
     Stack<T>::Stack(u32 size)
-        :size_(size)
-        ,numBuffers_(1)
+        :size_(0)
+        ,count_(0)
+        ,numBuffers_(0)
+        ,top_(NULL)
+        ,buffers_(NULL)
     {
-        buffers_= LIME_NEW Entry*[1];
+        initialize(size);
+    }
+
+    //----------------------------------------------------
+    template<class T>
+    Stack<T>::~Stack()
+    {
+        terminate();
+    }
+
+    //-----------------------------------------------------
+    // 初期化
+    template<class T>
+    void Stack<T>::initialize(u32 size)
+    {
+        LASSERT(size > 0);
+
+        size_ = size;
+        if(buffers_ != NULL){
+            size_ = size;
+        }
+
+        count_ = 0;
+        numBuffers_ = 1;
+        buffers_ = LIME_NEW Entry*[numBuffers_];
         buffers_[0] = LIME_NEW Entry[size_];
         top_ = initialize(buffers_[0]);
     }
 
+    //-----------------------------------------------------
+    // 終了
     template<class T>
-    Stack<T>::~Stack()
+    void Stack<T>::terminate()
     {
         for(u32 i=0; i<numBuffers_; ++i){
             LIME_DELETE_ARRAY(buffers_[i]);
         }
         LIME_DELETE_ARRAY(buffers_);
+
+        numBuffers_ = 0;
+        count_ = 0;
+        top_ = NULL;
     }
 
+    //-----------------------------------------------------
+    // エントリ取得
     template<class T>
     T* Stack<T>::pop()
     {
+        LASSERT(top_ != NULL);
+        ++count_;
+
         Entry *next = top_->next_;
         if(next == NULL){
             incBuffers();
@@ -82,6 +170,8 @@ namespace lcore
         return (T*)ret;
     }
 
+    //-----------------------------------------------------
+    // エントリをスタックに戻す
     template<class T>
     void Stack<T>::push(T* ptr)
     {
@@ -89,12 +179,22 @@ namespace lcore
             return;
         }
 
+#if 0
         LASSERT(check(ptr));
+#else
+        if(check(ptr) == false){
+            lcore::Log("Stack::push wrong adress");
+            return;
+        }
+#endif
+        --count_;
         Entry *entry = (Entry*)ptr;
         entry->next_ = top_;
         top_ = entry;
     }
 
+    //-----------------------------------------------------
+    // バッファブロック内に、新規エントリリスト作成
     template<class T>
     typename Stack<T>::Entry* Stack<T>::initialize(Entry* buffer)
     {
@@ -106,6 +206,8 @@ namespace lcore
         return &(buffer[0]);
     }
 
+    //-----------------------------------------------------
+    // バッファブロック追加
     template<class T>
     void Stack<T>::incBuffers()
     {
@@ -121,6 +223,8 @@ namespace lcore
         buffers_ = newBuffers;
     }
 
+    //-----------------------------------------------------
+    // ポインタチェック
     template<class T>
     bool Stack<T>::check(T* ptr)
     {

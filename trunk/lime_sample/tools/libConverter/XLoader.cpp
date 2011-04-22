@@ -605,7 +605,7 @@ namespace
 
 #if defined(LIME_GLES2)
         //頂点でライティング計算
-        //material.getFlags().setFlag(lscene::Material::MatFlag_LightingVS);
+        material.getFlags().setFlag(lscene::Material::MatFlag_LightingVS);
 #endif
         //透過
         f32 emissivePower = material.emissive_.lengthSqr();
