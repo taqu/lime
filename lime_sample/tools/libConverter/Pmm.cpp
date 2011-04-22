@@ -778,7 +778,7 @@ namespace pmm
         }
 
         lcore::strncpy(accInfo.path_, 255, lines[1], lcore::strlen(lines[1])+1);
-        f32 scale = static_cast<f32>( atof(lines[2]) );
+        //f32 scale = static_cast<f32>( atof(lines[2]) );
 
         u32 i=0;
         f32 f[6];
@@ -796,10 +796,10 @@ namespace pmm
             ++str;
         }
 
-        static const f32 toRad = (PI/180.0f);
         matrix.identity();
         //vacÇÃê›íËÇÕñ≥éã
 #if 0
+        static const f32 toRad = (PI/180.0f);
         matrix.setScale(scale);
         matrix.rotateX(f[3]*toRad);
         matrix.rotateY(f[4]*toRad);

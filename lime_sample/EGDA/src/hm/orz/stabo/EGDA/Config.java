@@ -37,7 +37,6 @@ public class Config
 	public static final int Screen_Rot180 = 2;
 	public static final int Screen_Rot270 = 3;
 
-	private static final int NumResolutions = 4;
 
 	//320Å~240 //QVGA 4:3
 	//400Å~240 //WQVGA 16:9

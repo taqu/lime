@@ -806,6 +806,10 @@ namespace
                     state.setZWriteEnable(true); //普通は書き込み禁止にするが、ソートしないかわりに書き込みしてるらしい
                 }
                 break;
+
+            default:
+                LASSERT(!"unknown state type");
+                break;
             };
             return state;
         }

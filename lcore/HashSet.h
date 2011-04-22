@@ -39,23 +39,23 @@ namespace lcore
             typedef AllocatorNew<value_type> value_allocator;
 
             HashSetTable()
-                :bucketCount_(0),
-                values_(NULL),
-                size_(0)
+                :size_(0)
+                ,bucketCount_(0)
+                ,values_(NULL)
             {
             }
 
             explicit HashSetTable(size_type n)
-                :bucketCount_(next_prime(n)),
-                size_(0)
+                :size_(0)
+                ,bucketCount_(next_prime(n))
             {
                 createBuckets(bucketCount_);
             }
 
             HashSetTable(size_type n, value_param_type emptyValue)
-                :bucketCount_(next_prime(n)),
-                empty_(emptyValue),
-                size_(0)
+                :size_(0)
+                ,bucketCount_(next_prime(n))
+                ,empty_(emptyValue)
             {
                 createBuckets(bucketCount_);
             }
@@ -253,10 +253,11 @@ namespace lcore
                 tmp.swap(*this);
             }
 
-            value_type empty_;
-            value_pointer values_;
             size_type size_;
             size_type bucketCount_;
+            value_pointer values_;
+
+            value_type empty_;
             value_allocator value_alloc_;
         };
     }

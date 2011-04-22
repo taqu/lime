@@ -279,7 +279,7 @@ namespace lgraphics
     {
         switch(type)
         {
-            //CASE_ENTRY(Primitive_PointList);
+            CASE_ENTRY(Primitive_PointList);
             CASE_ENTRY(Primitive_LineList);
             CASE_ENTRY(Primitive_LineStrip);
             CASE_ENTRY(Primitive_TriangleList);

@@ -74,6 +74,7 @@ namespace lcore
         }
     };
 
+#if defined(ANDROID)
     template<typename char_traits>
     class DebugOutputterAndroid
     {
@@ -100,7 +101,8 @@ namespace lcore
             __android_log_print(ANDROID_LOG_DEBUG, "lime", buff);
         }
     };
-
+#endif
+  
     template<
         typename char_traits = CharTraitsMultiByte,
         typename Outputter = DebugOutputter<char_traits> >

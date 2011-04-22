@@ -154,16 +154,16 @@ typedef TLogger<CharTraitsMultiByte, DebugOutputterStdOut<CharTraitsMultiByte> >
         //__android_log_vprint(ANDROID_LOG_ERROR, "LIME", format, ap);
 #else
         static const u32 MaxBuffer = 64;
-        Char buffer[MaxBuffer+2];
+        Char buffer[MaxBuffer+1];
         int count=vsnprintf(buffer, MaxBuffer, format, ap);
         if(count<0){
             count = MaxBuffer;
         }
-        buffer[count]='\n';
-        buffer[count+1]='\0';
 #if defined(_WIN32)
+        buffer[count]='\0';
         OutputDebugString(buffer);
 #else
+        buffer[count]='\0';
         std::cerr << buffer << '\n';
 #endif
 

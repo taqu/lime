@@ -15,6 +15,7 @@ namespace egda
         {
             Analog_X =0,
             Analog_Y,
+            Analog_Z,
             Analog_Num,
         };
 
@@ -63,7 +64,7 @@ namespace egda
         inline static bool* getClickFlags(){ return impl_.isClick_;}
 
         inline static void updateOrientation(f32 x, f32 y, f32 z);
-        inline static void updateTouch(bool isOn, f32 x, f32 y);
+        inline static void updateTouch(bool isOn, bool isMultiOn, f32 x, f32 y, f32 z);
     private:
         class Impl
         {
@@ -92,11 +93,13 @@ namespace egda
         impl_.angles_[Axis_Z] = z;
     }
 
-    inline void Input::updateTouch(bool isOn, f32 x, f32 y)
+    inline void Input::updateTouch(bool isOn, bool isMultiOn, f32 x, f32 y, f32 z)
     {
         impl_.durations_[Analog_X] = 0.0f;
         impl_.durations_[Analog_Y] = 0.0f;
+        impl_.durations_[Analog_Z] = 0.0f;
 
+        //シングルタッチ
         if(impl_.isOn_[Button_1]){
             impl_.isClick_[Button_1] = !isOn;
 
@@ -106,9 +109,20 @@ namespace egda
             }
         }
 
+        //マルチタッチ
+        if(impl_.isOn_[Button_2]){
+            impl_.isClick_[Button_2] = !isMultiOn;
+
+            if(isMultiOn){
+                impl_.durations_[Analog_Z] = z - impl_.positions_[Analog_Z];
+            }
+        }
+
         impl_.isOn_[Button_1] = isOn;
+        impl_.isOn_[Button_2] = isMultiOn;
         impl_.positions_[Analog_X] = x;
         impl_.positions_[Analog_Y] = y;
+        impl_.positions_[Analog_Z] = z;
     }
 }
 

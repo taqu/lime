@@ -36,7 +36,7 @@ extern "C"
     /**
     @brief タッチイベント更新
     */
-    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_updateTouch(JNIEnv *, jclass, jboolean, jfloat, jfloat);
+    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_updateTouch(JNIEnv *, jclass, jboolean, jboolean, jfloat, jfloat, jfloat);
 
     /**
     @brief リソースロード
@@ -62,8 +62,9 @@ extern "C"
         bool ret = egda::Application::getInstance().initialize(reinterpret_cast<const lcore::Char*>(tex.getData()), tex.size());
         if(!ret){
             lcore::Log("cannot initialize");
+        }else{
+            lcore::Log("initialize");
         }
-
         return (ret)? JNI_TRUE : JNI_FALSE;
     }
 
@@ -99,9 +100,9 @@ extern "C"
 
     //--------------------------------------------------------------------------
     //  タッチイベント更新
-    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_updateTouch(JNIEnv *, jclass, jboolean isOn, jfloat x, jfloat y)
+    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_updateTouch(JNIEnv *, jclass, jboolean isOn, jboolean isMultiOn, jfloat x, jfloat y, jfloat z)
     {
-        egda::Input::updateTouch(isOn, x, y);
+        egda::Input::updateTouch(isOn, isMultiOn, x, y, z);
     }
 
     //--------------------------------------------------------------------------
@@ -147,7 +148,6 @@ extern "C"
     // 状態セット
     JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setState(JNIEnv *, jclass, jint state)
     {
-        lcore::Log("set state: %d", state);
         egda::Application::getInstance().setState(state);
     }
 
@@ -155,8 +155,6 @@ extern "C"
     // モードセット
     JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setMode(JNIEnv *, jclass, jint screenMode, jint cameraMode)
     {
-        lcore::Log("set mode: screen %d, camera %d", screenMode, cameraMode);
-
         egda::Config::getInstance().setScreenMode((egda::ScreenMode)screenMode);
         egda::Application::getInstance().setCameraMode(cameraMode);
         egda::Application::getInstance().resetProjection();

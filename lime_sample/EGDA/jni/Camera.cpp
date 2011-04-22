@@ -55,6 +55,7 @@ namespace egda
         lmath::Vector3 initPosition_;
         lmath::Vector3 initTarget_;
         f32 initFov_;
+        f32 angleX_;
         f32 angleY_;
 
         lmath::Vector3 up_;
@@ -67,6 +68,7 @@ namespace egda
         :initPosition_(0.0f, 0.0f, 1.0f)
         ,initTarget_(0.0f, 0.0f, 0.0f)
         ,initFov_((45.0f/180.0f*PI))
+        ,angleX_(0.0f)
         ,angleY_(0.0f)
         ,up_(0.0f, 1.0f, 0.0f)
         ,position_(0.0f, 0.0f, 1.0f)
@@ -92,53 +94,39 @@ namespace egda
 
         f32 zoomLength = target_.distance(position_);
 #if 1
-        f32 zoomTick;
-        f32 angleX;
-        f32 angleYTick;
-
-
-        switch(config.getScreeMode())
-        {
-        case ScreenMode_Rot0:
-            angleX = Input::getAngle(Input::Axis_X) + PI_2;
-            angleYTick = Input::getAnalogDuration(Input::Analog_X);
-            zoomTick = -Input::getAnalogDuration(Input::Analog_Y);
-
-            break;
-
-        case ScreenMode_Rot90:
-            angleX = -Input::getAngle(Input::Axis_Y) + PI_2;
-            angleYTick = -Input::getAnalogDuration(Input::Analog_Y);
-            zoomTick = -Input::getAnalogDuration(Input::Analog_X);
-            break;
-
-        case ScreenMode_Rot180:
-            angleX = Input::getAngle(Input::Axis_X);
-            if(angleX >= 0.0f){
-                angleX = -angleX + PI_2;
-            }else{
-                angleX = -angleX - PI_2;
-            }
-            angleYTick = -Input::getAnalogDuration(Input::Analog_X);
-            zoomTick = Input::getAnalogDuration(Input::Analog_Y);
-            break;
-
-        case ScreenMode_Rot270:
-            angleX = -Input::getAngle(Input::Axis_Y);
-            angleYTick = -Input::getAnalogDuration(Input::Analog_Y);
-            zoomTick = Input::getAnalogDuration(Input::Analog_X);
-            break;
-        };
-#if 1
-        if(angleX>LimitMax){
-            angleX = LimitMax;
-        }else if(angleX<LimitMin){
-            angleX = LimitMin;
-        }
-#endif
-        //lcore::Log("rot %2.3f, %2.3f", angleX, angleY);
-        // 視線方向移動
         if(Input::isOn(Input::Button_1)){
+            f32 zoomTick;
+            f32 angleXTick;
+            f32 angleYTick;
+
+
+            switch(config.getScreeMode())
+            {
+            case ScreenMode_Rot0:
+                angleXTick = Input::getAnalogDuration(Input::Analog_Y);
+                angleYTick = Input::getAnalogDuration(Input::Analog_X);
+                zoomTick = Input::getAnalogDuration(Input::Analog_Z);
+
+                break;
+
+            case ScreenMode_Rot90:
+                angleXTick = Input::getAnalogDuration(Input::Analog_X);
+                angleYTick = -Input::getAnalogDuration(Input::Analog_Y);
+                zoomTick = Input::getAnalogDuration(Input::Analog_Z);
+                break;
+
+            case ScreenMode_Rot180:
+                angleXTick = -Input::getAnalogDuration(Input::Analog_Y);
+                angleYTick = -Input::getAnalogDuration(Input::Analog_X);
+                zoomTick = Input::getAnalogDuration(Input::Analog_Z);
+                break;
+
+            case ScreenMode_Rot270:
+                angleXTick = -Input::getAnalogDuration(Input::Analog_X);
+                angleYTick = Input::getAnalogDuration(Input::Analog_Y);
+                zoomTick = Input::getAnalogDuration(Input::Analog_Z);
+                break;
+            };
 
             zoomTick *= TickZoomRatio;
 
@@ -149,8 +137,18 @@ namespace egda
                 zoomLength = 1.0f;
             }
 
+            angleXTick *= TickRotationRatio;
+            angleX_ += angleXTick;
+
             angleYTick *= TickRotationRatio;
             angleY_ += angleYTick;
+
+             if(angleX_ > LimitMax){
+                angleX_ = LimitMax;
+            }
+            if(angleX_ < LimitMin){
+                angleX_ = LimitMin;
+            }
 
             while(angleY_ > PI2){
                 angleY_ -= PI2;
@@ -166,7 +164,7 @@ namespace egda
         Quaternion rot;
         rot.setRotateAxis(camY, angleY_);
         Quaternion rotX;
-        rotX.setRotateAxis(camX, angleX);
+        rotX.setRotateAxis(camX, angleX_);
 
         rot *= rotX;
 

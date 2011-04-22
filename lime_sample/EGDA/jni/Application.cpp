@@ -37,7 +37,6 @@ namespace egda
         :prevMSec_(0)
         ,currentMSec_(0)
     {
-        Config::initialize();
     }
 
     Application::~Application()
@@ -47,6 +46,8 @@ namespace egda
     //----------------------------------------------
     bool Application::initialize(const Char* textTexture, u32 size)
     {
+        Config::initialize();
+
         lgraphics::InitParam param;
         param.backBufferWidth_ = 300;
         param.backBufferHeight_ = 400;
@@ -65,7 +66,9 @@ namespace egda
         lframework::System::InitParam sysParam("", 32);
         lframework::System::initialize(sysParam, animInitParam);
 
+
         textRenderer_.initialize(MaxChars, CharW, CharH, Rows, Cols);
+
         textRenderer_.setTextureFromMemory(textTexture, size);
 
 
