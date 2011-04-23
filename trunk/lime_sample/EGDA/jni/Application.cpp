@@ -149,10 +149,10 @@ namespace egda
 
         renderSys.endDraw();
 
-        if(d<MSecPerFrame){ //1フレームの時間が短ければ眠る
-            d = (MSecPerFrame - d)*1000;
-            usleep(d);//マイクロ秒単位で眠る
-        }
+        //if(d<MSecPerFrame){ //1フレームの時間が短ければ眠る
+        //    d = (MSecPerFrame - d)*1000;
+        //    usleep(d);//マイクロ秒単位で眠る
+        //}
     }
 
     //----------------------------------------------
