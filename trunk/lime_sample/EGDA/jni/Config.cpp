@@ -16,8 +16,8 @@ namespace egda
         instance_.width_ = 300.0f;
         instance_.height_ = 400.0f;
         instance_.aspect_ = (300.0f/400.0f);
-        instance_.znear_ = 1.0f;
-        instance_.zfar_ = 200.0f;
+        instance_.znear_ = 0.5f;
+        instance_.zfar_ = 2000.0f;
     }
 
     //-------------------------------------------------------------------
