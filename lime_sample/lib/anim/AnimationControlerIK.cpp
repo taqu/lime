@@ -25,6 +25,36 @@ namespace lanim
     }
 #endif
 
+namespace
+{
+    /**
+    @brief ３辺の長さから対角の角度を計算
+    @ret bcに挟まれた角の角度
+    */
+    void calcAnglesFromSides(f32& angle, f32 a, f32 b, f32 c)
+    {
+        LASSERT(a>0.0f);
+        LASSERT(b>0.0f);
+        LASSERT(c>0.0f);
+
+        f32 s = (a + b + c)*0.5f;
+        f32 S = lmath::sqrt(s*(s-a)*(s-b)*(s-c));
+        f32 h = 2.0f*S/(b*b);
+
+        if(h>1.0f){
+            h = 1.0f;
+        }
+        angle = lmath::asin(h);
+
+        a = a*a;
+        b = b*b;
+        c = c*c;
+        if(a<(b+c)){ //鋭角
+            angle = PI - angle;
+        }
+    }
+}
+
     AnimationControlerIK::AnimationControlerIK()
     {
     }
@@ -57,6 +87,7 @@ namespace lanim
 
     void AnimationControlerIK::blendPose(SkeletonPose& pose)
     {
+
         //TODO:物理演算対応
         if(ikPack_ == NULL){
             return;
@@ -81,14 +112,12 @@ namespace lanim
             Joint& target = skeleton_->getJoint( entry.targetJoint_ );
             Joint& effector = skeleton_->getJoint( entry.effectorJoint_ );
 
-            //const lanim::Name& effectorName = skeleton_->getJointName( entry.effectorJoint_);
-            //const lanim::Name& targetName = skeleton_->getJointName( entry.targetJoint_);
-
             //ターゲットの現在位置
             transformPosition(targetPos, target.getPosition(), matrices, entry.targetJoint_);
 
             totalXRot = 0.0f; //曲げ角初期化
-            for(u32 j=0; j<entry.numIterations_; ++j){ //イテレーション
+            for(u8 j=0; j<entry.numIterations_; ++j){ //イテレーション
+
                 for(u16 k=0; k<entry.chainLength_; ++k){
                     LASSERT(entry.children_[k]<pose.getNumJoints());
 
@@ -135,7 +164,8 @@ namespace lanim
 
                     static const f32 IKThreshold = (1.0f-IKEpsilon);
                     if(dotProduct>IKThreshold){
-                        continue;
+                        radian = 0.0f;
+
                     }else if(dotProduct< -IKThreshold){
                         radian = lmath::acos(-IKThreshold);
                     }else{
@@ -144,35 +174,50 @@ namespace lanim
 
                     LASSERT(false == lcore::isNan(radian));
 
-                    if(entry.limitAngle_ < radian){
-                        radian = entry.limitAngle_;
-                    }
+                    //radian *= entry.limitAngle_;
 
 
                     if(child.getFlag() & lanim::JointFlag_IKLimitHeading){
 
                         rotation.setRotateAxis(axis, radian);
 
+
+
                         f32 head, pitch, bank;
                         lmath::getEulerObjectToInertial(head, pitch, bank, rotation);
 
-                        //エフェクタの方が遠くにある場合、曲げをプラス
-                        //if(ltot<ltoe){
-                        //    f32 cs = ltot/ltoe;//ltot/ltoeは、およそcosになるのではないかな
-                        //    pitch -= lmath::acos(cs);
-                        //}
+                        //if(lmath::absolute(pitch) < IKEpsilon
+                        //    && (ltot<ltoe))
+                        f32 limit = -PI;
+                        if(ltot<ltoe)
+                        {
+                            u8 parentIndex = entry.children_[k+1];
+                            Joint& parent = skeleton_->getJoint(parentIndex);
+
+                            lmath::Vector3 parentPos;
+                            transformPosition(parentPos, parent.getPosition(), matrices, parentIndex);
+
+                            f32 a = parentPos.distance( targetPos );
+                            f32 b = parent.getPosition().distance( child.getPosition() );
+                            f32 c = ltoe;
+
+                            calcAnglesFromSides(pitch, a, b, c);
+                            pitch = -pitch;
+                            limit = pitch;
+
+                        }
 
                         f32 sum = totalXRot + pitch;
 
                         if(sum > 0.0f){ //プラス方向に曲がらないように
                             pitch = -totalXRot;
-                        }else if(sum<(-PI)){
-                            pitch = -entry.limitAngle_ - totalXRot;
+                        }else if(sum<limit){
+                            pitch = limit - totalXRot;
                         }
-
                         rotation.setRotateAxis(1.0f, 0.0f, 0.0f, pitch);
 
                         totalXRot += pitch;
+
 
                     }else{
                         rotation.setRotateAxis(axis, radian);
@@ -189,26 +234,6 @@ namespace lanim
             }// for(u32 j=0; j<entry.numIterations_
 
             updateChildMatrices(pose, entry.effectorJoint_);
-#if defined(LIME_ANIM_IK_DEBUG)
-            //ターゲットの現在位置
-            transformPosition(targetPos, target.getPosition(), matrices, entry.targetJoint_);
-
-            drawDebugTriangle(targetPos, 0xFF0000FFU);
-
-            transformPosition(effectorPos, effector.getPosition(), matrices, entry.effectorJoint_);
-
-            drawDebugTriangle(effectorPos, 0x9000FF00U);
-
-            lmath::Vector3 childPos;
-            for(u32 k=0; k<entry.chainLength_; ++k){
-                u8 childIndex = entry.children_[k];
-                Joint& child = skeleton_->getJoint(childIndex);
-
-                transformPosition(childPos, child.getPosition(), matrices, childIndex);
-
-                drawDebugTriangle(childPos, 0xFFFFFFFFU);
-            }
-#endif
         }// for(u32 i=0; i<ikPack_->getNumIKs()
 
     }
