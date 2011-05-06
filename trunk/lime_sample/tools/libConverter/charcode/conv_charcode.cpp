@@ -6,6 +6,7 @@
 */
 #include "conv_charcode.h"
 #include "jis_level1_utf16.h"
+#include "jis_level2_utf16.h"
 
 #if !defined(NULL)
 #define NULL (0)
@@ -127,18 +128,15 @@ namespace charcode
             return 0;
         }
 
-        u16 utf16code;
+        u16 utf16code = 0;
 
         //‘æ‚P…€‚Ì”ÍˆÍ‚©
-        if(0x5021U>jiscode){
+        if(0x2121U<=jiscode && jiscode<=0x4F53U){
             utf16code = jis_level1_utf16_table[jiscode - 0x2121U];
-        }else{
-            //‘æ‚Q…€‚Í–³Ž‹
-#if 1
-            return 0;
-#else
+
+        }else if(0x5021U<=jiscode && jiscode<=0x7426U){
+            //‘æ‚Q…€
             utf16code = jis_level2_utf16_table[jiscode - 0x5021U];
-#endif
         }
 
         if(utf16code == 0){

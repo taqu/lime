@@ -11,11 +11,12 @@
 #include <lcore/vector.h>
 #include <lcore/String.h>
 
-#define LIME_LIBCONVERTER_DEBUGLOG_ENABLE (1)
+//#define LIME_LIBCONVERTER_DEBUGLOG_ENABLE (1)
 
 namespace lgraphics
 {
     class TextureRef;
+    class SamplerState;
 }
 
 namespace lconverter
@@ -32,12 +33,14 @@ namespace lconverter
 
     using lcore::Char;
 
+    static const u32 MinTextureSizeToCreateMipMap = 64; //テクスチャの１辺がこれ以上ならミップマップ作成
+
     s16 F32ToS16(f32 value);
     s16 F32ToS16Clamp(f32 value);
     u16 F32ToU16(f32 value);
 
     typedef lcore::HashMapCharArray<lgraphics::TextureRef*> NameTextureMap;
-    lgraphics::TextureRef* loadTexture(const Char* path, u32 size, const Char* directory, NameTextureMap& texMap, bool transpose=false);
+    lgraphics::TextureRef* loadTexture(const Char* path, u32 size, const Char* directory, NameTextureMap& texMap, lgraphics::SamplerState& sampler, bool transpose=false);
 
 
     enum TextureAddress

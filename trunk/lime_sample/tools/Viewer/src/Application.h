@@ -20,6 +20,11 @@ namespace lscene
     class Object;
 }
 
+namespace pmm
+{
+    class Loader;
+}
+
 namespace viewer
 {
     class Application : public lframework::Application
@@ -36,6 +41,14 @@ namespace viewer
         static const lcore::u32 Height = 128;
 #endif
 
+        static const u32 LoadingCountCycleBits = 10;
+
+        enum Status
+        {
+            Status_Load,
+            Status_Play,
+        };
+
         Application();
         ~Application();
 
@@ -44,11 +57,19 @@ namespace viewer
         void terminate();
 
     private:
+        Status status_;
         lscene::Object *animObj_;
         lanim::AnimationControler *animControler_;
 
         viewer::Scene scene_;
         TextRenderer textRenderer_;
+
+        u32 prevMSec_;
+        u32 currentMSec_;
+        u32 loadingIndex_;
+        u32 loadingCounter_;
+
+        pmm::Loader* loader_;
     };
 
     LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
