@@ -5,6 +5,7 @@
 @author t-sakai
 @date 2009/09/10 create
 */
+#include <stdarg.h>
 #include "lcore.h"
 #include "Hash.h"
 #include "liostream.h"
@@ -119,11 +120,15 @@ namespace lcore
             LASSERT(0<=index && index<size_);
             return buffer_[index];
         }
+
+        /// 書式付出力
+        int print(const Char* format, ... );
     private:
         u32 size_;
         Char buffer_[SIZE];
     };
 
+    //----------------------------------------------------------
     template<u32 SIZE>
     void String<SIZE>::assign(const Char* str, u32 length)
     {
@@ -133,6 +138,7 @@ namespace lcore
         buffer_[size_] = '\0';
     }
 
+    //----------------------------------------------------------
     template<u32 SIZE>
     void String<SIZE>::assignMemory(const Char* str, u32 size)
     {
@@ -150,6 +156,7 @@ namespace lcore
         buffer_[i] = '\0';
     }
 
+    //----------------------------------------------------------
     template<u32 SIZE>
     void String<SIZE>::swap(this_type& rhs)
     {
@@ -161,6 +168,7 @@ namespace lcore
         lcore::swap(size_, rhs.size_);
     }
 
+    //----------------------------------------------------------
     template<u32 SIZE>
     bool String<SIZE>::operator==(const this_type& rhs) const
     {
@@ -170,6 +178,7 @@ namespace lcore
         return (strncmp(buffer_, rhs.buffer_, size_) == 0);
     }
 
+    //----------------------------------------------------------
     template<u32 SIZE>
     bool String<SIZE>::operator==(const Char* str) const
     {
@@ -177,6 +186,7 @@ namespace lcore
         return (0 == lcore::strncmp(buffer_, str, size_));
     }
 
+    //----------------------------------------------------------
     template<u32 SIZE>
     lcore::istream& String<SIZE>::read(lcore::istream& is)
     {
@@ -192,6 +202,7 @@ namespace lcore
         return is;
     }
 
+    //----------------------------------------------------------
     template<u32 SIZE>
     String<SIZE>& String<SIZE>::operator=(const String<SIZE>& rhs)
     {
@@ -202,7 +213,7 @@ namespace lcore
         return *this;
     }
 
-
+    //----------------------------------------------------------
     template<u32 SIZE>
     u32 String<SIZE>::push_back(const Char* str, u32 len)
     {
@@ -221,7 +232,7 @@ namespace lcore
         return j;
     }
 
-
+    //----------------------------------------------------------
     template<u32 SIZE>
     lcore::ostream& String<SIZE>::write(lcore::ostream& os)
     {
@@ -229,7 +240,32 @@ namespace lcore
         return os;
     }
 
+    //----------------------------------------------------------
+    template<u32 SIZE>
+    int String<SIZE>::print(const Char* format, ... )
+    {
+        LASSERT(format != NULL);
 
+        va_list ap;
+        va_start(ap, format);
+
+        int ret = vsnprintf(buffer_, SIZE-1, format, ap);
+        if(ret<0){
+            size_ = 0;
+        }else{
+            size_ = ret;
+        }
+        buffer_[size_] = '\0';
+
+        va_end(ap);
+        return ret;
+    }
+
+
+
+    //----------------------------------------------------------
+    //---
+    //----------------------------------------------------------
     template<u32 SIZE>
     struct hasher<String<SIZE> >
     {
