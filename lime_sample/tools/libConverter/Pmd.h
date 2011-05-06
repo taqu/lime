@@ -8,6 +8,7 @@
 #include <lcore/liostream.h>
 #include <lcore/Vector.h>
 #include <lcore/smart_ptr/intrusive_ptr.h>
+#include <lgraphics/api/SamplerState.h>
 #include <lframework/scene/lscene.h>
 #include "converter.h"
 
@@ -544,11 +545,23 @@ namespace pmd
     class Pack
     {
     public:
+        enum State
+        {
+            State_None = 0,
+            State_LoadGeometry,
+            State_LoadToonTexture,
+            State_LoadTexture,
+            State_Finish,
+            State_Error,
+        };
+
         Pack();
-        Pack(lconverter::NameTextureMap* nameTexMap);
         ~Pack();
 
+        inline void setNameTextureMap(lconverter::NameTextureMap* nameTexMap);
+
         bool open(const Char* filepath);
+        void release();
 
         inline const Header& getHeader() const;
 
@@ -567,6 +580,8 @@ namespace pmd
         inline u16 getNumIKs() const;
         inline const IK& getIK(u32 index) const;
 
+        inline State getState() const{ return state_;}
+        void updateLoad(const char* directory);
 
         bool createObject(lscene::AnimObject& obj, const char* directory, bool swapOrigin);
 
@@ -575,6 +590,7 @@ namespace pmd
         inline SkinPack& getSkinPack();
 
         inline DispLabel& getDispLabel();
+
     private:
 
         class ToonTexturePack
@@ -586,14 +602,12 @@ namespace pmd
                     textures_[i] = NULL;
                 }
             }
-
+            lgraphics::SamplerState samplers_[NumToonTextures];
             lgraphics::TextureRef* textures_[NumToonTextures];
         };
 
         inline lanim::IKPack* releaseIKPack();
         bool loadInternal(const char* directory);
-
-        void release();
 
         template<class T, class U>
         void loadElements(lcore::istream& in, T** elements, U& numElements)
@@ -618,6 +632,9 @@ namespace pmd
         /// ボーンを親が前になるようにソート
         void sortBones();
 
+        void createInternalNameTextureMap();
+
+        State state_;
         lcore::ifstream input_;
 
         Header header_;
@@ -629,6 +646,7 @@ namespace pmd
         FaceIndex *faceIndices_;
 
         u32 numMaterials_;
+        u32 countTextureLoadedMaterial_;
         Material *materials_;
 
         u32 numGeometries_;
@@ -655,6 +673,13 @@ namespace pmd
         lconverter::DebugLog debugLog_;
 #endif
     };
+
+
+    inline void Pack::setNameTextureMap(lconverter::NameTextureMap* nameTexMap)
+    {
+        LASSERT(nameTexMap != NULL);
+        nameTexMap_ = nameTexMap;
+    }
 
     inline const Header& Pack::getHeader() const
     {

@@ -7,7 +7,7 @@
 */
 #include "Pmm.h"
 #include <lcore/utility.h>
-#include "Pmd.h"
+
 #include "XLoader.h"
 
 #include <lframework/scene/AnimObject.h>
@@ -32,7 +32,7 @@ namespace pmm
 {
     //----------------------------------------------
     //---
-    //---
+    //--- エラー処理
     //---
     //----------------------------------------------
 #define LPMM_CHECK_READ(file, obj, code) \
@@ -56,6 +56,8 @@ namespace pmm
     const f32 Loader::XToPMMScaling = 10.0f;
 
 
+    //----------------------------------------------
+    // アニメーションデータロード
     template<class PACK_TYPE, class FRAME_TYPE>
     inline void Loader::loadAnim(PACK_TYPE& pack, bool convert)
     {
@@ -94,17 +96,22 @@ namespace pmm
     }
 
 
+    //----------------------------------------------
     Loader::Loader()
         :errorCode_(Error_None)
+        ,status_(Status_None)
         ,filename_(NULL)
         ,directory_(NULL)
         ,startFrame_(0)
         ,endFrame_(0)
+        ,loadModelIndex_(0)
         ,numModels_(0)
         ,modelPacks_(NULL)
+        ,loadAccessoryIndex_(0)
         ,numAccessories_(0)
         ,accessoryPacks_(NULL)
     {
+        pmdPack_.setNameTextureMap(&nameTexMap_);
     }
 
     //----------------------------------------------
@@ -123,75 +130,167 @@ namespace pmm
     }
 
     //----------------------------------------------
-    void Loader::load(const Char* filename, const Char* directory)
+    void Loader::open(const Char* filename, const Char* directory)
     {
         LASSERT(filename != NULL);
-        filename_ = filename;
-        directory_ = directory;
-        
+        status_ = Status_None;
+
         //デバッグ情報初期化
 #if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
         debugLog_.reset();
 #endif
 
-        lenFilename_ = lcore::strlen(filename_);
+        //パスをローカルにコピー
+        //--------------------------------------------------
+        lenFilename_ = lcore::strlen(filename);
+        lenDirectory_ = (directory != NULL)? lcore::strlen(directory) : 0;
+
+        pathBuffer_.resize(lenFilename_ + lenDirectory_ + 2);
+        u32 i;
+        Char* str = pathBuffer_.get<Char>(0);
+        for(i=0; i<lenFilename_; ++i){
+            str[i] = filename[i];
+        }
+        str[i] = '\0';
+        ++i;
+        for(u32 j=0; j<lenDirectory_; ++j, ++i){
+            str[i] = directory[j];
+        }
+        str[i] = '\0';
+
+        filename_ = pathBuffer_.get<Char>(0);
+        directory_ = (directory != NULL)? pathBuffer_.get<Char>(lenFilename_+1) : NULL;
+
+
+        //ファイルパスを構成してオープン
         {
             StringBuffer filepath;
             if(directory_ != NULL){
-                lenDirectory_ = lcore::strlen(directory_);
                 filepath.push_back(directory, lenDirectory_);
                 filepath.push_back(filename_, lenFilename_);
+
             }else{
-                lenDirectory_= 0;
                 filepath.push_back(filename_, lenFilename_);
             }
 
             file_.open(filepath.c_str(), lcore::ios::binary);
             if(false == file_.is_open()){
                 errorCode_ = Error_FileOpen;
+
+                errorString_.print("pmm: fail to open %s", filename);
                 return;
             }
         }
 
-        readMagicVersion();
-        readEnvironment();
+        status_ = Status_FileOpened;
+    }
 
-        u8 numModels = 0;
-        if(0 == io::read(file_, numModels)){
-            errorCode_ = Error_Read;
-            file_.close();
-            return;
-        }
-        numModels_ = numModels;
+    //----------------------------------------------
+    void Loader::load()
+    {
+        LASSERT(filename_ != NULL);
+        LASSERT(file_.is_open());
 
-        lcore::Log("pmm: %d models", numModels_);
+        switch(status_)
+        {
+        case Status_None: //ここにはこない
+            {
+                LASSERT(false);
+                status_ = Status_Finish;
+                if(Error_None == errorCode_){
+                    errorCode_ = Error_Read;
+                }
+            }
+            break;
 
-        LIME_DELETE_ARRAY(modelPacks_);
-        modelPacks_ = LIME_NEW ModelPack[numModels_];
+            //---------------------------------------------
+        case Status_FileOpened:
+            {//ヘッダロード
+                readMagicVersion();
+                readEnvironment();
 
-        readModelNames();
-        if(errorCode_ != Error_None){
-            return;
-        }
+                u8 numModels = 0;
+                if(0 == io::read(file_, numModels)){
+                    errorCode_ = Error_Read;
+                }
 
-        readModels();
-        if(errorCode_ != Error_None){
-            return;
-        }
 
-        readCamera();
-        if(errorCode_ != Error_None){
-            return;
-        }
+                if(errorCode_ != Error_None){
+                    errorString_.print("pmm: format error");
+                    status_ = Status_Finish;
+                    return;
+                }
 
-        readLight();
-        if(errorCode_ != Error_None){
-            return;
-        }
+                numModels_ = numModels;
 
-        readAccessory();
+                LIME_DELETE_ARRAY(modelPacks_);
+                modelPacks_ = LIME_NEW ModelPack[numModels_];
 
-        file_.close();
+                readModelNames();
+                if(errorCode_ != Error_None){
+                    errorString_.print("pmm: fail to load model names");
+                    status_ = Status_Finish;
+                    return;
+                }
+
+                loadModelIndex_ = 0;
+                status_ = Status_LoadModels;
+            }
+            break;
+
+            //---------------------------------------------
+        case Status_LoadModels:
+            {
+                readModels();
+                if(errorCode_ != Error_None){
+                    status_ = Status_Finish;
+                    return;
+                }
+
+                if(numModels_<=loadModelIndex_){
+                    status_ = Status_LoadCameraAndLights;
+                }
+            }
+            break;
+
+            //---------------------------------------------
+        case Status_LoadCameraAndLights:
+            {
+                readCamera();
+                if(errorCode_ != Error_None){
+                    status_ = Status_Finish;
+                    return;
+                }
+
+                readLight();
+                if(errorCode_ != Error_None){
+                    status_ = Status_Finish;
+                    return;
+                }
+
+                loadAccessoryIndex_ = 0;
+                readAccessoryNames();
+
+                status_ = Status_LoadAccessories;
+            }
+            break;
+
+            //---------------------------------------------
+        case Status_LoadAccessories:
+            {
+                readAccessory();
+                if(errorCode_ != Error_None
+                    || numAccessories_<=loadAccessoryIndex_)
+                {
+                    status_ = Status_Finish;
+                    file_.close();
+                }
+            }
+            break;
+
+        default:
+            break;
+        };
     }
 
     //----------------------------------------------
@@ -220,123 +319,135 @@ namespace pmm
     //----------------------------------------------
     void Loader::readModels()
     {
-        ModelInfo modelInfo;
-
-
-        u32 numIKFrames = 0;
-        IKFrame ikFrame;
-
-        pmd::Pack pmdPack;
-        StringBuffer path;
-
-        pmd::DispLabel dispLabel;
-
-        for(u32 i=0; i<numModels_; ++i){
-            file_ >> modelInfo;
-
-            //PMDロード
-            loadPmd(i, modelInfo, dispLabel);
-            if(errorCode_ != Error_None){
-                return;
-            }
-
-            //フレームロード
-            readJointPoses(i, dispLabel);
-
-            modelPacks_[i].getAnimationClip()->setLastFrame( static_cast<f32>(modelInfo.endFrame_) );
-            if(endFrame_<modelInfo.endFrame_){
-                endFrame_ = modelInfo.endFrame_;
-            }
-
-            readSkinMorphPoses(i);
-
-            u32 numIKs = (modelPacks_[i].getObject()->getIKPack())? modelPacks_[i].getObject()->getIKPack()->getNumIKs() : 0;
-            IKFrame::readInit(file_, ikFrame, numIKs);
-
-            io::read(file_, numIKFrames);
-            for(u32 j=0; j<numIKFrames; ++j){
-                IKFrame::read(file_, ikFrame, numIKs);
-            }
-
-            //以下エディタ上の現在値
-            u32 numJoints = modelPacks_[i].getNumJoints();
-            for(u32 j=0; j<numJoints; ++j){
-                JointFrame::readInit2(file_);
-            }
-
-            u32 numSkins = modelPacks_[i].getSkinPack().getNumSkins();
-            for(u32 j=0; j<numSkins; ++j){
-                SkinFrame::readInit2(file_);
-            }
-            for(u32 j=0; j<numIKs; ++j){
-                IKFrame::readInit2(file_);
-            }
-
-            u16* boneMap = NULL;
-            dispLabel.swapBoneMap(boneMap);
-            modelPacks_[i].setBoneMap(boneMap);
-        }
-    }
-
-
-    //----------------------------------------------
-    // PMDロード
-    void Loader::loadPmd(u32 index, ModelInfo& modelInfo, pmd::DispLabel& dispLabel)
-    {
         static const Char ModelDirectory[] = "Model/";
         static const u32 LenModelDir = sizeof(ModelDirectory) - 1;
 
-        ModelPack& modelPack = modelPacks_[index];
+        if(loadModelIndex_>=numModels_){
+            return;
+        }
 
-        lscene::AnimObject* object = NULL;
-        pmd::Pack pmdPack(&nameTexMap_);
+        switch(pmdPack_.getState())
+        {
+        case pmd::Pack::State_None:
+            {
+                file_ >> modelInfo_;
 
-        {//ファイルオープン
-            u32 dlen = lenDirectory_ + LenModelDir;
-            Char* path = createPath(modelInfo.path_, ModelDirectory, LenModelDir);
+                //ファイルオープン
+                u32 dlen = lenDirectory_ + LenModelDir;
+                Char* path = createPath(modelInfo_.path_, ModelDirectory, LenModelDir);
 
 
-            if(false == pmdPack.open(path)){
-                //ModelディレクトリになければPMMファイルと同じディレクトリがあるか調べる
-                path = createPath(modelInfo.path_);
+                if(false == pmdPack_.open(path)){
+                    //ModelディレクトリになければPMMファイルと同じディレクトリがあるか調べる
+                    path = createPath(modelInfo_.path_);
 
-                if(false == pmdPack.open(path)){
+                    if(false == pmdPack_.open(path)){
+                        errorCode_ = Error_ReadPmd;
+                        errorString_.print("pmd: fail to open %s", path);
+                        return;
+                    }
+
+                    dlen = lenDirectory_;
+                }
+
+                if(dlen <= 0){
+                    buffer_.resize(1);
+                }
+                Char* directory = buffer_.get<Char>(0);
+
+                directory[dlen] = '\0'; //ディレクトリパスを作成
+
+            }
+            break;
+
+        case pmd::Pack::State_Finish:
+            {
+                lscene::AnimObject* object = LIME_NEW lscene::AnimObject;
+                if(object == NULL){
                     errorCode_ = Error_ReadPmd;
-                    lcore::Log("fail to load %s", modelInfo.path_);
                     return;
                 }
 
-                dlen = lenDirectory_;
-            }
+                Char* directory = buffer_.get<Char>(0);
+                if(false == pmdPack_.createObject(*object, directory, false)){
+                    LIME_DELETE(object);
+                    errorCode_ = Error_ReadPmd;
+                    errorString_.print("pmd: fail to load");
+                    return;
+                }
 
+                pmd::DispLabel dispLabel;
+                pmdPack_.getDispLabel().swap(dispLabel);
 
-            object = LIME_NEW lscene::AnimObject;
-            if(object == NULL){
-                errorCode_ = Error_ReadPmd;
-                return;
-            }
-
-            if(dlen <= 0){
-                buffer_.resize(1);
-            }
-            Char* directory = buffer_.get<Char>(0);
-
-            directory[dlen] = '\0'; //ディレクトリパスを作成
-            if(false == pmdPack.createObject(*object, directory, false)){
-                LIME_DELETE(object);
-                errorCode_ = Error_ReadPmd;
-                return;
-            }
-            pmdPack.getDispLabel().swap(dispLabel);
-
-            //デバッグ情報追加
+                //デバッグ情報追加
 #if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
-            debugLog_ += pmdPack.debugLog_;
+                debugLog_ += pmdPack_.debugLog_;
 #endif
-        }
+                modelPacks_[loadModelIndex_].set(object);
+                modelPacks_[loadModelIndex_].setSkinPack(pmdPack_.getSkinPack());
+                pmdPack_.release();
 
-        modelPack.set(object);
-        modelPack.setSkinPack(pmdPack.getSkinPack());
+                //フレームロード
+                readJointPoses(loadModelIndex_, dispLabel);
+
+                modelPacks_[loadModelIndex_].getAnimationClip()->setLastFrame( static_cast<f32>(modelInfo_.endFrame_) );
+                if(endFrame_<modelInfo_.endFrame_){
+                    endFrame_ = modelInfo_.endFrame_;
+                }
+
+                readSkinMorphPoses(loadModelIndex_);
+
+                u32 numIKs = (modelPacks_[loadModelIndex_].getObject()->getIKPack())?
+                    modelPacks_[loadModelIndex_].getObject()->getIKPack()->getNumIKs()
+                    : 0;
+
+                u32 numIKFrames = 0;
+                IKFrame ikFrame;
+                IKFrame::readInit(file_, ikFrame, numIKs);
+
+                io::read(file_, numIKFrames);
+                for(u32 j=0; j<numIKFrames; ++j){
+                    IKFrame::read(file_, ikFrame, numIKs);
+                }
+
+                //以下エディタ上の現在値
+                u32 numJoints = modelPacks_[loadModelIndex_].getNumJoints();
+                for(u32 j=0; j<numJoints; ++j){
+                    JointFrame::readInit2(file_);
+                }
+
+                u32 numSkins = modelPacks_[loadModelIndex_].getSkinPack().getNumSkins();
+                for(u32 j=0; j<numSkins; ++j){
+                    SkinFrame::readInit2(file_);
+                }
+                for(u32 j=0; j<numIKs; ++j){
+                    IKFrame::readInit2(file_);
+                }
+
+                u16* boneMap = NULL;
+                dispLabel.swapBoneMap(boneMap);
+                modelPacks_[loadModelIndex_].setBoneMap(boneMap);
+
+                ++loadModelIndex_; //ひとつロード完了
+            }
+            break;
+
+        case pmd::Pack::State_Error:
+            {
+                errorCode_ = Error_ReadPmd;
+                errorString_.print("pmd: fail to load");
+            }
+            break;
+
+        default:
+            {
+                Char* directory = buffer_.get<Char>(0);
+                pmdPack_.updateLoad(directory);
+            }
+            break;
+        };
+
+        //StringBuffer path;
     }
 
 
@@ -561,44 +672,58 @@ namespace pmm
     }
 
     //----------------------------------------------
-    // アクセサリ、アニメーションロード
-    void Loader::readAccessory()
+    // アクセサリ情報ロード
+    void Loader::readAccessoryNames()
     {
         file_.seekg(5, lcore::ios::cur); //unknown 5 bytes
         u8 numAccessories = 0;
-        io::read(file_, numAccessories);
+        if(0 == io::read(file_, numAccessories)){
+            errorCode_ = Error_Read;
+            status_ = Status_Finish;
+            return;
+        }
+        numAccessories_ = numAccessories;
 
         LIME_DELETE_ARRAY(accessoryPacks_);
-        accessoryPacks_ = LIME_NEW AccessoryPack[numAccessories];
+        accessoryPacks_ = LIME_NEW AccessoryPack[numAccessories_];
 
         AccessoryInfo accInfo;
 
         for(u8 i=0; i<numAccessories; ++i){
             AccessoryInfo::readName(file_, accInfo);
         }
+    }
 
+    //----------------------------------------------
+    // アクセサリ、アニメーションロード
+    void Loader::readAccessory()
+    {
+        AccessoryInfo accInfo;
         lmath::Matrix43 matrix;
         lx::XLoader xloader;
-        u8 index = 0;
-        for(u8 i=0; i<numAccessories; ++i){
+
+        if(loadAccessoryIndex_<numAccessories_){
             file_ >> accInfo;
 
-            AccessoryPack& accPack = accessoryPacks_[index];
+            AccessoryPack& accPack = accessoryPacks_[loadAccessoryIndex_];
 
             if(checkVac(accInfo, matrix)){
                 accPack.setMatrix(matrix);
             }
 
-            bool isLoaded = loadX(index, xloader, accInfo);
+            bool isLoaded = loadX(loadAccessoryIndex_, xloader, accInfo);
             xloader.release();
 
             loadAnim<AccessoryPack, AccessoryFrame>(accPack, isLoaded);
 
+            //ロードできなければ、アクセサリ数を減らす
             if(isLoaded){
                 const AccessoryPose& pose = accPack.getPose(0);
                 accPack.setIsDisp(pose.getDisp() == 1);
 
-                ++index;
+                ++loadAccessoryIndex_;
+            }else{
+                --numAccessories_;
             }
 
             for(u32 i=0; i<accPack.getNumPoses(); ++i){
@@ -612,7 +737,6 @@ namespace pmm
             }
 
         }
-        numAccessories_ = index;
     }
 
     bool Loader::loadX(u32 index, lx::XLoader& xloader, const AccessoryInfo& info)
@@ -630,7 +754,7 @@ namespace pmm
             path = createPath(info.path_);
 
             if(false == xloader.open(path)){
-                lcore::Log("loadx: fail to load %s", info.path_);
+                errorString_.print("x: fail to open %s", path);
                 return false;
             }
 
@@ -653,7 +777,7 @@ namespace pmm
 
         if(lx::XLoader::Error_None != xloader.getErrorCode()){
             LIME_DELETE(object);
-            lcore::Log("fail to load %s", info.path_);
+            lcore::Log("x: fail to load %s", path);
             return false;
         }
 

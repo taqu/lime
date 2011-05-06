@@ -492,7 +492,7 @@ namespace pmm
         u32 size = (skinPack_.getMaxIndex() - skinPack_.getMinIndex()) + 1;
         size *= sizeof(pmd::Vertex);
 
-        lgraphics::VertexBufferRef& vb = object_->getGeometry(0).getGeometryBuffer()->getVertexBuffer();
+        lgraphics::VertexBufferRef& vb = object_->getGeometry(0).getGeometryBuffer()->getVertexBuffer(0);
         vb.blit(vertices, offset, size);
     }
 
@@ -530,7 +530,7 @@ namespace pmm
         u32 size = (skinPack_.getMaxIndex() - skinPack_.getMinIndex()) + 1;
         size *= sizeof(pmd::Vertex);
 
-        lgraphics::VertexBufferRef& vb = object_->getGeometry(0).getGeometryBuffer()->getVertexBuffer();
+        lgraphics::VertexBufferRef& vb = object_->getGeometry(0).getGeometryBuffer()->getVertexBuffer(0);
         vb.blit(vertices, offset, size);
     }
 

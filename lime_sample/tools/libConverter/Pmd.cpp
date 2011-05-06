@@ -81,6 +81,118 @@ namespace
     }
 }
 
+namespace
+{
+    enum RenderStateType
+    {
+        RenderState_Default,
+        RenderState_AlphaBlend,
+        RenderState_Num,
+    };
+
+    RenderStateRef createRenderState(RenderStateType type)
+    {
+        //ステート設定はてきとう
+        RenderStateRef state;
+
+        // Zバッファ設定
+        state.setZEnable(true);
+
+        //type = RenderState_Default;
+        switch(type)
+        {
+        case RenderState_Default:
+            {
+                state.setCullMode(lgraphics::CullMode_CCW);
+
+                state.setAlphaBlendEnable(false);
+                state.setAlphaTest(true);
+                state.setAlphaTestFunc(lgraphics::Cmp_Greater);
+
+                // Zバッファ設定
+                state.setZWriteEnable(true);
+            }
+            break;
+
+        case RenderState_AlphaBlend:
+            {
+                state.setCullMode(lgraphics::CullMode_None);
+
+                state.setAlphaBlendEnable(true);
+                state.setAlphaBlend(lgraphics::Blend_SrcAlpha, lgraphics::Blend_InvSrcAlpha);
+
+                state.setAlphaTest(false);
+                state.setAlphaTestFunc(lgraphics::Cmp_Greater);
+
+                // Zバッファ設定
+                state.setZWriteEnable(true); //普通は書き込み禁止にするが、ソートしないかわりに書き込みしてるらしい
+            }
+            break;
+
+        default:
+            LASSERT(!"unknown state type");
+            break;
+        };
+        return state;
+    }
+
+    //-----------------------------------------------------------------------------
+    /// レンダリングステート設定
+    void setRenderStateToMaterial(lscene::Material& dst, lgraphics::RenderStateRef* stock, u32& createFlag, RenderStateType type)
+    {
+        //作成していなかったら作る
+        u32 flag = 0x01U << type;
+        if(0 == (createFlag & flag)){
+            stock[type] = createRenderState(type);
+            createFlag |= flag;
+        }
+        dst.setRenderState( stock[type] );
+    }
+
+
+    //-----------------------------------------------------------------------------
+    /// PMDのマテリアルをlgraphics::Materialに代入
+    void setMaterial(lscene::Material& dst, const pmd::Material& src)
+    {
+        dst.diffuse_.set(src.diffuse_[0], src.diffuse_[1], src.diffuse_[2], src.diffuse_[3]);
+        dst.specular_.set(src.specularColor_[0], src.specularColor_[1], src.specularColor_[2], src.specularity_);
+        dst.ambient_.set(src.ambient_[0], src.ambient_[1], src.ambient_[2]);
+        dst.reflectance_ = 0.05f;
+
+        u32 shader = lscene::shader::ShaderName[lscene::shader::Shader_Toon];
+        dst.setShaderID( shader );
+    }
+
+    bool createVertexBuffer(VertexBufferRef& vb, pmd::VertexBuffer& pmdVB)
+    {
+        pmd::Vertex* vertices = &(pmdVB.elements_[0]);
+        u32 numVertices = pmdVB.elements_.size();
+
+        //頂点バッファ作成
+#if defined(LIME_GLES2)
+        vb = lgraphics::VertexBuffer::create(sizeof(pmd::Vertex), numVertices, Pool_Managed, Usage_None);
+        if(vb.valid() == false){
+            return false;
+        }
+        vb.blit(vertices, true);
+#else
+        vb = lgraphics::VertexBuffer::create(sizeof(pmd::Vertex), numVertices, Pool_Managed, Usage_Dynamic);
+        if(vb.valid() == false){
+            return false;
+        }
+        pmd::Vertex* v = NULL;
+        u32 vsize = sizeof(pmd::Vertex)*numVertices;
+        if(false == vb.lock(0, vsize, (void**)&v)){
+            return false;
+        }
+        lcore::memcpy(v, vertices, vsize);
+        vb.unlock();
+#endif
+
+        return true;
+    }
+}
+
     //--------------------------------------
     //---
     //--- Header
@@ -245,7 +357,7 @@ namespace
         lcore::io::read(is, rhs.numIterations_);
         lcore::io::read(is, rhs.controlWeight_);
 
-        rhs.controlWeight_ *= PI;
+        rhs.controlWeight_ *= PI2;
 
         if(rhs.prevNumChildren_<rhs.chainLength_){
             rhs.prevNumChildren_ = rhs.chainLength_;
@@ -519,11 +631,13 @@ namespace
     //---
     //--------------------------------------
     Pack::Pack()
-        :numVertices_(0)
+        :state_(State_None)
+        ,numVertices_(0)
         ,vertices_(NULL)
         ,numFaceIndices_(0)
         ,faceIndices_(NULL)
         ,numMaterials_(0)
+        ,countTextureLoadedMaterial_(0)
         ,materials_(NULL)
         ,numGeometries_(0)
         ,geometries_(NULL)
@@ -532,24 +646,6 @@ namespace
         ,boneMap_(NULL)
         ,skeleton_(NULL)
         ,ikPack_(NULL)
-    {
-    }
-
-    Pack::Pack(lconverter::NameTextureMap* nameTexMap)
-        :numVertices_(0)
-        ,vertices_(NULL)
-        ,numFaceIndices_(0)
-        ,faceIndices_(NULL)
-        ,numMaterials_(0)
-        ,materials_(NULL)
-        ,numGeometries_(0)
-        ,geometries_(NULL)
-        ,numBones_(0)
-        ,bones_(NULL)
-        ,boneMap_(NULL)
-        ,skeleton_(NULL)
-        ,ikPack_(NULL)
-        ,nameTexMap_(nameTexMap)
     {
     }
 
@@ -566,9 +662,48 @@ namespace
             return false;
         }
 
+        state_ = State_LoadGeometry;
         return true;
     }
 
+    void Pack::release()
+    {
+        for(NameTextureMap::size_type pos = texMapInternal_.begin();
+            pos != texMapInternal_.end();
+            pos = texMapInternal_.next(pos))
+        {
+            TextureRef *tex = texMapInternal_.getValue(pos);
+            LIME_DELETE(tex);
+        }
+
+
+        LIME_DELETE(ikPack_);
+        LIME_DELETE(skeleton_);
+
+        numBones_ = 0;
+        LIME_DELETE_ARRAY(boneMap_);
+        LIME_DELETE_ARRAY(bones_);
+
+        numGeometries_= 0;
+        Geometry *next = geometries_;
+        while(geometries_ != NULL){
+            next = geometries_->next_;
+            LIME_DELETE(geometries_);
+            geometries_ = next;
+        }
+
+        numMaterials_ = 0;
+        LIME_DELETE_ARRAY(materials_);
+
+        numFaceIndices_ = 0;
+        LIME_DELETE_ARRAY(faceIndices_);
+
+        numVertices_ = 0;
+        LIME_DELETE_ARRAY(vertices_);
+
+        input_.close();
+        state_ = State_None;
+    }
 
     bool Pack::loadInternal(const char* directory)
     {
@@ -608,7 +743,6 @@ namespace
                 entry.effectorJoint_ = ik.targetBoneIndex_;
                 entry.chainLength_ = ik.chainLength_;
                 entry.numIterations_ = (MaxIKIterations<ik.numIterations_)? MaxIKIterations : ik.numIterations_;
-                //entry.numIterations_ = ik.numIterations_;
                 entry.limitAngle_ = ik.controlWeight_;
 
                 entry.children_ = LIME_NEW u8[entry.chainLength_];
@@ -713,167 +847,71 @@ namespace
 
         //英語名ロード
         loadNamesForENG();
-
-        //
-        loadToonTextures(directory);
         return true;
     }
 
-    void Pack::release()
+
+    //--------------------------------------------------------------
+    // ロード更新
+    void Pack::updateLoad(const char* directory)
     {
-        for(NameTextureMap::size_type pos = texMapInternal_.begin();
-            pos != texMapInternal_.end();
-            pos = texMapInternal_.next(pos))
+        switch(state_)
         {
-            TextureRef *tex = texMapInternal_.getValue(pos);
-            LIME_DELETE(tex);
-        }
+        case State_LoadGeometry: //ジオメトリ、マテリアルデータロード
+            if( loadInternal(directory) ){
+                countTextureLoadedMaterial_ = 0;
 
+                //テクスチャマップ初期化
+                if(NULL == nameTexMap_){
+                    if(texMapInternal_.capacity()<=0){
+                        createInternalNameTextureMap();
+                    }
+                    nameTexMap_ = &texMapInternal_;
+                }
 
-        LIME_DELETE(ikPack_);
-        LIME_DELETE(skeleton_);
+                state_ = State_LoadToonTexture;
+            }else{
+                state_ = State_Error;
+            }
+            break;
 
-        numBones_ = 0;
-        LIME_DELETE_ARRAY(boneMap_);
-        LIME_DELETE_ARRAY(bones_);
+        case State_LoadToonTexture: //トゥーン用テクスチャロード
+            loadToonTextures(directory);
+            state_ = State_LoadTexture;
+            break;
 
-        numGeometries_= 0;
-        Geometry *next = geometries_;
-        while(geometries_ != NULL){
-            next = geometries_->next_;
-            LIME_DELETE(geometries_);
-            geometries_ = next;
-        }
-
-        numMaterials_ = 0;
-        LIME_DELETE_ARRAY(materials_);
-
-        numFaceIndices_ = 0;
-        LIME_DELETE_ARRAY(faceIndices_);
-
-        numVertices_ = 0;
-        LIME_DELETE_ARRAY(vertices_);
-
-        input_.close();
-    }
-
-
-    namespace
-    {
-        enum RenderStateType
-        {
-            RenderState_Default,
-            RenderState_AlphaBlend,
-            RenderState_Num,
-        };
-
-        RenderStateRef createRenderState(RenderStateType type)
-        {
-            //ステート設定はてきとう
-            RenderStateRef state;
-
-            // Zバッファ設定
-            state.setZEnable(true);
-
-            //type = RenderState_Default;
-            switch(type)
+        case State_LoadTexture: //テクスチャロード
             {
-            case RenderState_Default:
-                {
-                    state.setCullMode(lgraphics::CullMode_CCW);
-                    //state.setCullMode(lgraphics::CullMode_None);
+                if(countTextureLoadedMaterial_<numMaterials_){
+                    TextureName texName;
+                    Material& material = materials_[countTextureLoadedMaterial_];
 
-                    state.setAlphaBlendEnable(false);
-                    state.setAlphaTest(true);
-                    state.setAlphaTestFunc(lgraphics::Cmp_Greater);
-
-                    // Zバッファ設定
-                    state.setZWriteEnable(true);
+                    SamplerState sampler;
+                    extractTextureName(texName, material.textureFileName_, pmd::TexNameSize);
+                    loadTexture(texName.c_str(), texName.size(), directory, *nameTexMap_, sampler);
+                    ++countTextureLoadedMaterial_;
                 }
-                break;
 
-            case RenderState_AlphaBlend:
-                {
-                    state.setCullMode(lgraphics::CullMode_None);
-
-                    state.setAlphaBlendEnable(true);
-                    state.setAlphaBlend(lgraphics::Blend_SrcAlpha, lgraphics::Blend_InvSrcAlpha);
-
-                    state.setAlphaTest(false);
-                    state.setAlphaTestFunc(lgraphics::Cmp_Greater);
-
-                    // Zバッファ設定
-                    state.setZWriteEnable(true); //普通は書き込み禁止にするが、ソートしないかわりに書き込みしてるらしい
+                if(countTextureLoadedMaterial_>=numMaterials_){
+                    state_ = State_Finish;
                 }
-                break;
-
-            default:
-                LASSERT(!"unknown state type");
-                break;
-            };
-            return state;
-        }
-
-        //-----------------------------------------------------------------------------
-        /// レンダリングステート設定
-        void setRenderStateToMaterial(lscene::Material& dst, lgraphics::RenderStateRef* stock, u32& createFlag, RenderStateType type)
-        {
-            //作成していなかったら作る
-            u32 flag = 0x01U << type;
-            if(0 == (createFlag & flag)){
-                stock[type] = createRenderState(type);
-                createFlag |= flag;
             }
-            dst.setRenderState( stock[type] );
-        }
+            break;
 
-
-        //-----------------------------------------------------------------------------
-        /// PMDのマテリアルをlgraphics::Materialに代入
-        void setMaterial(lscene::Material& dst, const pmd::Material& src)
-        {
-            dst.diffuse_.set(src.diffuse_[0], src.diffuse_[1], src.diffuse_[2], src.diffuse_[3]);
-            dst.specular_.set(src.specularColor_[0], src.specularColor_[1], src.specularColor_[2], src.specularity_);
-            dst.ambient_.set(src.ambient_[0], src.ambient_[1], src.ambient_[2]);
-            dst.reflectance_ = 0.05f;
-
-            u32 shader = lscene::shader::ShaderName[lscene::shader::Shader_Toon];
-            dst.setShaderID( shader );
-        }
-
-        bool createVertexBuffer(VertexBufferRef& vb, pmd::VertexBuffer& pmdVB)
-        {
-            pmd::Vertex* vertices = &(pmdVB.elements_[0]);
-            u32 numVertices = pmdVB.elements_.size();
-
-            //頂点バッファ作成
-            vb = lgraphics::VertexBuffer::create(sizeof(pmd::Vertex), numVertices, Pool_Default, Usage_None);
-            if(vb.valid() == false){
-                return false;
-            }
-
-#if defined(LIME_GL)
-            vb.blit(vertices, false);
-#else
-            pmd::Vertex* v = NULL;
-            u32 vsize = sizeof(pmd::Vertex)*numVertices;
-            if(false == vb.lock(0, vsize, (void**)&v)){
-                return false;
-            }
-            lcore::memcpy(v, vertices, vsize);
-            vb.unlock();
-#endif
-
-            return true;
-        }
+        default:
+            break;
+        };
     }
 
     bool Pack::createObject(lscene::AnimObject& obj, const char* directory, bool swapOrigin)
     {
         LASSERT(directory != NULL);
+        if(state_ != State_Finish){
+            return false;
+        }
 
+        LASSERT(nameTexMap_ != NULL);
 
-        loadInternal(directory);
 
         // 頂点宣言作成
         VertexDeclarationRef decl;
@@ -921,12 +959,6 @@ namespace
 
             TextureName texName;
 
-            NameTextureMap *texMap = nameTexMap_;
-            if(NULL == nameTexMap_){
-                NameTextureMap tmp(numMaterials_*2);
-                texMapInternal_.swap(tmp);
-                texMap = &texMapInternal_;
-            }
 
             for(u32 i=0; i<numMaterials_; ++i){
                 Material& material = materials_[i];
@@ -934,8 +966,11 @@ namespace
                 lscene::Material& dstMaterial = tmp.getMaterial(i);
                 setMaterial(dstMaterial, material);
 
+                //テクスチャロードは完了しているのでマップを探す
                 extractTextureName(texName, material.textureFileName_, pmd::TexNameSize);
-                TextureRef* texture = loadTexture(texName.c_str(), texName.size(), directory, *texMap);
+                u32 mapPos = nameTexMap_->find(texName.c_str(), texName.size());
+
+                TextureRef* texture = (nameTexMap_->isEnd(mapPos) == false)? nameTexMap_->getValue(mapPos) : NULL;
 
                 //アルファ値が１ならアルファブレンドなし
                 if(dstMaterial.diffuse_._w > 0.999f){
@@ -956,8 +991,21 @@ namespace
                     dstMaterial.setTexture(0, *texture);
                     //テクスチャがあったのでフラグ立てる
                     dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_TexAlbedo);
-                    dstMaterial.getSamplerState(0).setAddressU( lgraphics::TexAddress_Clamp );
-                    dstMaterial.getSamplerState(0).setAddressV( lgraphics::TexAddress_Clamp );
+                    lgraphics::SamplerState& sampler = dstMaterial.getSamplerState(0);
+                    sampler.setAddressU( lgraphics::TexAddress_Clamp );
+                    sampler.setAddressV( lgraphics::TexAddress_Clamp );
+
+                    if(texture->getLevels() > 1){ //ミップマップありか
+                        sampler.setMinFilter( lgraphics::TexFilter_PointMipMapPoint );
+                    }else{
+                        sampler.setMinFilter( lgraphics::TexFilter_Linear );
+                    }
+#if defined(LIME_GLES2)
+                    //サンプラステートセット
+                    texture->attach();
+                    sampler.apply(0);
+                    texture->detach();
+#endif
                 }
                 if(material.toonIndex_<NumToonTextures){ //トゥーンテクスチャを調べる
                     texture = toonTextures_.textures_[ material.toonIndex_ ];
@@ -966,8 +1014,8 @@ namespace
                         //フラグ立てる
                         dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_TexGrad); //テクスチャでグラディエーションつける
 
-                        dstMaterial.getSamplerState(1).setAddressU( lgraphics::TexAddress_Clamp );
-                        dstMaterial.getSamplerState(1).setAddressV( lgraphics::TexAddress_Clamp );
+                        lgraphics::SamplerState& sampler = dstMaterial.getSamplerState(1);
+                        sampler = toonTextures_.samplers_[ material.toonIndex_ ];
                     }
                 }
 
@@ -1083,6 +1131,8 @@ namespace
         static const u32 ToonTexDirectorySize = sizeof(ToonTexDirectory); //ヌル文字含む
         static const Char tex0[] = "toon0.bmp"; //0番目は固定なんだとさ
 
+        LASSERT(nameTexMap_ != NULL);
+
         u32 dlen = lcore::strlen(directory);
         u32 pathSize = dlen + ToonTexDirectorySize;
         if(pathSize>FilePathSize){
@@ -1093,9 +1143,8 @@ namespace
         lcore::memcpy(buffer, directory, dlen);
         lcore::memcpy(buffer + dlen, ToonTexDirectory, ToonTexDirectorySize);
 
-
         //0番目ロード
-        toonTextures_.textures_[0] = loadTexture(tex0, sizeof(tex0)-1, buffer, texMapInternal_, true);
+        toonTextures_.textures_[0] = loadTexture(tex0, sizeof(tex0)-1, buffer, *nameTexMap_, toonTextures_.samplers_[0], true);
 
         u32 utf8size = 0;
         Char name[ToonTexturePathSize+1];
@@ -1115,9 +1164,9 @@ namespace
                 name[utf8size] = '\0';        
             }
 
-            toonTextures_.textures_[i] = loadTexture(name, lcore::strlen(name), buffer, texMapInternal_, true);
+            toonTextures_.textures_[i] = loadTexture(name, lcore::strlen(name), buffer, *nameTexMap_, toonTextures_.samplers_[i], true);
             if(toonTextures_.textures_[i] == NULL){ //なければモデルのディレクトリも調べる
-                toonTextures_.textures_[i] = loadTexture(name, lcore::strlen(name), directory, texMapInternal_, true);
+                toonTextures_.textures_[i] = loadTexture(name, lcore::strlen(name), directory, *nameTexMap_, toonTextures_.samplers_[i], true);
             }
         }
 
@@ -1176,5 +1225,12 @@ namespace
         }
 #endif
 
+    }
+
+    //-------------------------------------
+    void Pack::createInternalNameTextureMap()
+    {
+        NameTextureMap tmp(numMaterials_*2);
+        texMapInternal_.swap(tmp);
     }
 }

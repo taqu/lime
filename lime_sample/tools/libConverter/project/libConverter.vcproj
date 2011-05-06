@@ -168,6 +168,18 @@
 				RelativePath="..\charcode\jis_level1_utf16.cpp"
 				>
 			</File>
+			<File
+				RelativePath="..\charcode\jis_level1_utf16.h"
+				>
+			</File>
+			<File
+				RelativePath="..\charcode\jis_level2_utf16.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\charcode\jis_level2_utf16.h"
+				>
+			</File>
 		</Filter>
 		<File
 			RelativePath="..\converter.cpp"

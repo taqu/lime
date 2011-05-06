@@ -43,8 +43,10 @@ namespace
 namespace viewer
 {
     Application::Application()
-        :animObj_(NULL)
+        :status_(Status_Load)
+        ,animObj_(NULL)
         ,animControler_(NULL)
+        ,loader_(NULL)
     {
     }
 
@@ -63,7 +65,7 @@ namespace viewer
         lframework::System::initialize(sysParam, animInitParam);
 
         textRenderer_.initialize(256, 9, 20, 6, 16);
-        textRenderer_.setTextureFromFile("data/M_plus_1m_regular10.tga");
+        textRenderer_.setTextureFromFile("data/M_plus_1m_regular10.png");
 
         // シーン初期化
         {
@@ -96,7 +98,17 @@ namespace viewer
 #if 1
         {//PMMロード
             scene_.release(); //携帯機ではメモリが少ないので先に解放する。ロード失敗すれば元には戻らない
-            pmm::Loader pmmLoader;
+
+            loader_ = LIME_NEW pmm::Loader;
+            //loader_->open("HelloP.pmm", "data/HelloP/");
+            loader_->open("mikumiku.pmm", "data/MikuMiku/");
+            if(loader_->getErrorCode() != pmm::Loader::Error_None){
+                LIME_DELETE(loader_);
+                status_ = Status_Play;
+            }else{
+                status_ = Status_Load;
+            }
+#if 0
             //pmmLoader.load("Sample.pmm", "data/pmm/");
             //pmmLoader.load("StrobeNights.pmm", "data/StrobeNights/");
             //pmmLoader.load("SampleAllStar.pmm", "data/pmm/");
@@ -131,9 +143,14 @@ namespace viewer
 #endif
             }
             return;
+#endif
         }
 #endif
 
+        prevMSec_ = lcore::getTime();
+        currentMSec_ = prevMSec_;
+        loadingCounter_ = 0;
+        loadingIndex_= 0;
     }
 
     void Application::update()
@@ -150,13 +167,41 @@ namespace viewer
             count = 0;
         }
 
-        if(animObj_){
-            //animObj_->getWorldMatrix().rotateAxis(0.0f, 1.0f, 0.0f, (0.5f/180.0f)*PI);
-            //animObj_->getWorldMatrix().setTranslate(0.0f, 2.0f*lmath::sinf_fast(PI2*(lcore::f32)count/max_count), 0.0f);
-            //animObj_->getWorldMatrix().setTranslate(0.0f, -5.0f, 0.0f);
-        }
+        switch(status_)
+        {
+        case Status_Load:
+            {
+                loader_->load();
+                if(loader_->getStatus() == pmm::Loader::Status_Finish){
+                    if(loader_->getErrorCode() == pmm::Loader::Error_None){
 
-        //animSys.update();
+                        //release時に0になるので先に取得
+                        u32 numModels = loader_->getNumModels();
+                        u32 numAccessories = loader_->getNumAccessories();
+                        viewer::Scene scene(
+                            numModels,
+                            loader_->releaseModelPacks(),
+                            loader_->getCameraAnimPack(),
+                            loader_->getLightAnimPack(),
+                            numAccessories,
+                            loader_->releaseAccessoryPacks()
+                            );
+
+                        scene_.swap(scene);
+
+                        f32 aspect = static_cast<f32>( window_.getViewWidth() ) / window_.getViewHeight();
+                        scene_.initialize(aspect);
+
+                    }
+
+                    LIME_DELETE(loader_);
+                    status_ = Status_Play;
+                }
+            }
+            break;
+        default:
+            break;
+        };
 
         scene_.update();
 
@@ -166,6 +211,49 @@ namespace viewer
         //textRenderer_.print(3, 0, "PQRSTUVWXYZ[\\]^_");
         //textRenderer_.print(4, 0, "`abcdefghijklmno");
         //textRenderer_.print(5, 0, "pqrstuvwxyz{|}");
+
+        {//なうろーでぃんぐ
+
+            static const lcore::Char NowLoading[] = "Now Loading";
+            static const lcore::u32 Len = sizeof(NowLoading) - 1;
+
+            currentMSec_ = lcore::getTime();
+
+            u32 d = (prevMSec_>currentMSec_)? (currentMSec_ - prevMSec_) : (0xFFFFFFFFU-prevMSec_+currentMSec_);
+            prevMSec_ = currentMSec_;
+            loadingCounter_ += d;
+
+            d = loadingCounter_ >> LoadingCountCycleBits;
+            loadingCounter_ -= d<<LoadingCountCycleBits;
+
+            loadingIndex_ += d;
+            if(loadingIndex_>=Len){
+                loadingIndex_ = 0;
+            }
+
+            lcore::Char buffer[Len+1];
+            u32 i,j;
+            for(i=0; i<loadingIndex_; ++i){
+                buffer[i] = NowLoading[i];
+            }
+            buffer[i] = '\0';
+            u32 col = 3;
+            textRenderer_.print(5-1, col, buffer);
+            col += loadingIndex_;
+
+            buffer[0] = NowLoading[loadingIndex_];
+            buffer[1] = '\0';
+            textRenderer_.print(5-2, col, buffer);
+            col += 1;
+
+
+            for(i=loadingIndex_+1, j=0; i<Len; ++i, ++j){
+                buffer[j] = NowLoading[i];
+            }
+            buffer[j] = '\0';
+            textRenderer_.print(5-1, col, buffer);
+
+        }
 
         char str[128];
 //デバッグ用ログ

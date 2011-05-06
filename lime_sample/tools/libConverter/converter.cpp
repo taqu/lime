@@ -7,18 +7,16 @@
 #include "converter.h"
 #include "charcode/conv_charcode.h"
 
-#include <wchar.h>
-#include <locale.h>
-#include <string.h>
-
 #include <lcore/String.h>
 #include <lcore/utility.h>
 #include <lgraphics/api/TextureRef.h>
+#include <lgraphics/api/SamplerState.h>
 #include <lgraphics/io/IOBMP.h>
 #include <lgraphics/io/IODDS.h>
 #include <lgraphics/io/IOTGA.h>
 #include <lgraphics/io/IOPNG.h>
 #include <lgraphics/io/IOJPEG.h>
+#include <lgraphics/io/IOTextureUtil.h>
 
 #include <lframework/IOUtil.h>
 
@@ -67,9 +65,28 @@ namespace lconverter
     }
 
 
-    lgraphics::TextureRef* loadTexture(const Char* path, u32 size, const Char* directory, NameTextureMap& texMap, bool transpose)
+    lgraphics::TextureRef* loadTexture(const Char* path, u32 size, const Char* directory, NameTextureMap& texMap, lgraphics::SamplerState& sampler, bool transpose)
     {
         LASSERT(path != NULL);
+        static const lgraphics::TextureAddress TexAddress = lgraphics::TexAddress_Wrap;
+        static const lgraphics::TextureFilterType TexMinFilter = lgraphics::TexFilter_Linear;
+        static const lgraphics::TextureFilterType TexMipMapMinFilter = lgraphics::TexFilter_LinearMipMapPoint;
+
+        u32 mapPos = texMap.find(path, size);
+        if(texMap.isEnd(mapPos) == false){
+            //すでに同じ名前のテクスチャが存在した
+            //lcore::Log("pmd tex has already loaded");
+            TextureRef* texture = texMap.getValue(mapPos);
+
+            sampler.setAddressU( TexAddress );
+            sampler.setAddressV( TexAddress );
+            if(texture->getLevels()>1){
+                sampler.setMinFilter( TexMipMapMinFilter );
+            }else{
+                sampler.setMinFilter( TexMinFilter );
+            }
+            return texture;
+        }
 
         lframework::ImageFormat format = lframework::Img_None;
         const Char* ext = lcore::rFindChr(path, '.', size);
@@ -79,13 +96,6 @@ namespace lconverter
 
         }else{
             format = lframework::io::getFormatFromExt(ext+1);
-        }
-
-        u32 mapPos = texMap.find(path, size);
-        if(texMap.isEnd(mapPos) == false){
-            //すでに同じ名前のテクスチャが存在した
-            //lcore::Log("pmd tex has already loaded");
-            return texMap.getValue(mapPos);
         }
 
         Char* filepath = NULL;
@@ -100,17 +110,18 @@ namespace lconverter
             lcore::memcpy(filepath+dlen, path, size + 1);
         }
 
-        TextureRef *texture = NULL;
         bool ret = false;
+
+        //一度メモリにロードする
+        //--------------------------------------------------------
+        u8* buffer = NULL;
+        u32 width = 0;
+        u32 height = 0;
+        lgraphics::BufferFormat bufferFormat = lgraphics::Buffer_Unknown;
 
         //jpegのロードのみ特殊
         if(format == lframework::Img_JPG){
-            texture = LIME_NEW TextureRef;
-            if(texture == NULL){
-                LIME_DELETE_ARRAY(filepath);
-                return NULL;
-            }
-            ret = lgraphics::io::IOJPEG::read(filepath, *texture);
+            ret = lgraphics::io::IOJPEG::read(filepath, &buffer, width, height, bufferFormat);
 
         }else{
 
@@ -121,32 +132,26 @@ namespace lconverter
                 return NULL;
             }
 
-            texture = LIME_NEW TextureRef;
-            if(texture == NULL){
-                LIME_DELETE_ARRAY(filepath);
-                return NULL;
-            }
-
             switch(format)
             {
             case lframework::Img_BMP:
-                ret = lgraphics::io::IOBMP::read(is, *texture, transpose);
+                ret = lgraphics::io::IOBMP::read(is, &buffer, width, height, bufferFormat, transpose);
                 break;
 
             case lframework::Img_TGA:
-#if defined(LIME_GL)
-                ret = lgraphics::io::IOTGA::read(is, *texture, false);
+#if defined(LIME_GLES2)
+                ret = lgraphics::io::IOTGA::read(is, &buffer, width, height, bufferFormat, false);
 #else
-                ret = lgraphics::io::IOTGA::read(is, *texture, true);
+                ret = lgraphics::io::IOTGA::read(is, &buffer, width, height, bufferFormat, true);
 #endif
                 break;
 
-            case lframework::Img_DDS:
-                ret = lgraphics::io::IODDS::read(is, *texture);
-                break;
+            //case lframework::Img_DDS:
+            //    ret = lgraphics::io::IODDS::read(is, *texture);
+            //    break;
 
             case lframework::Img_PNG:
-                ret = lgraphics::io::IOPNG::read(is, *texture);
+                ret = lgraphics::io::IOPNG::read(is, &buffer, width, height, bufferFormat);
                 break;
 
             default:
@@ -154,16 +159,49 @@ namespace lconverter
             };
         }
 
+        TextureRef* texture = NULL;
         if(ret){
-            texture->setName(path, size);
+            texture = LIME_NEW TextureRef;
+            if(texture != NULL){
+                sampler.setAddressU( TexAddress );
+                sampler.setAddressV( TexAddress );
 
-            texMap.insert(texture->getName().c_str(), texture->getName().size(), texture);
-            //lcore::Log("pmd success to load tex(%s)", filepath);
+
+                //小さいテクスチャはミップマップ作成しない
+                if(width<MinTextureSizeToCreateMipMap
+                    && height<MinTextureSizeToCreateMipMap)
+                {
+                    *texture = Texture::create(width, height, 1, lgraphics::Usage_None, bufferFormat, lgraphics::Pool_Managed);
+
+                    //サンプラステートセット
+                    sampler.setMinFilter( TexMinFilter );
+                    texture->attach();
+                    sampler.apply(0);
+
+                    texture->blit(buffer);
+                }else{
+
+                    u32 levels = lgraphics::io::calcMipMapLevels(width, height);
+                    *texture = Texture::create(width, height, levels, Usage_None, bufferFormat, lgraphics::Pool_Managed);
+
+                    //サンプラステートセット
+                    sampler.setMinFilter( TexMipMapMinFilter );
+                    texture->attach();
+                    sampler.apply(0);
+
+                    lgraphics::io::createMipMap(*texture, buffer, width, height, bufferFormat, levels);
+                    //lgraphics::io::createMipMapDebug(*texture, buffer, width, height, bufferFormat, levels);
+                }
+                texture->setName(path, size);
+
+                texMap.insert(texture->getName().c_str(), texture->getName().size(), texture);
+            }
+
         }else{
-            LIME_DELETE(texture);
             lcore::Log("pmd fail to load tex(%s)", filepath);
         }
 
+        LIME_DELETE_ARRAY(buffer);
         LIME_DELETE_ARRAY(filepath);
         return texture;
     }

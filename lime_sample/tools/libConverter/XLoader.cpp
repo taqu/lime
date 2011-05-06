@@ -866,13 +866,17 @@ namespace
         strSJISToUTF8(texName); //UTF8へ変換
         u32 length = lcore::strlen(texName); //何度もstrlenしている
 
-        lgraphics::TextureRef* texRef = lconverter::loadTexture(texName, length, directory_, nameTexMap_);
+        lgraphics::SamplerState sampler;
+        lgraphics::TextureRef* texRef = lconverter::loadTexture(texName, length, directory_, nameTexMap_, sampler);
         if(texRef){
             lscene::Material& material = animObj_->getMaterial(currentMaterial_);
             material.setTextureNum(1);
             material.setTexture(0, *texRef);
             //テクスチャがあったのでフラグ立てる
             material.getFlags().setFlag(lscene::Material::MatFlag_TexAlbedo);
+
+            lgraphics::SamplerState& dstSampler = material.getSamplerState(0);
+            dstSampler = sampler;
         }
 
         getNextToken();
@@ -1297,7 +1301,7 @@ namespace
         }
 
         ib = lgraphics::IndexBuffer::create(indexOffset, lgraphics::Pool_Default, lgraphics::Usage_None);
-#if defined(LIME_GL)
+#if defined(LIME_GLES2)
         ib.blit( &(tmpIndices[0]) );
 #else
         ib.blit( &(tmpIndices[0]), 0, sizeof(u16)*indexOffset );
@@ -1308,7 +1312,7 @@ namespace
     //-----------------------------------------------------------
     void XLoader::createObject(lscene::Object& obj, const Char* directory, bool /*swapOrigin*/)
     {
-#if defined(LIME_GL)
+#if defined(LIME_GLES2)
 #define LIME_XLOADER_CREATEOBJECT_BLIT_BUFFER(vb, ptr, offset, size) vb.blit(reinterpret_cast<void*>(ptr))
 #else
 #define LIME_XLOADER_CREATEOBJECT_BLIT_BUFFER(vb, ptr, offset, size) vb.blit(reinterpret_cast<void*>(ptr), offset, size)

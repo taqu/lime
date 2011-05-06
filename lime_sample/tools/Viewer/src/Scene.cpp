@@ -277,6 +277,33 @@ namespace viewer
             if(camera_.getMode() == Camera::Mode_Manual){
                 camera_.update(frameCounter_);
             }
+
+            if(Input::isClick(Input::Key_2)){
+                lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
+                animSys.update();
+
+                if(++frameCounter_>lastFrame_){
+                    frameCounter_ = 0;
+                    for(u32 i=1; i<numAccessories_; ++i){
+                        accPacks_[i].initialize();
+                    }
+
+                    camera_.initialize();
+                    light_.initialize();
+                }
+
+                for(u32 i=0; i<numModels_; ++i){
+                    modelPacks_[i].updateMorph(frameCounter_);
+                }
+
+                //アクセサリ更新
+                for(u32 i=0; i<numAccessories_; ++i){
+                    accPacks_[i].update(frameCounter_);
+                }
+
+                camera_.update(frameCounter_);
+                light_.update();
+            }
             break;
 
         case State_Play:
@@ -284,18 +311,7 @@ namespace viewer
                 lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
                 animSys.update();
 
-                //if(frameCounter_>=369){
-                //    if(Input::isClick(Input::Key_0)){
-                //        animSys.update();
-                //        ++frameCounter_;
-                //    }
-
-                //}else{
-                //    animSys.update();
-                //    ++frameCounter_;
-                //}
                 if(++frameCounter_>lastFrame_){
-                //if(frameCounter_>lastFrame_){
                     frameCounter_ = 0;
                     for(u32 i=1; i<numAccessories_; ++i){
                         accPacks_[i].initialize();

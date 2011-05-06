@@ -25,6 +25,7 @@ namespace viewer
         {
             linput::Key_SPACE,
             linput::Key_C,
+            linput::Key_TAB,
         };
     }
 
@@ -85,24 +86,34 @@ namespace viewer
             const linput::Mouse* mouse = linput::Input::getInstance().getMouse();
 
             if(mouse->isOn(linput::MouseButton_0)){
-                s32 x = mouse->getX();
-                s32 y = mouse->getY();
+                f32 x = impl_.angle_[Axis_Roll] + mouse->getDuration(linput::MouseAxis_X) * 0.05f;
+                f32 y = impl_.angle_[Axis_Pitch] + mouse->getDuration(linput::MouseAxis_Y) * 0.05f;
 
-                clamp(x, 0, impl_.width_);
-                clamp(y, 20, impl_.height_ - 20);
+                if(-PI2>x){
+                    x += PI2;
+                }else if(x>PI2){
+                    x -= PI2;
+                }
 
-                x -= impl_.halfWidth_;
-                y -= impl_.halfHeight_;
+                if((-PI_2*0.95f)>y){
+                    y = (-PI_2*0.95f);
+                }else if(y>(PI_2*0.95f)){
+                    y = (PI_2*0.95f);
+                }
 
-
-                impl_.angle_[Axis_Roll] = impl_.invHalfWidth_ * x * PI;
-                impl_.angle_[Axis_Pitch] = impl_.invHalfHeight_ * y * (PI*0.5f);
+                impl_.angle_[Axis_Roll] = x;
+                impl_.angle_[Axis_Pitch] = y;
 
             }else if(mouse->isOn(linput::MouseButton_1)){
-                s32 x = mouse->getDuration(linput::MouseAxis_X);
-                clamp(x, 0, impl_.width_);
-                x -= impl_.halfWidth_;
-                impl_.angle_[Axis_Yaw] = impl_.invHalfWidth_ * x * PI;;
+                f32 x = impl_.angle_[Axis_Yaw] + mouse->getDuration(linput::MouseAxis_X);
+
+                if(-PI2>x){
+                    x += PI2;
+                }else if(x>PI2){
+                    x -= PI2;
+                }
+
+                impl_.angle_[Axis_Yaw] = x;
             }
         }
     }

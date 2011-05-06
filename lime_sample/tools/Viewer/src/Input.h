@@ -30,6 +30,7 @@ namespace viewer
         {
             Key_0 =0, //stop or play
             Key_1,    //change camera mode
+            Key_2,
             Key_Num,
         };
 
