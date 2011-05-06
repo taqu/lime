@@ -1,7 +1,8 @@
 /**
 @file AnimationControlerIK.cpp
 @author t-sakai
-@date 2010/12/30
+@date 2010/12/30 create
+@date 2011/05/02 足IKを専用処理に変更
 */
 #include <lmath/lmath.h>
 #include <lmath/utility.h>
@@ -12,7 +13,9 @@
 
 namespace lanim
 {
-    f32 AnimationControlerIK::IKEpsilon = 1.0e-5f;
+    f32 AnimationControlerIK::IKEpsilon = 1.0e-4f;
+    f32 AnimationControlerIK::IKKneeLimit = -PI*0.9f;
+    f32 AnimationControlerIK::IKKneeStepLimit = -PI_2*1.2f;
 
 #if defined(LIME_ANIM_IK_DEBUG)
     inline void drawDebugTriangle(const lmath::Vector3& pos, u32 color)
@@ -31,11 +34,15 @@ namespace
     @brief ３辺の長さから対角の角度を計算
     @ret bcに挟まれた角の角度
     */
-    void calcAnglesFromSides(f32& angle, f32 a, f32 b, f32 c)
+    void calcAnglesFromSides(f32& angle, f32 a2, f32 b2, f32 c2)
     {
-        LASSERT(a>0.0f);
-        LASSERT(b>0.0f);
-        LASSERT(c>0.0f);
+        LASSERT(a2>0.0f);
+        LASSERT(b2>0.0f);
+        LASSERT(c2>0.0f);
+
+        f32 a = lmath::sqrt(a2);
+        f32 b = lmath::sqrt(b2);
+        f32 c = lmath::sqrt(c2);
 
         f32 s = (a + b + c)*0.5f;
         f32 S = lmath::sqrt(s*(s-a)*(s-b)*(s-c));
@@ -46,10 +53,7 @@ namespace
         }
         angle = lmath::asin(h);
 
-        a = a*a;
-        b = b*b;
-        c = c*c;
-        if(a<(b+c)){ //鋭角
+        if(a2<(b2+c2)){ //鋭角
             angle = PI - angle;
         }
     }
@@ -85,9 +89,69 @@ namespace
         }
     }
 
+    /// 膝の初期化
+    f32 AnimationControlerIK::preprocess(SkeletonPose& pose, IKEntry& entry, u16 chainIndex)
+    {
+        if( chainIndex>=(entry.chainLength_-1) ){
+            return 0.0f;
+        }
+
+        lmath::Matrix43 *matrices = pose.getMatrices();
+
+        lmath::Vector3 targetPos, effectorPos, jointPos, parentPos;
+
+        u8 jointIndex = entry.children_[chainIndex];
+        u8 parentIndex = entry.children_[ chainIndex+1 ];
+
+        Joint& target = skeleton_->getJoint( entry.targetJoint_ );
+        Joint& effector = skeleton_->getJoint( entry.effectorJoint_ );
+        Joint& joint = skeleton_->getJoint(jointIndex);
+        Joint& parent = skeleton_->getJoint( parentIndex );
+
+        //ターゲットの現在位置
+        transformPosition(targetPos, target.getPosition(), matrices, entry.targetJoint_);
+
+        //エフェクタの現在位置
+        transformPosition(effectorPos, effector.getPosition(), matrices, entry.effectorJoint_);
+
+        //ジョイント位置計算
+        transformPosition(jointPos, joint.getPosition(), matrices, jointIndex);
+
+        //親の現在位置
+        transformPosition(parentPos, parent.getPosition(), matrices, parentIndex);
+
+        f32 lengthParentToEffector = parentPos.distanceSqr( effectorPos );
+        if(lengthParentToEffector < IKEpsilon){
+            return 0.0f;
+        }
+        lengthParentToEffector = lmath::sqrt(lengthParentToEffector);
+
+        f32 lengthParentToTarget = parentPos.distanceSqr( targetPos );
+        if(lengthParentToTarget < IKEpsilon){
+            return 0.0f;
+        }
+        lengthParentToTarget = lmath::sqrt(lengthParentToTarget);
+
+        targetPos -= parentPos;
+        effectorPos -= parentPos;
+
+        f32 cs = targetPos.dot(effectorPos) / (lengthParentToEffector*lengthParentToTarget);
+
+        f32 radian;
+        if(cs>1.0f){
+            radian = 0.0f;
+        }else if(cs<0.0f){
+            radian = -PI_2;
+        }else{
+            radian = -lmath::acos(cs);
+        }
+
+        return radian;
+    }
+
+
     void AnimationControlerIK::blendPose(SkeletonPose& pose)
     {
-
         //TODO:物理演算対応
         if(ikPack_ == NULL){
             return;
@@ -116,19 +180,18 @@ namespace
             transformPosition(targetPos, target.getPosition(), matrices, entry.targetJoint_);
 
             totalXRot = 0.0f; //曲げ角初期化
-            for(u8 j=0; j<entry.numIterations_; ++j){ //イテレーション
-
+            for(u16 j=0; j<entry.numIterations_; ++j){ //イテレーション
                 for(u16 k=0; k<entry.chainLength_; ++k){
                     LASSERT(entry.children_[k]<pose.getNumJoints());
 
                     u8 childIndex = entry.children_[k];
                     Joint& child = skeleton_->getJoint(childIndex);
 
-                    //エフェクタ現在の位置計算
+                    //エフェクタの現在位置
                     transformPosition(effectorPos, effector.getPosition(), matrices, entry.effectorJoint_);
 
                     //エフェクタに近ければなにもしない
-                    f32 l = effectorPos.distance(targetPos);
+                    f32 l = effectorPos.distanceSqr(targetPos);
                     if(l <= IKEpsilon){
                         j = entry.numIterations_; //イテレーションも終了
                         break;
@@ -136,7 +199,7 @@ namespace
 
                     //エフェクタ、ターゲットをジョイントローカルへ
                     matInv = matrices[childIndex];
-                    matInv.preTranslate( (skeleton_->getJoint(childIndex).getPosition()) );
+                    matInv.preTranslate( child.getPosition() );
                     matInv.invert();
 
                     localTargetPos.mul(targetPos, matInv);
@@ -163,7 +226,7 @@ namespace
                     f32 radian;
 
                     static const f32 IKThreshold = (1.0f-IKEpsilon);
-                    if(dotProduct>IKThreshold){
+                    if(dotProduct>1.0f){
                         radian = 0.0f;
 
                     }else if(dotProduct< -IKThreshold){
@@ -174,45 +237,30 @@ namespace
 
                     LASSERT(false == lcore::isNan(radian));
 
-                    //radian *= entry.limitAngle_;
-
-
                     if(child.getFlag() & lanim::JointFlag_IKLimitHeading){
 
                         rotation.setRotateAxis(axis, radian);
 
-
-
                         f32 head, pitch, bank;
-                        lmath::getEulerObjectToInertial(head, pitch, bank, rotation);
+                        if(j == 0){
+                            pitch = preprocess(pose, entry, k);
+                        }else{
+                            lmath::getEulerObjectToInertial(head, pitch, bank, rotation);
+                        }
 
-                        //if(lmath::absolute(pitch) < IKEpsilon
-                        //    && (ltot<ltoe))
-                        f32 limit = -PI;
-                        if(ltot<ltoe)
-                        {
-                            u8 parentIndex = entry.children_[k+1];
-                            Joint& parent = skeleton_->getJoint(parentIndex);
-
-                            lmath::Vector3 parentPos;
-                            transformPosition(parentPos, parent.getPosition(), matrices, parentIndex);
-
-                            f32 a = parentPos.distance( targetPos );
-                            f32 b = parent.getPosition().distance( child.getPosition() );
-                            f32 c = ltoe;
-
-                            calcAnglesFromSides(pitch, a, b, c);
-                            pitch = -pitch;
-                            limit = pitch;
-
+                        if(ltot < ltoe){
+                            pitch -= 2.0f*lmath::acos(ltot/ltoe);
+                        }
+                        if(pitch<IKKneeStepLimit){
+                            pitch = IKKneeStepLimit;
                         }
 
                         f32 sum = totalXRot + pitch;
 
                         if(sum > 0.0f){ //プラス方向に曲がらないように
                             pitch = -totalXRot;
-                        }else if(sum<limit){
-                            pitch = limit - totalXRot;
+                        }else if(sum<IKKneeLimit){
+                            pitch = IKKneeLimit - totalXRot;
                         }
                         rotation.setRotateAxis(1.0f, 0.0f, 0.0f, pitch);
 
@@ -220,6 +268,9 @@ namespace
 
 
                     }else{
+                        if(radian>entry.limitAngle_){
+                            radian = entry.limitAngle_;
+                        }
                         rotation.setRotateAxis(axis, radian);
                     }
 
@@ -237,7 +288,6 @@ namespace
         }// for(u32 i=0; i<ikPack_->getNumIKs()
 
     }
-
 
     void AnimationControlerIK::updateMatrix(const JointPose& jointPose, lmath::Matrix43* matrices, u8 jointIndex)
     {
