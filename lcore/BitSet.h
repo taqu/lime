@@ -12,73 +12,15 @@ namespace lcore
 {
     //----------------------------------------------------
     /**
-    @brief ビットフラグセット。取りあえずリトルエンディアン
+    @brief ビットフラグセット
     */
     template<u32 SizeInByte>
     class BitSet
     {
     public:
-        typedef BitSet<SizeInByte> this_type;
-        typedef u8 slot_type;
-        static const u32 Byte = SizeInByte;
-        static const u32 BitsInByte = 8;
-
-        BitSet()
-        {
-            for(u32 i=0; i<SizeInByte; ++i){
-                bits_[i] = 0x00U;
-            }
-        }
-
-        /**
-        @brief フラグチェック
-        @param bit ... チェックするビット番号
-        */
-        inline bool check(u32 bit) const
-        {
-            u32 slot = (bit>>3);
-            LASSERT(slot<Byte);
-
-            bit &= 0x07U;
-            u8 flagInByte = (0x01U << bit);
-            return ((bits_[slot] & flagInByte) != 0);
-        }
-
-        /**
-        @brief フラグ立てる
-        */
-        inline void set(u32 bit)
-        {
-            u32 slot = (bit>>3);
-            LASSERT(slot<Byte);
-
-            bit &= 0x07U;
-            bits_[slot] |= (0x01U << bit);
-        }
-
-        /**
-        @brief フラグ降ろす
-        */
-        inline void reset(u32 bit)
-        {
-            u32 slot = (bit>>3);
-            LASSERT(slot<Byte);
-
-            bit &= 0x07U;
-            bits_[slot] &= ~(0x01U << bit);
-        }
-
-        const u8* getBuffer() const{ return bits_;}
-        u8* getBuffer(){ return bits_;}
-
-        inline void set(const BitSet& rhs)
-        {
-            for(u32 i=0; i<Byte; ++i){
-                bits_[i] = rhs.bits_[i];
-            }
-        }
     private:
-        template<u32 Size> friend bool compare(const BitSet<Size>& b0, const BitSet<Size>& b1);
+        BitSet();
+        ~BitSet();
 
         u8 bits_[Byte];
     };
@@ -87,12 +29,82 @@ namespace lcore
     /**
     @brief ビットフラグセット比較
     */
-    template<u32 Size>
-    inline bool compare(const BitSet<Size>& b0, const BitSet<Size>& b1)
+    template<u32 SizeInByte>
+    inline bool compare(const BitSet<SizeInByte>& b0, const BitSet<SizeInByte>& b1)
     {
-        return (lcore::memcmp(b0.bits_, b1.bits_, Size) == 0);
+        return false;
     }
 
+
+
+    //----------------------------------------------------
+    /**
+    @brief ビットフラグセット
+    */
+    template<>
+    class BitSet<4>
+    {
+    public:
+        typedef BitSet<4> this_type;
+
+        BitSet()
+            :bits_(0)
+        {
+        }
+
+        ~BitSet()
+        {
+        }
+
+        void clear()
+        {
+            bits_ = 0;
+        }
+
+        /**
+        @brief フラグチェック
+        @param flag
+        */
+        inline bool check(u32 flag) const
+        {
+            return ((bits_ & flag) != 0);
+        }
+
+        /**
+        @brief フラグ立てる
+        */
+        inline void set(u32 flag)
+        {
+            bits_ |= flag;
+        }
+
+        /**
+        @brief フラグ降ろす
+        */
+        inline void reset(u32 flag)
+        {
+            bits_ &= ~flag;
+        }
+
+        inline void set(const this_type& rhs)
+        {
+            bits_ = rhs.bits_;
+        }
+    private:
+        template<> friend bool compare(const BitSet<4>& b0, const BitSet<4>& b1);
+
+        u32 bits_;
+    };
+
+    //----------------------------------------------------
+    /**
+    @brief ビットフラグセット比較
+    */
+    template<>
+    inline bool compare(const BitSet<4>& b0, const BitSet<4>& b1)
+    {
+        return (b0.bits_ == b1.bits_);
+    }
 }
 
 #endif //INC_LCORE_BITSET_H__

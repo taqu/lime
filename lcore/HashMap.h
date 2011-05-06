@@ -357,6 +357,11 @@ namespace lcore
         {
         }
 
+        size_type capacity() const
+        {
+            return table_.bucket_count();
+        }
+
         size_type size() const
         {
             return table_.size();
@@ -530,6 +535,11 @@ namespace lcore
 
         ~HashMapCharArray()
         {
+        }
+
+        size_type capacity() const
+        {
+            return table_.bucket_count();
         }
 
         size_type size() const
