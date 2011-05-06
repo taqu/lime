@@ -16,6 +16,8 @@ namespace lmath
 
 namespace lanim
 {
+    struct IKEntry;
+
     //--------------------------------------------------------------
     //---
     //--- AnimationControlerIK
@@ -27,6 +29,8 @@ namespace lanim
     {
     public:
         static f32 IKEpsilon; //=1.0e-5f;
+        static f32 IKKneeLimit;
+        static f32 IKKneeStepLimit;
         
         enum Flag
         {
@@ -60,6 +64,8 @@ namespace lanim
         void updateChildMatrices(SkeletonPose& pose, u8 jointIndex);
 
         inline void updateMatrices(SkeletonPose& pose, const IKEntry& entry, u16 ikIndex);
+
+        f32 preprocess(SkeletonPose& pose, IKEntry& entry, u16 chainIndex);
 
         Skeleton::pointer skeleton_;
         IKPack::pointer ikPack_;
