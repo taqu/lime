@@ -232,7 +232,7 @@ namespace
 
         lgraphics::VertexShaderRef vsRef;
         lgraphics::PixelShaderRef psRef;
-        bool ret = lgraphics::Shader::linkShader(vsRef, psRef, decl, vsDesc, psDesc);
+        bool ret = lgraphics::Shader::linkShader(vsRef, psRef, 1, decl, vsDesc, psDesc);
         LASSERT(ret);
 
         vs.getShaderRef() = vsRef;
@@ -336,7 +336,7 @@ namespace debug
         }
 
         lgraphics::GeometryBuffer::pointer& geomBuffer = geometryInstance_.getGeometryBuffer();
-        lgraphics::VertexBufferRef& vb = geomBuffer->getVertexBuffer();
+        lgraphics::VertexBufferRef& vb = geomBuffer->getVertexBuffer(0);
 
         buffer_[0].position_ = v0;
         buffer_[0].color_ = color;
@@ -377,7 +377,7 @@ namespace debug
         LASSERT(batch_ == NULL);
     }
 
-    void DebugPrimitive::initialize(u16 numMaxTriangles)
+    void DebugPrimitive::initialize(u16 /*numMaxTriangles*/)
     {
         //batch_ = LIME_NEW PrimitiveBatch(numMaxTriangles);
     }
@@ -398,7 +398,7 @@ namespace debug
         //lframework::System::getRenderSys().remove(lrender::Pass_Main, batch_);
     }
 
-    void DebugPrimitive::draw(const lmath::Vector3& v0, const lmath::Vector3& v1, const lmath::Vector3& v2, u32 color)
+    void DebugPrimitive::draw(const lmath::Vector3& /*v0*/, const lmath::Vector3& /*v1*/, const lmath::Vector3& /*v2*/, u32 /*color*/)
     {
         //LASSERT(batch_ != NULL);
         //batch_->draw(v0, v1, v2, color);

@@ -79,7 +79,7 @@ namespace lgraphics
     void GraphicsDeviceRef::terminate()
     {
         terminateGLES2();
-        lcore::Log("desc cout: %d", descAllocator_.getCount());
+        //lcore::Log("desc cout: %d", descAllocator_.getCount());
 
         descAllocator_.terminate(); //IDアロケータ終了
     }
@@ -386,23 +386,11 @@ namespace lgraphics
         glBlendFuncSeparate(Blend_SrcAlpha, Blend_InvSrcAlpha, Blend_SrcAlpha, Blend_DestAlpha);
         state_.alphaBlendSrc_ = Blend_SrcAlpha;
         state_.alphaBlendDst_ = Blend_InvSrcAlpha;
+        state_.flush_ = false;
 
         //テクスチャサンプラ初期化
         for(u32 i=0; i<MAX_TEXTURES; ++i){
             state_.samplerStates_[i].id_ = INVALID_TEXTURE_ID;
-            state_.samplerStates_[i].addressU_ = TexAddress_Wrap;
-            state_.samplerStates_[i].addressV_ = TexAddress_Wrap;
-
-            state_.samplerStates_[i].magFilter_ = TexFilter_Linear;
-            state_.samplerStates_[i].minFilter_ = TexFilter_Linear;
-
-            glActiveTexture(GL_TEXTURE0 + i);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, TexAddress_Wrap);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, TexAddress_Wrap);
-
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, TexFilter_Linear);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, TexFilter_Linear);
         }
     }
 
@@ -574,39 +562,23 @@ namespace lgraphics
     }
 
     // テクスチャセット
-    void GraphicsDeviceRef::setTexture(u32 index, u32 id, u32 location, const lgraphics::SamplerState& samplerState)
+    void GraphicsDeviceRef::setTexture(u32 index, u32 id, u32 location)
     {
         LASSERT(0<=index && index<MAX_TEXTURES);
 
         glActiveTexture(GL_TEXTURE0 + index);
 
-        //if(state_.samplerStates_[index].addressU_ != samplerState.getAddressU()){
-        //    state_.samplerStates_[index].addressU_ = samplerState.getAddressU();
-        //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, samplerState.getAddressU());
-        //}
-        //if(state_.samplerStates_[index].addressV_ != samplerState.getAddressV()){
-        //    state_.samplerStates_[index].addressV_ = samplerState.getAddressV();
-        //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, samplerState.getAddressV());
-        //}
-
-        //if(state_.samplerStates_[index].magFilter_ != samplerState.getMagFilter()){
-        //    state_.samplerStates_[index].magFilter_ = samplerState.getMagFilter();
-        //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, samplerState.getMagFilter());
-        //}
-        //if(state_.samplerStates_[index].minFilter_ != samplerState.getMinFilter()){
-        //    state_.samplerStates_[index].minFilter_ = samplerState.getMinFilter();
-        //    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, samplerState.getMinFilter());
-        //}
-
-
         if(state_.samplerStates_[index].id_ != id){
             state_.samplerStates_[index].id_ = id;
             glBindTexture(GL_TEXTURE_2D, id);
 
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, samplerState.getAddressU());
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, samplerState.getAddressV());
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, samplerState.getMagFilter());
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, samplerState.getMinFilter());
+
+            //生成時に一度設定すればよいらしい
+            //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, samplerState.getAddressU());
+            //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, samplerState.getAddressV());
+            //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, samplerState.getMagFilter());
+            //glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, samplerState.getMinFilter());
+
         }
         glUniform1i( location, index );
     }

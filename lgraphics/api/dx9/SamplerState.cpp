@@ -18,7 +18,7 @@ namespace lgraphics
         ,addressV_(TexAddress_Wrap)
         ,magFilter_(TexFilter_Linear)
         ,minFilter_(TexFilter_Linear)
-        ,mipFilter_(TexFilter_Linear)
+        ,mipFilter_(TexFilter_Point)
         ,mipmapLODBias_(0)
         ,maxMipLevel_(0)
         ,maxAnisotropy_(1)

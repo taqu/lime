@@ -17,8 +17,6 @@ namespace lgraphics
     VertexBufferRef::VertexBufferRef(const VertexBufferRef& rhs)
         :vertexSize_(rhs.vertexSize_)
         ,vertexNum_(rhs.vertexNum_)
-        ,stream_(rhs.stream_)
-        ,offset_(rhs.offset_)
         ,vbID_(rhs.vbID_)
     {
         if(vbID_ != NULL){
@@ -134,8 +132,6 @@ namespace lgraphics
             return VertexBufferRef();
         }
         VertexBufferRef ret(vbUP.getVertexSize(), vbUP.getVertexNum(), desc);
-        ret.setStream(vbUP.getStream());
-        ret.setOffset(vbUP.getOffset());
 
         if(blit){
             void *data = NULL;
@@ -194,14 +190,14 @@ namespace lgraphics
     //--- VertexBufferUP
     //---
     //------------------------------------------------------------
-    VertexBufferUPRef VertexBufferUP::create(u32 vertexSize, u32 vertexNum, u32 stream, u32 offset)
+    VertexBufferUPRef VertexBufferUP::create(u32 vertexSize, u32 vertexNum)
     {
         u8 *buffer = LIME_NEW u8[vertexSize * vertexNum];
         if(buffer == NULL){
             return VertexBufferUPRef();
         }
 
-        VertexBufferUP *vb = LIME_NEW VertexBufferUP(buffer, vertexSize, vertexNum, stream, offset);
+        VertexBufferUP *vb = LIME_NEW VertexBufferUP(buffer, vertexSize, vertexNum);
         if(vb == NULL){
             return VertexBufferUPRef();
         }

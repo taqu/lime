@@ -50,18 +50,8 @@ namespace lrender
     {
         lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
 
-#if defined(LIME_GLES2)
-        device.present();
-#else
-        device.present(NULL, NULL, NULL);
-#endif
-
         device.beginScene();
-    }
 
-    void RenderingSystem::draw()
-    {
-        lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
 #if defined(LIME_GLES2)
         device.clearActiveTextures();
 
@@ -72,8 +62,10 @@ namespace lrender
 #else
         device.clear(clearTarget_);
 #endif
-        //device.beginScene();
+    }
 
+    void RenderingSystem::draw()
+    {
         passMain_.draw();
         //lframework::System::drawDebugString();
     }
@@ -82,6 +74,12 @@ namespace lrender
     {
         lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
         device.endScene();
+
+#if defined(LIME_GLES2)
+        device.present();
+#else
+        device.present(NULL, NULL, NULL);
+#endif
     }
 
 

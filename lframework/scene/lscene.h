@@ -19,7 +19,7 @@ namespace lscene
     using lcore::f32;
     using lcore::f64;
 
-    static const u32 MAX_NAME_BUFFER_SIZE = 32;
+    static const u32 MAX_NAME_BUFFER_SIZE = 48;
     static const u8 MAX_BONES = 255;
     typedef lcore::String<MAX_NAME_BUFFER_SIZE> NameString;
 }

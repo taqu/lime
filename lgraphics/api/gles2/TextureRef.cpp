@@ -207,21 +207,22 @@ namespace lgraphics
     }
 
     // GL的インターフェイス
-    void TextureRef::blit(u32 level, u8* data)
+    void TextureRef::blit(u8* data)
     {
-        LASSERT(level<texDesc_->levels_);
         LASSERT(data != NULL);
 
-        //ミップマップサイズ計算
-        u32 w = texDesc_->width_ >> level;
-        w = (w<=0)? 1 : w;
-
-        u32 h = texDesc_->height_ >> level;
-        h = (h<=0)? 1 : h;
-
-        //u32 align = (bpp_+0x03U) & (~0x03U);
-        glPixelStorei(GL_UNPACK_ALIGNMENT, 4); //4バイトアライメント
         glBindTexture(GL_TEXTURE_2D, texID_->id_);
+
+        blit(0, texDesc_->width_, texDesc_->height_, data);
+        glBindTexture(GL_TEXTURE_2D, NULL);
+    }
+
+    void TextureRef::blit(u32 level, u32 width, u32 height, u8* data)
+    {
+        LASSERT(level<=texDesc_->levels_);
+        LASSERT(data != NULL);
+
+        u32 align = 4;
 
         s32 internalFormat = 0;
         s32 type;
@@ -229,11 +230,13 @@ namespace lgraphics
         switch(texDesc_->format_)
         {
         case Buffer_A8:
+            align = 1; //1バイトアライメント
             internalFormat = GL_ALPHA;
             type = GL_UNSIGNED_BYTE;
             break;
 
         case Buffer_R8G8B8: //バイト並び反転の必要あり
+            align = 1; //1バイトアライメント
             internalFormat = GL_RGB;
             type = GL_UNSIGNED_BYTE;
 
@@ -244,6 +247,7 @@ namespace lgraphics
             break;
 
         case Buffer_B8G8R8:
+            align = 1; //1バイトアライメント
             internalFormat = GL_RGB;
             type = GL_UNSIGNED_BYTE;
             break;
@@ -259,6 +263,7 @@ namespace lgraphics
             break;
 
         case Buffer_X8R8G8B8: //バイト並び反転の必要あり
+            align = 1; //1バイトアライメント
             internalFormat = GL_RGB;
             type = GL_UNSIGNED_BYTE;
 
@@ -274,6 +279,7 @@ namespace lgraphics
             break;
 
         case Buffer_X8B8G8R8: //データ削減
+            align = 1; //1バイトアライメント
             internalFormat = GL_RGB;
             type = GL_UNSIGNED_BYTE;
 
@@ -284,6 +290,7 @@ namespace lgraphics
             break;
 
         case Buffer_L8:
+            align = 1; //1バイトアライメント
             internalFormat = GL_LUMINANCE;
             type = GL_UNSIGNED_BYTE;
             break;
@@ -292,19 +299,22 @@ namespace lgraphics
             LASSERT(false);
             break;
         };
+        glPixelStorei(GL_UNPACK_ALIGNMENT, align); //バイトアライメント
         
-        glTexImage2D(GL_TEXTURE_2D, level, internalFormat, w, h, 0, internalFormat, GL_UNSIGNED_BYTE, data);
-
-        glBindTexture(GL_TEXTURE_2D, NULL);
+        glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height, 0, internalFormat, GL_UNSIGNED_BYTE, data);
     }
 
     //------------------------------------------------
     // シェーダにセット
     void TextureRef::attach(u32 index, u32 location) const
     {
-        //glActiveTexture(GL_TEXTURE0 + index);
         glBindTexture(GL_TEXTURE_2D, texID_->id_);
         glUniform1i( location, index ); //シェーダのuniform変数にバインド
+    }
+
+    void TextureRef::attach() const
+    {
+        glBindTexture(GL_TEXTURE_2D, texID_->id_);
     }
 
     void TextureRef::detach() const

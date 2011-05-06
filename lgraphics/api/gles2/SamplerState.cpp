@@ -19,7 +19,8 @@ namespace lgraphics
         ,addressV_(TexAddress_Wrap)
         ,magFilter_(TexFilter_Linear)
         ,minFilter_(TexFilter_Linear)
-        ,mipFilter_(TexFilter_Linear)
+        //,minFilter_(TexFilter_PointMipMapPoint)
+        ,mipFilter_(TexFilter_Point)
         ,mipmapLODBias_(0)
         ,maxMipLevel_(0)
         ,maxAnisotropy_(1)
@@ -45,10 +46,8 @@ namespace lgraphics
     }
 
 
-    void SamplerState::apply(u32 sampler) const
+    void SamplerState::apply(u32 /*sampler*/) const
     {
-        //glActiveTexture(GL_TEXTURE0 + sampler);
-
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, addressU_);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, addressV_);
 

@@ -426,6 +426,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\io\IOJPEG.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\io\IOJPEG.h"
+				>
+			</File>
+			<File
 				RelativePath="..\io\IOPNG.cpp"
 				>
 			</File>
@@ -463,6 +471,14 @@
 			</File>
 			<File
 				RelativePath="..\io\IOTexture.h"
+				>
+			</File>
+			<File
+				RelativePath="..\io\IOTextureUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\io\IOTextureUtil.h"
 				>
 			</File>
 			<File

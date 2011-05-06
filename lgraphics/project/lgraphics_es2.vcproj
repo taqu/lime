@@ -403,6 +403,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\io\IOTextureUtil.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\io\IOTextureUtil.h"
+				>
+			</File>
+			<File
 				RelativePath="..\io\IOTGA.cpp"
 				>
 			</File>

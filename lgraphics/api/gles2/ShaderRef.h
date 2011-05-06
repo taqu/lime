@@ -266,7 +266,7 @@ namespace lgraphics
         */
         static Descriptor* createVertexShaderFromMemory(const char* memory, u32 size, s32 numDefines, const char** defines);
 
-        static bool linkShader(VertexShaderRef& vs, PixelShaderRef& ps, VertexDeclarationRef& decl, Descriptor* vsDesc, Descriptor* psDesc);
+        static bool linkShader(VertexShaderRef& vs, PixelShaderRef& ps, u32 numStreams, VertexDeclarationRef& decl, Descriptor* vsDesc, Descriptor* psDesc);
     private:
 
         /**

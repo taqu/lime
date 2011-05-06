@@ -28,6 +28,7 @@ namespace lscene
     //--- DefaultShaderVS
     //---
     //---------------------------------------------------
+#if defined(LIME_GL)
     // 行列の要素を転置する
     inline void DefaultShaderVS::toMatrix34(lmath::Matrix43& dst, const lmath::Matrix43& src)
     {
@@ -70,6 +71,7 @@ namespace lscene
         dst._elem[3][1] = 1.0f;
         dst._elem[3][2] = 0.0f;
     }
+#endif
 
     DefaultShaderVS::DefaultShaderVS(const lgraphics::VertexShaderRef& ref)
         :ShaderVSBase(ref)
@@ -159,8 +161,8 @@ namespace lscene
 
         //スキニング。マトリックスセット
         if(geometry->getFlags().checkFlag(lscene::Geometry::GeomFlag_Skinning)){
+#if defined(LIME_GL)
             if(drawable->getNumJointPoses()>0){
-            //if(false){
                 const lmath::Matrix43* poses = drawable->getGlobalJointPoses();
 
                 u8 count = geometry->getNumBonesInPalette();
@@ -181,6 +183,14 @@ namespace lscene
                 shader_.setVector4Array(params_[ParamVS_MatrixPalette], reinterpret_cast<const lmath::Vector4*>(palette_), count);
 
             }
+#else
+            const lmath::Matrix43* poses = drawable->getGlobalJointPoses();
+
+            u8 count = geometry->getNumBonesInPalette();
+            count *= 3;
+            shader_.setVector4Array(params_[ParamVS_MatrixPalette], reinterpret_cast<const lmath::Vector4*>(poses), count);
+
+#endif
         }
     }
 
@@ -273,13 +283,11 @@ namespace lscene
             if(tex.valid() == false){
                 continue;
             }
-            const lgraphics::SamplerState& samplerState = material->getSamplerState(i);
+
 #if defined(LIME_GLES2)
-            device.setTexture(i, tex.getTextureID(), textures_[i], samplerState);
-            //glActiveTexture(GL_TEXTURE0 + i);
-            //samplerState.apply(i);
-            //tex.attach( i, textures_[i] );
+            device.setTexture(i, tex.getTextureID(), textures_[i]);
 #else
+            const lgraphics::SamplerState& samplerState = material->getSamplerState(i);
             samplerState.apply( textures_[i] );
             tex.attach( i );
 #endif

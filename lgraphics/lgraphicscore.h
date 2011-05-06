@@ -38,6 +38,8 @@ namespace lgraphics
 
     using lcore::Char;
 
+    static const u32 LIME_MAX_VERTEX_STREAMS = 2; //最大頂点ストリーム数
+
     static const u32 LIME_MAX_PALLET_MATRICES = 256;
 
     static const u32 LIME_MAX_NAME_SIZE = (24 - 1);
@@ -48,11 +50,12 @@ namespace lgraphics
 #define LIME_GL (1)
 #endif
 
-    static const u32 MAX_NAME_BUFFER_SIZE = 32;
+    static const u32 MAX_NAME_BUFFER_SIZE = 48;
     typedef lcore::String<MAX_NAME_BUFFER_SIZE> NameString;
 
     static const u32 INVALID_SAMPLER_INDEX = 0xFFFFFFFFU;
     static const u32 INVALID_TEXTURE_ID = 0xFFFFFFFFU;
+    static const u32 INVALID_TEXTURE_LOCATION = 0xFFFFFFFFU;
 
     static const u32 MAX_TEXTURES = 2;
 

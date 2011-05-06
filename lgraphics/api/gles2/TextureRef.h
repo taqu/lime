@@ -54,7 +54,8 @@ namespace lgraphics
         /**
         @brief データ転送。GL的インターフェイス
         */
-        void blit(u32 level, u8* data);
+        void blit(u8* data);
+        void blit(u32 level, u32 width, u32 height, u8* data);
 
         u16 getLevels();
         bool getLevelDesc(u32 level, SurfaceDesc& desc);
@@ -66,6 +67,7 @@ namespace lgraphics
         */
         void attach(u32 index, u32 location) const;
 
+        void attach() const;
         void detach()const;
 
         void swap(TextureRef& rhs)

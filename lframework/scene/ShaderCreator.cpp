@@ -307,10 +307,7 @@ namespace lscene
             lgraphics::VertexShaderRef vsRef;
             lgraphics::PixelShaderRef psRef;
             lgraphics::VertexDeclarationRef& decl = geometry.getGeometryBuffer()->getDecl();
-            lgraphics::Shader::linkShader(vsRef, psRef, decl, vsDesc, psDesc);
-
-            //頂点属性インデックスをattribute変数にバインドする
-            decl.bindAttributes(vsRef.getProgramID()->id_);
+            lgraphics::Shader::linkShader(vsRef, psRef, geometry.getGeometryBuffer()->getNumStreams(), decl, vsDesc, psDesc);
 
             vs = LIME_NEW DefaultShaderVS(vsRef);
             ps = LIME_NEW DefaultShaderPS(psRef);

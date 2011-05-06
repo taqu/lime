@@ -147,50 +147,104 @@ namespace lgraphics
     //-------------------------------------------------
     VertexDeclarationRef::VertexDeclarationRef(const VertexDeclarationRef& rhs)
         :vertexSize_(rhs.vertexSize_)
-        ,numElements_(rhs.numElements_)
         ,declaration_(rhs.declaration_)
     {
         // 参照カウントを増やす
         if(declaration_ != NULL){
             declaration_->addRef();
         }
+
+        for(u32 i=0; i<LIME_MAX_VERTEX_STREAMS; ++i){
+            numElements_[i] = rhs.numElements_[i];
+            streamElementsOffset_[i] = rhs.streamElementsOffset_[i];
+        }
+    }
+
+    VertexDeclarationRef::VertexDeclarationRef(u32 vertexSize, u32 numElements, VertexDeclaration* declaration)
+            :vertexSize_(vertexSize)
+            ,declaration_(declaration)
+    {
+        for(u32 i=0; i<LIME_MAX_VERTEX_STREAMS; ++i){
+            numElements_[i] = 0;
+            streamElementsOffset_[i] = 0;
+        }
+
+        VertexElement *elements = declaration_->elements_;
+        for(u32 i=0; i<numElements; ++i){
+            LASSERT(0<=elements[i].stream_ && elements[i].stream_<LIME_MAX_VERTEX_STREAMS);
+            ++numElements_[ elements[i].stream_ ];
+        }
+
+        u16 offset = 0;
+        for(u32 i=0; i<LIME_MAX_VERTEX_STREAMS; ++i){
+            streamElementsOffset_[i] = offset;
+            offset += numElements_[i];
+        }
     }
 
     void VertexDeclarationRef::destroy()
     {
-        numElements_ = 0;
+        for(u32 i=0; i<LIME_MAX_VERTEX_STREAMS; ++i){
+            numElements_[i] = 0;
+            streamElementsOffset_[i] = 0;
+        }
+
         LSAFE_RELEASE(declaration_);
     }
 
-    void VertexDeclarationRef::attach() const
+    void VertexDeclarationRef::attach(u32 stream) const
     {
         LASSERT(declaration_ != NULL);
 
         VertexElement *elements = declaration_->elements_;
-        for(u32 i=0; i<numElements_; ++i){
+        u32 elementsEnd = numElements_[stream] + streamElementsOffset_[stream];
+
+        for(u32 i=streamElementsOffset_[stream]; i<elementsEnd; ++i){
             s32 size = DeclTypeSizeTable[elements[i].element_[VertexElement::Elem_Type] ];
             GLenum type = DeclTypeTable[elements[i].element_[VertexElement::Elem_Type] ];
             GLboolean normalized = DeclMethodNormalizedTable[ elements[i].element_[VertexElement::Elem_Method] ];
 
-            glVertexAttribPointer(i, size, type, normalized, vertexSize_, (const void*)elements[i].offset_);
             glEnableVertexAttribArray(i);
+            glVertexAttribPointer(i, size, type, normalized, vertexSize_, (const void*)elements[i].offset_);
         }
     }
 
-    void VertexDeclarationRef::detach() const
+    void VertexDeclarationRef::attach(u32 stream, const u8* buffer) const
     {
-        for(u32 i=0; i<numElements_; ++i){
+        LASSERT(declaration_ != NULL);
+        LASSERT(buffer != NULL);
+
+        VertexElement *elements = declaration_->elements_;
+        u32 elementsEnd = numElements_[stream] + streamElementsOffset_[stream];
+
+        for(u32 i=streamElementsOffset_[stream]; i<elementsEnd; ++i){
+            s32 size = DeclTypeSizeTable[elements[i].element_[VertexElement::Elem_Type] ];
+            GLenum type = DeclTypeTable[elements[i].element_[VertexElement::Elem_Type] ];
+            GLboolean normalized = DeclMethodNormalizedTable[ elements[i].element_[VertexElement::Elem_Method] ];
+
+            glEnableVertexAttribArray(i);
+            glVertexAttribPointer(i, size, type, normalized, vertexSize_, buffer+elements[i].offset_);
+        }
+    }
+
+    void VertexDeclarationRef::detach(u32 stream) const
+    {
+        u32 elementsEnd = numElements_[stream] + streamElementsOffset_[stream];
+
+        for(u32 i=streamElementsOffset_[stream]; i<elementsEnd; ++i){
             glDisableVertexAttribArray(i);
         }
     }
 
     // 頂点属性をシェーダにバインド
-    void VertexDeclarationRef::bindAttributes(u32 program)
+    void VertexDeclarationRef::bindAttributes(u32 stream, u32 program)
     {
         char name[MaxUageNameLength];
 
         VertexElement *elements = declaration_->elements_;
-        for(u32 i=0; i<numElements_; ++i){
+        u32 elementsEnd = numElements_[stream] + streamElementsOffset_[stream];
+
+        for(u32 i=streamElementsOffset_[stream]; i<elementsEnd; ++i){
             u8 usage = elements[i].element_[VertexElement::Elem_Usage];
             u32 size = DeclUsageNameSizeTable[usage];
             lcore::memcpy(name, DeclUsageNameTable[usage], size);
@@ -201,16 +255,38 @@ namespace lgraphics
         }
     }
 
+    u32 VertexDeclarationRef::getNumElements() const
+    {
+        u32 numElements = 0;
+        for(u32 i=0; i<LIME_MAX_VERTEX_STREAMS; ++i){
+            numElements += numElements_[i];
+        }
+        return numElements;
+    }
+
     bool VertexDeclarationRef::getDecl(VertexElement* decl)
     {
         if(declaration_ == NULL){
             return false;
         }
 
-        for(u32 i=0; i<=numElements_; ++i){
+        u32 numElements = getNumElements();
+        for(u32 i=0; i<=numElements; ++i){
             decl[i] = declaration_->elements_[i];
         }
         return true;
+    }
+
+    void VertexDeclarationRef::swap(VertexDeclarationRef& rhs)
+    {
+        lcore::swap(vertexSize_, rhs.vertexSize_);
+
+        for(u32 i=0; i<LIME_MAX_VERTEX_STREAMS; ++i){
+            lcore::swap(numElements_[i], rhs.numElements_[i]);
+            lcore::swap(streamElementsOffset_[i], rhs.streamElementsOffset_[i]);
+        }
+
+        lcore::swap(declaration_, rhs.declaration_);
     }
 
 

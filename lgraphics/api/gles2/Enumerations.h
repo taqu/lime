@@ -237,12 +237,13 @@ namespace lgraphics
         TexFilter_PyramidalQuad = GL_LINEAR,
         TexFilter_GaussianQuad = GL_LINEAR,
         TexFilter_ConvolutionMono = GL_LINEAR,
-        TexFilter_Num = 7,
 
-        //GL_NEAREST_MIPMAP_NEAREST
-        //GL_LINEAR_MIPMAP_NEAREST
-        //GL_NEAREST_MIPMAP_LINEAR
-        //GL_LINEAR_MIPMAP_LINEAR
+        TexFilter_PointMipMapPoint = GL_NEAREST_MIPMAP_NEAREST,
+        TexFilter_LinearMipMapPoint = GL_LINEAR_MIPMAP_NEAREST,
+        TexFilter_PointMipMapLinear = GL_NEAREST_MIPMAP_LINEAR,
+        TexFilter_LinearMipMapLinear = GL_LINEAR_MIPMAP_LINEAR,
+
+        TexFilter_Num = 11,
     };    
 
     enum CullMode

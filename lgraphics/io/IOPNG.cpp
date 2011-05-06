@@ -23,18 +23,11 @@ namespace io
             lcore::istream* is = reinterpret_cast<lcore::istream*>(png_get_io_ptr(png_ptr));
             is->read(reinterpret_cast<char*>(data), size);
         }
-    }
 
-    IOPNG::IOPNG()
+    bool readPNG(lcore::istream& is, u8** ppBuffer, u32& width, u32& height, BufferFormat& format)
     {
-    }
+        LASSERT(ppBuffer != NULL);
 
-    IOPNG::~IOPNG()
-    {
-    }
-
-    bool IOPNG::read(lcore::istream& is, TextureRef& texture)
-    {
         //シグネチャチェック
         static const u32 SigSize = 8;
         u8 signature[SigSize];
@@ -71,6 +64,7 @@ namespace io
         if(setjmp(png_jmpbuf(png_ptr))){
             LIME_DELETE_ARRAY(buffer);
             LIME_DELETE_ARRAY(rowPointers);
+            *ppBuffer = NULL;
 
             png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
             return false;
@@ -85,13 +79,13 @@ namespace io
         u32 result = 0;
 
         png_read_info(png_ptr, info_ptr);
-        png_uint_32 width, height;
         int bit_depth, color_type;
         int interlace, compression, filter;
         result = png_get_IHDR(
             png_ptr,
             info_ptr,
-            &width, &height,
+            reinterpret_cast<png_uint_32*>(&width),
+            reinterpret_cast<png_uint_32*>(&height),
             &bit_depth,
             &color_type,
             &interlace, &compression, &filter);
@@ -111,7 +105,7 @@ namespace io
         }
 
         //カラータイプチェック。テクスチャフォーマット
-        BufferFormat format = Buffer_Unknown;
+        format = Buffer_Unknown;
         switch(color_type)
         {
         case PNG_COLOR_TYPE_GRAY:
@@ -154,23 +148,48 @@ namespace io
 
         // バッファ確保。各行ごとの先頭ポインタ配列作成
         png_uint_32 rowbytes = png_get_rowbytes(png_ptr, info_ptr);
-        buffer = LIME_NEW u8[rowbytes*height];
+        *ppBuffer = LIME_NEW u8[rowbytes*height];
+        buffer = *ppBuffer;
         rowPointers = LIME_NEW u8*[height];
-
+#if defined(LIME_GL)
         for(u32 i=0; i<height; ++i){
             rowPointers[i] = buffer + rowbytes * i;
         }
-
+#else
+        for(u32 i=0; i<height; ++i){
+            rowPointers[height-i-1] = buffer + rowbytes * i;
+        }
+#endif
         png_read_image(png_ptr, rowPointers);
 
 
-        texture = Texture::create(width, height, 1, Usage_None, format, Pool_Managed);
-        texture.blit(0, buffer);
-
-        LIME_DELETE_ARRAY(buffer);
         LIME_DELETE_ARRAY(rowPointers);
         png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
         return true;
+    }
+    }
+
+    bool IOPNG::read(lcore::istream& is, u8** ppBuffer, u32& width, u32& height, BufferFormat& format)
+    {
+        return readPNG(is, ppBuffer, width, height, format);
+    }
+
+    bool IOPNG::read(lcore::istream& is, TextureRef& texture)
+    {
+        u8* buffer = NULL;
+        u32 width = 0;
+        u32 height = 0;
+        BufferFormat format = Buffer_Unknown;
+
+        bool ret = readPNG(is, &buffer, width, height, format);
+
+        if(ret){
+            texture = Texture::create(width, height, 1, Usage_None, format, Pool_Managed);
+            texture.blit(buffer);
+        }
+
+        LIME_DELETE_ARRAY(buffer);
+        return ret;
     }
 
 }

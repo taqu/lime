@@ -51,9 +51,6 @@ namespace io
             u32 reserved2_;
         };
 
-        IODDS(){}
-        ~IODDS(){}
-
         static bool read(lcore::istream& is, TextureRef& texture);
         static bool write(lcore::ostream& os, TextureRef& texture);
 

@@ -58,6 +58,7 @@ namespace lgraphics
         void setClearStencil(u32 stencil);
 
         inline void present();
+        inline void flush();
 
         Descriptor* allocate()
         {
@@ -136,9 +137,8 @@ namespace lgraphics
         @param index ... テクスチャユニットインデックス
         @param id ... テクスチャオブジェクトハンドル
         @param location ... シェーダのuniform変数ハンドル
-        @param samplerState ... サンプラステート
         */
-        void setTexture(u32 index, u32 id, u32 location, const lgraphics::SamplerState& samplerState);
+        void setTexture(u32 index, u32 id, u32 location);
     private:
         friend struct Descriptor;
 
@@ -153,14 +153,6 @@ namespace lgraphics
         struct Sampler
         {
             u32 id_;
-            TextureAddress addressU_;
-            TextureAddress addressV_;
-            TextureFilterType magFilter_;
-            TextureFilterType minFilter_;
-            //TextureFilterType mipFilter_;
-            //u32 mipmapLODBias_;
-            //u32 maxMipLevel_;
-            //u32 maxAnisotropy_;
         };
 
         /// レンダリングステート
@@ -187,6 +179,7 @@ namespace lgraphics
             BlendType alphaBlendSrc_; //srcブレンド設定
             BlendType alphaBlendDst_; //dstブレンド設定
 
+            bool flush_;
             bool flags_[Flag_Num];
         };
 
@@ -209,6 +202,10 @@ namespace lgraphics
 
     inline void GraphicsDeviceRef::beginScene()
     {
+        if(state_.flush_){
+            state_.flush_ = false;
+            glFlush();
+        }
     }
 
     inline void GraphicsDeviceRef::endScene()
@@ -224,11 +221,15 @@ namespace lgraphics
     inline void GraphicsDeviceRef::present()
     {
 #if defined(ANDROID)
-        glFlush();
+
 #else
-        glFlush();
         eglSwapBuffers(display_, surface_);
 #endif
+    }
+
+    inline void GraphicsDeviceRef::flush()
+    {
+        state_.flush_ = true;
     }
 
     // ビューポート設定
