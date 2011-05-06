@@ -44,6 +44,17 @@ extern "C"
     JNIEXPORT jboolean JNICALL Java_hm_orz_stabo_EGDA_EGDALib_load(JNIEnv *, jclass, jbyteArray, jbyteArray, jint);
 
     /**
+    @brief ロード更新
+    @return ロード完了ならtrue
+    */
+    JNIEXPORT jboolean JNICALL Java_hm_orz_stabo_EGDA_EGDALib_updateLoad(JNIEnv *, jclass);
+
+    /**
+    @brief ロードキャンセル
+    */
+    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_cancelLoad(JNIEnv *, jclass);
+
+    /**
     @brief 状態セット
     */
     JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setState(JNIEnv *, jclass, jint);
@@ -143,6 +154,23 @@ extern "C"
         return JNI_TRUE;
     }
 
+    /**
+    @brief ロード更新
+    */
+    JNIEXPORT jboolean JNICALL Java_hm_orz_stabo_EGDA_EGDALib_updateLoad(JNIEnv *, jclass)
+    {
+        egda::Application& app = egda::Application::getInstance();
+        return app.updateLoad();
+    }
+
+    /**
+    @brief ロードキャンセル
+    */
+    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_cancelLoad(JNIEnv *, jclass)
+    {
+        egda::Application& app = egda::Application::getInstance();
+        app.cancelLoad();
+    }
 
     //--------------------------------------------------------------------------
     // 状態セット

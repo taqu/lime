@@ -63,6 +63,7 @@ LOCAL_SRC_FILES := $(LIME_DIR)/lgraphics/lgraphics.cpp\
                    $(LIME_DIR)/lgraphics/io/IOSamplerState.cpp\
                    $(LIME_DIR)/lgraphics/io/IOShaderKey.cpp\
                    $(LIME_DIR)/lgraphics/io/IOTexture.cpp\
+                   $(LIME_DIR)/lgraphics/io/IOTextureUtil.cpp\
                    $(LIME_DIR)/lgraphics/io/IOVertexBuffer.cpp\
                    $(LIME_DIR)/lgraphics/io/IOVertexDeclaration.cpp
 
@@ -121,7 +122,8 @@ LOCAL_SRC_FILES := $(LIBCONVERTER_DIR)/converter.cpp\
                    $(LIBCONVERTER_DIR)/XLoaderDef.cpp\
                    $(LIBCONVERTER_DIR)/XLoader.cpp\
                    $(LIBCONVERTER_DIR)/charcode/conv_charcode.cpp\
-                   $(LIBCONVERTER_DIR)/charcode/jis_level1_utf16.cpp
+                   $(LIBCONVERTER_DIR)/charcode/jis_level1_utf16.cpp\
+                   $(LIBCONVERTER_DIR)/charcode/jis_level2_utf16.cpp
 
 LOCAL_C_INCLUDES := $(APP_C_INCLUDES) $(LIBCONVERTER_DIR)
 

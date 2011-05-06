@@ -23,19 +23,14 @@
 #include <time.h>
 #include <unistd.h>
 
-namespace
-{
-    //デバッグ用ログ
-#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
-        //lconverter::DebugLog g_debugLog;
-#endif
-}
-
 namespace egda
 {
     Application::Application()
         :prevMSec_(0)
         ,currentMSec_(0)
+        ,loadingCounter_(0)
+        ,loadingIndex_(0)
+        ,loader_(NULL)
     {
     }
 
@@ -66,11 +61,9 @@ namespace egda
         lframework::System::InitParam sysParam("", 32);
         lframework::System::initialize(sysParam, animInitParam);
 
-
         textRenderer_.initialize(MaxChars, CharW, CharH, Rows, Cols);
 
         textRenderer_.setTextureFromMemory(textTexture, size);
-
 
         // シーン初期化
         {
@@ -102,8 +95,11 @@ namespace egda
     //----------------------------------------------
     void Application::terminate()
     {
+        LIME_DELETE(loader_);
         scene_.release();
+
         textRenderer_.terminate();
+
         lframework::System::terminate();
         lgraphics::Graphics::terminate();
     }
@@ -111,48 +107,35 @@ namespace egda
     //----------------------------------------------
     void Application::update()
     {
-        static char buffer[128];
-
-        lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
-
         scene_.update();
 
-
-        renderSys.beginDraw();
-
+//デバッグ用ログ
+#if defined(LIME_EGDA_DISP_FPS)
         currentMSec_ = lcore::getTime();
 
         u32 d = (prevMSec_>currentMSec_)? (currentMSec_ - prevMSec_) : (0xFFFFFFFFU-prevMSec_+currentMSec_);
         prevMSec_ = currentMSec_;
 
-//デバッグ用ログ
-#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
-        //sprintf(buffer, "total %d msec", d);
-        //textRenderer_.print(0, 0, buffer);
+        static char buffer[128];
+        sprintf(buffer, "total %d msec", d);
+        textRenderer_.print(0, 0, buffer);
 
-        //u32 fps = (6000 * 1667)/(d*10000);
+        u32 fps = (6000 * 1667)/(d*10000);
 
-        //sprintf(buffer, "%d fps", fps);
-        //textRenderer_.print(1, 0, buffer);
-
-
-        //sprintf(buffer, "vertices: %d", g_debugLog.getNumVertices());
-        //textRenderer_.print(2, 0, buffer);
-
-        //sprintf(buffer, "batches: %d", g_debugLog.getNumBatches());
-        //textRenderer_.print(3, 0, buffer);
+        sprintf(buffer, "%d fps", fps);
+        textRenderer_.print(1, 0, buffer);
 #endif
+
+        lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
+
+        renderSys.beginDraw();
 
         renderSys.draw();
 
+#if defined(LIME_EGDA_DISP_FPS)
         textRenderer_.draw();
-
+#endif
         renderSys.endDraw();
-
-        //if(d<MSecPerFrame){ //1フレームの時間が短ければ眠る
-        //    d = (MSecPerFrame - d)*1000;
-        //    usleep(d);//マイクロ秒単位で眠る
-        //}
     }
 
     //----------------------------------------------
@@ -190,39 +173,122 @@ namespace egda
     }
 
     //----------------------------------------------
-    //PMMロード
+    // PMMロード
     bool Application::loadPmm(const Char* filename, const Char* directory)
     {
         scene_.release(); //携帯機ではメモリが少ないので先に解放する。ロード失敗すれば元には戻らない
-        pmm::Loader pmmLoader;
-        pmmLoader.load(filename, directory);
-        if(pmm::Loader::Error_None != pmmLoader.getErrorCode()){
+
+        LIME_DELETE(loader_);
+
+        loader_ = LIME_NEW pmm::Loader;
+        if(NULL == loader_){
             return false;
         }
 
-        egda::Scene scene(
-            pmmLoader.getNumModels(),
-            pmmLoader.releaseModelPacks(),
-            pmmLoader.getCameraAnimPack(),
-            pmmLoader.getLightAnimPack(),
-            pmmLoader.getNumAccessories(),
-            pmmLoader.releaseAccessoryPacks()
-            );
+        loader_->open(filename, directory);
 
-        scene.setCameraMode( scene_.getCameraMode() );
+        if(loader_->getErrorCode() != pmm::Loader::Error_None){
+            return false;
+        }
 
-        scene_.swap(scene);
+        loadingCounter_ = 0;
+        loadingIndex_= 0;
+        return true;
+    }
 
-        scene_.initialize();
+    //----------------------------------------------
+    // PMMロード
+    bool Application::updateLoad()
+    {
+        if(NULL == loader_){
+            return true;
+        }
 
-        //デバッグ用ログ
-#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
-        //g_debugLog = pmmLoader.debugLog_;
-#endif
+        loader_->load();
+
+        if(loader_->getStatus() == pmm::Loader::Status_Finish){
+            if(loader_->getErrorCode() == pmm::Loader::Error_None){
+                u32 numModels = loader_->getNumModels();
+                u32 numAccessories = loader_->getNumAccessories();
+
+                egda::Scene scene(
+                    numModels,
+                    loader_->releaseModelPacks(),
+                    loader_->getCameraAnimPack(),
+                    loader_->getLightAnimPack(),
+                    numAccessories,
+                    loader_->releaseAccessoryPacks()
+                    );
+
+                scene.setCameraMode( scene_.getCameraMode() );
+
+                scene_.swap(scene);
+
+                scene_.initialize();
 
 #if defined(_DEBUG)
-        lframework::System::attachDebugDraw();
+                lframework::System::attachDebugDraw();
 #endif
-        return true;
+            }
+            LIME_DELETE(loader_);
+            return true;
+        }
+
+
+        {//なうろーでぃんぐ
+            lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
+
+            static const Char NowLoading[] = "Now Loading";
+            static const u32 Len = sizeof(NowLoading) - 1;
+
+            currentMSec_ = lcore::getTime();
+
+            u32 d = (prevMSec_>currentMSec_)? (currentMSec_ - prevMSec_) : (0xFFFFFFFFU-prevMSec_+currentMSec_);
+            prevMSec_ = currentMSec_;
+            loadingCounter_ += d;
+
+            d = loadingCounter_ >> LoadingCountCycleBits;
+            loadingCounter_ -= d<<LoadingCountCycleBits;
+
+            loadingIndex_ += d;
+            if(loadingIndex_>=Len){
+                loadingIndex_ = 0;
+            }
+
+            Char buffer[Len+1];
+            u32 i,j;
+            for(i=0; i<loadingIndex_; ++i){
+                buffer[i] = NowLoading[i];
+            }
+            buffer[i] = '\0';
+            u32 col = 2;
+            textRenderer_.print(Cols, col, buffer);
+            col += loadingIndex_;
+
+            buffer[0] = NowLoading[loadingIndex_];
+            buffer[1] = '\0';
+            textRenderer_.print(Cols-1, col, buffer);
+            col += 1;
+
+
+            for(i=loadingIndex_+1, j=0; i<Len; ++i, ++j){
+                buffer[j] = NowLoading[i];
+            }
+            buffer[j] = '\0';
+            textRenderer_.print(Cols, col, buffer);
+
+            renderSys.beginDraw();
+
+            textRenderer_.draw();
+            renderSys.endDraw();
+        }
+        return false;
+    }
+
+    //----------------------------------------------
+    // ロードキャンセル
+    void Application::cancelLoad()
+    {
+        LIME_DELETE(loader_);
     }
 }

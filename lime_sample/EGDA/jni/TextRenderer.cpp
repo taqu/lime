@@ -17,7 +17,7 @@
 #include <lgraphics/api/SamplerState.h>
 #include <lgraphics/api/TextureRef.h>
 
-#include <lgraphics/io/IOTGA.h>
+#include <lgraphics/io/IOPNG.h>
 
 #include <lframework/scene/Material.h>
 #include <lframework/scene/Geometry.h>
@@ -83,7 +83,7 @@ namespace
         "void main()\n"
         "{\n"
         "vec4 c = texture2D(texAlbedo, v_tex0);\n"
-        "if(c.w<0.5){discard;}else{gl_FragColor=c;}\n"
+        "if(c.r==0.0){discard;}else{gl_FragColor=c;}\n"
         "}\n"
 #else
         "struct VSOutput\n"
@@ -118,7 +118,7 @@ namespace
     void createRenderState(RenderStateRef& state)
     {
         //ステート設定はてきとう
-        state.setCullMode(lgraphics::CullMode_None);
+        state.setCullMode(lgraphics::CullMode_CCW);
 
         // アルファ設定
         state.setAlphaBlendEnable(false);
@@ -129,13 +129,6 @@ namespace
         // Zバッファ設定
         state.setZEnable(false);
         state.setZWriteEnable(false);
-    }
-
-    //-----------------------------------------------------------------------------
-    //頂点バッファ作成
-    void createVertexBuffer(VertexBufferRef& vb, u32 numVertices)
-    {
-        vb = lgraphics::VertexBuffer::create(sizeof(TextVertex), numVertices, Pool_Default, Usage_Dynamic);
     }
 
     //---------------------------------------------------
@@ -201,16 +194,13 @@ namespace
 
         void setParameters(const lscene::Material& material)
         {
-            const lgraphics::SamplerState& samplerState = material.getSamplerState(0);
             const lgraphics::TextureRef& tex = material.getTexture(0);
 #if defined(LIME_GLES2)
             lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
-            device.setTexture(0, tex.getTextureID(), textures_[0], samplerState);
+            device.setTexture(0, tex.getTextureID(), textures_[0]);
 
-            //glActiveTexture(GL_TEXTURE0);
-            //samplerState.apply(0);
-            //tex.attach(0, textures_[0]);
 #else
+            const lgraphics::SamplerState& samplerState = material.getSamplerState(0);
             samplerState.apply( textures_[0] );
             tex.attach(0);
 #endif
@@ -239,7 +229,7 @@ namespace
 
         lgraphics::VertexShaderRef vsRef;
         lgraphics::PixelShaderRef psRef;
-        lgraphics::Shader::linkShader(vsRef, psRef, decl, vsDesc, psDesc);
+        lgraphics::Shader::linkShader(vsRef, psRef, 1, decl, vsDesc, psDesc);
         LASSERT(vsRef != NULL);
         LASSERT(psRef != NULL);
 
@@ -277,6 +267,9 @@ namespace
     {
     public:
         static const s32 MaxRowChars = 16;
+        static const u8 MinControlCode = 0x01U;
+        static const u8 MaxControlCode = 0x20U;
+
         static const u8 MinCharCode = 0x20U;
         static const u8 MaxCharCode = 0x7EU;
 
@@ -306,7 +299,7 @@ namespace
         PrimitiveBatch(const PrimitiveBatch&);
         PrimitiveBatch& operator=(const PrimitiveBatch&);
 
-        lscene::Geometry geometry_;
+        VertexDeclarationRef decl_;
         lscene::Material material_;
 
         TextShaderVS shaderVS_;
@@ -341,52 +334,13 @@ namespace
         //unitTexW_ = static_cast<u16>(0xFFFFU*(1.0f/charW));
         //unitTexH_ = static_cast<u16>(0xFFFFU*(1.0f/charH));
 
-        VertexDeclarationRef decl;
-        createVertexDecl(decl);
-
-        createVertexBuffer(vb_, numMaxCharacters<<2);
-
-#if defined(LIME_GLES2)
-        vb_.blit(NULL, true); //バッファ予約
-#endif
-        //インデックスバッファ作成
-        IndexBufferRef ib;
-
-        u32 numIndicies = numMaxCharacters * 6;
-        ib = lgraphics::IndexBuffer::create(numIndicies, Pool_Default, Usage_None);
-        u16* indices = LIME_NEW u16[numIndicies];
-
-        u16* tmpIndices = indices;
-        u16 index = 0;
-        for(u32 i=0; i<numMaxCharacters; ++i){
-            tmpIndices[0] = index;
-            tmpIndices[1] = index + 1;
-            tmpIndices[2] = index + 2;
-
-            tmpIndices[3] = index + 2;
-            tmpIndices[4] = index + 1;
-            tmpIndices[5] = index + 3;
-
-            tmpIndices += 6;
-            index += 4;
-        }
-
-        ib.blit((void*)indices);
-        LIME_DELETE_ARRAY(indices);
-
-        GeometryBuffer::pointer geomBuffer( LIME_NEW GeometryBuffer(lgraphics::Primitive_TriangleList, decl, vb_, ib));
-
-        lscene::Geometry geometry(geomBuffer, numMaxCharacters_, 0, 0);
-        geometry_.swap(geometry);
+        createVertexDecl(decl_);
 
         createRenderState( material_.getRenderState() );
 
-        createShader(shaderVS_, shaderPS_, decl);
+        createShader(shaderVS_, shaderPS_, decl_);
 
-        geometry_.setShaderVS(&shaderVS_);
-        geometry_.setShaderPS(&shaderPS_);
-
-        buffer_ = LIME_NEW TextVertex[(numMaxCharacters_<<2)];
+        buffer_ = LIME_NEW TextVertex[(numMaxCharacters_*6)];
     }
 
     TextRenderer::PrimitiveBatch::~PrimitiveBatch()
@@ -406,18 +360,21 @@ namespace
 
             device.setAlphaBlendEnable(false);
 
-            u32 vsize = (count_ << 2)*sizeof(TextVertex);
-
-            vb_.blit(buffer_, 0, vsize);
-
-            geometry_.getGeometryBuffer()->attach();
             material_.applyRenderState();
 
             shaderVS_.attach();
 
             shaderPS_.setParameters(material_);
 
-            device.drawIndexed(Primitive_TriangleList, count_ * 6, 0);
+            glBindBuffer( GL_ARRAY_BUFFER, NULL );
+            glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, NULL );
+
+            decl_.attach( reinterpret_cast<const u8*>(buffer_) );
+
+            device.draw(Primitive_TriangleList, count_*6, 0);
+
+            decl_.detach();
+            device.flush();
 
             clear();
         }
@@ -435,10 +392,17 @@ namespace
         u16 u;
         u16 v;
 
-        u16 index = count_ << 2;
+        u16 index = count_ * 6;
         while(*str != '\0'){
             if(count_>=numMaxCharacters_){
                 return;
+            }
+
+            if(MinControlCode<=*str && *str<=MaxControlCode){
+                ++str;
+                sx += unitW_;
+                ex += unitW_;
+                continue;
             }
 
             if(MinCharCode<=*str && *str<=MaxCharCode){
@@ -448,6 +412,7 @@ namespace
                 u = c*unitTexW_;
                 v = r*unitTexH_;
 
+                //-----------------------------------------
                 buffer_[index].position_.set(sx, sy);
                 buffer_[index].uv_[0] = u;
                 buffer_[index].uv_[1] = v;
@@ -461,6 +426,18 @@ namespace
                 buffer_[index].position_.set(sx, ey);
                 buffer_[index].uv_[0] = u;
                 buffer_[index].uv_[1] = v + unitTexH_;
+                ++index;
+
+
+                //-----------------------------------------
+                buffer_[index].position_.set(sx, ey);
+                buffer_[index].uv_[0] = u;
+                buffer_[index].uv_[1] = v + unitTexH_;
+                ++index;
+
+                buffer_[index].position_.set(ex, sy);
+                buffer_[index].uv_[0] = u + unitTexW_;
+                buffer_[index].uv_[1] = v;
                 ++index;
 
                 buffer_[index].position_.set(ex, ey);
@@ -526,34 +503,6 @@ namespace
         batch_->print(row, col, reinterpret_cast<const u8*>(str));
     }
 
-//    bool TextRenderer::setTextureFromFile(const char* path)
-//    {
-//        LASSERT(path != NULL);
-//        LASSERT(batch_ != NULL);
-//
-//        lcore::ifstream file(path, lcore::ios::binary);
-//        if(false == file.is_open()){
-//            return false;
-//        }
-//
-//        lgraphics::TextureRef texture;
-//#if defined(LIME_GLES2)
-//        bool ret = lgraphics::io::IOTGA::read(file, texture, false);
-//#else
-//        bool ret = lgraphics::io::IOTGA::read(file, texture, true);
-//#endif
-//        if(false == ret){
-//            return false;
-//        }
-//
-//        batch_->material_.setTextureNum(1);
-//        batch_->material_.setTexture(0, texture);
-//
-//        SurfaceDesc desc;
-//        texture.getLevelDesc(0, desc);
-//        batch_->setTextureSize(desc.width_, desc.height_);
-//        return true;
-//    }
 
     bool TextRenderer::setTextureFromMemory(const Char* memory, u32 size)
     {
@@ -561,17 +510,26 @@ namespace
         lcore::isstream is(memory, size);
 
         lgraphics::TextureRef texture;
-#if defined(LIME_GLES2)
-        bool ret = lgraphics::io::IOTGA::read(is, texture, false);
-#else
-        bool ret = lgraphics::io::IOTGA::read(is, texture, true);
-#endif
+
+        bool ret = lgraphics::io::IOPNG::read(is, texture);
         if(false == ret){
             return false;
         }
 
         batch_->material_.setTextureNum(1);
         batch_->material_.setTexture(0, texture);
+
+#if defined(LIME_GL)
+        //サンプラステートセット
+        texture.attach();
+        lgraphics::SamplerState& sampler = batch_->material_.getSamplerState(0);
+        sampler.setAddressU(lgraphics::TexAddress_Clamp);
+        sampler.setAddressV(lgraphics::TexAddress_Clamp);
+        sampler.setMinFilter(lgraphics::TexFilter_Point);
+
+        sampler.apply(0);
+        texture.detach();
+#endif
 
         SurfaceDesc desc;
         texture.getLevelDesc(0, desc);
