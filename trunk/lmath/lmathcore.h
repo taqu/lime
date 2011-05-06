@@ -309,23 +309,34 @@ namespace lmath
             : round2S32(x - doublemagicroundeps);
     }
 
-    inline s32 floor(f32 val)
+    inline f32 floor(f32 val)
+    {
+        return floorf(val);
+    }
+
+    inline f32 ceil(f32 val)
+    {
+        return ceilf(val);
+    }
+
+
+    inline s32 floorS32(f32 val)
     {
         return static_cast<s32>( floorf(val) );
     }
 
-    inline s32 ceil(f32 val)
+    inline s32 ceilS32(f32 val)
     {
         return static_cast<s32>( ceilf(val) );
     }
 
-    inline s32 floor(f64 val)
+    inline s32 floorS32(f64 val)
     {
         const f64 doublemagicroundeps = .5-1.4e-11;
         return round2S32(val - doublemagicroundeps);
     }
 
-    inline s32 ceil(f64 val)
+    inline s32 ceilS32(f64 val)
     {
         const f64 doublemagicroundeps = .5-1.4e-11;
         return round2S32(val + doublemagicroundeps);
