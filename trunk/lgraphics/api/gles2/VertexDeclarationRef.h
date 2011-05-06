@@ -42,9 +42,12 @@ namespace lgraphics
 
         VertexDeclarationRef()
             :vertexSize_(0)
-            ,numElements_(0)
             ,declaration_(NULL)
         {
+            for(u32 i=0; i<LIME_MAX_VERTEX_STREAMS; ++i){
+                numElements_[i] = 0;
+                streamElementsOffset_[i] = 0;
+            }
         }
 
         VertexDeclarationRef(const VertexDeclarationRef& rhs);
@@ -64,37 +67,30 @@ namespace lgraphics
 
         bool valid() const{ return (declaration_ != NULL); }
 
-        void attach() const;
-        void detach() const;
+        void attach(u32 stream) const;
+        void attach(u32 stream, const u8* buffer) const;
+        void detach(u32 stream) const;
 
         u32 getVertexSize() const{ return vertexSize_;}
-        u32 getNumElements() const{ return numElements_;}
+        u32 getNumElements() const;
         bool getDecl(VertexElement* decl);
 
-        void swap(VertexDeclarationRef& rhs)
-        {
-            lcore::swap(vertexSize_, rhs.vertexSize_);
-            lcore::swap(numElements_, rhs.numElements_);
-            lcore::swap(declaration_, rhs.declaration_);
-        }
+        void swap(VertexDeclarationRef& rhs);
 
         /**
         @brief 頂点属性をシェーダにバインド
         */
-        void bindAttributes(u32 program);
+        void bindAttributes(u32 stream, u32 program);
     private:
         friend class VertexDeclCreator;
         friend class Shader;
 
-        VertexDeclarationRef(u32 vertexSize, u32 numElements, VertexDeclaration* declaration)
-            :vertexSize_(vertexSize)
-            ,numElements_(numElements)
-            ,declaration_(declaration)
-        {
-        }
+        VertexDeclarationRef(u32 vertexSize, u32 numElements, VertexDeclaration* declaration);
 
         u32 vertexSize_;
-        u32 numElements_;
+        u16 numElements_[LIME_MAX_VERTEX_STREAMS];
+        u16 streamElementsOffset_[LIME_MAX_VERTEX_STREAMS];
+
         VertexDeclaration *declaration_;
     };
 
@@ -107,6 +103,8 @@ namespace lgraphics
 
         /**
         @return 要素のバイト数を返す
+
+        ストリーム番号は昇順で登録すること
         */
         u16 add(u16 stream, u16 offset, DeclType type, DeclMethod method, DeclUsage usage, u8 usageIndex);
         void end(VertexDeclarationRef& declaration);

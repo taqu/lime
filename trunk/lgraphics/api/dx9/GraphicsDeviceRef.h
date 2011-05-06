@@ -151,6 +151,8 @@ namespace lgraphics
         inline IDirect3DVertexShader9* createVertexShader(const u32* function);
         inline void setVertexShader(IDirect3DVertexShader9* shader);
 
+        inline void setAlphaBlendEnable(bool enable);
+
         // RenderState
         //------------------------------------------------------------------
         inline IDirect3DStateBlock9* createStateBlock(StateType type);
@@ -516,6 +518,12 @@ namespace lgraphics
         d3dDevice_->GetRenderState((D3DRENDERSTATETYPE)type, &value);
         return value;
     }
+
+    inline void GraphicsDeviceRef::setAlphaBlendEnable(bool enable)
+    {
+        d3dDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, (enable)?TRUE : FALSE);
+    }
+
 
     // SamplerState
     //------------------------------------------------------------------

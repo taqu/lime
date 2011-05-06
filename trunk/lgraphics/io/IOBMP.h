@@ -7,6 +7,7 @@
 
 */
 #include "../lgraphicscore.h"
+#include "../api/Enumerations.h"
 #include <lcore/liostream.h>
 
 namespace lgraphics
@@ -26,7 +27,7 @@ namespace io
             Compression_BitFields,
         };
 
-        static const u16 BMP_MAGIC = 'MB';
+        static const u16 BMP_MAGIC;// = 'MB';
         static const u32 INFO_SIZE = 40;
 
         struct BMP_HEADER
@@ -51,10 +52,11 @@ namespace io
 
         };
 
-        IOBMP();
-        ~IOBMP();
-
+        static bool read(lcore::istream& is, u8** ppBuffer, u32& width, u32& height, BufferFormat& format, bool transpose =false);
         static bool read(lcore::istream& is, TextureRef& texture, bool transpose =false);
+
+
+        static bool write(lcore::ostream& os, const u8* buffer, u32 width, u32 height, BufferFormat format);
     };
 }
 }

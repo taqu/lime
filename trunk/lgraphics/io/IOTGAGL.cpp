@@ -21,30 +21,21 @@ namespace
 
 
     //-------------------------------------------------------------------------
-    void read32(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read32(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 4;
 
-        //バッファにロードして転送
-        u32 rowBytes = width * bpp;
-        u8* buffer = LIME_NEW u8[rowBytes*height];
-
+        //バッファにロード
         u32 pitch = width * bpp;
         u32 size = pitch*height;
         lcore::io::read(src, buffer, size);
-
-        dst.blit(0, buffer);
-        LIME_DELETE_ARRAY(buffer);
     }
 
-    void read32RLE(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read32RLE(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 4;
 
-        //バッファにロードして転送
-        u32 rowBytes = width * bpp;
-        u8* buffer = LIME_NEW u8[rowBytes*height];
-
+        //バッファにロード
         u32 pixels = width*height;
         u8 tmp[bpp];
         u8 byte;
@@ -72,36 +63,24 @@ namespace
             }
             i += count;
         }
-
-        dst.blit(0, buffer);
-        LIME_DELETE_ARRAY(buffer);
     }
 
 
-    void read24(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read24(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 3;
 
-        //バッファにロードして転送
-        u32 rowBytes = width * bpp;
-        u8* buffer = LIME_NEW u8[rowBytes*height];
-
+        //バッファにロード
         u32 pitch = width * bpp;
         u32 size = pitch*height;
         lcore::io::read(src, buffer, size);
-
-        dst.blit(0, buffer);
-        LIME_DELETE_ARRAY(buffer);
     }
 
-    void read24RLE(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read24RLE(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 3;
 
         //バッファにロードして転送
-        u32 rowBytes = width * bpp;
-        u8* buffer = LIME_NEW u8[rowBytes*height];
-
         u32 pixels = width*height;
         u8 tmp[bpp];
         for(u32 i=0; i<pixels;){
@@ -132,20 +111,16 @@ namespace
             }
             i += count;
         }
-
-        dst.blit(0, buffer);
-        LIME_DELETE_ARRAY(buffer);
     }
 
 
     //-------------------------------------------------------------------------
-    void read32Transpose(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read32Transpose(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 4;
 
         //バッファにロードして転送
         u32 rowBytes = width * bpp;
-        u8* buffer = LIME_NEW u8[rowBytes*height];
 
         //転地する
         u8* tmpBuffer = buffer + rowBytes * (height-1);
@@ -163,18 +138,14 @@ namespace
             }
             tmpBuffer -= rowBytes;
         }
-
-        dst.blit(0, buffer);
-        LIME_DELETE_ARRAY(buffer);
     }
 
-    void read32RLETranspose(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read32RLETranspose(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 4;
 
         //バッファにロードして転送
         u32 rowBytes = width * bpp;
-        u8* buffer = LIME_NEW u8[rowBytes*height];
 
         //転地する
         u32 pixels = width*height;
@@ -229,19 +200,15 @@ namespace
             }
             i += count;
         }
-
-        dst.blit(0, buffer);
-        LIME_DELETE_ARRAY(buffer);
     }
 
 
-    void read24Transpose(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read24Transpose(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 3;
 
         //バッファにロードして転送
         u32 rowBytes = width * bpp;
-        u8* buffer = LIME_NEW u8[rowBytes*height];
 
         //転地する
         u8* tmpBuffer = buffer + rowBytes * (height-1);
@@ -258,18 +225,14 @@ namespace
             }
             tmpBuffer -= rowBytes;
         }
-
-        dst.blit(0, buffer);
-        LIME_DELETE_ARRAY(buffer);
     }
 
-    void read24RLETranspose(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read24RLETranspose(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 3;
 
         //バッファにロードして転送
         u32 rowBytes = width * bpp;
-        u8* buffer = LIME_NEW u8[rowBytes*height];
 
         //転地する
         u32 pixels = width*height;
@@ -317,9 +280,6 @@ namespace
             }
             i += count;
         }
-
-        dst.blit(0, buffer);
-        LIME_DELETE_ARRAY(buffer);
     }
 
 }

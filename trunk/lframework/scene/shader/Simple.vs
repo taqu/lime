@@ -23,40 +23,20 @@ uniform float3 ambient;
 #ifdef SKINNING
 
 #define NUM_PALETTE_MATRICES 80
-uniform float4 palette[NUM_PALETTE_MATRICES*3];
+uniform float4x3 palette[NUM_PALETTE_MATRICES];
 
-float4 skinning_position(uniform float4 position, uniform int index)
-{
-    float4 tmp;
-    tmp.x = dot(position, palette[index      ]);
-    tmp.y = dot(position, palette[index+c_ione]);
-    tmp.z = dot(position, palette[index+c_itwo]);
-    tmp.w = position.w;
-
-    return tmp;
-}
-
-float3 skinning_normal(uniform float3 normal, uniform int index)
-{
-    float3 tmp;
-    tmp.x = dot(normal, palette[index      ].xyz);
-    tmp.y = dot(normal, palette[index+c_ione].xyz);
-    tmp.z = dot(normal, palette[index+c_itwo].xyz);
-    return tmp;
-}
-
-void skinning(uniform float4 position, uniform float3 normal, out float4 retPosition, out float3 retNormal, uniform float4 indices)
+void skinning(uniform float4 position, uniform float3 normal, out float3 retPosition, out float3 retNormal, uniform float4 indices)
 {
     float weight = indices.z * f_1_100;
-    int index = int(indices.x) * c_ithree;
+    int index = int(indices.x);
 
-    retPosition = skinning_position(position, index) * weight;
-    retNormal = skinning_normal(normal, index) * weight;
+    retPosition = mul(position * palette[index]) * weight;
+    retNormal = mul(normal * palette[index]) * weight;
 
     weight = float(c_ione) - weight;
-    index = int(indices.y) * c_ithree;
-    retPosition += skinning_position(position, index) * weight;
-    retNormal += skinning_normal(normal, index) * weight;
+    index = int(indices.y);
+    retPosition += mul(position * palette[index]) * weight;
+    retNormal += mul(normal * palette[index]) * weight;
 }
 #endif
 
@@ -108,28 +88,28 @@ VS_OUTPUT main(VSInput input)
 {
     VS_OUTPUT output= (VS_OUTPUT)0;
 
-    float4 position;
+    float3 position;
     float3 normal;
 #ifdef SKINNING
     skinning(input.position, input.normal, position, normal, input.bones);
 #else
-    position = input.position;
+    position = input.position.xyz;
 #ifdef V_NORMAL
     normal = input.normal;
 #endif
 #endif
 
 #ifdef PPOS
-    output.pos0 = position.xyz;
+    output.pos0 = position;
 #endif
 
 //linear-z or non-linear-z
 #if 1
-    float4 vpos = mul(position, mwvp);
+    float4 vpos = mul(float4(position.xyz, 1.0f), mwvp);
     vpos.z *= vpos.w;
     output.position = vpos;
 #else
-    output.position = mul(position, mwvp);
+    output.position = mul(float4(position.xyz, 1.0f), mwvp);
 #endif
 
 #ifdef PNORMAL

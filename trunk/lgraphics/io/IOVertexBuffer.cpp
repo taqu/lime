@@ -21,8 +21,6 @@ namespace io
             u32 id_;
             u32 size_;
             u32 num_;
-            u32 offset_;
-            u16 stream_;
             u16 pool_;
             u32 usage_;
         };
@@ -38,9 +36,6 @@ namespace io
         vbHeader.usage_ = decodeUsage(static_cast<CodeUsage>(vbHeader.usage_));
 
         buffer = VertexBuffer::create(vbHeader.size_, vbHeader.num_, static_cast<Pool>(vbHeader.pool_), static_cast<Usage>(vbHeader.usage_));
-
-        buffer.setStream(vbHeader.stream_);
-        buffer.setOffset(vbHeader.offset_);
 
 #if defined(LIME_GL)
         //GL版

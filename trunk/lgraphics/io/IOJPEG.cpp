@@ -59,13 +59,15 @@ namespace io
         }
 
 #if defined(LIME_GL)
-        bool readJPG(TextureRef& dst, jpeg_decompress_struct& cinfo)
+
+        bool readJPG(jpeg_decompress_struct& cinfo, u8** ppBuffer, u32& width, u32& height, BufferFormat& format)
         {
+            LASSERT(ppBuffer != NULL);
+
             //long jump用ステートセット
             jmp_buf jbuf;
             cinfo.client_data = (void*)&jbuf;
 
-            u8* buffer = NULL;
             bool ret = true;
             if(JUMP_OK == setjmp(jbuf)){
                 jpeg_read_header(&cinfo, TRUE);
@@ -73,11 +75,10 @@ namespace io
 
                 jpeg_start_decompress(&cinfo);
 
-                u32 width = cinfo.output_width;
-                u32 height = cinfo.output_height;
+                width = cinfo.output_width;
+                height = cinfo.output_height;
                 s32 component = cinfo.output_components;
 
-                BufferFormat format;
                 switch(component)
                 {
                 case 3:
@@ -92,13 +93,9 @@ namespace io
                     return false;
                 };
 
-                dst = Texture::create(width, height, 1, Usage_None, format, Pool_Managed);
-                if(dst.valid() == false){
-                    return false;
-                }
-
                 u32 pitch = width*component;
-                buffer = LIME_NEW u8[ pitch*height ];
+                *ppBuffer = LIME_NEW u8[ pitch*height ];
+                u8* buffer = *ppBuffer;
 
                 JSAMPROW rows[1];
 
@@ -109,28 +106,129 @@ namespace io
                     rows[0] -= pitch;
                 }
 
-                dst.blit(0, buffer);
+            }else{
+                ret = false;
+            }
+
+            return ret;
+        }
+
+#else
+        bool readJPG(jpeg_decompress_struct& cinfo, u8** ppBuffer, u32& width, u32& height, BufferFormat& format)
+        {
+            LASSERT(ppBuffer != NULL);
+
+            //long jump用ステートセット
+            jmp_buf jbuf;
+            cinfo.client_data = (void*)&jbuf;
+
+            bool ret = true;
+            if(JUMP_OK == setjmp(jbuf)){
+                jpeg_read_header(&cinfo, TRUE);
+
+
+                jpeg_start_decompress(&cinfo);
+
+                width = cinfo.output_width;
+                height = cinfo.output_height;
+                s32 component = cinfo.output_components;
+
+                //TODO: 24ビットテクスチャ対応
+                u32 pitch;
+                switch(component)
+                {
+                case 3:
+                    format = Buffer_X8R8G8B8;
+                    pitch = width * 4;
+                    *ppBuffer = LIME_NEW u8[ pitch*(height+1) ];
+                    break;
+
+                case 1:
+                    format = Buffer_L8;
+                    pitch = width;
+                    *ppBuffer = LIME_NEW u8[ pitch*height ];
+                    break;
+
+                default:
+                    return false;
+                };
+
+                JSAMPROW rows[1];
+                u8* buffer = *ppBuffer;
+
+                switch(component)
+                {
+                case 3:
+                    {
+                        u8* lineBuffer = buffer + pitch * width;
+                        u8* tmp = buffer;
+                        rows[0] = reinterpret_cast<JSAMPLE*>( lineBuffer );
+                        while(cinfo.output_scanline < cinfo.output_height){
+                            jpeg_read_scanlines(&cinfo, rows, 1);
+
+                            for(u32 i=0; i<width; ++i){
+                                tmp[0] = lineBuffer[2];
+                                tmp[1] = lineBuffer[1];
+                                tmp[2] = lineBuffer[0];
+                                tmp[3] = 0xFFU;
+                                tmp += 4;
+                            }
+                        }
+                    }
+                    break;
+
+                case 1:
+                    {
+                        rows[0] = reinterpret_cast<JSAMPLE*>( buffer );
+                        while(cinfo.output_scanline < cinfo.output_height){
+                            jpeg_read_scanlines(&cinfo, rows, 1);
+                            rows[0] += pitch;
+                        }
+                    }
+                    break;
+
+                default:
+                    return false;
+                };
 
             }else{
                 ret = false;
             }
 
-            LIME_DELETE_ARRAY(buffer);
             return ret;
-        }
-#else
-        bool readJPG(jpeg_decompress_struct& cinfo)
-        {
         }
 #endif
     }
 
-    IOJPEG::IOJPEG()
+    bool IOJPEG::read(const Char* filepath, u8** ppBuffer, u32& width, u32& height, BufferFormat& format)
     {
-    }
+        LASSERT(filepath != NULL);
+        LASSERT(ppBuffer != NULL);
 
-    IOJPEG::~IOJPEG()
-    {
+        FILE *file = fopen(filepath, "rb");
+        if(NULL == file){
+            return false;
+        }
+
+        jpeg_decompress_struct cinfo;
+        jpeg_error_mgr jerror;
+
+        // エラー処理初期化
+        cinfo.err = jpeg_std_error(&jerror);
+        jerror.error_exit = jpg_error_return; //エラー終了コールバックセット
+        jerror.output_message = jpg_out_msg;  //メッセージ出力コールバックセット
+
+
+        jpeg_create_decompress(&cinfo);
+        jpeg_stdio_src(&cinfo, file);
+
+        bool ret = readJPG(cinfo, ppBuffer, width, height, format);
+
+        jpeg_finish_decompress(&cinfo);
+        jpeg_destroy_decompress(&cinfo);
+
+        fclose(file);
+        return ret;
     }
 
     bool IOJPEG::read(const Char* filepath, TextureRef& texture)
@@ -153,8 +251,23 @@ namespace io
 
         jpeg_create_decompress(&cinfo);
         jpeg_stdio_src(&cinfo, file);
-        bool ret = readJPG(texture, cinfo);
 
+        u32 width = 0;
+        u32 height = 0;
+        BufferFormat format = Buffer_Unknown;
+        u8* buffer = NULL;
+        bool ret = readJPG(cinfo, &buffer, width, height, format);
+
+        if(ret){
+            texture = Texture::create(width, height, 1, Usage_None, format, Pool_Managed);
+            if(texture.valid()){
+                texture.blit(buffer);
+            }else{
+                ret = false;
+            }
+        }
+
+        LIME_DELETE_ARRAY(buffer);
         jpeg_finish_decompress(&cinfo);
         jpeg_destroy_decompress(&cinfo);
 

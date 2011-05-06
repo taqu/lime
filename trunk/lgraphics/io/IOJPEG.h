@@ -6,6 +6,7 @@
 @date 2011/01/08 create
 */
 #include "../lgraphicscore.h"
+#include "../api/Enumerations.h"
 #include <lcore/liostream.h>
 
 namespace lgraphics
@@ -17,9 +18,7 @@ namespace io
     class IOJPEG
     {
     public:
-        IOJPEG();
-        ~IOJPEG();
-
+        static bool read(const Char* filepath, u8** ppBuffer, u32& width, u32& height, BufferFormat& format);
         static bool read(const Char* filepath, TextureRef& texture);
     };
 }

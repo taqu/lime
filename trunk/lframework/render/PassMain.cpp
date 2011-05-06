@@ -112,6 +112,12 @@ namespace lrender
         lscene::Geometry* geometry = NULL;
         lscene::Material* material = NULL;
 
+        if(batches_.size()>0){
+            BatchVector::iterator itr = batches_.begin();
+            geomBuffer = (*itr)->getGeometry()->getGeometryBuffer().get();
+            geomBuffer->attach();
+        }
+
         //アルファブレンド無効
         lgraphics::Graphics::getDevice().setAlphaBlendEnable(false);
 
@@ -126,6 +132,7 @@ namespace lrender
             lgraphics::GeometryBuffer* currentGeom = geometry->getGeometryBuffer().get();
 
             if(currentGeom != geomBuffer){
+                geomBuffer->detach();
                 geomBuffer = currentGeom;
                 geomBuffer->attach();
             }
@@ -141,8 +148,19 @@ namespace lrender
 
         //アルファブレンド有効
         lgraphics::Graphics::getDevice().setAlphaBlendEnable(true);
-        geomBuffer = NULL;
         material = NULL;
+
+        if(geomBuffer != NULL){
+            geomBuffer->detach();
+        }
+
+        if(alphaBatches_.size()>0){
+            BatchVector::iterator itr = alphaBatches_.begin();
+            geomBuffer = (*itr)->getGeometry()->getGeometryBuffer().get();
+            geomBuffer->attach();
+        }else{
+            geomBuffer = NULL;
+        }
 
         for(BatchVector::iterator itr = alphaBatches_.begin();
             itr != alphaBatches_.end();
@@ -155,6 +173,7 @@ namespace lrender
             lgraphics::GeometryBuffer* currentGeom = geometry->getGeometryBuffer().get();
 
             if(currentGeom != geomBuffer){
+                geomBuffer->detach();
                 geomBuffer = currentGeom;
                 geomBuffer->attach();
             }
@@ -168,7 +187,7 @@ namespace lrender
             drawBatch(batch, geomBuffer, geometry);
         }
 
-        if(geomBuffer){
+        if(geomBuffer != NULL){
             geomBuffer->detach();
         }
 

@@ -336,6 +336,9 @@ namespace io
             s32 pitch = dst.getBytePerPixel() * header.width_;
             u8* buffer = LIME_NEW u8[pitch*height];
 
+            u32 width = header.width_;
+
+            dst.attach();
             for(u32 i=0; i<mipmapLevel; ++i){
                 diff = (pitchSize < pitch)? 0 : pitchSize - pitch;
                 LASSERT(diff<=4);
@@ -348,16 +351,15 @@ namespace io
                     b += pitch;
                 }
 
-                dst.blit(i, buffer);
+                dst.blit(i, width, height, buffer);
 
-                height >>= 1;
-                height = (height<=0)? 1 : height;
+                width = (width>=2)? (width>>1) : 1;
+                height = (height>=2)? (height>>1) : 1;
 
-                pitchSize >>= 1;
-                pitchSize = (pitchSize<=0)? 1 : pitchSize;
-                pitch >>= 1;
-                pitch = (pitch<=0)? 1 : pitch;
+                pitchSize = (pitchSize>=2)? (pitchSize>>1) : 1;
+                pitch = (pitch>=2)? (pitch>>1) : 1;
             }
+            dst.detach();
             LIME_DELETE_ARRAY(buffer);
 #else
             //DX版
@@ -380,11 +382,9 @@ namespace io
 
                 dst.unlock(i);
 
-                height >>= 1;
-                height = (height<=0)? 1 : height;
+                height = (height>=2)? (height>>1) : 1;
 
-                pitchSize >>= 1;
-                pitchSize = (pitchSize<=0)? 1 : pitchSize;
+                pitchSize = (pitchSize>=2)? (pitchSize>>1) : 1;
             }
 #endif
         }
@@ -437,14 +437,20 @@ namespace io
             //GL版
             u8* buffer = LIME_NEW u8[linearSize];
 
+            dst.attach();
+            u32 width = header.width_;
+            u32 height = header.height_;
             for(u32 i=0; i<mipmapLevel; ++i){
                 lcore::io::read(src, buffer, linearSize);
 
-                dst.blit(i, buffer);
+                dst.blit(i, width, height, buffer);
 
-                linearSize >>= 2;
+                linearSize >>= 1;
                 linearSize = lcore::maximum(linearSize, minSize);
+                width = (width>=2)? (width>>1) : 1;
+                height = (height>=2)? (height>>1) : 1;
             }
+            dst.detach();
             LIME_DELETE_ARRAY(buffer);
 #else
             //DX版
@@ -459,7 +465,7 @@ namespace io
 
                 dst.unlock(i);
 
-                linearSize >>= 2;
+                linearSize >>= 1;
                 linearSize = lcore::maximum(linearSize, minSize);
             }
 #endif

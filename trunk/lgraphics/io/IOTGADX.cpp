@@ -20,31 +20,17 @@ namespace
     }
 
     //-------------------------------------------------------------------------
-    void read32(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read32(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
-        LockedRect rect;
-        if(dst.lock(0, rect) == false){
-            return;
-        }
-        u8* buffer = reinterpret_cast<u8*>( rect.bits_ );
-
         static const u32 bpp = 4;
 
         u32 pixels = width*height;
 
         lcore::io::read(src, buffer, pixels*bpp);
-
-        dst.unlock(0);
     }
 
-    void read32RLE(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read32RLE(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
-        LockedRect rect;
-        if(dst.lock(0, rect) == false){
-            return;
-        }
-        u8* buffer = reinterpret_cast<u8*>( rect.bits_ );
-
         static const u32 bpp = 4;
 
         u32 pixels = width*height;
@@ -74,19 +60,11 @@ namespace
             }
             i += count;
         }
-
-        dst.unlock(0);
     }
 
 
-    void read24(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read24(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
-        LockedRect rect;
-        if(dst.lock(0, rect) == false){
-            return;
-        }
-        u8* buffer = reinterpret_cast<u8*>( rect.bits_ );
-
         static const u32 bpp = 3;
         static const u32 dstBpp = 4;
 
@@ -97,20 +75,12 @@ namespace
             buffer[bpp] = 0xFFU;
             buffer += dstBpp;
         }
-
-        dst.unlock(0);
     }
 
-    void read24RLE(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read24RLE(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 3;
         static const u32 dstBpp = 4;
-
-        LockedRect rect;
-        if(dst.lock(0, rect) == false){
-            return;
-        }
-        u8* buffer = reinterpret_cast<u8*>( rect.bits_ );
 
         u32 pixels = width*height;
         u8 tmp[bpp];
@@ -144,23 +114,14 @@ namespace
             }
             i += count;
         }
-
-        dst.unlock(0);
     }
 
 
 
     //-------------------------------------------------------------------------
-    void read32Transpose(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read32Transpose(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 4;
-
-        LockedRect rect;
-        if(dst.lock(0, rect) == false){
-            return;
-        }
-
-        u8* buffer = reinterpret_cast<u8*>( rect.bits_ );
 
         //“]’n‚·‚é
         u32 rowBytes = width * bpp;
@@ -179,19 +140,11 @@ namespace
             }
             tmpBuffer -= rowBytes;
         }
-
-        dst.unlock(0);
     }
 
-    void read32RLETranspose(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read32RLETranspose(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 4;
-
-        LockedRect rect;
-        if(dst.lock(0, rect) == false){
-            return;
-        }
-        u8* buffer = reinterpret_cast<u8*>( rect.bits_ );
 
         //“]’n‚·‚é
         u32 pixels = width*height;
@@ -247,18 +200,11 @@ namespace
             }
             i += count;
         }
-        dst.unlock(0);
     }
 
 
-    void read24Transpose(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read24Transpose(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
-        LockedRect rect;
-        if(dst.lock(0, rect) == false){
-            return;
-        }
-        u8* buffer = reinterpret_cast<u8*>( rect.bits_ );
-
         static const u32 bpp = 3;
         static const u32 dstBpp = 4;
 
@@ -279,20 +225,12 @@ namespace
             }
             tmpBuffer -= rowBytes;
         }
-
-        dst.unlock(0);
     }
 
-    void read24RLETranspose(TextureRef& dst, lcore::istream& src, u32 width, u32 height)
+    void read24RLETranspose(u8* buffer, lcore::istream& src, u32 width, u32 height)
     {
         static const u32 bpp = 3;
         static const u32 dstBpp = 4;
-
-        LockedRect rect;
-        if(dst.lock(0, rect) == false){
-            return;
-        }
-        u8* buffer = reinterpret_cast<u8*>( rect.bits_ );
 
         //“]’n‚·‚é
         u32 rowBytes = width * dstBpp;
@@ -344,7 +282,6 @@ namespace
             }
             i += count;
         }
-        dst.unlock(0);
     }
 }
 }

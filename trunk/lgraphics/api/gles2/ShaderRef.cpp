@@ -121,7 +121,7 @@ namespace lgraphics
         return desc;
     }
 
-    bool Shader::linkShader(VertexShaderRef& vs, PixelShaderRef& ps, VertexDeclarationRef& decl, Descriptor* vsDesc, Descriptor* psDesc)
+    bool Shader::linkShader(VertexShaderRef& vs, PixelShaderRef& ps, u32 numStreams, VertexDeclarationRef& decl, Descriptor* vsDesc, Descriptor* psDesc)
     {
         LASSERT(vsDesc != NULL);
         LASSERT(psDesc != NULL);
@@ -130,7 +130,9 @@ namespace lgraphics
         glAttachShader(program, vsDesc->id_);
         glAttachShader(program, psDesc->id_);
 
-        decl.bindAttributes(program);
+        for(u32 i=0; i<numStreams; ++i){
+            decl.bindAttributes(i, program);
+        }
 
         glLinkProgram(program);
         GLint status = 0;

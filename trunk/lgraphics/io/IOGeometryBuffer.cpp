@@ -97,7 +97,7 @@ namespace io
         lcore::io::write(os, header);
 
         IOVertexDeclaration::write(os, buffer->getDecl());
-        IOVertexBuffer::write(os, buffer->getVertexBuffer());
+        IOVertexBuffer::write(os, buffer->getVertexBuffer(0));
         IOIndexBuffer::write(os, buffer->getIndexBuffer());
 #endif
         return true;

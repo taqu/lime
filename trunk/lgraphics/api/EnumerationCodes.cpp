@@ -333,7 +333,9 @@ namespace lgraphics
 
             CASE_ENTRY(Buffer_A8);
             CASE_ENTRY(Buffer_R8G8B8);
+#if defined(LIME_GL)
             CASE_ENTRY(Buffer_B8G8R8);
+#endif
             CASE_ENTRY(Buffer_A8R8G8B8);
             CASE_ENTRY(Buffer_X8R8G8B8);
             CASE_ENTRY(Buffer_A8B8G8R8);

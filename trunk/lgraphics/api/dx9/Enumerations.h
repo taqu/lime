@@ -149,7 +149,7 @@ namespace lgraphics
 
     enum PrimitiveType
     {
-        //Primitive_PointList = D3DPT_POINTLIST,
+        Primitive_PointList = D3DPT_POINTLIST,
         Primitive_LineList = D3DPT_LINELIST,
         Primitive_LineStrip = D3DPT_LINESTRIP,
         Primitive_TriangleList = D3DPT_TRIANGLELIST,
@@ -250,7 +250,13 @@ namespace lgraphics
         TexFilter_PyramidalQuad = D3DTEXF_PYRAMIDALQUAD,
         TexFilter_GaussianQuad = D3DTEXF_GAUSSIANQUAD,
         TexFilter_ConvolutionMono = D3DTEXF_CONVOLUTIONMONO,
-        TexFilter_Num,
+
+        TexFilter_PointMipMapPoint = D3DTEXF_LINEAR,
+        TexFilter_LinearMipMapPoint = D3DTEXF_LINEAR,
+        TexFilter_PointMipMapLinear = D3DTEXF_LINEAR,
+        TexFilter_LinearMipMapLinear = D3DTEXF_LINEAR,
+
+        TexFilter_Num = 11,
     };
 
     enum FillMode

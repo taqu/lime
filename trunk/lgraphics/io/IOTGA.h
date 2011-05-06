@@ -6,6 +6,7 @@
 @date 2010/05/20 create
 */
 #include "../lgraphicscore.h"
+#include "../api/Enumerations.h"
 #include <lcore/liostream.h>
 
 namespace lgraphics
@@ -57,9 +58,7 @@ namespace io
 
         static const u32 TGA_HEADER_SIZE = 18;
 
-        IOTGA();
-        ~IOTGA();
-
+        static bool read(lcore::istream& is, u8** ppBuffer, u32& width, u32& height, BufferFormat& format, bool transpose = false);
         static bool read(lcore::istream& is, TextureRef& texture, bool transpose = false);
     };
 }

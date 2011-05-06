@@ -161,6 +161,9 @@ namespace lscene
         virtual void setParameters(const lrender::Batch& batch, const lscene::Scene& scene);
 
     private:
+
+        lgraphics::HANDLE params_[shader::ParamVS_Num];
+#if defined(LIME_GL)
         /**
         @brief 行列の要素を転置する。
 
@@ -170,8 +173,8 @@ namespace lscene
 
         inline void setInitializeMatrix34(lmath::Matrix43& dst);
 
-        lgraphics::HANDLE params_[shader::ParamVS_Num];
         lmath::Matrix43 palette_[lgraphics::LIME_MAX_SKINNING_MATRICES];
+#endif
     };
 
 

@@ -41,8 +41,6 @@ namespace lgraphics
         VertexBufferRef()
             :vertexSize_(0)
             ,vertexNum_(0)
-            ,stream_(0)
-            ,offset_(0)
             ,vbID_(NULL)
         {
         }
@@ -88,12 +86,6 @@ namespace lgraphics
         u32 getVertexSize() const{ return vertexSize_;}
         u32 getVertexNum() const{ return vertexNum_;}
 
-        u32 getStream() const{ return stream_;}
-        void setStream(u32 stream){ stream_ = stream;}
-
-        u32 getOffset() const{ return offset_;}
-        void setOffset(u32 offset){ offset_ = offset;}
-
         void attach() const;
         void detach() const;
 
@@ -101,8 +93,6 @@ namespace lgraphics
         {
             lcore::swap(vertexSize_, rhs.vertexSize_);
             lcore::swap(vertexNum_, rhs.vertexNum_);
-            lcore::swap(stream_, rhs.stream_);
-            lcore::swap(offset_, rhs.offset_);
             lcore::swap(vbID_, rhs.vbID_);
         }
 
@@ -112,8 +102,6 @@ namespace lgraphics
         VertexBufferRef(u32 vertexSize, u32 vertexNum, Descriptor* vbID)
             :vertexSize_(vertexSize)
             ,vertexNum_(vertexNum)
-            ,stream_(0)
-            ,offset_(0)
             ,vbID_(vbID)
         {
             LASSERT(vbID_ != NULL);
@@ -121,8 +109,6 @@ namespace lgraphics
 
         u32 vertexSize_;
         u32 vertexNum_;
-        u32 stream_;
-        u32 offset_;
         Descriptor *vbID_;
     };
 
@@ -151,7 +137,7 @@ namespace lgraphics
     class VertexBufferUP : private lcore::NonCopyable<VertexBufferUP>
     {
     public:
-        static VertexBufferUPRef create(u32 vertexSize, u32 vertexNum, u32 stream, u32 offset);
+        static VertexBufferUPRef create(u32 vertexSize, u32 vertexNum);
 
         u32 AddRef()
         {
@@ -193,12 +179,6 @@ namespace lgraphics
         u32 getVertexSize() const{ return vertexSize_;}
         u32 getVertexNum() const{ return vertexNum_;}
 
-        u32 getStream() const{ return stream_;}
-        void setStream(u32 stream){ stream_ = stream;}
-
-        u32 getOffset() const{ return offset_;}
-        void setOffset(u32 offset){ offset_ = offset;}
-
         void swap(VertexBufferUP& rhs)
         {
             lcore::swap(buffer_, rhs.buffer_);
@@ -210,18 +190,14 @@ namespace lgraphics
     private:
         VertexBufferUP()
             :buffer_(NULL)
-            ,stream_(0)
-            ,offset_(0)
             ,vertexSize_(0)
             ,vertexNum_(0)
             ,count_(0)
         {
         }
 
-        VertexBufferUP(u8* buffer, u32 vertexSize, u32 vertexNum, u32 stream, u32 offset)
+        VertexBufferUP(u8* buffer, u32 vertexSize, u32 vertexNum)
             :buffer_(buffer)
-            ,stream_(stream)
-            ,offset_(offset)
             ,vertexSize_(vertexSize)
             ,vertexNum_(vertexNum)
             ,count_(0)
@@ -231,8 +207,6 @@ namespace lgraphics
         ~VertexBufferUP();
 
         u8 *buffer_;
-        u32 stream_;
-        u32 offset_;
         u32 vertexSize_;
         u32 vertexNum_;
 
@@ -298,29 +272,6 @@ namespace lgraphics
             return buffer_->getVertexNum();
         }
 
-        u32 getStream() const
-        {
-            LASSERT(buffer_ != NULL);
-            return buffer_->getStream();
-        }
-
-        void setStream(u32 stream)
-        {
-            LASSERT(buffer_ != NULL);
-            return buffer_->setStream(stream);
-        }
-
-        u32 getOffset() const
-        {
-            LASSERT(buffer_ != NULL);
-            return buffer_->getOffset();
-        }
-
-        void setOffset(u32 offset)
-        {
-            LASSERT(buffer_ != NULL);
-            return buffer_->setOffset(offset);
-        }
     private:
         friend class VertexBufferUP;
 

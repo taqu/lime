@@ -9,6 +9,8 @@ const int c_ione = 1;
 const int c_itwo = 2;
 const int c_ithree = 3;
 const float f_1_100 = 0.01;
+const float c_fzero = 0.0;
+const float c_fone = 1.0;
 
 uniform mat4 mwvp; //World * View * Projection Matrix
 
@@ -68,58 +70,23 @@ varying vec3 v_pos0;
 #ifdef SKINNING
 uniform vec4 palette[NUM_PALETTE_MATRICES*3];
 
-void skinning_position(inout vec4 ret, in vec4 position, float weight, int index)
+vec3 skinning_normal(vec3 normal, ivec3 index)
 {
-    vec4 tmp;
-    tmp.x = dot(position, palette[index      ]);
-    tmp.y = dot(position, palette[index+c_ione]);
-    tmp.z = dot(position, palette[index+c_itwo]);
-    tmp.w = position.w;
-
-    ret += weight * tmp;
+    vec3 ret;
+    ret.x = dot( normal, palette[index.x].xyz );
+    ret.y = dot( normal, palette[index.y].xyz );
+    ret.z = dot( normal, palette[index.z].xyz );
+    return ret;
 }
 
-void skinning_normal(inout vec3 ret, in vec3 normal, float weight, int index)
+vec3 skinning_position(vec4 position, ivec3 index)
 {
-    vec3 tmp;
-    tmp.x = dot(normal, palette[index      ].xyz);
-    tmp.y = dot(normal, palette[index+c_ione].xyz);
-    tmp.z = dot(normal, palette[index+c_itwo].xyz);
-
-    ret += weight * tmp;
+    vec3 ret;
+    ret.x = dot( position, palette[index.x].xyzw );
+    ret.y = dot( position, palette[index.y].xyzw );
+    ret.z = dot( position, palette[index.z].xyzw );
+    return ret;
 }
-
-#if defined(PNORMAL) || (defined(LIGHTVS) && defined(VNORMAL))
-void skinning(in vec4 position, in vec3 normal, out vec4 retPosition, out vec3 retNormal)
-{
-    retPosition = vec4(float(c_izero));
-    retNormal = vec3(float(c_izero));
-
-    float weight = a_indices0.z * f_1_100;
-    int index = int(a_indices0.x) * c_ithree;
-    skinning_position(retPosition, position, weight, index);
-    skinning_normal(retNormal, normal, weight, index);
-
-    weight = float(c_ione) - weight;
-    index = int(a_indices0.y) * c_ithree;
-    skinning_position(retPosition, position, weight, index);
-    skinning_normal(retNormal, normal, weight, index);
-}
-#else
-
-void skinning(in vec4 position, out vec4 retPosition)
-{
-    retPosition = vec4(float(c_izero));
-
-    float weight = a_indices0.z * f_1_100;
-    int index = int(a_indices0.x) * c_ithree;
-    skinning_position(retPosition, position, weight, index);
-
-    weight = float(c_ione) - weight;
-    index = int(a_indices0.y) * c_ithree;
-    skinning_position(retPosition, position, weight, index);
-}
-#endif
 
 #endif
 
@@ -144,16 +111,31 @@ void main()
 
 #ifdef SKINNING
 
-#if defined(PNORMAL) || (defined(LIGHTVS) && defined(VNORMAL))
-    skinning(vec4(a_pos0.xyz, float(c_ione)), a_normal0.xyz, position, normal);
+    ivec3 index0;
+    index0.x = int(a_indices0.x) * c_ithree;
+    index0.yz = ivec2(index0.x + c_ione, index0.x + c_itwo);
 
-#else
-    skinning(vec4(a_pos0.xyz, float(c_ione)), position);
+    ivec3 index1;
+    index1.x = int(a_indices0.y) * c_ithree;
+    index1.yz = ivec2(index1.x + c_ione, index1.x + c_itwo);
+
+    float weight = a_indices0.z * f_1_100;
+
+    position = vec4(a_pos0.xyz, c_fone);
+    vec3 p0 = skinning_position(position, index0);
+    vec3 p1 = skinning_position(position, index1);
+    position.xyz = mix(p1, p0, weight);
+
+#if defined(PNORMAL) || (defined(LIGHTVS) && defined(VNORMAL))
+    vec3 n0 = skinning_normal(a_normal0.xyz, index0);
+    vec3 n1 = skinning_normal(a_normal0.xyz, index1);
+    normal = mix(n1, n0, weight);
+
 #endif //PNORMAL
 
 #else //SKINNING
 
-    position = vec4(a_pos0.xyz, float(c_ione));
+    position = vec4(a_pos0.xyz, c_fone);
 #ifdef VNORMAL
     normal = a_normal0.xyz;
 #endif //VNORMAL
@@ -205,8 +187,8 @@ void main()
     vec3 E = normalize(camPos - posLighting);
     vec3 H = normalize(L+E);
 
-    float cosNL = max(float(c_izero), dot(N,L));
-    float cosNH = max(float(c_izero), dot(N,H));
+    float cosNL = max(c_fzero, dot(N,L));
+    float cosNH = max(c_fzero, dot(N,H));
 
     v_tex3 = vec2(cosNL);
 
@@ -222,8 +204,8 @@ void main()
     vec3 E = normalize(camPos - posLighting);
     vec3 H = normalize(L+E);
 
-    float cosNL = max(float(c_izero), dot(N,L));
-    float cosNH = max(float(c_izero), dot(N,H));
+    float cosNL = max(c_fzero, dot(N,L));
+    float cosNH = max(c_fzero, dot(N,H));
 
     float shininess = specular.w;
 
@@ -233,8 +215,8 @@ void main()
 #endif //TEXSHADE
 
 #else
-    v_specular0.xyz = vec3(float(c_izero));
-    v_specular0.w = float(c_ione);
+    v_specular0.xyz = vec3(c_fzero);
+    v_specular0.w = c_fone;
 #endif
 
 #endif //LIGHTVS

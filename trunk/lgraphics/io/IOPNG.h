@@ -6,6 +6,7 @@
 @date 2011/01/08 create
 */
 #include "../lgraphicscore.h"
+#include "../api/Enumerations.h"
 #include <lcore/liostream.h>
 
 namespace lgraphics
@@ -17,9 +18,7 @@ namespace io
     class IOPNG
     {
     public:
-        IOPNG();
-        ~IOPNG();
-
+        static bool read(lcore::istream& is, u8** ppBuffer, u32& width, u32& height, BufferFormat& format);
         static bool read(lcore::istream& is, TextureRef& texture);
     };
 }
