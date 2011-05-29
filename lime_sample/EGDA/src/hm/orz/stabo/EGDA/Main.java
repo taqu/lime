@@ -45,6 +45,7 @@ public class Main extends Activity
         renderer_ = new MainRenderer();
         mainView_ = new GLSurfaceView(this, renderer_);
         mainView_.setLayoutParams( new FrameLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        //mainView_.setLayoutParams( new LayoutParams(480, 800));
 
         //ÉÅÉCÉìHUD
         View hud = this.getLayoutInflater().inflate(R.layout.hud, null);
@@ -56,6 +57,7 @@ public class Main extends Activity
         //GL->HUDÇÃèáÇ…èdÇÀÇÈ
         frameLayout_ = new FrameLayout(this);
         frameLayout_.setLayoutParams( new LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+        //frameLayout_.setLayoutParams( new LayoutParams(800, 600));
 
         frameLayout_.addView(mainView_);
         frameLayout_.addView(hud);
@@ -64,7 +66,7 @@ public class Main extends Activity
 
         state_ = State_Stop;
 
-        LogOut.d("onCreate");
+        //LogOut.d("onCreate");
     }
 
 	protected void onPause()
@@ -72,7 +74,7 @@ public class Main extends Activity
 		super.onPause();
 
 		mainView_.onPause();
-		LogOut.d("onPause");
+		//LogOut.d("onPause");
 	}
 
 	protected void onResume()
@@ -80,14 +82,14 @@ public class Main extends Activity
 		super.onResume();
 
 		mainView_.onResume();
-		LogOut.d("onResume");
+		//LogOut.d("onResume");
 	}
 
 	protected void onStop()
     {
 	    super.onStop();
 	    Config.getInstance().save(getResources().getString(R.string.app_name));
-	    LogOut.d("onStop");
+	    //LogOut.d("onStop");
     }
 
 	public boolean onCreateOptionsMenu(Menu menu)

@@ -120,8 +120,9 @@ public class MainRenderer implements GLSurfaceView.Renderer
       EGDALib.initialize(textTexture_);
 
       //モードセット
-      EGDALib.setMode(Config.getInstance().getScreenMode(), Config.getInstance().getCameraMode() );
-      
+      Config appConfig = Config.getInstance();
+      EGDALib.setMode(appConfig.getScreenMode(), appConfig.getCameraMode(), appConfig.isAlhpaTest(), appConfig.isTextureCompress() );
+
       textTexture_ = null;
     }
 
@@ -158,7 +159,7 @@ public class MainRenderer implements GLSurfaceView.Renderer
 
         case CommandManager.Command_ChangeMode:
             CommandManager.CommandChangeMode changeMode = (CommandManager.CommandChangeMode)command;
-        	EGDALib.setMode(changeMode.screenMode_, changeMode.cameraMode_ );
+        	EGDALib.setMode(changeMode.screenMode_, changeMode.cameraMode_, changeMode.isAlphaTest_, changeMode.isTextureCompress_ );
         	break;
         }
     }

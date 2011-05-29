@@ -8,6 +8,7 @@
 namespace pmm
 {
     class CameraAnimPack;
+    struct CameraPose;
 }
 
 namespace egda
@@ -43,7 +44,7 @@ namespace egda
 
         void resetProjection();
 
-        void setInitial(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov);
+        void setInitial(const pmm::CameraPose& pose);
         void setCameraAnim(pmm::CameraAnimPack* pack);
     private:
         Camera(const Camera&);

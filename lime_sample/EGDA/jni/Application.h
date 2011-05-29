@@ -26,7 +26,7 @@ namespace egda
         static const u32 CharH = 20;
 
         static const u32 Rows = 6;
-        static const u32 Cols = 16;
+        static const u32 Cols = 17;
         static const u32 RowsRatio = 3;
         static const u32 ColsRatio = 3;
 

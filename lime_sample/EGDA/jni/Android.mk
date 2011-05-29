@@ -54,6 +54,7 @@ LOCAL_SRC_FILES := $(LIME_DIR)/lgraphics/lgraphics.cpp\
                    $(LIME_DIR)/lgraphics/api/gles2/VertexDeclarationRef.cpp\
                    $(LIME_DIR)/lgraphics/io/IOBMP.cpp\
                    $(LIME_DIR)/lgraphics/io/IODDS.cpp\
+                   $(LIME_DIR)/lgraphics/io/ETC1.cpp\
                    $(LIME_DIR)/lgraphics/io/IOJPEG.cpp\
                    $(LIME_DIR)/lgraphics/io/IOTGA.cpp\
                    $(LIME_DIR)/lgraphics/io/IOPNG.cpp\

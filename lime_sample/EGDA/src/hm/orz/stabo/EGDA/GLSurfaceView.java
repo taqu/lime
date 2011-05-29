@@ -119,66 +119,81 @@ public class GLSurfaceView extends SurfaceView implements
 
     public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display)
     {
-        // choose default configure
-        // int[] attribs24 =
-        // {
-        // EGL10.EGL_RED_SIZE, 8,
-        // EGL10.EGL_GREEN_SIZE, 8,
-        // EGL10.EGL_BLUE_SIZE, 8,
-        // EGL10.EGL_DEPTH_SIZE, 24,
-        // EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-        // EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
-        // EGL10.EGL_NONE,
-        // };
-
-        int[] attribs16 =
+        int[] initAttribs =
         {
-                EGL10.EGL_RED_SIZE, 5,
-                EGL10.EGL_GREEN_SIZE, 6,
-                EGL10.EGL_BLUE_SIZE, 5,
-                EGL10.EGL_DEPTH_SIZE, 24,
-                EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
-                EGL10.EGL_SURFACE_TYPE, EGL10.EGL_WINDOW_BIT,
-                //EGL_MAX_SWAP_INTERVAL, 0,
-                EGL10.EGL_NONE,
+            EGL10.EGL_RED_SIZE, 4,
+            EGL10.EGL_GREEN_SIZE, 4,
+            EGL10.EGL_BLUE_SIZE, 4,
+            EGL10.EGL_DEPTH_SIZE, 8,
+            EGL10.EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+            EGL10.EGL_NONE
         };
-
-        EGLConfig[] configs = new EGLConfig[1];
+        
+        // Get the number of minimally matching EGL configurations
         int[] numConfigs = new int[1];
+        egl.eglChooseConfig(display, initAttribs, null, 0, numConfigs);
+
+        if (numConfigs[0] <= 0) {
+            throw new IllegalArgumentException("No configs match config attributes");
+        }
+        
+        EGLConfig[] configs = new EGLConfig[numConfigs[0]];
+        egl.eglChooseConfig(display, initAttribs, configs, numConfigs[0], numConfigs);
+
+
+        EGLConfig  config = chooseConfig(egl, display, configs,
+                5,6,5,0, 16, 0);
+        
+        return config;
+    }
+
+    public EGLConfig chooseConfig(EGL10 egl, EGLDisplay display, EGLConfig[] configs,
+            int red, int green, int blue, int alpha, int depth, int stencil)
+    {
         int[] value = new int[1];
+        
+        for(EGLConfig config : configs){
+            int d = findConfigAttrib(egl, display, config, EGL10.EGL_DEPTH_SIZE, value);
+            int s = findConfigAttrib(egl, display, config, EGL10.EGL_STENCIL_SIZE, value);
 
-        boolean ret = false;
+            if(d < depth || s < stencil){
+                continue;
+            }
 
-        // for(int i=0; i<3; ++i){
-        // attribs24[7] = 8*(4-i);
-        // ret = egl.eglChooseConfig(display, attribs24, configs, 4,
-        // numConfigs);
-        // if(ret && numConfigs[0]>0){
-        // egl.eglGetConfigAttrib(display, configs[0], EGL10.EGL_DEPTH_SIZE,
-        // value);
-        // Log.d(Tag, "depth " + value[0]);
-        // return configs[0];
-        // }
-        // }
+            // We want an *exact* match for red/green/blue/alpha
+            int r = findConfigAttrib(egl, display, config, EGL10.EGL_RED_SIZE, value);
+            int g = findConfigAttrib(egl, display, config, EGL10.EGL_GREEN_SIZE, value);
+            int b = findConfigAttrib(egl, display, config, EGL10.EGL_BLUE_SIZE, value);
+            int a = findConfigAttrib(egl, display, config, EGL10.EGL_ALPHA_SIZE, value);
 
-        //デプスバッファのサイズを小さくしながら検索
-        final int DepthDecMax = 2;
-        for(int i = 0; i < DepthDecMax; ++i){
-            attribs16[7] = 8 * (DepthDecMax - i);
-            ret = egl.eglChooseConfig(display, attribs16, configs, 1,
-                    numConfigs);
-            if(ret && numConfigs[0] > 0){
-                egl.eglGetConfigAttrib(display, configs[0],
-                        EGL10.EGL_DEPTH_SIZE, value);
-                LogOut.d("depth " + value[0]);
-                return configs[0];
+            if(r == red && g == green && b == blue && a == alpha)
+            {
+                LogOut.d("rgba:" 
+                        + Integer.toString(r)
+                        + Integer.toString(g)
+                        + Integer.toString(b)
+                        + Integer.toString(a)
+                        + ", depth:"
+                        + d
+                        + ", stencil"
+                        + s);
+                return config;
             }
         }
         return null;
     }
+    
+    private int findConfigAttrib(EGL10 egl, EGLDisplay display, EGLConfig config,
+            int attribute, int[] value)
+    {
 
-    public EGLContext createContext(EGL10 egl, EGLDisplay display,
-            EGLConfig config)
+        if (egl.eglGetConfigAttrib(display, config, attribute, value)) {
+            return value[0];
+        }
+        return 0;
+    }
+    
+    public EGLContext createContext(EGL10 egl, EGLDisplay display, EGLConfig config)
     {
         int[] attributes = { EGL_CONTEXT_CLIENT_VERSION, 2, EGL10.EGL_NONE }; // gles2
         return egl.eglCreateContext(display, config, EGL10.EGL_NO_CONTEXT,
@@ -190,8 +205,7 @@ public class GLSurfaceView extends SurfaceView implements
     public EGLSurface createWindowSurface(EGL10 egl, EGLDisplay display,
             EGLConfig config, SurfaceHolder window)
     {
-        int[] attributes = { EGL10.EGL_RENDER_BUFFER, EGL_BACK_BUFFER,
-                EGL10.EGL_NONE };
+        int[] attributes = { EGL10.EGL_RENDER_BUFFER, EGL_BACK_BUFFER, EGL10.EGL_NONE };
         return egl.eglCreateWindowSurface(display, config, window, attributes);
     }
 
@@ -263,11 +277,16 @@ public class GLSurfaceView extends SurfaceView implements
         //sensorSys_.initialize();
 
         renderer_.onSurfaceCreated(gl, config);
-
         config = null;
+        
         Thread thisThread = Thread.currentThread();
         boolean resized = false;
         int width, height;
+        long prevTime = System.nanoTime();
+        long currentTime, diffTime;
+        long t, milli;
+        int nano;
+        
         while(thread_ == thisThread){
             synchronized(this){
                 resized = isResized_;
@@ -283,8 +302,6 @@ public class GLSurfaceView extends SurfaceView implements
             }
 
             EGDALib.updateTouch(touchOn_, multiTouch_, touchX_, touchY_, touchZ_);
-            //LogOut.d("z: " + touchZ_);
-
 
             //EGDALib.updateOrientation( sensorSys_.rots_[1], sensorSys_.rots_[2], sensorSys_.rots_[0]); //渡す時にマッピングしなおす
 
@@ -296,6 +313,28 @@ public class GLSurfaceView extends SurfaceView implements
                 if(c instanceof Activity){
                     Activity activity = (Activity) c;
                     activity.finish();
+                }
+            }
+            
+            currentTime = System.nanoTime();
+            diffTime = currentTime-prevTime;
+            prevTime = currentTime;
+            if(diffTime<33000000){
+                if(diffTime < 0) diffTime = 0;
+                diffTime = 33000000 - diffTime;
+
+                try{
+                    while(diffTime>500000){
+                        milli = diffTime/1000000;
+                        nano = (int)(diffTime - 1000000*milli);
+                        
+                        Thread.sleep(milli, nano);
+                        t = System.nanoTime();
+                        diffTime -= t-prevTime;
+                        prevTime = t;
+                    }
+                }catch(InterruptedException e){
+                    //e.printStackTrace();
                 }
             }
 
