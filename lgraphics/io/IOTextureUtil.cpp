@@ -239,7 +239,7 @@ namespace io
         LASSERT(width>0);
         LASSERT(height>0);
 
-        convertToPow2Image(&src, width, height, format);
+        //convertToPow2Image(&src, width, height, format);
 
         dst.attach(); //bind
 

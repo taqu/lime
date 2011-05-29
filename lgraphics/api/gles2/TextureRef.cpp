@@ -8,6 +8,7 @@
 #include "GraphicsDeviceRef.h"
 
 #include "TextureRef.h"
+#include "../../io/IOTextureUtil.h"
 
 namespace lgraphics
 {
@@ -141,6 +142,10 @@ namespace lgraphics
             texDesc_->bpp_ = sizeof(u8);
             break;
 
+        case Buffer_ETC1:
+            texDesc_->bpp_ = 0;
+            break;
+
         default:
             LASSERT(false);
             break;
@@ -225,20 +230,19 @@ namespace lgraphics
         u32 align = 4;
 
         s32 internalFormat = 0;
-        s32 type;
+
+        GLenum type = GL_UNSIGNED_BYTE;
 
         switch(texDesc_->format_)
         {
         case Buffer_A8:
             align = 1; //1バイトアライメント
             internalFormat = GL_ALPHA;
-            type = GL_UNSIGNED_BYTE;
             break;
 
         case Buffer_R8G8B8: //バイト並び反転の必要あり
             align = 1; //1バイトアライメント
             internalFormat = GL_RGB;
-            type = GL_UNSIGNED_BYTE;
 
             {//反転
                 u32 size = getLevelSize(level, texDesc_->bpp_);
@@ -249,12 +253,10 @@ namespace lgraphics
         case Buffer_B8G8R8:
             align = 1; //1バイトアライメント
             internalFormat = GL_RGB;
-            type = GL_UNSIGNED_BYTE;
             break;
 
         case Buffer_A8R8G8B8: //バイト並び反転の必要あり
             internalFormat = GL_RGBA;
-            type = GL_UNSIGNED_BYTE;
 
             {//反転
                 u32 size = getLevelSize(level, texDesc_->bpp_);
@@ -265,7 +267,6 @@ namespace lgraphics
         case Buffer_X8R8G8B8: //バイト並び反転の必要あり
             align = 1; //1バイトアライメント
             internalFormat = GL_RGB;
-            type = GL_UNSIGNED_BYTE;
 
             {//反転
                 u32 size = getLevelSize(level, texDesc_->bpp_);
@@ -275,13 +276,11 @@ namespace lgraphics
 
         case Buffer_A8B8G8R8:
             internalFormat = GL_RGBA;
-            type = GL_UNSIGNED_BYTE;
             break;
 
         case Buffer_X8B8G8R8: //データ削減
             align = 1; //1バイトアライメント
             internalFormat = GL_RGB;
-            type = GL_UNSIGNED_BYTE;
 
             {//削減
                 u32 size = getLevelSize(level, texDesc_->bpp_);
@@ -289,10 +288,46 @@ namespace lgraphics
             }
             break;
 
+        case Buffer_R5G6B5: //TODO:変換
+             LASSERT(false);
+             break;
+
+        case Buffer_B5G6R5:
+            align = 2; //2バイトアライメント
+            internalFormat = GL_RGB;
+            type = GL_UNSIGNED_SHORT_5_6_5;
+            break;
+
+        case Buffer_A4R4G4B4: //TODO:変換
+            LASSERT(false);
+            break;
+
+        case Buffer_A4B4G4R4:
+            align = 2; //2バイトアライメント
+            internalFormat = GL_RGBA;
+            type = GL_UNSIGNED_SHORT_4_4_4_4;
+            break;
+
         case Buffer_L8:
             align = 1; //1バイトアライメント
             internalFormat = GL_LUMINANCE;
-            type = GL_UNSIGNED_BYTE;
+            break;
+
+        case Buffer_ETC1:
+            {
+                glPixelStorei(GL_UNPACK_ALIGNMENT, 8); //バイトアライメント
+                internalFormat = GL_ETC1_RGB8_OES;
+                u32 w = width + 0x03U;
+                w >>= 2;
+
+                u32 h = height + 0x03U;
+                h >>= 2;
+
+                u32 size = (w * h * 8);
+
+                glCompressedTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height, 0, size, data);
+                return;
+            }
             break;
 
         default:
@@ -301,7 +336,7 @@ namespace lgraphics
         };
         glPixelStorei(GL_UNPACK_ALIGNMENT, align); //バイトアライメント
         
-        glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height, 0, internalFormat, GL_UNSIGNED_BYTE, data);
+        glTexImage2D(GL_TEXTURE_2D, level, internalFormat, width, height, 0, internalFormat, type, data);
     }
 
     //------------------------------------------------
@@ -390,6 +425,11 @@ namespace lgraphics
     u32 TextureRef::getTextureID() const
     {
         return texID_->id_;
+    }
+
+    s32 TextureRef::getFormat() const
+    {
+        return texDesc_->format_;
     }
 
     //--------------------------------------------

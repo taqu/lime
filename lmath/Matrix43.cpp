@@ -134,7 +134,7 @@ namespace lmath
     {
         f32 det = determinant33();
 
-        LASSERT(isEqual(det, 0.0f) != false);
+        LASSERT(isEqual(det, 0.0f) == false);
 
         f32 invDet = 1.0f / det;
 

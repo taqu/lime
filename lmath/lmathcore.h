@@ -116,6 +116,12 @@ namespace lmath
     }
 #endif
 
+    template<class T>
+    inline T distance(T v0, T v1)
+    {
+        return (v0>v1)? (v0-v1) : (v1-v0);
+    }
+
     inline bool isEqual(f32 x1, f32 x2)
     {
         return (absolute<f32>(x1 - x2) < F32_EPSILON);

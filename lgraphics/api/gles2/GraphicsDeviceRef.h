@@ -10,6 +10,7 @@
 #include "../../lgraphicscore.h"
 #include "Enumerations.h"
 #include <lcore/Stack.h>
+#include <lcore/BitSet.h>
 
 namespace lmath
 {
@@ -41,6 +42,7 @@ namespace lgraphics
     class GraphicsDeviceRef
     {
     public:
+
         static const u32 InitialIDAllocatorSize = 128;
 
         GraphicsDeviceRef();
@@ -139,12 +141,15 @@ namespace lgraphics
         @param location ... シェーダのuniform変数ハンドル
         */
         void setTexture(u32 index, u32 id, u32 location);
+
+        inline bool checkExtension(Extension extension);
     private:
         friend struct Descriptor;
 
         typedef lcore::Stack<Descriptor> DescriptorAllocator;
 
         void initializeRenderState();
+        void initializeExtension();
 
         static const s32 DefaultAlphaTestRef = 128;
         static const CmpFunc DefaultAlphaTestFunc = Cmp_Less;
@@ -194,6 +199,8 @@ namespace lgraphics
 #endif
 
         DescriptorAllocator descAllocator_;
+
+        lcore::BitSet32 extension_;
 
         //u32 maxMultiTextures_; /// マルチテクスチャ最大枚数
     };
@@ -307,6 +314,11 @@ namespace lgraphics
     inline BlendType GraphicsDeviceRef::getAlphaBlendDst() const
     {
         return state_.alphaBlendDst_;
+    }
+
+    inline bool GraphicsDeviceRef::checkExtension(Extension extension)
+    {
+        return extension_.check(extension);
     }
 }
 #endif //INC_LGRAPHICS_ES2_GRAPHICSDEVICEREF_H__

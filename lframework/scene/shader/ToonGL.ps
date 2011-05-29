@@ -1,5 +1,4 @@
 precision mediump float;
-//precision highp float;
 precision mediump int;
 
 #ifdef PNORMAL
@@ -87,20 +86,23 @@ void main()
 #endif
 
 //////////////////
-// omit alpha test
 #ifdef ALPHATEST
-    //if(color.w<ALPHA_REF){
-    //    discard;
-    //}
+    if(color.w<ALPHA_REF){
+        discard;
+    }
 #endif
 
 #ifdef LIGHTVS
 
 #ifdef TEXSHADE
     vec3 c = texture2D(texAlbedo2, v_tex3).xyz;
-    color.xyz = (color.xyz * c + v_specular0.xyz) * dlColor.xyz + ambient * color.xyz;
+    vec3 power = min(dlColor.xyz * diffuse.xyz + ambient, c_fone);
+
+    color.xyz = (color.xyz * c) * power + dlColor.xyz*v_specular0.xyz;
+
 #else
-    color.xyz = (color.xyz * v_specular0.w + v_specular0.xyz) * dlColor.xyz + ambient * color.xyz;
+    vec3 power = min(dlColor.xyz * diffuse.xyz + ambient, c_fone);
+    color.xyz = (color.xyz * v_specular0.w) * power + dlColor.xyz*v_specular0.xyz;
 #endif //TEXSHADE
 
 #elif defined(TEXSHADE)

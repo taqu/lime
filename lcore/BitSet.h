@@ -19,10 +19,6 @@ namespace lcore
     {
     public:
     private:
-        BitSet();
-        ~BitSet();
-
-        u8 bits_[Byte];
     };
 
     //----------------------------------------------------
@@ -91,7 +87,7 @@ namespace lcore
             bits_ = rhs.bits_;
         }
     private:
-        template<> friend bool compare(const BitSet<4>& b0, const BitSet<4>& b1);
+        friend bool compare(const BitSet<4>& b0, const BitSet<4>& b1);
 
         u32 bits_;
     };
@@ -100,11 +96,13 @@ namespace lcore
     /**
     @brief ビットフラグセット比較
     */
-    template<>
     inline bool compare(const BitSet<4>& b0, const BitSet<4>& b1)
     {
         return (b0.bits_ == b1.bits_);
     }
+
+
+    typedef BitSet<4> BitSet32;
 }
 
 #endif //INC_LCORE_BITSET_H__

@@ -268,6 +268,7 @@ namespace lscene
             //アルファテスト
             if(featurePSFlags & Material::MatFlag_AlphaTest){
                 macros[numMacros++] = MacroNames[Macro_ALPHATEST];
+                //lcore::Log("alpha test");
             }
 
             if(inputPSFlags & VFlag_Tex0){

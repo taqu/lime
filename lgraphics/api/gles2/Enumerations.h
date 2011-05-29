@@ -168,12 +168,17 @@ namespace lgraphics
         Buffer_X8R8G8B8,
         Buffer_A8B8G8R8,
         Buffer_X8B8G8R8,
+        Buffer_R5G6B5,
+        Buffer_B5G6R5,
+        Buffer_A4R4G4B4,
+        Buffer_A4B4G4R4,
         Buffer_A16B16G16R16,
         Buffer_A2R10G10B10,
         Buffer_A2B10G10R10,
         Buffer_G16R16,
         Buffer_L8,
         Buffer_L16,
+        Buffer_ETC1,
 
         Buffer_FORCEDWORD = LIME_FORCE_DWORD,
     };
@@ -288,6 +293,12 @@ namespace lgraphics
         FaceDir_Font = GL_FRONT,
         FaceDir_Back = GL_BACK,
         FaceDir_FrontBack = GL_FRONT_AND_BACK,
+    };
+
+    enum Extension
+    {
+        Ext_ETC1 = LCORE_BIT(0),
+        Ext_Num = 1,
     };
 }
 

@@ -12,6 +12,14 @@
 
 namespace lgraphics
 {
+    namespace
+    {
+        const Char* ExtensionNames[Ext_Num] =
+        {
+            "GL_OES_compressed_ETC1_RGB8_texture",
+        };
+    }
+
     void Descriptor::release()
     {
         if(--counter_ == 0){
@@ -73,6 +81,7 @@ namespace lgraphics
         glViewport(0, 0, param.backBufferWidth_, param.backBufferHeight_);
 
         initializeRenderState();
+        initializeExtension();
         return true;
     }
 
@@ -312,11 +321,7 @@ namespace lgraphics
         glViewport(0, 0, param.backBufferWidth_, param.backBufferHeight_);
 
         initializeRenderState();
-
-#if defined(_DEBUG)
-        dumpEGLExtensions("eglext.txt");
-        dumpGLES2Extensions("gles2ext.txt");
-#endif
+        initializeExtension();
         return true;
     }
 
@@ -394,6 +399,31 @@ namespace lgraphics
         }
     }
 
+    //---------------------------------------------------------------
+    // 拡張チェック
+    void GraphicsDeviceRef::initializeExtension()
+    {
+        extension_.clear();
+        const Char* ext = reinterpret_cast<const Char*>( glGetString(GL_EXTENSIONS) );
+
+        const Char* name = ext;
+        u32 len = 0;
+        while(*ext != '\0'){
+            if(lcore::isSpace(*ext)){
+                len = ext - name;
+                for(u32 i=0; i<Ext_Num; ++i){
+                    if(0 == lcore::strncmp(name, ExtensionNames[i], len)){
+                        extension_.set(LCORE_BIT(i));
+                        lcore::Log("%s", ExtensionNames[i]);
+                    }
+                }
+                name = ext + 1;
+            }
+            ++ext;
+        }
+    }
+
+    //---------------------------------------------------------------
     namespace
     {
         inline void lglSetDepthTest(bool enable)
