@@ -399,15 +399,16 @@ namespace pmm
     template<class T>
     u32 BinarySearchInterface<T>::getNextIndex(u32 frame)
     {
-        for(u32 i=currentIndex_; i<numPoses_; ++i){
-            if(frame==poses_[i].frameNo_){
-                break;
-            }else if(frame<poses_[i].frameNo_){
-                currentIndex_ = (i == 0)? 0 : i-1;
-                break;
+        while(currentIndex_<numPoses_){
+            if(frame==poses_[currentIndex_].frameNo_){
+                return currentIndex_;
+            }else if(frame<poses_[currentIndex_].frameNo_){
+                currentIndex_ = (currentIndex_ == 0)? 0 : currentIndex_-1;
+                return currentIndex_;
             }
+            ++currentIndex_;
         }
-        return currentIndex_;
+        return --currentIndex_;
     }
 
     //----------------------------------------------------------------------
@@ -505,7 +506,7 @@ namespace pmm
         lanim::AnimationControler* getAnimationControler(){ return animControler_;}
 
         void resetMorph();
-        void updateMorph(u32 frame);
+        void updateMorph(u32 frame, u32 nextFrame);
 
         inline const u16* getBoneMap();
         inline void setBoneMap(u16* boneMap);
@@ -543,8 +544,9 @@ namespace pmm
     struct CameraPose
     {
         u32 frameNo_;
-        lmath::Vector3 position_; //Ž‹“_
-        lmath::Vector3 target_;   //’Ž‹“_
+        lmath::Vector3 center_;
+        lmath::Vector3 angle_;
+        f32 length_;
         f32 fov_;
     };
 

@@ -9,9 +9,14 @@
 #include <lcore/Vector.h>
 #include <lcore/smart_ptr/intrusive_ptr.h>
 #include <lgraphics/api/SamplerState.h>
+#include <lgraphics/api/VertexBufferRef.h>
 #include <lframework/scene/lscene.h>
 #include "converter.h"
 
+namespace lmath
+{
+    class Vector3;
+}
 
 namespace lscene
 {
@@ -59,6 +64,9 @@ namespace pmd
 
     static const u32 NumLimitJoint = 1; ///動き制限するジョイントキーワード数
     extern const Char* LimitJointName[NumLimitJoint]; ///動き制限するジョイントキーワード
+
+    extern const f32 ColorRatio; //色の割合
+    extern const f32 AmbientRatio; //環境光の割合
 
     //--------------------------------------
     //---
@@ -109,6 +117,17 @@ namespace pmd
     };
 
     lcore::istream& operator>>(lcore::istream& is, Vertex& rhs);
+
+
+    //２番目の頂点ストリーム用頂点
+    struct VertexStream1
+    {
+        s16 normal_[4];//normal (x, y, z) padding
+        s16 uv_[2];
+        BYTE element_[Vertex::Index_Num]; //bone0, bone1
+                                  //boneWeight min:0-max:100 シェーダで正規化されていないので注意
+                                  //edgeFlag 0:on, 1:off
+    };
 
 
     //--------------------------------------
@@ -397,6 +416,52 @@ namespace pmd
     //--- SkinPack
     //---
     //--------------------------------------
+//マルチストリーム実験
+#if defined(LIME_LIBCONVERT_PMD_USE_MULTISTREAM)
+    class SkinPack
+    {
+    public:
+        SkinPack();
+        SkinPack(u32 numSkins);
+        ~SkinPack();
+
+        inline u32 getNumSkins() const;
+
+        inline Skin* getSkins();
+
+        inline Skin& getSkin(u32 index);
+
+        void swap(SkinPack& rhs);
+
+        void createMorphBaseVertices(u32 numVertices, const Vertex* vertices, lgraphics::VertexBufferRef& backBuffer);
+
+        u16 getMinIndex() const{ return indexRange_[0];}
+        u16 getMaxIndex() const{ return indexRange_[1];}
+
+        lmath::Vector3* getMorphBaseVertices(){ return morphBaseVertices_;}
+
+        lgraphics::VertexBufferRef& getBackVertexBuffer(){ return vb_;}
+    private:
+        SkinPack(const SkinPack&);
+        SkinPack& operator=(SkinPack&);
+
+        void sortVertexIndices();
+
+        struct Batch
+        {
+            u32 numVertices_;
+            lmath::Vector3* vertices_;
+        };
+
+        u32 numSkins_;
+        Skin* skins_;
+        u16 indexRange_[2];
+        lmath::Vector3* morphBaseVertices_;
+
+        lgraphics::VertexBufferRef vb_; //ダブルバッファリング用
+    };
+
+#else
     class SkinPack
     {
     public:
@@ -435,6 +500,7 @@ namespace pmd
         u16 indexRange_[2];
         Vertex* morphBaseVertices_;
     };
+#endif
 
     inline u32 SkinPack::getNumSkins() const
     {

@@ -15,6 +15,7 @@
 #include <lcore/HashMap.h>
 #include <lcore/String.h>
 #include <lgraphics/lgraphicscore.h>
+#include <lgraphics/api/Enumerations.h>
 #include <lgraphics/api/VertexDeclarationRef.h>
 #include <lgraphics/api/VertexBufferRef.h>
 #include <lgraphics/api/GeometryBuffer.h>
@@ -65,6 +66,9 @@ namespace pmd
     static const u32 TexNameSize = lgraphics::MAX_NAME_BUFFER_SIZE;
     typedef lgraphics::NameString TextureName;
 
+    const f32 ColorRatio = 0.4f;
+    const f32 AmbientRatio = 0.6f;
+
 namespace
 {
     void extractTextureName(TextureName& dst, const Char* path, u32 size)
@@ -90,7 +94,7 @@ namespace
         RenderState_Num,
     };
 
-    RenderStateRef createRenderState(RenderStateType type)
+    RenderStateRef createRenderState(RenderStateType type, bool alphaTest)
     {
         //ステート設定はてきとう
         RenderStateRef state;
@@ -104,9 +108,10 @@ namespace
         case RenderState_Default:
             {
                 state.setCullMode(lgraphics::CullMode_CCW);
+                //state.setCullMode(lgraphics::CullMode_None);
 
                 state.setAlphaBlendEnable(false);
-                state.setAlphaTest(true);
+                state.setAlphaTest(alphaTest);
                 state.setAlphaTestFunc(lgraphics::Cmp_Greater);
 
                 // Zバッファ設定
@@ -138,12 +143,12 @@ namespace
 
     //-----------------------------------------------------------------------------
     /// レンダリングステート設定
-    void setRenderStateToMaterial(lscene::Material& dst, lgraphics::RenderStateRef* stock, u32& createFlag, RenderStateType type)
+    void setRenderStateToMaterial(lscene::Material& dst, lgraphics::RenderStateRef* stock, u32& createFlag, RenderStateType type, bool alphaTest)
     {
         //作成していなかったら作る
         u32 flag = 0x01U << type;
         if(0 == (createFlag & flag)){
-            stock[type] = createRenderState(type);
+            stock[type] = createRenderState(type, alphaTest);
             createFlag |= flag;
         }
         dst.setRenderState( stock[type] );
@@ -187,6 +192,70 @@ namespace
         }
         lcore::memcpy(v, vertices, vsize);
         vb.unlock();
+#endif
+
+        return true;
+    }
+
+
+    //--------------------------------------------------------------------
+    // マルチストリーム頂点バッファ作成
+    bool createVertexBuffer(VertexBufferRef& vb0, VertexBufferRef& vb1, VertexBufferRef& vb0Back, pmd::VertexBuffer& pmdVB)
+    {
+        pmd::Vertex* vertices = &(pmdVB.elements_[0]);
+        u32 numVertices = pmdVB.elements_.size();
+
+        //頂点バッファ作成
+#if defined(LIME_GLES2)
+
+        static const u32 SizeVertex0 = sizeof(f32) * 3;
+        static const u32 SizeVertex1 = 16;
+
+        lcore::ScopedArrayPtr<u8> tmp( LIME_NEW u8[ SizeVertex1 * numVertices ] );
+
+        // ひとつ目
+        lmath::Vector3* v0 = reinterpret_cast<lmath::Vector3*>( tmp.get() );
+        for(u32 i=0; i<numVertices; ++i){
+            v0[i].set(vertices[i].position_[0], vertices[i].position_[1], vertices[i].position_[2]);
+        }
+
+        vb0 = lgraphics::VertexBuffer::create(SizeVertex0, numVertices, Pool_Managed, Usage_None);
+        if(vb0.valid() == false){
+            return false;
+        }
+        vb0.blit(v0, true);
+
+        //バックバッファも作成
+        vb0Back = lgraphics::VertexBuffer::create(SizeVertex1, numVertices, Pool_Managed, Usage_None);
+        if(vb0Back.valid() == false){
+            return false;
+        }
+        vb0Back.blit(v0, true);
+
+        // ふたつ目
+        VertexStream1* v1 = reinterpret_cast<VertexStream1*>( tmp.get() );
+        for(u32 i=0; i<numVertices; ++i){
+            v1[i].normal_[0] = vertices[i].normal_[0];
+            v1[i].normal_[1] = vertices[i].normal_[1];
+            v1[i].normal_[2] = vertices[i].normal_[2];
+            v1[i].normal_[3] = vertices[i].normal_[3];
+
+            v1[i].uv_[0] = vertices[i].uv_[0];
+            v1[i].uv_[1] = vertices[i].uv_[1];
+
+            v1[i].element_[0] = vertices[i].element_[0];
+            v1[i].element_[1] = vertices[i].element_[1];
+            v1[i].element_[2] = vertices[i].element_[2];
+            v1[i].element_[3] = vertices[i].element_[3];
+        }
+
+        vb1 = lgraphics::VertexBuffer::create(SizeVertex1, numVertices, Pool_Managed, Usage_None);
+        if(vb1.valid() == false){
+            return false;
+        }
+        vb1.blit(v1, false);
+#else
+        LASSERT(false); //とりあえずDXは後回し
 #endif
 
         return true;
@@ -281,6 +350,12 @@ namespace
         if(rhs.specularity_ < 0.01f){
             rhs.specularity_ = 0.01f;
         }
+
+        //色と環境光の補正
+        //for(u32 i=0; i<3; ++i){
+        //    rhs.diffuse_[i] *= ColorRatio;
+        //    rhs.ambient_[i] *= AmbientRatio;
+        //}
         return is;
     }
 
@@ -423,6 +498,97 @@ namespace
     //--- SkinPack
     //---
     //----------------------------------------------------------
+    //マルチストリーム実験
+#if defined(LIME_LIBCONVERT_PMD_USE_MULTISTREAM)
+
+    SkinPack::SkinPack()
+        :numSkins_(0)
+        ,skins_(NULL)
+        ,morphBaseVertices_(NULL)
+    {
+        indexRange_[0] = 0xFFFFU;
+        indexRange_[1] = 0;
+    }
+
+    SkinPack::SkinPack(u32 numSkins)
+        :numSkins_(numSkins)
+        ,morphBaseVertices_(NULL)
+    {
+        if(numSkins_>0){
+            skins_ = LIME_NEW Skin[numSkins_];
+        }else{
+            skins_ = NULL;
+        }
+        indexRange_[0] = 0xFFFFU;
+        indexRange_[1] = 0;
+    }
+
+    SkinPack::~SkinPack()
+    {
+        LIME_DELETE_ARRAY(morphBaseVertices_);
+        LIME_DELETE_ARRAY(skins_);
+    }
+
+    void SkinPack::swap(SkinPack& rhs)
+    {
+        lcore::swap(numSkins_, rhs.numSkins_);
+        lcore::swap(skins_, rhs.skins_);
+        lcore::swap(indexRange_[0], rhs.indexRange_[0]);
+        lcore::swap(indexRange_[1], rhs.indexRange_[1]);
+        lcore::swap(morphBaseVertices_, rhs.morphBaseVertices_);
+        vb_.swap( rhs.vb_ );
+    }
+
+    void SkinPack::createMorphBaseVertices(u32 numVertices, const Vertex* vertices, lgraphics::VertexBufferRef& backBuffer)
+    {
+        LASSERT(vertices != NULL);
+        if(skins_ == NULL || morphBaseVertices_ != NULL){
+            return;
+        }
+
+        Skin& skin = skins_[0];
+
+        for(u32 i=0; i<skin.numVertices_; ++i){
+            u32 index = skin.vertices_[i].index_;
+
+            LASSERT(index<numVertices);
+            if(index<indexRange_[0]){
+                indexRange_[0] = static_cast<u16>(index);
+            }
+
+            if(index>indexRange_[1]){
+                indexRange_[1] = static_cast<u16>(index);
+            }
+        }
+
+        if(indexRange_[0]<=indexRange_[1]){
+            u32 size = indexRange_[1] - indexRange_[0] + 1;
+            morphBaseVertices_ = LIME_NEW lmath::Vector3[size];
+
+        }
+        //ダブルバッファ用頂点バッファ
+        vb_ = backBuffer;
+
+        u32 index = 0;
+        for(u16 i=indexRange_[0]; i<=indexRange_[1]; ++i){
+            morphBaseVertices_[index].set(vertices[i].position_[0], vertices[i].position_[1], vertices[i].position_[2]);
+            ++index;
+        }
+    }
+
+    void SkinPack::sortVertexIndices()
+    {
+        LASSERT(false);
+        Skin& skin = skins_[0];
+        u16* toIndices = LIME_NEW u16[skin.numVertices_];
+        u16 numVertices = static_cast<u16>(skin.numVertices_);
+        for(u16 i=0; i<numVertices; ++i){
+        }
+
+        LIME_DELETE_ARRAY(toIndices);
+    }
+
+#else
     SkinPack::SkinPack()
         :numSkins_(0)
         ,skins_(NULL)
@@ -504,6 +670,7 @@ namespace
 
         LIME_DELETE_ARRAY(toIndices);
     }
+#endif
 
 
     //----------------------------------------------------------
@@ -705,7 +872,7 @@ namespace
         state_ = State_None;
     }
 
-    bool Pack::loadInternal(const char* directory)
+    bool Pack::loadInternal(const char* /*directory*/)
     {
         input_ >> header_;
 
@@ -917,6 +1084,19 @@ namespace
         VertexDeclarationRef decl;
         IndexBufferRef ib;
         if(numGeometries_>0){
+            //マルチストリーム実験
+#if defined(LIME_LIBCONVERT_PMD_USE_MULTISTREAM)
+            {
+                VertexDeclCreator creator(4);
+                u16 voffset = 0;
+                creator.add(0, voffset, DeclType_Float3, DeclMethod_Default, DeclUsage_Position, 0);
+                voffset += creator.add(1, voffset, DeclType_Short4N, DeclMethod_Normalize, DeclUsage_Normal, 0);
+                voffset += creator.add(1, voffset, DeclType_Short2N, DeclMethod_Normalize, DeclUsage_Texcoord, 0);
+                voffset += creator.add(1, voffset, DeclType_UB4, DeclMethod_Default, DeclUsage_BlendIndicies, 0);
+
+                creator.end(decl);
+            }
+#else
             {
                 VertexDeclCreator creator(4);
                 u16 voffset = 0;
@@ -927,6 +1107,7 @@ namespace
 
                 creator.end(decl);
             }
+#endif
 
             //インデックスバッファ作成
             ib = IndexBuffer::create(numFaceIndices_, Pool_Default, Usage_None);
@@ -973,10 +1154,25 @@ namespace
                 TextureRef* texture = (nameTexMap_->isEnd(mapPos) == false)? nameTexMap_->getValue(mapPos) : NULL;
 
                 //アルファ値が１ならアルファブレンドなし
+                bool alphaTest = false;
                 if(dstMaterial.diffuse_._w > 0.999f){
                     renderStateType = RenderState_Default;
-                    dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_AlphaTest);
 
+                    //アルファありのテクスチャなら、アルファテストあり
+                    if(lconverter::Config::getInstance().isAlphaTest()
+                        && NULL != texture)
+                    {
+                        s32 format = texture->getFormat();
+
+                        if(lgraphics::Buffer_A8R8G8B8 == format
+                            || lgraphics::Buffer_A8B8G8R8 == format
+                            || lgraphics::Buffer_A4R4G4B4 == format
+                            || lgraphics::Buffer_A4B4G4R4 == format)
+                        {
+                            alphaTest = true;
+                            dstMaterial.getFlags().setFlag( lscene::Material::MatFlag_AlphaTest );
+                        }
+                    }
                 }else{
                     renderStateType = RenderState_AlphaBlend;
                 }
@@ -1024,7 +1220,7 @@ namespace
                 dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_LightingVS);
 #endif
 
-                setRenderStateToMaterial(dstMaterial, renderState, stateCreateFlag, renderStateType);
+                setRenderStateToMaterial(dstMaterial, renderState, stateCreateFlag, renderStateType, alphaTest);
 
             }
         }
@@ -1043,16 +1239,35 @@ namespace
         while(geometry != NULL){
             if(bufferPtr != geometry->vertexBuffer_.get()){
                 bufferPtr = geometry->vertexBuffer_.get();
+
+//マルチストリーム実験
+#if defined(LIME_LIBCONVERT_PMD_USE_MULTISTREAM)
+                lgraphics::VertexBufferRef vb0, vb1, vb0Back;
+                if(false == createVertexBuffer(vb0, vb1, vb0Back, *bufferPtr)){
+                    return false;
+                }
+
+                skinPack_.createMorphBaseVertices(bufferPtr->elements_.size(), &(bufferPtr->elements_[0]), vb0Back);
+
+                geomBuffer = LIME_NEW GeometryBuffer(Primitive_TriangleList, decl, vb0, ib);
+
+                geomBuffer->addVertexBufferStream(vb1);
+
+#else
                 lgraphics::VertexBufferRef vb;
                 if(false == createVertexBuffer(vb, *bufferPtr)){
                     return false;
                 }
-#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
-                numVertices_ += bufferPtr->elements_.size();
-#endif
+
                 skinPack_.createMorphBaseVertices(bufferPtr->elements_.size(), &(bufferPtr->elements_[0]));
 
                 geomBuffer = LIME_NEW GeometryBuffer(Primitive_TriangleList, decl, vb, ib);
+
+#endif
+
+#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
+                numVertices_ += bufferPtr->elements_.size();
+#endif
             }
 
             u16 count = static_cast<u16>( geometry->faceIndices_.size()/3 );
@@ -1185,7 +1400,7 @@ namespace
         }
 
         Bone *stack = LIME_NEW Bone[numBones_];
-        u32 stackIndex = 0;
+        u16 stackIndex = 0;
 
         for(u16 i=0; i<numBones_; ++i){
 

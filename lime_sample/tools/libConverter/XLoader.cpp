@@ -135,7 +135,7 @@ namespace
 
             // Zバッファ設定
             state.setZWriteEnable(true);
-            state.setAlphaTest(true);
+            state.setAlphaTest(false);
             state.setAlphaTestFunc(lgraphics::Cmp_Greater);
         }
     }
@@ -609,15 +609,14 @@ namespace
 #endif
         //透過
         f32 emissivePower = material.emissive_.lengthSqr();
-        if( material.diffuse_._w < 0.999f){
+        if( material.diffuse_._w > 0.999f){
+        }else{
 
             //発光が0でなければ、フラグ立てる
             if(false == lmath::isEqual(emissivePower, 0.0f))
             {
                 material.getFlags().setFlag(lscene::Material::MatFlag_Emissive);
             }
-        }else{
-            material.getFlags().setFlag(lscene::Material::MatFlag_AlphaTest);
         }
 
         ++currentMaterial_;
@@ -874,6 +873,22 @@ namespace
             material.setTexture(0, *texRef);
             //テクスチャがあったのでフラグ立てる
             material.getFlags().setFlag(lscene::Material::MatFlag_TexAlbedo);
+
+            if(lconverter::Config::getInstance().isAlphaTest()
+                && (material.diffuse_._w > 0.999f))
+            {
+
+                s32 format = texRef->getFormat();
+
+                if(lgraphics::Buffer_A8R8G8B8 == format
+                    || lgraphics::Buffer_A8B8G8R8 == format
+                    || lgraphics::Buffer_A4R4G4B4 == format
+                    || lgraphics::Buffer_A4B4G4R4 == format)
+                {
+                    material.getFlags().setFlag( lscene::Material::MatFlag_AlphaTest );
+                    material.getRenderState().setAlphaTest(true);
+                }
+            }
 
             lgraphics::SamplerState& dstSampler = material.getSamplerState(0);
             dstSampler = sampler;
@@ -1291,10 +1306,10 @@ namespace
             obj.getGeometry(i).setPrimitiveCount(numIndicesInMaterial/3);
 
             //アルファブレンドするか
-            if( obj.getMaterial(i).diffuse_._w < 0.99f){
-                obj.getMaterial(i).setRenderState(renderStateAlpha);
-            }else{
+            if( obj.getMaterial(i).diffuse_._w > 0.999f){
                 obj.getMaterial(i).setRenderState(renderState);
+            }else{
+                obj.getMaterial(i).setRenderState(renderStateAlpha);
             }
 
             indexOffset += numIndicesInMaterial;

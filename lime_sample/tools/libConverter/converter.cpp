@@ -9,6 +9,7 @@
 
 #include <lcore/String.h>
 #include <lcore/utility.h>
+#include <lgraphics/lgraphics.h>
 #include <lgraphics/api/TextureRef.h>
 #include <lgraphics/api/SamplerState.h>
 #include <lgraphics/io/IOBMP.h>
@@ -17,6 +18,7 @@
 #include <lgraphics/io/IOPNG.h>
 #include <lgraphics/io/IOJPEG.h>
 #include <lgraphics/io/IOTextureUtil.h>
+#include <lgraphics/io/etc1.h>
 
 #include <lframework/IOUtil.h>
 
@@ -166,6 +168,66 @@ namespace lconverter
                 sampler.setAddressU( TexAddress );
                 sampler.setAddressV( TexAddress );
 
+                io::convertToPow2Image(&buffer, width, height, bufferFormat);
+
+#if defined(LIME_LIBCONVERT_USE_ETC1)
+
+                //ETC1圧縮
+                if( Config::getInstance().isTextureCompress()
+                    && lgraphics::Graphics::getDevice().checkExtension( lgraphics::Ext_ETC1)
+                    && (width>MinTextureSizeToCompress && height>MinTextureSizeToCompress)
+                    && (bufferFormat == lgraphics::Buffer_B8G8R8 || bufferFormat == lgraphics::Buffer_R8G8B8))
+                {
+                    u32 levels = lgraphics::io::calcMipMapLevels(width, height);
+                    *texture = lgraphics::Texture::create(
+                        width,
+                        height,
+                        levels,
+                        lgraphics::Usage_None,
+                        lgraphics::Buffer_ETC1,
+                        lgraphics::Pool_Default);
+
+                    lgraphics::etc::ETC1Codec etc1Codec;
+                    etc1Codec.encodeMipMap(*texture, buffer, width, height, levels);
+
+                    //サンプラステートセット
+                    sampler.setMinFilter( TexMipMapMinFilter );
+                    texture->attach();
+                    sampler.apply(0);
+
+                }else{
+
+                    //小さいテクスチャはミップマップ作成しない
+                    if(width<MinTextureSizeToCreateMipMap
+                        && height<MinTextureSizeToCreateMipMap)
+                    {
+                        *texture = Texture::create(width, height, 1, lgraphics::Usage_None, bufferFormat, lgraphics::Pool_Managed);
+
+                        //サンプラステートセット
+                        sampler.setMinFilter( TexMinFilter );
+                        texture->attach();
+                        sampler.apply(0);
+
+                        texture->blit(buffer);
+
+                    }else{
+
+                        u32 levels = lgraphics::io::calcMipMapLevels(width, height);
+                        *texture = Texture::create(width, height, levels, Usage_None, bufferFormat, lgraphics::Pool_Managed);
+
+                        //サンプラステートセット
+                        sampler.setMinFilter( TexMipMapMinFilter );
+                        texture->attach();
+                        sampler.apply(0);
+#if defined(LIME_LIBCONVERT_USE_MIPMAP_DEBUG)
+                        lgraphics::io::createMipMapDebug(*texture, buffer, width, height, bufferFormat, levels);
+#else
+                        lgraphics::io::createMipMap(*texture, buffer, width, height, bufferFormat, levels);
+#endif
+                    }
+                }
+
+#else
 
                 //小さいテクスチャはミップマップ作成しない
                 if(width<MinTextureSizeToCreateMipMap
@@ -179,6 +241,7 @@ namespace lconverter
                     sampler.apply(0);
 
                     texture->blit(buffer);
+
                 }else{
 
                     u32 levels = lgraphics::io::calcMipMapLevels(width, height);
@@ -192,6 +255,7 @@ namespace lconverter
                     lgraphics::io::createMipMap(*texture, buffer, width, height, bufferFormat, levels);
                     //lgraphics::io::createMipMapDebug(*texture, buffer, width, height, bufferFormat, levels);
                 }
+#endif
                 texture->setName(path, size);
 
                 texMap.insert(texture->getName().c_str(), texture->getName().size(), texture);
@@ -305,4 +369,12 @@ namespace lconverter
         }
 #endif
     }
+
+
+    //--------------------------------------------------------------
+    //---
+    //--- Config
+    //---
+    //--------------------------------------------------------------
+    Config Config::instance_;
 }

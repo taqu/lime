@@ -8,6 +8,7 @@
 namespace pmm
 {
     class CameraAnimPack;
+    struct CameraPose;
 }
 
 namespace viewer
@@ -40,7 +41,7 @@ namespace viewer
         inline void reset();
         inline void reset(Mode mode);
 
-        void setInitial(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov, f32 asect);
+        void setInitial(const pmm::CameraPose& pose, f32 aspect);
         void setCameraAnim(pmm::CameraAnimPack* pack, f32 aspect);
     private:
         Camera(const Camera&);
