@@ -67,13 +67,9 @@ void main()
     //-------------
     vec4 color;
 
+////////////////////
 #ifdef TEXALBEDO
     color = texture2D(texAlbedo, v_tex0);
-//#ifdef EMISSIVE
-    color *= diffuse;
-//#endif
-
-#elif defined(LIGHTVS)
 #else
     color = diffuse;
 #endif
@@ -82,23 +78,15 @@ void main()
     color *= v_color0;
 #endif
 
-// omit alpha test
+//////////////////
 #ifdef ALPHATEST
-    //if(color.w<ALPHA_REF){
-    //    discard;
-    //}else{
+    if(color.w<ALPHA_REF){
+        discard;
+    }
 #endif
 
 #ifdef LIGHTVS
-
-#ifdef TEXSHADE
-    vec3 c = texture2D(texAlbedo2, v_tex3).xyz;
-    color.xyz = (color.xyz * c + v_specular0.xyz) * dlColor.xyz + ambient * color.xyz;
-#else
     color.xyz = (color.xyz * v_specular0.w + v_specular0.xyz) * dlColor.xyz + ambient * color.xyz;
-#endif //TEXSHADE
-
-#elif defined(TEXSHADE)
 
 #elif defined(PNORMAL)
     vec3 L = dlDir;
@@ -123,8 +111,4 @@ void main()
 #endif
 
     gl_FragColor = color;
-
-#ifdef ALPHATEST
-    //}
-#endif
 }

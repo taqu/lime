@@ -55,6 +55,10 @@ namespace lgraphics
         @brief データ転送。GL的インターフェイス
         */
         void blit(u8* data);
+
+        /**
+        bindしないので、事前にattachを呼ぶ必要あり。
+        */
         void blit(u32 level, u32 width, u32 height, u8* data);
 
         u16 getLevels();
@@ -107,6 +111,8 @@ namespace lgraphics
         u16 getBytePerPixel() const;
 
         u32 getTextureID() const;
+
+        s32 getFormat() const;
     private:
         friend class Texture;
 

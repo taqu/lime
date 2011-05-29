@@ -86,6 +86,9 @@
 #endif
 
 
+//ユーティリティ
+#define LCORE_BIT(n) (0x00000001U<<n)
+
 namespace lcore
 {
 

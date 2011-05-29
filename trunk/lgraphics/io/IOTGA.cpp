@@ -83,7 +83,7 @@ namespace lgraphics
                 case 24:
                     {
 #if defined(LIME_GL)
-                        format = Buffer_R8G8B8;
+                        format = Buffer_B8G8R8;
 #else
                         format = Buffer_X8R8G8B8;
 #endif
@@ -123,7 +123,7 @@ namespace lgraphics
                 case 24:
                     {
 #if defined(LIME_GL)
-                        format = Buffer_R8G8B8;
+                        format = Buffer_B8G8R8;
 #else
                         format = Buffer_X8R8G8B8;
 #endif
@@ -206,7 +206,7 @@ namespace lgraphics
 
                 case 24:
                     {
-                        texture = Texture::create(width, height, 1, Usage_None, Buffer_R8G8B8, Pool_Managed);
+                        texture = Texture::create(width, height, 1, Usage_None, Buffer_B8G8R8, Pool_Managed);
                         u8* buffer = LIME_NEW u8[3*width*height];
                         if(type == Type_FullColorRLE){
                             read24RLE(buffer, is, width, height);
@@ -242,7 +242,7 @@ namespace lgraphics
 
                 case 24:
                     {
-                        texture = Texture::create(width, height, 1, Usage_None, Buffer_R8G8B8, Pool_Managed);
+                        texture = Texture::create(width, height, 1, Usage_None, Buffer_B8G8R8, Pool_Managed);
                         u8* buffer = LIME_NEW u8[3*width*height];
                         if(type == Type_FullColorRLE){
                             read24RLETranspose(buffer, is, width, height);

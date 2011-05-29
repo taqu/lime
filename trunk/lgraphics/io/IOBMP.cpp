@@ -75,7 +75,8 @@ namespace io
             //GL版
             u32 pitch = width * 3;
 
-            u32 diff = (width*3) & 0x03U;
+            u32 diff = (pitch + 0x03U) & (~0x03U);
+            diff -= pitch;
 
             u8 tmp[4];
             u8* b = buffer;
@@ -110,7 +111,8 @@ namespace io
 #else
             //DX版
             u32 pitch = width * 4;
-            u32 diff = (width*3) & 0x03U;
+            u32 diff = (pitch + 0x03U) & (~0x03U);
+            diff -= pitch;
 
             u8 tmp[4];
 

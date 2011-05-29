@@ -41,10 +41,10 @@ namespace lgraphics
         static const u32 MAX_ELEMENTS = 64;
 
         VertexDeclarationRef()
-            :vertexSize_(0)
-            ,declaration_(NULL)
+            :declaration_(NULL)
         {
             for(u32 i=0; i<LIME_MAX_VERTEX_STREAMS; ++i){
+                vertexSize_[i] = 0;
                 numElements_[i] = 0;
                 streamElementsOffset_[i] = 0;
             }
@@ -71,7 +71,12 @@ namespace lgraphics
         void attach(u32 stream, const u8* buffer) const;
         void detach(u32 stream) const;
 
-        u32 getVertexSize() const{ return vertexSize_;}
+        u16 getVertexSize(u32 stream) const
+        {
+            LASSERT(0<=stream && stream<LIME_MAX_VERTEX_STREAMS);
+            return vertexSize_[stream];
+        }
+
         u32 getNumElements() const;
         bool getDecl(VertexElement* decl);
 
@@ -85,9 +90,9 @@ namespace lgraphics
         friend class VertexDeclCreator;
         friend class Shader;
 
-        VertexDeclarationRef(u32 vertexSize, u32 numElements, VertexDeclaration* declaration);
+        VertexDeclarationRef(u32 numElements, VertexDeclaration* declaration);
 
-        u32 vertexSize_;
+        u16 vertexSize_[LIME_MAX_VERTEX_STREAMS];
         u16 numElements_[LIME_MAX_VERTEX_STREAMS];
         u16 streamElementsOffset_[LIME_MAX_VERTEX_STREAMS];
 
@@ -108,7 +113,6 @@ namespace lgraphics
         */
         u16 add(u16 stream, u16 offset, DeclType type, DeclMethod method, DeclUsage usage, u8 usageIndex);
         void end(VertexDeclarationRef& declaration);
-        void end(VertexDeclarationRef& declaration, u32 vertexSize);
     private:
         VertexDeclCreator(const VertexDeclCreator&);
         VertexDeclCreator& operator=(const VertexDeclCreator&);
@@ -120,7 +124,6 @@ namespace lgraphics
         VertexElement *elements_;
         u32 count_;
         u32 size_;
-        u32 vertexSize_;
     };
 }
 

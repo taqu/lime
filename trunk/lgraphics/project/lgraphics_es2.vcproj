@@ -323,6 +323,14 @@
 			Name="io"
 			>
 			<File
+				RelativePath="..\io\ETC1.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\io\ETC1.h"
+				>
+			</File>
+			<File
 				RelativePath="..\io\IOBMP.cpp"
 				>
 			</File>

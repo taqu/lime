@@ -97,6 +97,7 @@ static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (80);
 #define LIME_INCLUDE_GLES2
 
 static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (36);
+//static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (18);
 
 #if defined(ANDROID)
 

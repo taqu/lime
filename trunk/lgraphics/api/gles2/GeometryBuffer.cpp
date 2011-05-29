@@ -60,10 +60,11 @@ namespace lgraphics
     {
         for(u32 i=0; i<numStreams_; ++i){
             decl_.detach(i);
+            vertexBuffer_[i].detach();
         }
 
-        //indexBuffer_.detach();
-        //vertexBuffer_.detach();
+        indexBuffer_.detach();
+        //vertexBuffer_[1].detach();
     }
 
 }

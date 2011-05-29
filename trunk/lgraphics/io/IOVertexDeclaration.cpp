@@ -54,7 +54,7 @@ namespace io
 
         DeclHeader declHeader;
         declHeader.id_ = format::VertexDeclarationID;
-        declHeader.vertexSize_ = decl.getVertexSize();
+        declHeader.vertexSize_ = decl.getVertexSize(0);
         declHeader.numElements_ = decl.getNumElements()-1; //終端を引く
 
         lcore::io::write(os, declHeader);

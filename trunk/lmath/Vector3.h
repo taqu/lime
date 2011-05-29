@@ -68,6 +68,13 @@ namespace lmath
         */
         Vector3& lerp(const Vector3& v0, const Vector3& v1, f32 f);
 
+        /**
+        @brief 線形補間。v = f1*v0 + f0*v1
+        @param v0 ... 
+        @param v1 ... 
+        */
+        Vector3& lerp(const Vector3& v0, const Vector3& v1, f32 f0, f32 f1);
+
         void mul(const Matrix43& matrix, const Vector3& vector);
         void mul(const Vector3& v, const Matrix43& m);
 

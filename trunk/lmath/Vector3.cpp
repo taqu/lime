@@ -34,6 +34,17 @@ namespace lmath
         return *this;
     }
 
+    Vector3& Vector3::lerp(const Vector3& v0, const Vector3& v1, f32 f0, f32 f1)
+    {
+        *this = v0;
+        *this *= f1;
+
+        Vector3 tmp(v1);
+        tmp *= f0;
+        *this += tmp;
+        return *this;
+    }
+
     void Vector3::mul(const Vector3& v, const Matrix43& m)
     {
         f32 value[3];
