@@ -236,8 +236,10 @@ namespace egda
         {
             // カメラ初期化
             const pmm::CameraPose& cameraPose = cameraAnimPack_.getPose(0);
-            camera_.setInitial(cameraPose.position_, cameraPose.target_, cameraPose.fov_);
+            camera_.setInitial(cameraPose);
             camera_.setCameraAnim(&cameraAnimPack_);
+
+            //camera_.setMode(Camera::Mode_FrameAnim);
         }
 
         {
@@ -246,8 +248,7 @@ namespace egda
         }
 
         lastFrame_ = static_cast<u32>(lastFrame);
-        state_ = State_Play;
-
+        lgraphics::Graphics::getDevice().flush(); //モーフィング更新のためフラッシュ
     }
 
 
@@ -266,8 +267,11 @@ namespace egda
                 lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
                 animSys.update();
 
+                u32 nextFrame;
+
                 if(++frameCounter_>lastFrame_){
                     frameCounter_ = 0;
+                    nextFrame = (lastFrame_>1)? 1 : 0;
 
                     for(u32 i=1; i<numAccessories_; ++i){
                         accPacks_[i].initialize();
@@ -275,10 +279,8 @@ namespace egda
 
                     camera_.reset(Camera::Mode_FrameAnim);
                     light_.initialize();
-                }
-
-                for(u32 i=0; i<numModels_; ++i){
-                    modelPacks_[i].updateMorph(frameCounter_);
+                }else{
+                    nextFrame = (frameCounter_ == lastFrame_)? 0 : (frameCounter_+1);
                 }
 
                 //アクセサリ更新
@@ -288,6 +290,12 @@ namespace egda
 
                 camera_.update(frameCounter_);
                 light_.update();
+
+                for(u32 i=0; i<numModels_; ++i){
+                    modelPacks_[i].updateMorph(frameCounter_, nextFrame);
+                }
+
+                //lgraphics::Graphics::getDevice().flush(); //モーフィング更新のためフラッシュ
             }
             break;
         default:

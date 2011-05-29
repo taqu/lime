@@ -28,6 +28,8 @@ public class Config
 	private static final String TagLastDirectory = "last_directory";
 	private static final String TagCameraMode = "camera_mode";
 	private static final String TagScreenMode = "screen_mode";
+	private static final String TagAlphaTest = "alpha_test";
+	private static final String TagTextureCompress = "tex_compress";
 
 	public static final int Camera_Manual = 0;
 	public static final int Camera_Animation = 1;
@@ -115,6 +117,27 @@ public class Config
 	{
 	    screenMode_ = mode;
 	}
+	
+	public boolean isAlhpaTest()
+	{
+	    return alphaTest_;
+	}
+	
+	public void setAlphaTest(boolean alphaTest)
+	{
+	    alphaTest_ = alphaTest;
+	}
+
+	public boolean isTextureCompress()
+    {
+        return textureCompress_;
+    }
+
+    public void setTextureCompress(boolean textureCompress)
+    {
+        textureCompress_ = textureCompress;
+    }
+
 
 	private String createPath(String appName)
 	{
@@ -168,6 +191,12 @@ public class Config
                         }else if(xmlPullParser.getName().equals(TagScreenMode)){
                             screenMode_ = Integer.parseInt( xmlPullParser.nextText() );
                             screenMode_ = clamp(screenMode_, 0, 3);
+                            
+                        }else if(xmlPullParser.getName().equals(TagAlphaTest)){
+                            alphaTest_ = Boolean.parseBoolean(xmlPullParser.nextText() );
+                            
+                        }else if(xmlPullParser.getName().equals(TagTextureCompress)){
+                            textureCompress_ = Boolean.parseBoolean( xmlPullParser.nextText() );
                         }
         				break;
         			}
@@ -217,6 +246,14 @@ public class Config
             xmlSerializer.text( Integer.toString(screenMode_) );
             xmlSerializer.endTag(Empty, TagScreenMode);
 
+            xmlSerializer.startTag(Empty, TagAlphaTest);
+            xmlSerializer.text( Boolean.toString(alphaTest_) );
+            xmlSerializer.endTag(Empty, TagAlphaTest);
+            
+            xmlSerializer.startTag(Empty, TagTextureCompress);
+            xmlSerializer.text( Boolean.toString(textureCompress_) );
+            xmlSerializer.endTag(Empty, TagTextureCompress);
+            
             xmlSerializer.endTag(Empty, TagConfig);
 
         	xmlSerializer.endDocument();
@@ -235,6 +272,8 @@ public class Config
 		lastDirectory_ = Empty;
 		cameraMode_ = Camera_Animation;
 	    screenMode_ = Screen_Rot0;
+	    alphaTest_ = false;
+	    textureCompress_ = false;
 	}
 
 	private Config(){}
@@ -244,4 +283,6 @@ public class Config
 	private String lastDirectory_; /** 最後に選択したディレクトリ */
 	private int cameraMode_ = Camera_Animation;
 	private int screenMode_ = Screen_Rot0;
+	private boolean alphaTest_ = false;
+	private boolean textureCompress_ = false;
 }

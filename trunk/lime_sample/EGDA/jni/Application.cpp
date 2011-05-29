@@ -61,6 +61,9 @@ namespace egda
         lframework::System::InitParam sysParam("", 32);
         lframework::System::initialize(sysParam, animInitParam);
 
+        //lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
+        //renderSys.setClearTarget(lgraphics::ClearTarget_Depth);
+
         textRenderer_.initialize(MaxChars, CharW, CharH, Rows, Cols);
 
         textRenderer_.setTextureFromMemory(textTexture, size);
@@ -262,12 +265,13 @@ namespace egda
             }
             buffer[i] = '\0';
             u32 col = 2;
-            textRenderer_.print(Cols, col, buffer);
+            u32 row = Cols - 1;
+            textRenderer_.print(row, col, buffer);
             col += loadingIndex_;
 
             buffer[0] = NowLoading[loadingIndex_];
             buffer[1] = '\0';
-            textRenderer_.print(Cols-1, col, buffer);
+            textRenderer_.print(row-1, col, buffer);
             col += 1;
 
 
@@ -275,7 +279,7 @@ namespace egda
                 buffer[j] = NowLoading[i];
             }
             buffer[j] = '\0';
-            textRenderer_.print(Cols, col, buffer);
+            textRenderer_.print(row, col, buffer);
 
             renderSys.beginDraw();
 

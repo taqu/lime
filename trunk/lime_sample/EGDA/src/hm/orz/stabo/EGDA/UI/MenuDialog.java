@@ -35,8 +35,11 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
 
     private void initialize()
     {
-        screenMode_ = Config.getInstance().getScreenMode();
-        cameraMode_ = Config.getInstance().getCameraMode();
+        Config config = Config.getInstance();
+        screenMode_ = config.getScreenMode();
+        cameraMode_ = config.getCameraMode();
+        isAlphaTest_ = config.isAlhpaTest();
+        isTextureCompress_ = config.isTextureCompress();
 
         // スクリーン回転
         Spinner spinner = (Spinner)findViewById(R.id.screen_spinner);
@@ -45,24 +48,35 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
         spinner.setOnItemSelectedListener(this);
         
         // カメラモード
-        RadioGroup radioGroup = (RadioGroup)findViewById(R.id.camera_radioGroup);
+        RadioGroup cameraRadioGroup = (RadioGroup)findViewById(R.id.camera_radioGroup);
         switch(cameraMode_)
         {
         case Config.Camera_Manual:
-            radioGroup.check(R.id.camera_radioM);
+            cameraRadioGroup.check(R.id.camera_radioM);
             break;
             
         case Config.Camera_Animation:
-            radioGroup.check(R.id.camera_radioA);
+            cameraRadioGroup.check(R.id.camera_radioA);
             break;
             
         default:
-            radioGroup.check(R.id.camera_radioM);
+            cameraRadioGroup.check(R.id.camera_radioM);
             break;
         }
-        radioGroup.setOnCheckedChangeListener( this );
+        cameraRadioGroup.setOnCheckedChangeListener( this );
+        
+        // ロード設定
+        RadioGroup alphaTestRadioGroup = (RadioGroup)findViewById(R.id.alpha_test_radioGroup);
+        int id = (isAlphaTest_)? R.id.alpha_test_on : R.id.alpha_test_off;
+        alphaTestRadioGroup.check(id);
+        alphaTestRadioGroup.setOnCheckedChangeListener( this );
+
+        RadioGroup texCompRadioGroup = (RadioGroup)findViewById(R.id.texcomp_radioGroup);
+        id = (isTextureCompress_)? R.id.texcomp_on : R.id.texcomp_off;
+        texCompRadioGroup.check(id);
+        texCompRadioGroup.setOnCheckedChangeListener( this );
     }
-    
+
     public void onCheckedChanged(RadioGroup group, int checkedId)
     {        
         switch(checkedId)
@@ -73,6 +87,22 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
             
         case R.id.camera_radioA:
             cameraMode_ = Config.Camera_Animation;
+            break;
+            
+        case R.id.alpha_test_on:
+            isAlphaTest_ = true;
+            break;
+            
+        case R.id.alpha_test_off:
+            isAlphaTest_ = false;
+            break;
+            
+        case R.id.texcomp_on:
+            isTextureCompress_ = true;
+            break;
+            
+        case R.id.texcomp_off:
+            isTextureCompress_ = false;
             break;
             
         default:
@@ -101,15 +131,23 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
         case R.id.menu_button_ok:
             {
                 Config config = Config.getInstance();
-                boolean changed = (screenMode_ != config.getScreenMode()) || (cameraMode_ != config.getCameraMode());
+                boolean changed =
+                   (screenMode_ != config.getScreenMode())
+                || (cameraMode_ != config.getCameraMode())
+                || (isAlphaTest_ != config.isAlhpaTest())
+                || (isTextureCompress_ != config.isTextureCompress());
+
                 config.setCameraMode(cameraMode_);
                 config.setScreenMode(screenMode_);
+                config.setAlphaTest(isAlphaTest_);
+                config.setTextureCompress(isTextureCompress_);
+
                 if(changed){
                     config.save(app_name_);
                 }
             }
             commandManager_.push(CommandManager.createChangeMode(
-                    commandManager_, screenMode_, cameraMode_));
+                    commandManager_, screenMode_, cameraMode_, isAlphaTest_, isTextureCompress_));
             this.dismiss();
             break;
             
@@ -121,5 +159,7 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
     String app_name_ = null;
     int cameraMode_ = 0;
     int screenMode_ = 0;
+    boolean isAlphaTest_ = false;
+    boolean isTextureCompress_ = false;
     private CommandManager commandManager_ = null;
 }

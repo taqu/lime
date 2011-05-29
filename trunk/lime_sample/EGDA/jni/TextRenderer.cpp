@@ -369,12 +369,11 @@ namespace
             glBindBuffer( GL_ARRAY_BUFFER, NULL );
             glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, NULL );
 
-            decl_.attach( reinterpret_cast<const u8*>(buffer_) );
+            decl_.attach( 0, reinterpret_cast<const u8*>(buffer_) );
 
             device.draw(Primitive_TriangleList, count_*6, 0);
 
-            decl_.detach();
-            device.flush();
+            decl_.detach(0);
 
             clear();
         }

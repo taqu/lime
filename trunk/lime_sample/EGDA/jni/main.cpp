@@ -1,4 +1,5 @@
 #include "stdafx.h"
+#include <converter.h>
 #include "Application.h"
 #include "Input.h"
 #include "Config.h"
@@ -62,12 +63,14 @@ extern "C"
     /**
     @brief モードセット
     */
-    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setMode(JNIEnv *, jclass, jint, jint);
+    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setMode(JNIEnv *, jclass, jint, jint, jboolean, jboolean);
 
     //--------------------------------------------------------------------------
     // システム初期化
     jboolean JNICALL Java_hm_orz_stabo_EGDA_EGDALib_initialize(JNIEnv *env, jclass, jbyteArray btex)
     {
+        lconverter::Config::getInstance().reset(); //ロード設定初期化
+
         egda::JNIByteArray tex(env, btex);
 
         bool ret = egda::Application::getInstance().initialize(reinterpret_cast<const lcore::Char*>(tex.getData()), tex.size());
@@ -181,11 +184,16 @@ extern "C"
 
     //--------------------------------------------------------------------------
     // モードセット
-    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setMode(JNIEnv *, jclass, jint screenMode, jint cameraMode)
+    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setMode(JNIEnv *, jclass, jint screenMode, jint cameraMode, jboolean  alphaTest, jboolean texCompress)
     {
         egda::Config::getInstance().setScreenMode((egda::ScreenMode)screenMode);
         egda::Application::getInstance().setCameraMode(cameraMode);
         egda::Application::getInstance().resetProjection();
+
+        //ロード設定
+        lconverter::Config& config = lconverter::Config::getInstance();
+        config.setAlphaTest(alphaTest);
+        config.setTextureCompress(texCompress);
     }
 
 

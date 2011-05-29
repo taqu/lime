@@ -11,6 +11,7 @@ public class EGDALib
     public static final int State_Play = 1;
 
     /**
+     * 初期化
      * @return 
      * @param textTexture アルファベットテクスチャ
      */
@@ -76,11 +77,13 @@ public class EGDALib
      * @param state
      */
     public static native void setState(int state);
-    
+
     /**
-     * スクリーン、カメラモード変更
+     * スクリーン、カメラモード、アルファテスト、テクスチャ圧縮変更
      * @param screenMode
      * @param cameraMode
+     * @param alphaTest
+     * @param texComp
      */
-    public static native void setMode(int screenMode, int cameraMode);
+    public static native void setMode(int screenMode, int cameraMode, boolean alphaTest, boolean texComp);
 }

@@ -79,15 +79,19 @@ public class CommandManager
 
     public class CommandChangeMode extends Command
     {
-        protected CommandChangeMode(int screenMode, int cameraMode)
+        protected CommandChangeMode(int screenMode, int cameraMode, boolean isAlphaTest, boolean isTextureCompress)
         {
         	type_ = Command_ChangeMode;
         	screenMode_ = screenMode;
         	cameraMode_ = cameraMode;
+        	isAlphaTest_ = isAlphaTest;
+        	isTextureCompress_ = isTextureCompress;
         }
 
         public int screenMode_ = 0;
         public int cameraMode_ = 0;
+        public boolean isAlphaTest_ = false;
+        public boolean isTextureCompress_ = false;
     }
 
 
@@ -108,9 +112,9 @@ public class CommandManager
         return command;
     }
 
-    public static Command createChangeMode(CommandManager parent, int screenMode, int cameraMode)
+    public static Command createChangeMode(CommandManager parent, int screenMode, int cameraMode, boolean isAlphaTest, boolean isTextureCompress)
     {
-        CommandChangeMode command = parent.new CommandChangeMode(screenMode, cameraMode);
+        CommandChangeMode command = parent.new CommandChangeMode(screenMode, cameraMode, isAlphaTest, isTextureCompress);
         return command;
     }
 

@@ -48,7 +48,7 @@ namespace egda
 
         virtual void update(u32 counter);
         virtual void reset();
-        void set(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov);
+        void set(const pmm::CameraPose& pose);
 
         void resetProjection();
 
@@ -196,19 +196,30 @@ namespace egda
 
         Config& config = Config::getInstance();
 
-        lmath::Matrix44 mat;
-        config.perspectiveFovLinearZ(mat, initFov_);
-
-        camera.setProjMatrix(mat);
+        config.perspectiveFovLinearZ(camera.getProjMatrix(), initFov_);
 
         camera.updateMatrix();
     }
 
-    void Camera::Manual::set(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov)
+    void Camera::Manual::set(const pmm::CameraPose& pose)
     {
-        initPosition_ = position;
-        initTarget_ = target;
-        initFov_ = fov;
+        initFov_ = pose.fov_;
+
+        lmath::Vector3 center(pose.center_[0], pose.center_[1], pose.center_[2]);
+
+        initTarget_ = center;
+
+        lmath::Matrix43 rot;
+        rot.identity();
+        rot.rotateX( -pose.angle_[0] );
+        rot.rotateY( -pose.angle_[1] );
+        rot.rotateZ(  pose.angle_[2] );
+
+
+        initPosition_.set(0.0f, 0.0f, pose.length_);
+        initPosition_.mul33( initPosition_, rot );
+        initPosition_ += center;
+
         reset();
     }
 
@@ -219,10 +230,7 @@ namespace egda
 
         Config& config = Config::getInstance();
 
-        lmath::Matrix44 mat;
-        config.perspectiveFovLinearZ(mat, initFov_);
-
-        camera.setProjMatrix(mat);
+        config.perspectiveFovLinearZ(camera.getProjMatrix(), initFov_);
 
         camera.updateMatrix();
     }
@@ -246,13 +254,15 @@ namespace egda
         virtual void update(u32 counter);
         virtual void reset();
 
+        void calcMatrix();
         void setMatrix();
 
         void set(pmm::CameraAnimPack* pack);
 
         lmath::Vector3 up_;
-        lmath::Vector3 position_;
-        lmath::Vector3 target_;
+        lmath::Vector3 center_;
+        lmath::Vector3 angle_;
+        f32 length_;
         f32 fov_;
 
         lmath::Matrix44 matrix_;
@@ -262,8 +272,9 @@ namespace egda
 
     Camera::FrameAnim::FrameAnim()
         :up_(0.0f, 1.0f, 0.0f)
-        ,position_(0.0f, 0.0f, 1.0f)
-        ,target_(0.0f, 0.0f, 0.0f)
+        ,center_(0.0f, 0.0f, 0.0f)
+        ,angle_(0.0f, 0.0f, 0.0f)
+        ,length_(1.0f)
         ,fov_((45.0f/180.0f*PI))
         ,cameraAnimPack_(NULL)
     {
@@ -283,8 +294,9 @@ namespace egda
 
         if(animIndex == cameraAnimPack_->getNumPoses() - 1){
             //最後のフレーム
-            position_ = cameraPose.position_;
-            target_ = cameraPose.target_;
+            center_ = cameraPose.center_;
+            angle_ = cameraPose.angle_;
+            length_ = cameraPose.length_;
             fov_ = cameraPose.fov_;
 
         }else{
@@ -293,16 +305,18 @@ namespace egda
             //次のフレームのポーズ
             const pmm::CameraPose& nextPose = cameraAnimPack_->getPose(animIndex + 1);
 
-            f32 blend = static_cast<f32>(counter - cameraPose.frameNo_);
-            blend /= static_cast<f32>(nextPose.frameNo_ - cameraPose.frameNo_);
+            f32 blend0 = static_cast<f32>(counter - cameraPose.frameNo_);
+            blend0 /= static_cast<f32>(nextPose.frameNo_ - cameraPose.frameNo_);
+            f32 blend1 = (1.0f-blend0);
 
-            position_.lerp(cameraPose.position_, nextPose.position_, blend);
+            center_.lerp(cameraPose.center_, nextPose.center_, blend0, blend1);
+            angle_.lerp(cameraPose.angle_, nextPose.angle_,  blend0, blend1);
 
-            target_.lerp(cameraPose.target_, nextPose.target_, blend);
-
-            fov_ = blend * nextPose.fov_ + (1.0f-blend) * cameraPose.fov_;
+            length_ = blend1 * cameraPose.length_ + blend0 * nextPose.length_;
+            fov_ = blend1 * cameraPose.fov_ + blend0 * nextPose.fov_;
 
         } //if(animIndex ==
+        calcMatrix();
         setMatrix();
 
     }
@@ -312,11 +326,36 @@ namespace egda
         cameraAnimPack_->initialize();
 
         const pmm::CameraPose& cameraPose = cameraAnimPack_->getPose(0);
-        position_ = cameraPose.position_;
-        target_ = cameraPose.target_;
+        center_ = cameraPose.center_;
+        angle_ = cameraPose.angle_;
+        length_ = cameraPose.length_;
         fov_ = cameraPose.fov_;
 
-        matrix_.lookAt(position_, target_, up_);
+        calcMatrix();
+    }
+
+    void Camera::FrameAnim::calcMatrix()
+    {
+        lmath::Matrix43 rot;
+        rot.identity();
+        rot.rotateX( -angle_._x );
+        rot.rotateY( -angle_._y );
+        //rot.rotateZ(  angle_._z );
+
+        lmath::Vector3 zaxis(0.0f, 0.0f, length_);
+        zaxis.mul33( zaxis, rot );
+
+
+        lmath::Vector3 pos( zaxis );
+        pos += center_;
+
+        f32 sn = -lmath::sinf(angle_._z);
+        f32 cs = lmath::cosf(angle_._z);
+
+        up_._x = sn;
+        up_._y = cs;
+
+        matrix_.lookAt(pos, center_, up_);
     }
 
     void Camera::FrameAnim::setMatrix()
@@ -324,14 +363,11 @@ namespace egda
         lscene::Scene& scene = lframework::System::getRenderSys().getScene();
         lscene::Camera& camera = scene.getCamera();
 
-        matrix_.lookAt(position_, target_, up_);
         camera.setViewMatrix(matrix_);
 
         Config& config = Config::getInstance();
 
-        config.perspectiveFovLinearZ(matrix_, fov_);
-
-        camera.setProjMatrix(matrix_);
+        config.perspectiveFovLinearZ(camera.getProjMatrix(), fov_);
 
         camera.updateMatrix();
     }
@@ -363,10 +399,10 @@ namespace egda
         }
     }
 
-    void Camera::setInitial(const lmath::Vector3& position, const lmath::Vector3& target, f32 fov)
+    void Camera::setInitial(const pmm::CameraPose& pose)
     {
         Manual* manual = reinterpret_cast<Manual*>(impl_[Mode_Manual]);
-        manual->set(position, target, fov);
+        manual->set(pose);
 
     }
 
