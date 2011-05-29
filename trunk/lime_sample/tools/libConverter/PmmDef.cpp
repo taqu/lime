@@ -471,6 +471,83 @@ namespace pmm
         animControler_ = controler;
     }
 
+    //マルチストリーム実験
+#if defined(LIME_LIBCONVERT_PMD_USE_MULTISTREAM)
+    void ModelPack::resetMorph()
+    {
+        if(skinPack_.getNumSkins()<=0){
+            return;
+        }
+
+        lmath::Vector3* vertices = skinPack_.getMorphBaseVertices();
+
+        u32 minIndex = skinPack_.getMinIndex();
+        pmd::Skin& skin = skinPack_.getSkin(0);
+        for(u32 i=0; i<skin.numVertices_; ++i){
+            u32 index = skin.vertices_[i].index_ - minIndex;
+            vertices[index].set(
+                skin.vertices_[i].position_[0],
+                skin.vertices_[i].position_[1],
+                skin.vertices_[i].position_[2]);
+        }
+
+        u32 offset = skinPack_.getMinIndex() * sizeof(lmath::Vector3);
+        u32 size = (skinPack_.getMaxIndex() - skinPack_.getMinIndex()) + 1;
+        size *= sizeof(lmath::Vector3);
+
+        lgraphics::VertexBufferRef& vb = object_->getGeometry(0).getGeometryBuffer()->getVertexBuffer(0);
+        vb.blit(vertices, offset, size);
+
+        //バックバッファも初期化
+        lgraphics::VertexBufferRef& back = skinPack_.getBackVertexBuffer();
+        back.blit(vertices, offset, size);
+    }
+
+    void ModelPack::updateMorph(u32 /*frame*/, u32 nextFrame)
+    {
+        if(skinPack_.getNumSkins()<=0){
+            return;
+        }
+
+        lgraphics::VertexBufferRef& vb = object_->getGeometry(0).getGeometryBuffer()->getVertexBuffer(0);
+        lgraphics::VertexBufferRef& back = skinPack_.getBackVertexBuffer();
+        //バックバッファと入れ替え
+        vb.swap(back);
+
+        lmath::Vector3* vertices = skinPack_.getMorphBaseVertices();
+
+        u32 minIndex = skinPack_.getMinIndex();
+        pmd::Skin& skin = skinPack_.getSkin(0);
+        for(u32 i=0; i<skin.numVertices_; ++i){
+            u32 index = skin.vertices_[i].index_ - minIndex;
+            vertices[index].set(
+                skin.vertices_[i].position_[0],
+                skin.vertices_[i].position_[1],
+                skin.vertices_[i].position_[2]);
+        }
+
+        for(u32 i=1; i<skinPack_.getNumSkins(); ++i){
+            f32 weight = skinAnimPack_.searchSkinWeight(i-1, nextFrame);
+
+            pmd::Skin& offsetSkin = skinPack_.getSkin(i);
+
+            for(u32 j=0; j<offsetSkin.numVertices_; ++j){
+                u32 index = skin.vertices_[ offsetSkin.vertices_[j].index_ ].index_ - minIndex;
+                vertices[index]._x += weight * offsetSkin.vertices_[j].position_[0];
+                vertices[index]._y += weight * offsetSkin.vertices_[j].position_[1];
+                vertices[index]._z += weight * offsetSkin.vertices_[j].position_[2];
+            }
+        }
+
+        u32 offset = skinPack_.getMinIndex() * sizeof(lmath::Vector3);
+        u32 size = (skinPack_.getMaxIndex() - skinPack_.getMinIndex()) + 1;
+        size *= sizeof(lmath::Vector3);
+
+        //vb.blit(vertices, offset, size);
+        back.blit(vertices, offset, size); //バックバッファに転送
+    }
+
+#else
     void ModelPack::resetMorph()
     {
         if(skinPack_.getNumSkins()<=0){
@@ -496,7 +573,7 @@ namespace pmm
         vb.blit(vertices, offset, size);
     }
 
-    void ModelPack::updateMorph(u32 frame)
+    void ModelPack::updateMorph(u32 frame, u32 nextFrame)
     {
         if(skinPack_.getNumSkins()<=0){
             return;
@@ -533,6 +610,8 @@ namespace pmm
         lgraphics::VertexBufferRef& vb = object_->getGeometry(0).getGeometryBuffer()->getVertexBuffer(0);
         vb.blit(vertices, offset, size);
     }
+#endif
+
 
     //----------------------------------------------------------------------
     //---
@@ -546,19 +625,13 @@ namespace pmm
 
         pose.frameNo_ = frame.frameNo_;
 
-        lmath::Vector3 center(frame.center_[0], frame.center_[1], frame.center_[2]);
+        pose.center_.set(frame.center_[0], frame.center_[1], frame.center_[2]);
+        pose.angle_.set(frame.angle_[0], frame.angle_[1], frame.angle_[2]);
 
-        pose.target_ = center;
+        static const f32 Limit = (PI_2*0.98f);
+        lmath::clamp(pose.angle_._x, -Limit, Limit);
 
-        lmath::Matrix43 rot;
-        rot.identity();
-        rot.rotateX( -frame.angle_[0] );
-        rot.rotateY( -frame.angle_[1] );
-        rot.rotateZ( frame.angle_[2] );
-
-        pose.position_.set(0.0f, 0.0f, frame.length_);
-        pose.position_.mul33( pose.position_, rot );
-        pose.position_ += center;
+        pose.length_ = frame.length_;
 
         pose.fov_ = static_cast<f32>( frame.fov_ ) / 180.0f * PI;
     }

@@ -82,12 +82,13 @@ namespace viewer
             //次のフレームのポーズ
             const pmm::LightPose& nextPose = lightAnimPack_->getPose(animIndex + 1);
 
-            f32 blend = (frame_ - static_cast<f32>(lightPose.frameNo_));
-            blend /= static_cast<f32>(nextPose.frameNo_ - lightPose.frameNo_);
+            f32 blend0 = (frame_ - static_cast<f32>(lightPose.frameNo_));
+            blend0 /= static_cast<f32>(nextPose.frameNo_ - lightPose.frameNo_);
+            f32 blend1 = 1.0f - blend0;
 
-            dlight.getDirection().lerp(lightPose.direction_, nextPose.direction_, blend);
+            dlight.getDirection().lerp(lightPose.direction_, nextPose.direction_, blend0, blend1);
 
-            lerp(dlight.getColor(), lightPose.rgbx_, nextPose.rgbx_, blend);
+            lerp(dlight.getColor(), lightPose.rgbx_, nextPose.rgbx_, blend0);
         } //if(animIndex ==
     }
 

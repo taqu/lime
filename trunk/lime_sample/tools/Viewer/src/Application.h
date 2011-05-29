@@ -30,12 +30,12 @@ namespace viewer
     class Application : public lframework::Application
     {
     public:
-#if 0
-        static const lcore::u32 Width = 1920;
-        static const lcore::u32 Height = 1080;
-#elif 1
-        static const lcore::u32 Width = 800;
-        static const lcore::u32 Height = 600;
+#if 1
+        static const lcore::u32 Width = 1024;
+        static const lcore::u32 Height = 1024;
+#elif 0
+        static const lcore::u32 Width = 480;
+        static const lcore::u32 Height = 852;
 #else
         static const lcore::u32 Width = 256;
         static const lcore::u32 Height = 128;

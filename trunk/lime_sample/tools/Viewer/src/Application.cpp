@@ -31,6 +31,7 @@
 #include "AnimationControlerImpl.h"
 
 #include "Input.h"
+#include <converter.h>
 
 namespace
 {
@@ -78,7 +79,7 @@ namespace viewer
             //mat.lookAt(lmath::Vector3(0.0f, 0.0f, -2.0f), lmath::Vector3(0.0f, 0.0f, 0.0f), lmath::Vector3(0.0f, 1.0f, 0.0f));
             camera.setViewMatrix(mat);
 
-            mat.perspectiveFovLinearZ(45.0f/180.0f*PI, static_cast<lcore::f32>(Width)/Height, 1.0f, 200.0f);
+            mat.perspectiveFovLinearZ(45.0f/180.0f*PI, static_cast<lcore::f32>(Width)/Height, 0.5f, 3000.0f);
             camera.setProjMatrix(mat);
 
             camera.updateMatrix();
@@ -93,6 +94,10 @@ namespace viewer
 
 
             Input::initialize( window_.getHandle().hWnd_, window_.getViewWidth(), window_.getViewHeight() );
+
+            lconverter::Config::getInstance().setAlphaTest(true);
+            //lconverter::Config::getInstance().setTextureCompress(true);
+
         }
 
 #if 1
@@ -100,8 +105,11 @@ namespace viewer
             scene_.release(); //携帯機ではメモリが少ないので先に解放する。ロード失敗すれば元には戻らない
 
             loader_ = LIME_NEW pmm::Loader;
-            //loader_->open("HelloP.pmm", "data/HelloP/");
-            loader_->open("mikumiku.pmm", "data/MikuMiku/");
+            loader_->open("HelloP.pmm", "data/HelloP/");
+            //loader_->open("mikumiku.pmm", "data/MikuMiku/");
+            //loader_->open("kkhscene01.pmm", "data/StrobeNights/");
+            //loader_->open("SampleAllStar.pmm", "data/pmm/");
+            //loader_->open("Sample.pmm", "data/pmm/");
             if(loader_->getErrorCode() != pmm::Loader::Error_None){
                 LIME_DELETE(loader_);
                 status_ = Status_Play;
@@ -211,7 +219,7 @@ namespace viewer
         //textRenderer_.print(3, 0, "PQRSTUVWXYZ[\\]^_");
         //textRenderer_.print(4, 0, "`abcdefghijklmno");
         //textRenderer_.print(5, 0, "pqrstuvwxyz{|}");
-
+#if 0
         {//なうろーでぃんぐ
 
             static const lcore::Char NowLoading[] = "Now Loading";
@@ -254,7 +262,7 @@ namespace viewer
             textRenderer_.print(5-1, col, buffer);
 
         }
-
+#endif
         char str[128];
 //デバッグ用ログ
 #if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)

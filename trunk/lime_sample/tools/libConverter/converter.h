@@ -12,6 +12,9 @@
 #include <lcore/String.h>
 
 //#define LIME_LIBCONVERTER_DEBUGLOG_ENABLE (1)
+#define LIME_LIBCONVERT_PMD_USE_MULTISTREAM
+#define LIME_LIBCONVERT_USE_ETC1
+//#define LIME_LIBCONVERT_USE_MIPMAP_DEBUG
 
 namespace lgraphics
 {
@@ -33,7 +36,8 @@ namespace lconverter
 
     using lcore::Char;
 
-    static const u32 MinTextureSizeToCreateMipMap = 64; //テクスチャの１辺がこれ以上ならミップマップ作成
+    static const u32 MinTextureSizeToCreateMipMap = 32; //テクスチャの１辺がこれ以上ならミップマップ作成
+    static const u32 MinTextureSizeToCompress = 32; //テクスチャの１辺がこれ以上なら圧縮
 
     s16 F32ToS16(f32 value);
     s16 F32ToS16Clamp(f32 value);
@@ -63,6 +67,41 @@ namespace lconverter
 
     typedef lcore::String<256> StringBuffer;
 
+    //--------------------------------------------------------------
+    //---
+    //--- Config
+    //---
+    //--------------------------------------------------------------
+    /**
+    @brief ロードコンフィグ
+    */
+    class Config
+    {
+    public:
+        static Config& getInstance(){ return instance_;}
+
+        void reset()
+        {
+            alphaTest_ = false;
+            textureCompress_ = false;
+        }
+
+        bool isAlphaTest() const{ return alphaTest_;}
+        void setAlphaTest(bool enable){ alphaTest_ = enable;}
+
+        bool isTextureCompress() const{ return textureCompress_;}
+        void setTextureCompress(bool enable){ textureCompress_ = enable;}
+    private:
+        Config()
+            :alphaTest_(false)
+            ,textureCompress_(false)
+        {}
+
+        static Config instance_;
+
+        bool alphaTest_;
+        bool textureCompress_;
+    };
 
     /**
     @brief 挿入ソート

@@ -374,7 +374,6 @@ namespace
             device.drawIndexed(Primitive_TriangleList, count_ * 4, count_*2, 0);
 #endif
             decl_.detach(0);
-            //device.flush();
             clear();
         }
     }

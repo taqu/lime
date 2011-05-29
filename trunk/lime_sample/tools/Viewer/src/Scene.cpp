@@ -236,7 +236,7 @@ namespace viewer
         {
             // カメラ初期化
             const pmm::CameraPose& cameraPose = cameraAnimPack_.getPose(0);
-            camera_.setInitial(cameraPose.position_, cameraPose.target_, cameraPose.fov_, aspect);
+            camera_.setInitial(cameraPose, aspect);
             camera_.setCameraAnim(&cameraAnimPack_, aspect);
 
             camera_.setMode(Camera::Mode_FrameAnim);
@@ -253,11 +253,13 @@ namespace viewer
         //state_ = State_Stop;
 
         frameCounter_ = 0;
+        //frameCounter_ = 1500;
     }
 
 
     void Scene::Impl::update()
     {
+        //lgraphics::Graphics::getDevice().flush(); //モーフィング更新のためフラッシュ
         if(Input::isClick(Input::Key_0)){
             State trans[State_Num] = 
             {
@@ -270,6 +272,8 @@ namespace viewer
         if(Input::isClick(Input::Key_1)){
             camera_.changeMode();
         }
+
+        u32 nextFrame;
 
         switch(state_)
         {
@@ -284,16 +288,16 @@ namespace viewer
 
                 if(++frameCounter_>lastFrame_){
                     frameCounter_ = 0;
+                    nextFrame = (lastFrame_>1)? 1 : 0;
+
                     for(u32 i=1; i<numAccessories_; ++i){
                         accPacks_[i].initialize();
                     }
 
                     camera_.initialize();
                     light_.initialize();
-                }
-
-                for(u32 i=0; i<numModels_; ++i){
-                    modelPacks_[i].updateMorph(frameCounter_);
+                }else{
+                    nextFrame = (frameCounter_ == lastFrame_)? 0 : (frameCounter_+1);
                 }
 
                 //アクセサリ更新
@@ -303,6 +307,11 @@ namespace viewer
 
                 camera_.update(frameCounter_);
                 light_.update();
+
+                for(u32 i=0; i<numModels_; ++i){
+                    modelPacks_[i].updateMorph(frameCounter_, nextFrame);
+                }
+
             }
             break;
 
@@ -313,16 +322,15 @@ namespace viewer
 
                 if(++frameCounter_>lastFrame_){
                     frameCounter_ = 0;
+                    nextFrame = (lastFrame_>1)? 1 : 0;
                     for(u32 i=1; i<numAccessories_; ++i){
                         accPacks_[i].initialize();
                     }
 
                     camera_.initialize();
                     light_.initialize();
-                }
-
-                for(u32 i=0; i<numModels_; ++i){
-                    modelPacks_[i].updateMorph(frameCounter_);
+                }else{
+                    nextFrame = (frameCounter_ == lastFrame_)? 0 : (frameCounter_+1);
                 }
 
                 //アクセサリ更新
@@ -332,6 +340,11 @@ namespace viewer
 
                 camera_.update(frameCounter_);
                 light_.update();
+
+                for(u32 i=0; i<numModels_; ++i){
+                    modelPacks_[i].updateMorph(frameCounter_, nextFrame);
+                }
+
             }
             break;
         };
