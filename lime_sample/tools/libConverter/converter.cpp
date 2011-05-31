@@ -178,7 +178,11 @@ namespace lconverter
                     && (width>MinTextureSizeToCompress && height>MinTextureSizeToCompress)
                     && (bufferFormat == lgraphics::Buffer_B8G8R8 || bufferFormat == lgraphics::Buffer_R8G8B8))
                 {
+#if 0
                     u32 levels = lgraphics::io::calcMipMapLevels(width, height);
+#else
+                    u32 levels = 1;
+#endif
                     *texture = lgraphics::Texture::create(
                         width,
                         height,
@@ -188,10 +192,18 @@ namespace lconverter
                         lgraphics::Pool_Default);
 
                     lgraphics::etc::ETC1Codec etc1Codec;
+#if 0
                     etc1Codec.encodeMipMap(*texture, buffer, width, height, levels);
 
                     //サンプラステートセット
                     sampler.setMinFilter( TexMipMapMinFilter );
+
+#else
+                    etc1Codec.encode(*texture, buffer, width, height);
+
+                    //サンプラステートセット
+                    sampler.setMinFilter( TexMinFilter );
+#endif
                     texture->attach();
                     sampler.apply(0);
 
