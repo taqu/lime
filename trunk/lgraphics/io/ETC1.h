@@ -13,10 +13,6 @@ namespace lgraphics
 
 namespace etc
 {
-    extern const f32 WeightR;
-    extern const f32 WeightG;
-    extern const f32 WeightB;
-
     static const u32 WeightRError = static_cast<u32>(0xFFU * 0.299f);
     static const u32 WeightGError = static_cast<u32>(0xFFU * 0.587f);
     static const u32 WeightBError = static_cast<u32>(0xFFU * 0.114f);
@@ -24,7 +20,6 @@ namespace etc
     static const u32 MaxError = 0xFFFFFFFFU;
 
     static const s32 NumBitShift = 16;
-    static const u32 MaxGray = 0xFF0000U;
 
     struct Texel
     {
@@ -35,11 +30,6 @@ namespace etc
         u32 getGrayFixed() const
         {
             return (WeightRError * r_ + WeightGError * g_ + WeightBError * b_);
-        }
-
-        f32 getGrayF32() const
-        {
-            return WeightR * r_ + WeightG * g_ + WeightB * b_;
         }
 
         void set(u8 r, u8 g, u8 b)
@@ -111,36 +101,6 @@ namespace etc
         }
     };
 
-    struct GrayFixedPoint
-    {
-        static const s32 NumBitShift = 16;
-        static const u32 Max = 0xFFFFFFU;
-
-        static const f32 WeightR;
-        static const f32 WeightG;
-        static const f32 WeightB;
-
-        u32 v_;
-
-        void set(u8 r, u8 g, u8 b)
-        {
-            f32 v = WeightR * r + WeightG * g + WeightB * b;
-            v_ = static_cast<u32>(v);
-        }
-
-        void set(const Texel& texel)
-        {
-            f32 v = WeightR * texel.r_ + WeightG * texel.g_ + WeightB * texel.b_;
-            v_ = static_cast<u32>(v);
-        }
-
-        static u32 calc(u8 r, u8 g, u8 b)
-        {
-            f32 v = WeightR * r + WeightG * g + WeightB * b;
-            return static_cast<u32>(v);
-        }
-    };
-
 
 #if 1
     class ETC1Codec
@@ -159,10 +119,18 @@ namespace etc
         @param height ... 
         @param format ... 
 
-        フルレベルでミップマップ作成。convertToPow2Imageで２のべき乗に変換する。
-        バッファを破壊するので注意。
+        フルレベルでミップマップ作成。バッファを破壊するので注意。
         */
         void encodeMipMap(TextureRef& dst, u8* src, u32 width, u32 height, u32 levels);
+
+        //-----------------------------------------------------
+        /**
+        @brief エンコード
+        @param src ...
+        @param width ... 
+        @param height ... 
+        */
+        void encode(TextureRef& dst, const u8* src, u32 width, u32 height);
 
         //-----------------------------------------------------------------------------
         bool encode(u8* dst, const u8* src, u32 width, u32 height);
@@ -186,13 +154,13 @@ namespace etc
         void encodeBlock(u8*& dst);
 
         //---------------------------------------------------------------------
-        //u32 encodeBlock2x4(u8* dst);
+        u32 encodeBlock2x4(u8* dst);
 
         //---------------------------------------------------------------------
         u32 encodeBlock2x4avg(u8* dst);
 
         //---------------------------------------------------------------------
-        //u32 encodeBlock4x2(u8* dst);
+        u32 encodeBlock4x2(u8* dst);
 
         //---------------------------------------------------------------------
         u32 encodeBlock4x2avg(u8* dst);
@@ -204,12 +172,12 @@ namespace etc
         void calcAvg4x2(etc::TexelFixedPoint& texel, u32 sx);
 
         //---------------------------------------------------------------------
-        //void quantizeTo444(u8* encoded, const TexelFixedPoint& avg);
+        void quantizeTo444(u8* encoded, const TexelFixedPoint& avg);
 
         //---------------------------------------------------------------------
-        //void quantizeTo555(u8* encoded, const TexelFixedPoint& avg);
+        void quantizeTo555(u8* encoded, const TexelFixedPoint& avg);
 
-        //void quantize(u8* encoded, const TexelFixedPoint& avg, const u32* low, const u32* high, const u32* lbit, const u32* hbit);
+        void quantize(u8* encoded, const TexelFixedPoint& avg, const s32* low, const s32* high, const u32* lbit, const u32* hbit);
 
         u32 encode2x4(u8* dst, u8& min_table, const u8* rgb, u32 sx, u32 ex);
         u32 encode2x4(u8* msb, u8* lsb, u8 table, const u8* rgb, u32 sx, u32 ex);

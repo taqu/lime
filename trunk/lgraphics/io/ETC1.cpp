@@ -145,19 +145,6 @@ namespace
 #endif
     };
 
-    /// 16:16固定少数版テーブル
-    const u32 ModifierTableFixed[8][4] =
-    {
-        {0x020000U, 0x080000U, 0xFFFE0000U, 0xFFF80000U, },
-        {0x050000U, 0x110000U, 0xFFFB0000U, 0xFFEF0000U, },
-        {0x090000U, 0x1D0000U, 0xFFF70000U, 0xFFE30000U, },
-        {0x0D0000U, 0x2A0000U, 0xFFF30000U, 0xFFD60000U, },
-        {0x120000U, 0x3C0000U, 0xFFEE0000U, 0xFFC40000U, },
-        {0x180000U, 0x500000U, 0xFFE80000U, 0xFFB00000U, },
-        {0x210000U, 0x6A0000U, 0xFFDF0000U, 0xFF960000U, },
-        {0x2F0000U, 0xB70000U, 0xFFD10000U, 0xFF490000U, },
-    };
-
     class IndividualMode
     {
     public:
@@ -275,21 +262,21 @@ namespace
 
 
     // Le Gall (CDF) 5/3 Analisys Filter
-    static const f32 CDF53LowPass[5] =
-    {
-        -(1.0f/8.0f),
-         (2.0f/8.0f),
-         (6.0f/8.0f),
-         (2.0f/8.0f),
-        -(1.0f/8.0f),
-    };
+    //static const f32 CDF53LowPass[5] =
+    //{
+    //    -(1.0f/8.0f),
+    //     (2.0f/8.0f),
+    //     (6.0f/8.0f),
+    //     (2.0f/8.0f),
+    //    -(1.0f/8.0f),
+    //};
 
-    static const f32 CDF53HighPass[3] =
-    {
-         (1.0f/2.0f),
-         1.0f,
-         (1.0f/2.0f),
-    };
+    //static const f32 CDF53HighPass[3] =
+    //{
+    //     (1.0f/2.0f),
+    //     1.0f,
+    //     (1.0f/2.0f),
+    //};
 
 
     u32 avgCDF53Convolusion(u32 d0, u32 d1, u32 d2, u32 d3)
@@ -335,9 +322,6 @@ namespace
 
 namespace etc
 {
-    const f32 GrayFixedPoint::WeightR = 0.299f * 65536.0f;
-    const f32 GrayFixedPoint::WeightG = 0.587f * 65536.0f;
-    const f32 GrayFixedPoint::WeightB = 0.114f * 65536.0f;
 
     u32 ETC1Codec::calcEncodedSize(u32 width, u32 height)
     {
@@ -352,9 +336,6 @@ namespace etc
 
 
 #if 1
-    const f32 WeightR = 0.299f;
-    const f32 WeightG = 0.587f;
-    const f32 WeightB = 0.114f;
 
     //-----------------------------------------------------------------------------
     // ミップマップ作成
@@ -395,6 +376,28 @@ namespace etc
             height = dh;
             io::calcHalfSize(dw, dh, width, height);
         }
+
+        LIME_DELETE_ARRAY(buffer);
+        dst.detach(); //unbind
+    }
+
+    //-----------------------------------------------------
+    /// エンコード
+    void ETC1Codec::encode(TextureRef& dst, const u8* src, u32 width, u32 height)
+    {
+        LASSERT(src != NULL);
+        LASSERT(width>0);
+        LASSERT(height>0);
+
+        u32 encodedSize = calcEncodedSize(width, height);
+
+        u8* buffer = LIME_NEW u8[encodedSize];
+
+        dst.attach(); //bind
+
+        encode(buffer, src, width, height);
+
+        dst.blit(0, width, height, buffer);
 
         LIME_DELETE_ARRAY(buffer);
         dst.detach(); //unbind
@@ -499,19 +502,45 @@ namespace etc
     void ETC1Codec::encodeBlock(u8*& dst)
     {
 #if 0
-        u8 vblock[8];
+        u8 block[8];
+        u8 blockAvg[8];
+        ModeBase::clearBlock(block);
+        ModeBase::clearBlock(blockAvg);
+
+        u32 error, errorAvg;
+
+        if(isHigherFrequencyVertical(texels_)){
+            error = encodeBlock2x4( block );
+            errorAvg = encodeBlock2x4avg( blockAvg );
+
+        }else{
+            error = encodeBlock4x2( block );
+            errorAvg = encodeBlock4x2avg( blockAvg );
+        }
+
+        if(error < errorAvg){
+            lcore::memcpy(dst, block, 8);
+        }else{
+            lcore::memcpy(dst, blockAvg, 8);
+        }
+
+#elif 0
         u8 hblock[8];
-
-        ModeBase::clearBlock(vblock);
+        u8 vblock[8];
         ModeBase::clearBlock(hblock);
+        ModeBase::clearBlock(vblock);
 
-        f32 verror = encodeBlock4x2( vblock );
-        f32 herror = encodeBlock2x4( hblock );
+        u32 herror, verror;
+
+        herror = encodeBlock2x4avg( hblock );
+        verror = encodeBlock4x2avg( vblock );
+
         if(verror < herror){
             lcore::memcpy(dst, vblock, 8);
         }else{
             lcore::memcpy(dst, hblock, 8);
         }
+
 #else
         ModeBase::clearBlock(dst);
 
@@ -527,7 +556,7 @@ namespace etc
         dst += 8;
     }
 
-#if 0
+#if 1
     //---------------------------------------------------------------------
     u32 ETC1Codec::encodeBlock2x4(u8* dst)
     {
@@ -537,67 +566,64 @@ namespace etc
         u8 rgb1[3];
         u8 rgb2[3];
 
+        TexelFixedPoint texel1, texel2;
+        u8 rgb5bit1[3];
+        u8 rgb5bit2[3];
+
+        calcAvg2x4(texel1, 0, 8);
+        calcAvg2x4(texel2, 8, 16);
+
+        //-------------------------------------------------------
+        quantizeTo555(rgb5bit1, texel1);
+
+        //-------------------------------------------------------
+        quantizeTo555(rgb5bit2, texel2);
+
+
+        //サブブロック１との差をとる
+        s32 diff[3];
+        for(s32 i=0; i<3; ++i){
+            diff[i] = rgb5bit2[i];
+            diff[i] -= rgb5bit1[i];
+        }
+
+
+        // 差が4ビット以内ならDifferentialモード
+        if((-4<=diff[0]) && (diff[0]<=3)
+            && (-4<=diff[1]) && (diff[1]<=3)
+            && (-4<=diff[2]) && (diff[2]<=3))
         {
-            TexelFixedPoint texel1, texel2;
+            ModeBase::setDiffBit(dst, 1);
+
+            DifferentialMode::setBaseColor1(dst, rgb5bit1[0], rgb5bit1[1], rgb5bit1[2]);
+            DifferentialMode::setBaseColor2(dst, diff[0], diff[1], diff[2]);
+
+            s32 tmp;
+            for(s32 i=0; i<3; ++i){
+                tmp = rgb1[i];
+                tmp += diff[i];
+                tmp = lmath::clamp(tmp, 0, 255);
+
+                rgb1[i] = (rgb1[i]<<3) | (rgb1[i]>>2);
+
+                rgb2[i] = tmp;
+                rgb2[i] = (rgb2[i]<<3) | (rgb2[i]>>2);
+            }
+
+        }else{
             u8 rgb4bit1[3];
             u8 rgb4bit2[3];
-            u8 rgb5bit1[3];
-            u8 rgb5bit2[3];
+            quantizeTo444(rgb4bit1, texel1);
+            quantizeTo444(rgb4bit2, texel2);
 
-            calcAvg2x4(texel1, 0, 8);
-            calcAvg2x4(texel2, 8, 16);
+            ModeBase::setDiffBit(dst, 0);
+            IndividualMode::setBaseColor1(dst, rgb4bit1[0], rgb4bit1[1], rgb4bit1[2]);
+            IndividualMode::setBaseColor2(dst, rgb4bit2[0], rgb4bit2[1], rgb4bit2[2]);
 
-            //-------------------------------------------------------
-            quantizeTo555(rgb5bit1, texel1);
-
-            //-------------------------------------------------------
-            quantizeTo555(rgb5bit2, texel2);
-
-
-            //サブブロック１との差をとる
-            s32 diff[3];
             for(s32 i=0; i<3; ++i){
-                diff[i] = rgb5bit2[i];
-                diff[i] -= rgb5bit1[i];
+                rgb1[i] = (rgb4bit1[i]<<4) | rgb4bit1[i];
+                rgb2[i] = (rgb4bit2[i]<<4) | rgb4bit2[i];
             }
-
-
-            // 差が4ビット以内ならDifferentialモード
-            if((-4<=diff[0]) && (diff[0]<=3)
-                && (-4<=diff[1]) && (diff[1]<=3)
-                && (-4<=diff[2]) && (diff[2]<=3))
-            {
-                ModeBase::setDiffBit(dst, 1);
-
-                DifferentialMode::setBaseColor1(dst, rgb5bit1[0], rgb5bit1[1], rgb5bit1[2]);
-                DifferentialMode::setBaseColor2(dst, diff[0], diff[1], diff[2]);
-
-                s32 tmp;
-                for(s32 i=0; i<3; ++i){
-                    rgb1[i] = (rgb5bit1[i]<<3) | (rgb5bit1[i]>>2);
-
-                    tmp = rgb5bit1[i];
-                    tmp += diff[i];
-                    tmp = lmath::clamp(tmp, 0, 255);
-
-                    rgb2[i] = tmp;
-                    rgb2[i] = (rgb2[i]<<3) | (rgb2[i]>>2);
-                }
-
-            }else{
-                quantizeTo444(rgb4bit1, texel1);
-                quantizeTo444(rgb4bit2, texel2);
-
-                ModeBase::setDiffBit(dst, 0);
-                IndividualMode::setBaseColor1(dst, rgb4bit1[0], rgb4bit1[1], rgb4bit1[2]);
-                IndividualMode::setBaseColor2(dst, rgb4bit2[0], rgb4bit2[1], rgb4bit2[2]);
-
-                for(s32 i=0; i<3; ++i){
-                    rgb1[i] = (rgb4bit1[i]<<4) | rgb4bit1[i];
-                    rgb2[i] = (rgb4bit2[i]<<4) | rgb4bit2[i];
-                }
-            }
-
         }
 
 
@@ -703,7 +729,7 @@ namespace etc
         return error;
     }
 
-#if 0
+#if 1
     //---------------------------------------------------------------------
     u32 ETC1Codec::encodeBlock4x2(u8* dst)
     {
@@ -713,15 +739,12 @@ namespace etc
         u8 rgb1[3];
         u8 rgb2[3];
 
-        {
             TexelFixedPoint texel1, texel2;
-            u8 rgb4bit1[3];
-            u8 rgb4bit2[3];
             u8 rgb5bit1[3];
             u8 rgb5bit2[3];
 
-            calcAvg4x2(texel1, true);
-            calcAvg4x2(texel2, false);
+            calcAvg4x2(texel1, 0);
+            calcAvg4x2(texel2, 2);
 
             //-------------------------------------------------------
             quantizeTo555(rgb5bit1, texel1);
@@ -750,16 +773,19 @@ namespace etc
 
                 s32 tmp;
                 for(s32 i=0; i<3; ++i){
-                    rgb1[i] = (rgb5bit1[i]<<3) | (rgb5bit1[i]>>2);
-                    tmp = rgb5bit1[i];
+                    tmp = rgb1[i];
                     tmp += diff[i];
                     tmp = lmath::clamp(tmp, 0, 255);
+
+                    rgb1[i] = (rgb1[i]<<3) | (rgb1[i]>>2);
 
                     rgb2[i] = tmp;
                     rgb2[i] = (rgb2[i]<<3) | (rgb2[i]>>2);
                 }
 
             }else{
+                u8 rgb4bit1[3];
+                u8 rgb4bit2[3];
                 quantizeTo444(rgb4bit1, texel1);
                 quantizeTo444(rgb4bit2, texel2);
 
@@ -773,13 +799,12 @@ namespace etc
                 }
             }
 
-        }
 
         u8 min_table;
-        u32 error = encode4x2(dst, min_table, rgb1, true);
+        u32 error = encode4x2(dst, min_table, rgb1, 0);
         ModeBase::setTableCodeWord1(dst, min_table);
 
-        error += encode4x2(dst, min_table, rgb2, false);
+        error += encode4x2(dst, min_table, rgb2, 2);
         ModeBase::setTableCodeWord2(dst, min_table);
 
         return error;
@@ -911,18 +936,19 @@ namespace etc
         texel.setShift(r, g, b, TexelFixedPoint::NumBitShift-3);
     }
 
-#if 0
+#if 1
     //---------------------------------------------------------------------
     void ETC1Codec::quantizeTo444(u8* encoded, const TexelFixedPoint& avg)
     {
         u32 low4bit[3];
         u32 high4bit[3];
-        u32 low[3];
-        u32 high[3];
+        s32 low[3];
+        s32 high[3];
 
-        low4bit[0] = avg.r_ >> 4;
-        low4bit[1] = avg.g_ >> 4;
-        low4bit[2] = avg.b_ >> 4;
+        static const s32 Shift = TexelFixedPoint::NumBitShift + 4;
+        low4bit[0] = avg.r_ >> Shift;
+        low4bit[1] = avg.g_ >> Shift;
+        low4bit[2] = avg.b_ >> Shift;
         for(s32 i=0; i<3; ++i){
             high4bit[i] = (low4bit[i]>15)? 15 : (low4bit[i] + 1);
 
@@ -938,12 +964,13 @@ namespace etc
     {
         u32 low5bit[3];
         u32 high5bit[3];
-        u32 low[3];
-        u32 high[3];
+        s32 low[3];
+        s32 high[3];
 
-        low5bit[0] = avg.r_ >> 3;
-        low5bit[1] = avg.g_ >> 3;
-        low5bit[2] = avg.b_ >> 3;
+        static const s32 Shift = TexelFixedPoint::NumBitShift + 3;
+        low5bit[0] = avg.r_ >> Shift;
+        low5bit[1] = avg.g_ >> Shift;
+        low5bit[2] = avg.b_ >> Shift;
         for(s32 i=0; i<3; ++i){
             high5bit[i] = (low5bit[i]>31)? 31 : (low5bit[i] + 1);
 
@@ -955,35 +982,35 @@ namespace etc
     }
 
     //---------------------------------------------------------------------
-    void ETC1Codec::quantize(u8* encoded, const TexelFixedPoint& avg, const u32* low, const u32* high, const u32* lbit, const u32* hbit)
+    void ETC1Codec::quantize(u8* encoded, const TexelFixedPoint& avg, const s32* low, const s32* high, const u32* lbit, const u32* hbit)
     {
-        f32 k[3];
-        f32 d[3];
+        s32 k[3];
+        s32 d[3];
 
-        k[0] = static_cast<f32>(high[0] - low[0]);
-        k[1] = static_cast<f32>(high[1] - low[1]);
-        k[2] = static_cast<f32>(high[2] - low[2]);
+        k[0] = high[0] - low[0];
+        k[1] = high[1] - low[1];
+        k[2] = high[2] - low[2];
 
-        d[0] = static_cast<f32>(low[0]) - avg.r_;
-        d[1] = static_cast<f32>(low[1]) - avg.g_;
-        d[2] = static_cast<f32>(low[2]) - avg.b_;
+        d[0] = low[0] - static_cast<s32>(avg.r_>>TexelFixedPoint::NumBitShift);
+        d[1] = low[1] - static_cast<s32>(avg.g_>>TexelFixedPoint::NumBitShift);
+        d[2] = low[2] - static_cast<s32>(avg.b_>>TexelFixedPoint::NumBitShift);
 
-        const f32 RG = WeightR * WeightG;
-        const f32 GB = WeightG * WeightB;
-        const f32 BR = WeightB * WeightR;
+        const u32 RG = (WeightRError * WeightGError) >> 8;
+        const u32 GB = (WeightGError * WeightBError) >> 8;
+        const u32 BR = (WeightBError * WeightRError) >> 8;
 
-        f32 error[8];
-        error[0] = RG*sqr((d[0] + 0.0f) - (d[1] + 0.0f)) + BR*sqr((d[2] + 0.0f) - (d[0] + 0.0f)) + GB*sqr((d[1] + 0.0f) - (d[2] + 0.0f));
-        error[1] = RG*sqr((d[0] + k[0]) - (d[1] + 0.0f)) + BR*sqr((d[2] + 0.0f) - (d[0] + k[0])) + GB*sqr((d[1] + 0.0f) - (d[2] + 0.0f));
-        error[2] = RG*sqr((d[0] + 0.0f) - (d[1] + k[1])) + BR*sqr((d[2] + 0.0f) - (d[0] + 0.0f)) + GB*sqr((d[1] + k[1]) - (d[2] + 0.0f));
-        error[3] = RG*sqr((d[0] + 0.0f) - (d[1] + 0.0f)) + BR*sqr((d[2] + k[2]) - (d[0] + 0.0f)) + GB*sqr((d[1] + 0.0f) - (d[2] + k[2]));
-        error[4] = RG*sqr((d[0] + k[0]) - (d[1] + k[1])) + BR*sqr((d[2] + 0.0f) - (d[0] + k[0])) + GB*sqr((d[1] + k[1]) - (d[2] + 0.0f));
-        error[5] = RG*sqr((d[0] + k[0]) - (d[1] + 0.0f)) + BR*sqr((d[2] + k[2]) - (d[0] + k[0])) + GB*sqr((d[1] + 0.0f) - (d[2] + k[2]));
-        error[6] = RG*sqr((d[0] + 0.0f) - (d[1] + k[1])) + BR*sqr((d[2] + k[2]) - (d[0] + 0.0f)) + GB*sqr((d[1] + k[1]) - (d[2] + k[2]));
+        u32 error[8];
+        error[0] = RG*sqr((d[0] +    0) - (d[1] +    0)) + BR*sqr((d[2] +    0) - (d[0] +    0)) + GB*sqr((d[1] +    0) - (d[2] +    0));
+        error[1] = RG*sqr((d[0] + k[0]) - (d[1] +    0)) + BR*sqr((d[2] +    0) - (d[0] + k[0])) + GB*sqr((d[1] +    0) - (d[2] +    0));
+        error[2] = RG*sqr((d[0] +    0) - (d[1] + k[1])) + BR*sqr((d[2] +    0) - (d[0] +    0)) + GB*sqr((d[1] + k[1]) - (d[2] +    0));
+        error[3] = RG*sqr((d[0] +    0) - (d[1] +    0)) + BR*sqr((d[2] + k[2]) - (d[0] +    0)) + GB*sqr((d[1] +    0) - (d[2] + k[2]));
+        error[4] = RG*sqr((d[0] + k[0]) - (d[1] + k[1])) + BR*sqr((d[2] +    0) - (d[0] + k[0])) + GB*sqr((d[1] + k[1]) - (d[2] +    0));
+        error[5] = RG*sqr((d[0] + k[0]) - (d[1] +    0)) + BR*sqr((d[2] + k[2]) - (d[0] + k[0])) + GB*sqr((d[1] +    0) - (d[2] + k[2]));
+        error[6] = RG*sqr((d[0] +    0) - (d[1] + k[1])) + BR*sqr((d[2] + k[2]) - (d[0] +    0)) + GB*sqr((d[1] + k[1]) - (d[2] + k[2]));
         error[7] = RG*sqr((d[0] + k[0]) - (d[1] + k[1])) + BR*sqr((d[2] + k[2]) - (d[0] + k[0])) + GB*sqr((d[1] + k[1]) - (d[2] + k[2]));
 
         s32 min_index = 0;
-        f32 min_error = error[0];
+        u32 min_error = error[0];
         for(s32 i=1; i<8; ++i){
             if(error[i]<min_error){
                 min_error = error[i];
