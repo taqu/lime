@@ -881,9 +881,7 @@ namespace
                 s32 format = texRef->getFormat();
 
                 if(lgraphics::Buffer_A8R8G8B8 == format
-                    || lgraphics::Buffer_A8B8G8R8 == format
-                    || lgraphics::Buffer_A4R4G4B4 == format
-                    || lgraphics::Buffer_A4B4G4R4 == format)
+                    || lgraphics::Buffer_A8B8G8R8 == format)
                 {
                     material.getFlags().setFlag( lscene::Material::MatFlag_AlphaTest );
                     material.getRenderState().setAlphaTest(true);

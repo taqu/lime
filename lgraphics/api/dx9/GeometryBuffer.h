@@ -26,11 +26,19 @@ namespace lgraphics
 
         PrimitiveType getType() const{ return type_;}
 
-        VertexBufferRef& getVertexBuffer(){ return vertexBuffer_;}
+        u32 getNumStreams() const{ return numStreams_;}
+
+        VertexBufferRef& getVertexBuffer(u32 stream)
+        {
+            LASSERT(0<=stream && stream<LIME_MAX_VERTEX_STREAMS);
+            return vertexBuffer_[stream];
+        }
 
         IndexBufferRef& getIndexBuffer(){ return indexBuffer_;}
 
         VertexDeclarationRef& getDecl() { return decl_;}
+
+        bool addVertexBufferStream(VertexBufferRef& vb);
 
         /**
 
@@ -60,8 +68,9 @@ namespace lgraphics
         s32 refCount_;
 
         PrimitiveType type_;
+        u32 numStreams_;
         VertexDeclarationRef decl_;
-        VertexBufferRef vertexBuffer_;
+        VertexBufferRef vertexBuffer_[LIME_MAX_VERTEX_STREAMS];
         IndexBufferRef indexBuffer_;
     };
 

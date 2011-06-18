@@ -246,11 +246,12 @@ namespace lconverter
                     && height<MinTextureSizeToCreateMipMap)
                 {
                     *texture = Texture::create(width, height, 1, lgraphics::Usage_None, bufferFormat, lgraphics::Pool_Managed);
-
+#if defined(LIME_GLES2)
                     //サンプラステートセット
                     sampler.setMinFilter( TexMinFilter );
                     texture->attach();
                     sampler.apply(0);
+#endif
 
                     texture->blit(buffer);
 
@@ -258,12 +259,12 @@ namespace lconverter
 
                     u32 levels = lgraphics::io::calcMipMapLevels(width, height);
                     *texture = Texture::create(width, height, levels, Usage_None, bufferFormat, lgraphics::Pool_Managed);
-
+#if defined(LIME_GLES2)
                     //サンプラステートセット
                     sampler.setMinFilter( TexMipMapMinFilter );
                     texture->attach();
                     sampler.apply(0);
-
+#endif
                     lgraphics::io::createMipMap(*texture, buffer, width, height, bufferFormat, levels);
                     //lgraphics::io::createMipMapDebug(*texture, buffer, width, height, bufferFormat, levels);
                 }

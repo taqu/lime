@@ -7,7 +7,10 @@
 */
 #include <lframework/Application.h>
 #include "Scene.h"
+
+#if defined(LIME_GLES2)
 #include "TextRenderer.h"
+#endif
 
 namespace lanim
 {
@@ -62,7 +65,9 @@ namespace viewer
         lanim::AnimationControler *animControler_;
 
         viewer::Scene scene_;
+#if defined(LIME_GLES2)
         TextRenderer textRenderer_;
+#endif
 
         u32 prevMSec_;
         u32 currentMSec_;

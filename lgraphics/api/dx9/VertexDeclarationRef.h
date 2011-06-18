@@ -58,7 +58,7 @@ namespace lgraphics
 
         void attach() const;
 
-        u32 getVertexSize() const{ return vertexSize_;}
+        u32 getVertexSize(u32 ) const{ return vertexSize_;}
         u32 getNumElements() const{ return numElements_;}
         bool getDecl(VertexElement* decl);
 

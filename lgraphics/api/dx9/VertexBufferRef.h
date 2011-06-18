@@ -39,7 +39,6 @@ namespace lgraphics
         VertexBufferRef()
             :vertexSize_(0)
             ,vertexNum_(0)
-            ,stream_(0)
             ,offset_(0)
             ,buffer_(NULL)
         {
@@ -74,19 +73,16 @@ namespace lgraphics
         u32 getVertexSize() const{ return vertexSize_;}
         u32 getVertexNum() const{ return vertexNum_;}
 
-        u16 getStream() const{ return stream_;}
-        void setStream(u16 stream){ stream_ = stream;}
-
         u32 getOffset() const{ return offset_;}
         void setOffset(u32 offset){ offset_ = offset;}
 
         void attach(u32 stride) const;
+        void attach(u32 stride, u32 stream) const;
 
         void swap(VertexBufferRef& rhs)
         {
             lcore::swap(vertexSize_, rhs.vertexSize_);
             lcore::swap(vertexNum_, rhs.vertexNum_);
-            lcore::swap(stream_, rhs.stream_);
             lcore::swap(offset_, rhs.offset_);
             lcore::swap(buffer_, rhs.buffer_);
         }
@@ -97,7 +93,6 @@ namespace lgraphics
         VertexBufferRef(u32 vertexSize, u32 vertexNum, IDirect3DVertexBuffer9* buffer)
             :vertexSize_(vertexSize)
             ,vertexNum_(vertexNum)
-            ,stream_(0)
             ,offset_(0)
             ,buffer_(buffer)
         {
@@ -107,7 +102,6 @@ namespace lgraphics
         u32 vertexNum_;
         u32 offset_;
         IDirect3DVertexBuffer9 *buffer_;
-        u16 stream_;
     };
 
 

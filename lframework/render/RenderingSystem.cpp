@@ -36,12 +36,12 @@ namespace lrender
     {
     }
 
-    void RenderingSystem::add(Pass pass, Drawable* drawable)
+    void RenderingSystem::add(Pass , Drawable* drawable)
     {
         passMain_.add(drawable);
     }
 
-    void RenderingSystem::remove(Pass pass, Drawable* drawable)
+    void RenderingSystem::remove(Pass , Drawable* drawable)
     {
         passMain_.remove(drawable);
     }

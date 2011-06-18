@@ -65,8 +65,10 @@ namespace viewer
         lframework::System::InitParam sysParam("data/evac-fh.otf", 32);
         lframework::System::initialize(sysParam, animInitParam);
 
+#if defined(LIME_GLES2)
         textRenderer_.initialize(256, 9, 20, 6, 16);
         textRenderer_.setTextureFromFile("data/M_plus_1m_regular10.png");
+#endif
 
         // シーン初期化
         {
@@ -275,7 +277,9 @@ namespace viewer
         renderSys.beginDraw();
         renderSys.draw();
 
+#if defined(LIME_GLES2)
         textRenderer_.draw();
+#endif
         renderSys.endDraw();
 
         lframework::System::debugDrawClear();
@@ -306,7 +310,10 @@ namespace viewer
 
         scene_.release();
 
+#if defined(LIME_GLES2)
         textRenderer_.terminate();
+#endif
+
         lframework::System::terminate();
     }
 
