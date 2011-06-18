@@ -93,24 +93,45 @@ namespace lgraphics
     }
 
     // データ転送
-    void TextureRef::blit(u32 level, u8* data)
+    void TextureRef::blit(u8* data)
     {
         LASSERT(data != NULL);
 
-        D3DSURFACE_DESC desc;
-        HRESULT hr = texture_->GetLevelDesc(level, &desc);
+        LockedRect lockedRect;
+        HRESULT hr = texture_->LockRect(0, (D3DLOCKED_RECT*)&lockedRect, NULL, Lock_None);
         if(FAILED(hr)){
             return;
         }
 
-        LockedRect lockedRect;
-        hr = texture_->LockRect(level, (D3DLOCKED_RECT*)&lockedRect, NULL, Lock_None);
+        SurfaceDesc desc;
+        hr = texture_->GetLevelDesc(0, (D3DSURFACE_DESC*)&desc);
         if(FAILED(hr)){
             return;
         }
 
         //ミップマップサイズ計算
-        u32 size = desc.Width * desc.Height;
+        u32 size = desc.height_ * lockedRect.pitch_;
+
+        //TODO:ちゃんとピッチやサイズをみないと
+        lcore::memcpy(lockedRect.bits_, data, size);
+
+        texture_->UnlockRect(0);
+
+    }
+
+    // データ転送
+    void TextureRef::blit(u32 level, u32 width, u32 height, u8* data)
+    {
+        LASSERT(data != NULL);
+
+        LockedRect lockedRect;
+        HRESULT hr = texture_->LockRect(level, (D3DLOCKED_RECT*)&lockedRect, NULL, Lock_None);
+        if(FAILED(hr)){
+            return;
+        }
+
+        //ミップマップサイズ計算
+        u32 size = width * height;
 
         //TODO:ちゃんとピッチやサイズをみないと
         lcore::memcpy(lockedRect.bits_, data, size);
@@ -148,6 +169,16 @@ namespace lgraphics
     {
         LASSERT(texDesc_ != NULL);
         texDesc_->name_.assign(name, len);
+    }
+
+    s32 TextureRef::getFormat() const
+    {
+        SurfaceDesc desc;
+        HRESULT hr = texture_->GetLevelDesc(0, (D3DSURFACE_DESC*)&desc);
+        if(FAILED(hr)){
+            return Buffer_Unknown;
+        }
+        return desc.format_;
     }
 
     //-------------------------------------------------------

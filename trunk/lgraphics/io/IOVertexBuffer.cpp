@@ -78,8 +78,6 @@ namespace io
         vbHeader.id_ = format::VertexBufferID;
         vbHeader.size_ = buffer.getVertexSize();
         vbHeader.num_ = buffer.getVertexNum();
-        vbHeader.stream_ = buffer.getStream();
-        vbHeader.offset_ = buffer.getOffset();
         vbHeader.pool_ = static_cast<u16>( encodePool(desc.pool_) );
         vbHeader.usage_ = encodeUsage( static_cast<Usage>(desc.usage_) );
 

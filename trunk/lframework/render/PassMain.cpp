@@ -93,7 +93,7 @@ namespace lrender
 #else
         vs->attach();
         ps->attach();
-        u32 vnum = geomBuffer->getVertexBuffer().getVertexNum();
+        u32 vnum = geomBuffer->getVertexBuffer(0).getVertexNum();
         if(geomBuffer->hasIndex()){
             device.drawIndexed(type, vnum, geometry->getPrimitiveCount(), geometry->getIndexOffset());
         }else{

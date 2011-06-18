@@ -55,13 +55,18 @@ namespace lgraphics
         /**
         @brief データ転送。GL的インターフェイス
         */
-        void blit(u32 level, u8* data);
+        void blit(u8* data);
+
+        /**
+        @brief データ転送。GL的インターフェイス
+        */
+        void blit(u32 level, u32 width, u32 height, u8* data);
 
         u16 getLevels();
         bool getLevelDesc(u32 level, SurfaceDesc& desc);
 
         void attach(u32 index) const;
-
+        void detach(){}
 
         void debugout(const char* filename);
 
@@ -87,6 +92,7 @@ namespace lgraphics
         void setName(const NameString& name);
         void setName(const char* name, u32 len);
 
+        s32 getFormat() const;
     private:
         friend class Texture;
 

@@ -438,6 +438,8 @@ namespace pmm
         inline SkinPose* getSkinPoses(u32 index);
 
         f32 searchSkinWeight(u32 index, u32 frame) const;
+
+        void swap(SkinAnimPack& rhs);
     private:
         struct FuncGetFrameNo
         {
@@ -504,6 +506,11 @@ namespace pmm
 
         void setAnimationControler(lanim::AnimationControler* controler);
         lanim::AnimationControler* getAnimationControler(){ return animControler_;}
+
+        void setSkinAnimPack(SkinAnimPack& skinAnim)
+        {
+            skinAnimPack_.swap(skinAnim);
+        }
 
         void resetMorph();
         void updateMorph(u32 frame, u32 nextFrame);

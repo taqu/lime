@@ -101,8 +101,6 @@ namespace io
     // 2のべき乗のサイズに変換
     void convertToPow2Image(u8** ppBuffer, u32& width, u32& height, BufferFormat format)
     {
-        static const f32 Epsilon = 0.0001f;
-
         LASSERT(width>0);
         LASSERT(height>0);
 
@@ -255,7 +253,7 @@ namespace io
         u8* tmp0 = src;
         u8* tmp1 = buffer;
 
-        for(u32 i=1; i<=levels; ++i){
+        for(u32 i=1; i<levels; ++i){
             createHalfSizeImage(tmp1, dw, dh, tmp0, width, height, bpp);
             dst.blit(i, dw, dh, tmp1); //テクスチャデータ転送
 
@@ -300,7 +298,7 @@ namespace io
         u8* tmp;
 
         dst.attach(); //bind
-        for(u32 i=0; i<=levels; ++i){
+        for(u32 i=0; i<levels; ++i){
 
             tmp = src;
             u32 index = (NumColors<=i)? NumColors-1 : i;

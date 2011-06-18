@@ -434,6 +434,15 @@ namespace pmm
         return (w0*(1.0f-ratio) + ratio*w1);
     }
 
+    void SkinAnimPack::swap(SkinAnimPack& rhs)
+    {
+        lcore::swap(numSkinPoses_, rhs.numSkinPoses_);
+        lcore::swap(ptrSkinPoses_, rhs.ptrSkinPoses_);
+        lcore::swap(skinPoses_, rhs.skinPoses_);
+
+        buffer_.swap(rhs.buffer_);
+    }
+
     //----------------------------------------------------------------------
     //---
     //--- ModelPack

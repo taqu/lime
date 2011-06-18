@@ -19,7 +19,6 @@ namespace lgraphics
     VertexBufferRef::VertexBufferRef(const VertexBufferRef& rhs)
         :vertexSize_(rhs.vertexSize_)
         ,vertexNum_(rhs.vertexNum_)
-        ,stream_(rhs.stream_)
         ,offset_(rhs.offset_)
         ,buffer_(rhs.buffer_)
     {
@@ -84,7 +83,13 @@ namespace lgraphics
     void VertexBufferRef::attach(u32 stride) const
     {
         IDirect3DDevice9 *d3ddevice = Graphics::getDevice().getD3DDevice();
-        d3ddevice->SetStreamSource(stream_, const_cast<IDirect3DVertexBuffer9*>(buffer_), offset_, stride);
+        d3ddevice->SetStreamSource(0, const_cast<IDirect3DVertexBuffer9*>(buffer_), offset_, stride);
+    }
+
+    void VertexBufferRef::attach(u32 stride, u32 stream) const
+    {
+        IDirect3DDevice9 *d3ddevice = Graphics::getDevice().getD3DDevice();
+        d3ddevice->SetStreamSource(stream, const_cast<IDirect3DVertexBuffer9*>(buffer_), offset_, stride);
     }
 
 

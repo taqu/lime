@@ -16,16 +16,18 @@ namespace lgraphics
     GeometryBuffer::GeometryBuffer()
         :refCount_(0)
         ,type_(lgraphics::Primitive_TriangleList)
+        ,numStreams_(0)
     {
     }
 
     GeometryBuffer::GeometryBuffer(PrimitiveType type, const VertexDeclarationRef& decl, const VertexBufferRef& vb, const IndexBufferRef& ib)
         :refCount_(0)
         ,type_(type)
+        ,numStreams_(0)
         ,decl_(decl)
-        ,vertexBuffer_(vb)
         ,indexBuffer_(ib)
     {
+        vertexBuffer_[0] = vb;
     }
 
     GeometryBuffer::~GeometryBuffer()
@@ -33,10 +35,23 @@ namespace lgraphics
         refCount_ = 0;
     }
 
+    bool GeometryBuffer::addVertexBufferStream(VertexBufferRef& vb)
+    {
+        if(numStreams_>=LIME_MAX_VERTEX_STREAMS){
+            return false;
+        }
+        vertexBuffer_[numStreams_] = vb;
+        ++numStreams_;
+        return true;
+    }
+
     void GeometryBuffer::attach()
     {
         decl_.attach();
-        vertexBuffer_.attach(decl_.getVertexSize());
+        for(u32 i=0; i<numStreams_; ++i){
+            vertexBuffer_[i].attach(decl_.getVertexSize(i), i);
+        }
+
         if(indexBuffer_.valid()){
             indexBuffer_.attach();
         }
@@ -45,7 +60,10 @@ namespace lgraphics
     void GeometryBuffer::attach(u32 stride)
     {
         decl_.attach();
-        vertexBuffer_.attach(stride);
+        for(u32 i=0; i<numStreams_; ++i){
+            vertexBuffer_[i].attach(stride, i);
+        }
+
         if(indexBuffer_.valid()){
             indexBuffer_.attach();
         }
