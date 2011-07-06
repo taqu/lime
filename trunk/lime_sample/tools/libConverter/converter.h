@@ -56,7 +56,7 @@ namespace lconverter
 
     f32 texAddress(f32 value, TextureAddress op);
 
-    void strSJISToUTF8(Char* dst);
+    void strSJISToUTF8(Char* dst, u32 buffSize);
     void extractFileNameUTF8(Char* dst);
 
     typedef lcore::vector_arena<Char> S8Vector;
@@ -91,16 +91,21 @@ namespace lconverter
 
         bool isTextureCompress() const{ return textureCompress_;}
         void setTextureCompress(bool enable){ textureCompress_ = enable;}
+
+        bool useMipMap() const{ return useMipMap_;}
+        void setUseMipMap(bool enable){ useMipMap_ = enable;}
     private:
         Config()
             :alphaTest_(false)
             ,textureCompress_(false)
+            ,useMipMap_(false)
         {}
 
         static Config instance_;
 
         bool alphaTest_;
         bool textureCompress_;
+        bool useMipMap_;
     };
 
     /**

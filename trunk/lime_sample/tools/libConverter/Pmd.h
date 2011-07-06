@@ -151,14 +151,29 @@ namespace pmd
     //--------------------------------------
     struct Material
     {
+        static const u32 PathBufferSize = FileNameSize*3;
+
+        enum TextureType
+        {
+            TexType_Albedo =0,
+            TexType_Sphere,
+            TexType_Num,
+        };
+
         FLOAT diffuse_[4];
         FLOAT specularity_;
         FLOAT specularColor_[3];
         FLOAT ambient_[3];
+
+        DWORD faceVertexCount_;
+        CHAR textureFileName_[ PathBufferSize ]; //UTF8とヌル文字用にパディング
+
+        CHAR* textureFileNames_[TexType_Num];
+
+        BYTE sphereAdd_; //環境マップが加算なら0意外
         BYTE toonIndex_;
         BYTE edgeFlag_;
-        DWORD faceVertexCount_;
-        CHAR textureFileName_[FileNameSize];
+        BYTE padding_;
 
         friend lcore::istream& operator>>(lcore::istream& is, Material& rhs);
     };

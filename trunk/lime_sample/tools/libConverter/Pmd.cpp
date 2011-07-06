@@ -14,6 +14,7 @@
 
 #include <lcore/HashMap.h>
 #include <lcore/String.h>
+#include <lcore/utility.h>
 #include <lgraphics/lgraphicscore.h>
 #include <lgraphics/api/Enumerations.h>
 #include <lgraphics/api/VertexDeclarationRef.h>
@@ -71,17 +72,26 @@ namespace pmd
 
 namespace
 {
-    void extractTextureName(TextureName& dst, const Char* path, u32 size)
+    /**
+    @brief アスタリスクで文字列を分割抽出
+    @return 次の文字列の先頭ポインタ。なければNULL
+    */
+    Char* extractTextureName(Char* path)
     {
         LASSERT(path != NULL);
-        u32 i;
-        for(i=0; i<size; ++i){
-            if(path[i] == '*'
-                || path[i]=='\0'){
-                break;
+
+        while(*path != '\0'){
+            if(*path == '*'){
+                do{
+                    *path = '\0';
+                    ++path;
+                }while(*path == '*');
+
+                return path;
             }
+            ++path;
         }
-        dst.assign(path, i);
+        return NULL;
     }
 }
 
@@ -343,8 +353,51 @@ namespace
         lcore::io::read(is, rhs.edgeFlag_);
         lcore::io::read(is, rhs.faceVertexCount_);
         lcore::io::read(is, rhs.textureFileName_, sizeof(CHAR)*FileNameSize);
+        rhs.textureFileName_[FileNameSize] = '\0'; //必ずヌル文字が入るように
 
-        strSJISToUTF8(rhs.textureFileName_); //UTF8へ変換
+        strSJISToUTF8(rhs.textureFileName_, Material::PathBufferSize); //UTF8へ変換
+
+        rhs.textureFileNames_[Material::TexType_Albedo] = NULL;
+        rhs.textureFileNames_[Material::TexType_Sphere] = NULL;
+        rhs.sphereAdd_ = 0;
+
+        //先にテクスチャ名を抽出
+        CHAR* path = rhs.textureFileName_;
+        CHAR* next = path;
+        do{
+            next = extractTextureName( path );
+            if(*path != '\0'){
+
+                //拡張子判別
+                const Char* ext = lcore::rFindChr(path, '.', lcore::strlen(path));
+                if(ext != NULL){
+                    lframework::ImageFormat format = lframework::io::getFormatFromExt(ext+1);
+                    switch(format)
+                    {
+                        case lframework::Img_BMP:
+                        case lframework::Img_TGA:
+                        case lframework::Img_PNG:
+                        case lframework::Img_JPG:
+                            rhs.textureFileNames_[Material::TexType_Albedo] = path;
+                            break;
+
+                        case lframework::Img_SPH:
+                            rhs.sphereAdd_ = 0;
+                            rhs.textureFileNames_[Material::TexType_Sphere] = path;
+                            break;
+
+                        case lframework::Img_SPA:
+                            rhs.sphereAdd_ = 1;
+                            rhs.textureFileNames_[Material::TexType_Sphere] = path;
+                            break;
+
+                        default:
+                            break;
+                    }
+                }
+            }
+            path = next;
+        }while(next != NULL);
 
         //シェーダのpow関数の値域におさめるために補正
         if(rhs.specularity_ < 0.01f){
@@ -1050,12 +1103,20 @@ namespace
         case State_LoadTexture: //テクスチャロード
             {
                 if(countTextureLoadedMaterial_<numMaterials_){
-                    TextureName texName;
+                    SamplerState sampler;
+
                     Material& material = materials_[countTextureLoadedMaterial_];
 
-                    SamplerState sampler;
-                    extractTextureName(texName, material.textureFileName_, pmd::TexNameSize);
-                    loadTexture(texName.c_str(), texName.size(), directory, *nameTexMap_, sampler);
+                    //環境マップもロードする
+                    for(u32 i=0; i<Material::TexType_Num; ++i){
+                        if(material.textureFileNames_[i] == NULL){
+                            continue;
+                        }
+
+                        u32 len = lcore::strlen(material.textureFileNames_[i]);
+                        loadTexture(material.textureFileNames_[i], len, directory, *nameTexMap_, sampler);
+                    }
+
                     ++countTextureLoadedMaterial_;
                 }
 
@@ -1148,10 +1209,14 @@ namespace
                 setMaterial(dstMaterial, material);
 
                 //テクスチャロードは完了しているのでマップを探す
-                extractTextureName(texName, material.textureFileName_, pmd::TexNameSize);
-                u32 mapPos = nameTexMap_->find(texName.c_str(), texName.size());
+                TextureRef* texture = NULL;
 
-                TextureRef* texture = (nameTexMap_->isEnd(mapPos) == false)? nameTexMap_->getValue(mapPos) : NULL;
+                if(material.textureFileNames_[Material::TexType_Albedo] != NULL){
+                    u32 len = lcore::strlen( material.textureFileNames_[Material::TexType_Albedo] );
+                    u32 mapPos = nameTexMap_->find(material.textureFileNames_[Material::TexType_Albedo], len);
+
+                    texture = (nameTexMap_->isEnd(mapPos) == false)? nameTexMap_->getValue(mapPos) : NULL;
+                }
 
                 //アルファ値が１ならアルファブレンドなし
                 bool alphaTest = false;
@@ -1177,9 +1242,21 @@ namespace
                     renderStateType = RenderState_AlphaBlend;
                 }
 
-                //テクスチャはどちらかひとつにする。やはり２枚いけるかもしれない
-                dstMaterial.setTextureNum(2);
-                    
+                //テクスチャセット
+                {
+                    u32 numTextures = 0;
+                    if(texture != NULL){
+                        numTextures = 1;
+                    }
+                    if(material.toonIndex_<NumToonTextures){
+                        numTextures = 2;
+                    }
+                    if(material.textureFileNames_[Material::TexType_Sphere] != NULL){
+                        numTextures = 3;
+                    }
+                    dstMaterial.setTextureNum(numTextures);
+                }
+
                 if(texture != NULL){
                     if(swapOrigin){
                         lframework::io::swapOrigin(*texture);
@@ -1187,22 +1264,20 @@ namespace
                     dstMaterial.setTexture(0, *texture);
                     //テクスチャがあったのでフラグ立てる
                     dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_TexAlbedo);
+
+                    //サンプラステートを合わせておく
                     lgraphics::SamplerState& sampler = dstMaterial.getSamplerState(0);
                     sampler.setAddressU( lgraphics::TexAddress_Clamp );
                     sampler.setAddressV( lgraphics::TexAddress_Clamp );
+                    sampler.setMagFilter( lgraphics::TexFilter_Linear );
 
                     if(texture->getLevels() > 1){ //ミップマップありか
-                        sampler.setMinFilter( lgraphics::TexFilter_PointMipMapPoint );
+                        sampler.setMinFilter( lgraphics::TexFilter_LinearMipMapPoint );
                     }else{
                         sampler.setMinFilter( lgraphics::TexFilter_Linear );
                     }
-#if defined(LIME_GLES2)
-                    //サンプラステートセット
-                    texture->attach();
-                    sampler.apply(0);
-                    texture->detach();
-#endif
                 }
+
                 if(material.toonIndex_<NumToonTextures){ //トゥーンテクスチャを調べる
                     texture = toonTextures_.textures_[ material.toonIndex_ ];
                     if(texture != NULL){
@@ -1210,10 +1285,42 @@ namespace
                         //フラグ立てる
                         dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_TexGrad); //テクスチャでグラディエーションつける
 
+                        //サンプラステートを合わせておく
                         lgraphics::SamplerState& sampler = dstMaterial.getSamplerState(1);
                         sampler = toonTextures_.samplers_[ material.toonIndex_ ];
+
                     }
                 }
+
+                //環境マップを調べる
+                if(material.textureFileNames_[Material::TexType_Sphere] != NULL){
+                    u32 len = lcore::strlen( material.textureFileNames_[Material::TexType_Sphere] );
+                    u32 mapPos = nameTexMap_->find(material.textureFileNames_[Material::TexType_Sphere], len);
+
+                    texture = (nameTexMap_->isEnd(mapPos) == false)? nameTexMap_->getValue(mapPos) : NULL;
+                    if(texture != NULL){
+                        dstMaterial.setTexture(2, *texture);
+                        //フラグ立てる
+                        dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_SphereMap); //テクスチャでグラディエーションつける
+                        if(material.sphereAdd_ != 0){
+                            dstMaterial.getFlags().setFlag(lscene::Material::MatFlag_SphereMapAdd);
+                        }
+
+                        //サンプラステートを合わせておく
+                        lgraphics::SamplerState& sampler = dstMaterial.getSamplerState(2);
+                        sampler.setAddressU( lgraphics::TexAddress_Clamp );
+                        sampler.setAddressV( lgraphics::TexAddress_Clamp );
+                        sampler.setMagFilter( lgraphics::TexFilter_Linear );
+
+                        if(texture->getLevels() > 1){ //ミップマップありか
+                            sampler.setMinFilter( lgraphics::TexFilter_LinearMipMapPoint );
+                        }else{
+                            sampler.setMinFilter( lgraphics::TexFilter_Linear );
+                        }
+
+                    }
+                }
+
 
 #if defined(LIME_GLES2)
                 //頂点でライティング計算
@@ -1222,8 +1329,8 @@ namespace
 
                 setRenderStateToMaterial(dstMaterial, renderState, stateCreateFlag, renderStateType, alphaTest);
 
-            }
-        }
+            } //for(u32 i=0; i<numMaterials_
+        } //if(numMaterials_>0)
 
 
         lanim::Skeleton::pointer skeleton( releaseSkeleton() );
@@ -1296,7 +1403,7 @@ namespace
 
             ++geomIndex;
             geometry = geometry->next_;
-        }
+        } //while(geometry != NULL)
 
         obj.swap(tmp);
 

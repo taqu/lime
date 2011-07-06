@@ -70,9 +70,14 @@ namespace lconverter
     lgraphics::TextureRef* loadTexture(const Char* path, u32 size, const Char* directory, NameTextureMap& texMap, lgraphics::SamplerState& sampler, bool transpose)
     {
         LASSERT(path != NULL);
-        static const lgraphics::TextureAddress TexAddress = lgraphics::TexAddress_Wrap;
+        static const lgraphics::TextureAddress TexAddress = lgraphics::TexAddress_Clamp;
         static const lgraphics::TextureFilterType TexMinFilter = lgraphics::TexFilter_Linear;
         static const lgraphics::TextureFilterType TexMipMapMinFilter = lgraphics::TexFilter_LinearMipMapPoint;
+
+        sampler.setAddressU( TexAddress );
+        sampler.setAddressV( TexAddress );
+        sampler.setMagFilter( lgraphics::TexFilter_Linear );
+        sampler.setMinFilter( TexMinFilter );
 
         u32 mapPos = texMap.find(path, size);
         if(texMap.isEnd(mapPos) == false){
@@ -80,12 +85,8 @@ namespace lconverter
             //lcore::Log("pmd tex has already loaded");
             TextureRef* texture = texMap.getValue(mapPos);
 
-            sampler.setAddressU( TexAddress );
-            sampler.setAddressV( TexAddress );
             if(texture->getLevels()>1){
                 sampler.setMinFilter( TexMipMapMinFilter );
-            }else{
-                sampler.setMinFilter( TexMinFilter );
             }
             return texture;
         }
@@ -137,6 +138,8 @@ namespace lconverter
             switch(format)
             {
             case lframework::Img_BMP:
+            case lframework::Img_SPH:
+            case lframework::Img_SPA:
                 ret = lgraphics::io::IOBMP::read(is, &buffer, width, height, bufferFormat, transpose);
                 break;
 
@@ -165,8 +168,6 @@ namespace lconverter
         if(ret){
             texture = LIME_NEW TextureRef;
             if(texture != NULL){
-                sampler.setAddressU( TexAddress );
-                sampler.setAddressV( TexAddress );
 
                 io::convertToPow2Image(&buffer, width, height, bufferFormat);
 
@@ -202,7 +203,6 @@ namespace lconverter
                     etc1Codec.encode(*texture, buffer, width, height);
 
                     //サンプラステートセット
-                    sampler.setMinFilter( TexMinFilter );
 #endif
                     texture->attach();
                     sampler.apply(0);
@@ -210,13 +210,12 @@ namespace lconverter
                 }else{
 
                     //小さいテクスチャはミップマップ作成しない
-                    if(width<MinTextureSizeToCreateMipMap
-                        && height<MinTextureSizeToCreateMipMap)
+                    if(!Config::getInstance().useMipMap()
+                        || (width<MinTextureSizeToCreateMipMap && height<MinTextureSizeToCreateMipMap))
                     {
                         *texture = Texture::create(width, height, 1, lgraphics::Usage_None, bufferFormat, lgraphics::Pool_Managed);
 
                         //サンプラステートセット
-                        sampler.setMinFilter( TexMinFilter );
                         texture->attach();
                         sampler.apply(0);
 
@@ -242,13 +241,12 @@ namespace lconverter
 #else
 
                 //小さいテクスチャはミップマップ作成しない
-                if(width<MinTextureSizeToCreateMipMap
-                    && height<MinTextureSizeToCreateMipMap)
+                if(!Config::getInstance().useMipMap()
+                        || (width<MinTextureSizeToCreateMipMap && height<MinTextureSizeToCreateMipMap))
                 {
                     *texture = Texture::create(width, height, 1, lgraphics::Usage_None, bufferFormat, lgraphics::Pool_Managed);
 #if defined(LIME_GLES2)
                     //サンプラステートセット
-                    sampler.setMinFilter( TexMinFilter );
                     texture->attach();
                     sampler.apply(0);
 #endif
@@ -312,11 +310,11 @@ namespace lconverter
     }
 
 #if defined(_WIN32)
-    void strSJISToUTF8(Char* )
+    void strSJISToUTF8(Char* , u32)
     {
     }
 #else
-    void strSJISToUTF8(Char* dst)
+    void strSJISToUTF8(Char* dst, u32 buffSize)
     {
 
         LASSERT(dst);
@@ -335,8 +333,8 @@ namespace lconverter
         }
 
         u32 utf8size = charcode::strSJISToUTF8(NULL, reinterpret_cast<const u8*>(&path[0]));
-        if(utf8size>255){
-            //変換後が255バイトを超える場合サポートしない
+        if(utf8size>=buffSize){
+            //変換後がbuffSizeを超える場合サポートしない
         }else{
             charcode::strSJISToUTF8(reinterpret_cast<u8*>(dst), reinterpret_cast<const u8*>(&path[0]));
             dst[utf8size] = '\0';

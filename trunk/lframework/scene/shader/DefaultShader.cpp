@@ -365,6 +365,7 @@ namespace shader
     {
         "texAlbedo",
         "texAlbedo2",
+        "texSphere",
     };
 
     // マクロ名
@@ -392,6 +393,9 @@ namespace shader
 
         "#define ALPHATEST\n",
         "#define LIGHTVS\n",
+
+        "#define SPHEREMAP\n",
+        "#define SPHEREMAPADD\n",
     };
 #else
     const char* MacroNames[Macro_Num] =
@@ -417,6 +421,9 @@ namespace shader
 
         "ALPHATEST",
         "LIGHTVS",
+
+        "SPHEREMAP",
+        "SPHEREMAPADD",
     };
 #endif
 

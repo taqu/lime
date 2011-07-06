@@ -102,7 +102,7 @@ uniform vec4 specular;
 varying vec4 v_specular0;
 
 #ifdef TEXSHADE
-varying vec2 v_tex3;
+varying vec4 v_tex3;
 #endif
 
 #endif //LIGHTVS
@@ -185,23 +185,25 @@ void main()
 #ifdef VNORMAL
 
 #ifdef TEXSHADE
-    MP vec3 N = normalize(normal);
+    normal = normalize(normal);
     MP vec3 E = normalize(camPos - posLighting);
     MP vec3 H = normalize(dlDir+E);
 
-    MP float cosNH = max(c_fzero, dot(N,H));
+    MP vec4 tex3;
+    tex3.xy = vec2(c_fone + dot(normal, dlDir));
+    tex3.zw = vec2(normal.xy + vec2(c_fone, c_fone));
+    v_tex3 = tex3 * c_fhalf;
 
-    v_tex3 = vec2( (c_fone + dot(N, dlDir))*c_fhalf );
-
+    MP float cosNH = max(c_fzero, dot(normal,H));
     v_specular0.xyz = specular.xyz * pow(cosNH, specular.w);
     v_specular0.w = cosNH;
 
 #else //TEXSHADE
-    MP vec3 N = normalize(normal);
+    normal = normalize(normal);
     MP vec3 E = normalize(camPos - posLighting);
     MP vec3 H = normalize(dlDir+E);
 
-    MP float cosNH = max(c_fzero, dot(N,H));
+    MP float cosNH = max(c_fzero, dot(normal,H));
 
     v_specular0.xyz = specular.xyz *  pow(cosNH, specular.w);
     v_specular0.w = cosNH;

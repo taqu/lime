@@ -23,10 +23,7 @@ varying vec3 v_pos0;
 
 const float c_fzero = 0.0;
 const float c_fone = 1.0;
-const float PI = 3.14159265358979323846;
-const float PI2 = 6.28318530717958647692;
-const float INV_PI = 0.31830988618379067153;
-const float INV_PI_2 = 0.63661977236758134306;
+const float c_fhalf = 0.5;
 
 const float ALPHA_REF = 0.5;
 const float c_ffive = 5.0;
@@ -42,7 +39,7 @@ uniform vec3 emissive;
 varying vec4 v_specular0;
 
 #ifdef TEXSHADE
-varying vec2 v_tex3;
+varying vec4 v_tex3;
 #endif
 
 #else //LIGHTVS
@@ -68,6 +65,10 @@ uniform sampler2D texAlbedo;
 uniform sampler2D texAlbedo2;
 #endif
 
+//////////////////////////
+#ifdef SPHEREMAP
+uniform sampler2D texSphere;
+#endif
 
 void main()
 {
@@ -77,6 +78,7 @@ void main()
 ////////////////////
 #ifdef TEXALBEDO
     color = texture2D(texAlbedo, v_tex0);
+    color.xyz *= diffuse.w;
 #else
     color = diffuse;
 #endif
@@ -92,18 +94,21 @@ void main()
     }
 #endif
 
+vec2 sample;
+
 #ifdef LIGHTVS
 
 #ifdef TEXSHADE
-    vec3 c = texture2D(texAlbedo2, v_tex3).xyz;
-    vec3 power = min(dlColor.xyz * diffuse.xyz + ambient, c_fone);
-
-    color.xyz = (color.xyz * c) * power + dlColor.xyz*v_specular0.xyz;
-
+    vec3 power = texture2D(texAlbedo2, v_tex3.xy).xyz;
 #else
-    vec3 power = min(dlColor.xyz * diffuse.xyz + ambient, c_fone);
-    color.xyz = (color.xyz * v_specular0.w) * power + dlColor.xyz*v_specular0.xyz;
+    vec3 power = vec3(v_specular0.w);
 #endif //TEXSHADE
+
+#ifdef TEXALBEDO
+    color.xyz = color.xyz * power * min(dlColor.xyz * diffuse.xyz + ambient, c_fone) + dlColor.xyz*v_specular0.xyz;
+#else
+    color.xyz = power * min(dlColor.xyz * diffuse.xyz + ambient, c_fone) + dlColor.xyz*v_specular0.xyz;
+#endif
 
 #elif defined(TEXSHADE)
     vec3 N = normalize(v_normal);
@@ -115,7 +120,6 @@ void main()
     float cosNH = max(c_fzero, dot(N,H));
     //float cosNE = max(c_fzero, dot(N,E));
 
-    vec2 sample;
     //sample.x = cosNE; //‚±‚¿‚ç‘¤‚ÍƒJƒbƒg
     sample.x = cosNL;
     sample.y = cosNL;
@@ -150,6 +154,23 @@ void main()
     //color.xyz = color.xyz * cosNH * dlColor.xyz + ambient * color.xyz; //omit specular
 #else
     color.xyz *= dlColor.xyz;
+#endif
+
+#ifdef SPHEREMAP
+
+#if defined(LIGHTVS) && defined(TEXSHADE)
+    sample = v_tex3.zw;
+#else
+    sample = v_normal.xy + vec2(c_fone, c_fone);
+    sample *= c_fhalf;
+#endif
+
+#ifdef SPHEREMAPADD
+    color.xyz += texture2D(texSphere, sample).xyz;
+#else
+    color.xyz *= texture2D(texSphere, sample).xyz;
+#endif
+
 #endif
 
 #ifdef EMISSIVE

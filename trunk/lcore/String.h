@@ -65,6 +65,7 @@ namespace lcore
             return buffer_;
         }
 
+        /// 文字列長を返す
         u32 size() const
         {
             return size_;
@@ -111,20 +112,20 @@ namespace lcore
 
         Char& operator[](u32 index)
         {
-            LASSERT(0<=index && index<size_);
+            LASSERT(0<=index && index=<size_);
             return buffer_[index];
         }
 
         const Char& operator[](u32 index) const
         {
-            LASSERT(0<=index && index<size_);
+            LASSERT(0<=index && index=<size_);
             return buffer_[index];
         }
 
         /// 書式付出力
         int print(const Char* format, ... );
     private:
-        u32 size_;
+        u32 size_; //文字列長
         Char buffer_[SIZE];
     };
 

@@ -98,7 +98,7 @@ namespace viewer
             Input::initialize( window_.getHandle().hWnd_, window_.getViewWidth(), window_.getViewHeight() );
 
             lconverter::Config::getInstance().setAlphaTest(true);
-            lconverter::Config::getInstance().setTextureCompress(true);
+            //lconverter::Config::getInstance().setTextureCompress(true);
 
         }
 

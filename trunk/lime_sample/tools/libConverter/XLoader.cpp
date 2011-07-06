@@ -860,10 +860,16 @@ namespace
         //文字列はエスケープ文字等ちゃんと解析すべきか？
         LASSERT(currentStr_ != NULL);
 
-        Char* texName = currentStr_;
+        
+        u32 length = lcore::strlen(currentStr_);
 
-        strSJISToUTF8(texName); //UTF8へ変換
-        u32 length = lcore::strlen(texName); //何度もstrlenしている
+        u32 buffSize = length*3+1;
+        lcore::Buffer buffer(buffSize); //UTF8用に大きく確保
+        Char* texName = buffer.get<Char>(0);
+        lcore::memcpy(texName, currentStr_, length+1); //コピー
+
+        strSJISToUTF8(texName, buffSize); //UTF8へ変換
+        length = lcore::strlen(texName); //何度もstrlenしている
 
         lgraphics::SamplerState sampler;
         lgraphics::TextureRef* texRef = lconverter::loadTexture(texName, length, directory_, nameTexMap_, sampler);

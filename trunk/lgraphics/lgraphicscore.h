@@ -57,7 +57,7 @@ namespace lgraphics
     static const u32 INVALID_TEXTURE_ID = 0xFFFFFFFFU;
     static const u32 INVALID_TEXTURE_LOCATION = 0xFFFFFFFFU;
 
-    static const u32 MAX_TEXTURES = 2;
+    static const u32 MAX_TEXTURES = 3;
 
 //----------------------------------------------------------
 //---
