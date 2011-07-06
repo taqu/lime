@@ -18,6 +18,9 @@ namespace lframework
         Img_PNG,
         Img_JPG,
 
+        Img_SPH,
+        Img_SPA,
+
         Img_Num,
         Img_None = 0xFFU,
     };

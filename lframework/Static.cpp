@@ -14,5 +14,8 @@ namespace lframework
         "dds",
         "png",
         "jpg",
+
+        "sph",
+        "spa",
     };
 }

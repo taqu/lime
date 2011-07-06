@@ -94,6 +94,7 @@ namespace lscene
         {
             TexPS_Albedo,
             TexPS_Albedo2,
+            TexPS_Envmap,
             TexPS_Num,
         };
 
@@ -124,6 +125,10 @@ namespace lscene
             Macro_ALPHATEST,
 
             Macro_LightingVS,
+
+            Macro_SPHEREMAP,
+            Macro_SPHEREMAPADD,
+
             Macro_Num,
         };
 

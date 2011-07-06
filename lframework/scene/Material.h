@@ -40,6 +40,8 @@ namespace lscene
             MatFlag_Emissive = (0x01U<<7),
             MatFlag_AlphaTest = (0x01U<<8),
             MatFlag_LightingVS = (0x01U<<9),
+            MatFlag_SphereMap = (0x01U<<10),
+            MatFlag_SphereMapAdd = (0x01U<<11),
             MatFlag_Valid = (0x01U<<31),
             MatFlag_Num = 5,
         };

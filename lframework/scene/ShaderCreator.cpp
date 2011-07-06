@@ -144,6 +144,13 @@ namespace lscene
             }
         }
 
+        //スフィアマップがあるが法線がない場合、スフィアマップ無効
+        if( (featurePSFlags & Material::MatFlag_SphereMap)
+            && ((inputVSFlags & VFlag_Normal) == 0) )
+        {
+            featurePSFlags &= ~(Material::MatFlag_SphereMap);
+        }
+
         u32 inputPSFlags = inputVSFlags;
 
         lgraphics::ShaderKey vsKey(0, inputVSFlags, featureVSFlags); //頂点シェーダのフラグは上位ワードへ
@@ -277,6 +284,15 @@ namespace lscene
 
             if(featurePSFlags & Material::MatFlag_TexAlbedo){
                 macros[numMacros++] = MacroNames[Macro_TEXALBEDO];
+            }
+
+            //スフィアマップ
+            if(featurePSFlags & Material::MatFlag_SphereMap){
+                macros[numMacros++] = MacroNames[Macro_SPHEREMAP];
+
+                if(featurePSFlags & Material::MatFlag_SphereMapAdd){
+                    macros[numMacros++] = MacroNames[Macro_SPHEREMAPADD];
+                }
             }
 
             const char* source = shader::ShaderPSSource[ shaderID ];
