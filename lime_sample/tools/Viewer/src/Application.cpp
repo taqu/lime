@@ -98,7 +98,7 @@ namespace viewer
             Input::initialize( window_.getHandle().hWnd_, window_.getViewWidth(), window_.getViewHeight() );
 
             lconverter::Config::getInstance().setAlphaTest(true);
-            //lconverter::Config::getInstance().setTextureCompress(true);
+            lconverter::Config::getInstance().setTextureCompress(false);
 
         }
 
@@ -108,9 +108,9 @@ namespace viewer
 
             loader_ = LIME_NEW pmm::Loader;
             //loader_->open("HelloP.pmm", "data/HelloP/");
-            loader_->open("mikumiku.pmm", "data/MikuMiku/");
+            //loader_->open("mikumiku.pmm", "data/MikuMiku/");
             //loader_->open("kkhscene01.pmm", "data/StrobeNights/");
-            //loader_->open("SampleAllStar.pmm", "data/pmm/");
+            loader_->open("SampleAllStar.pmm", "data/pmm/");
             //loader_->open("Sample.pmm", "data/pmm/");
             if(loader_->getErrorCode() != pmm::Loader::Error_None){
                 LIME_DELETE(loader_);

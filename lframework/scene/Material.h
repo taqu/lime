@@ -34,7 +34,6 @@ namespace lscene
             MatFlag_Texture1 = (0x01U<<1),
             MatFlag_TextureN = (0x01U<<2),
             MatFlag_TextureS = (0x01U<<3),
-            MatFlag_DiffuseVS = (0x01U<<4),
             MatFlag_Fresnel = (0x01U<<5),
             MatFlag_TexGrad = (0x01U<<6),
             MatFlag_Emissive = (0x01U<<7),

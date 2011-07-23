@@ -51,7 +51,7 @@ namespace lscene
         inline const lanim::SkeletonPose* getSkeletonPose() const;
 
         virtual u32 getNumJointPoses() const;
-        virtual const lmath::Matrix43* getGlobalJointPoses() const;
+        virtual const lmath::Matrix34* getGlobalJointPoses() const;
     private:
         AnimObject(const AnimObject&);
         AnimObject& operator=(const AnimObject&);

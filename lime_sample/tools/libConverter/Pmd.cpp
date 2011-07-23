@@ -191,7 +191,7 @@ namespace
         }
         vb.blit(vertices, true);
 #else
-        vb = lgraphics::VertexBuffer::create(sizeof(pmd::Vertex), numVertices, Pool_Managed, Usage_Dynamic);
+        vb = lgraphics::VertexBuffer::create(sizeof(pmd::Vertex), numVertices, Pool_Managed, Usage_None);
         if(vb.valid() == false){
             return false;
         }
@@ -215,11 +215,11 @@ namespace
         pmd::Vertex* vertices = &(pmdVB.elements_[0]);
         u32 numVertices = pmdVB.elements_.size();
 
-        //頂点バッファ作成
-#if defined(LIME_GLES2)
-
         static const u32 SizeVertex0 = sizeof(f32) * 3;
         static const u32 SizeVertex1 = 16;
+
+        //頂点バッファ作成
+#if defined(LIME_GLES2)
 
         lcore::ScopedArrayPtr<u8> tmp( LIME_NEW u8[ SizeVertex1 * numVertices ] );
 
@@ -264,8 +264,51 @@ namespace
             return false;
         }
         vb1.blit(v1, false);
+
 #else
-        LASSERT(false); //とりあえずDXは後回し
+        lcore::ScopedArrayPtr<u8> tmp( LIME_NEW u8[ SizeVertex1 * numVertices ] );
+
+        // ひとつ目
+        lmath::Vector3* v0 = reinterpret_cast<lmath::Vector3*>( tmp.get() );
+        for(u32 i=0; i<numVertices; ++i){
+            v0[i].set(vertices[i].position_[0], vertices[i].position_[1], vertices[i].position_[2]);
+        }
+
+        vb0 = lgraphics::VertexBuffer::create(SizeVertex0, numVertices, Pool_Managed, Usage_None);
+        if(vb0.valid() == false){
+            return false;
+        }
+        vb0.blit(v0, true);
+
+        //バックバッファも作成
+        vb0Back = lgraphics::VertexBuffer::create(SizeVertex1, numVertices, Pool_Managed, Usage_None);
+        if(vb0Back.valid() == false){
+            return false;
+        }
+        vb0Back.blit(v0, true);
+
+        // ふたつ目
+        VertexStream1* v1 = reinterpret_cast<VertexStream1*>( tmp.get() );
+        for(u32 i=0; i<numVertices; ++i){
+            v1[i].normal_[0] = vertices[i].normal_[0];
+            v1[i].normal_[1] = vertices[i].normal_[1];
+            v1[i].normal_[2] = vertices[i].normal_[2];
+            v1[i].normal_[3] = vertices[i].normal_[3];
+
+            v1[i].uv_[0] = vertices[i].uv_[0];
+            v1[i].uv_[1] = vertices[i].uv_[1];
+
+            v1[i].element_[0] = vertices[i].element_[0];
+            v1[i].element_[1] = vertices[i].element_[1];
+            v1[i].element_[2] = vertices[i].element_[2];
+            v1[i].element_[3] = vertices[i].element_[3];
+        }
+
+        vb1 = lgraphics::VertexBuffer::create(SizeVertex1, numVertices, Pool_Managed, Usage_None);
+        if(vb1.valid() == false){
+            return false;
+        }
+        vb1.blit(v1, false);
 #endif
 
         return true;
@@ -1171,7 +1214,7 @@ namespace
 #endif
 
             //インデックスバッファ作成
-            ib = IndexBuffer::create(numFaceIndices_, Pool_Default, Usage_None);
+            ib = IndexBuffer::create(numFaceIndices_, Pool_Default, Usage_WriteOnly);
             {
                 if(ib.valid() == false){
                     return false;
@@ -1220,7 +1263,7 @@ namespace
 
                 //アルファ値が１ならアルファブレンドなし
                 bool alphaTest = false;
-                if(dstMaterial.diffuse_._w > 0.999f){
+                if(dstMaterial.diffuse_.w_ > 0.999f){
                     renderStateType = RenderState_Default;
 
                     //アルファありのテクスチャなら、アルファテストあり

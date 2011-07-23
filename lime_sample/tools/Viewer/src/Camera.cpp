@@ -85,8 +85,8 @@ namespace viewer
         {
             f32 angleX = Input::getAngle(Input::Axis_Pitch);
             f32 angleY = Input::getAngle(Input::Axis_Roll);
-            rotation._x = angleX;
-            rotation._y = angleY;
+            rotation.x_ = angleX;
+            rotation.y_ = angleY;
         }
 
         // 視線方向移動
@@ -108,16 +108,16 @@ namespace viewer
         // カメラをセット
 
         Quaternion rot;
-        rot.setRotateAxis(camY, rotation._y);
-        Quaternion rotX;
-        rotX.setRotateAxis(camX, rotation._x);
+        rot.setRotateAxis(camX, rotation.x_);
+        Quaternion rotY;
+        rotY.setRotateAxis(camY, rotation.y_);
 
-        rot *= rotX;
+        rot *= rotY;
 
-        Matrix43 mat;
+        Matrix34 mat;
         rot.getMatrix(mat);
         //mat.identity();
-        camZ.mul33(camZ, mat);
+        camZ.mul33(mat, camZ);
         camZ.normalize();
 
         position_ = camZ;
@@ -154,15 +154,15 @@ namespace viewer
 
         initTarget_ = center;
 
-        lmath::Matrix43 rot;
+        lmath::Matrix34 rot;
         rot.identity();
-        rot.rotateX( -pose.angle_[0] );
-        rot.rotateY( -pose.angle_[1] );
         rot.rotateZ(  pose.angle_[2] );
+        rot.rotateY( -pose.angle_[1] );
+        rot.rotateX( -pose.angle_[0] );
 
 
         initPosition_.set(0.0f, 0.0f, pose.length_);
-        initPosition_.mul33( initPosition_, rot );
+        initPosition_.mul33( rot, initPosition_);
         initPosition_ += center;
 
         reset();
@@ -271,11 +271,11 @@ namespace viewer
 
     void Camera::FrameAnim::calcMatrix()
     {
-        lmath::Matrix43 rot;
+        lmath::Matrix34 rot;
         rot.identity();
-        rot.rotateX( -angle_._x );
-        rot.rotateY( -angle_._y );
-        //rot.rotateZ(  angle_._z );
+        //rot.rotateZ(  angle_.z_ );
+        rot.rotateY( -angle_.y_ );
+        rot.rotateX( -angle_.x_ );
 
         lmath::Vector3 zaxis(0.0f, 0.0f, length_);
         zaxis.mul33( zaxis, rot );
@@ -284,11 +284,11 @@ namespace viewer
         lmath::Vector3 pos( zaxis );
         pos += center_;
 
-        f32 sn = -lmath::sinf(angle_._z);
-        f32 cs = lmath::cosf(angle_._z);
+        f32 sn = -lmath::sinf(angle_.z_);
+        f32 cs =  lmath::cosf(angle_.z_);
 
-        up_._x = sn;
-        up_._y = cs;
+        up_.x_ = sn;
+        up_.y_ = cs;
 
         matrix_.lookAt(pos, center_, up_);
     }

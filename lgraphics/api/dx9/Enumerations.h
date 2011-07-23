@@ -78,6 +78,7 @@ namespace lgraphics
         Usage_DoNotClip = D3DUSAGE_DONOTCLIP,
         Usage_Dynamic = D3DUSAGE_DYNAMIC,
         Usage_RenderTarget = D3DUSAGE_RENDERTARGET,
+        Usage_WriteOnly = D3DUSAGE_WRITEONLY,
     };
 
     enum Lock

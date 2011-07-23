@@ -266,7 +266,7 @@ namespace bvh
             if(begin>=end){
                 break;
             }
-            std::swap(entries[begin], entries[end]);
+            lcore::swap(entries[begin], entries[end]);
             ++begin;
             --end;
         }

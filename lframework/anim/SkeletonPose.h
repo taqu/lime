@@ -9,7 +9,7 @@
 #include "lanim.h"
 namespace lmath
 {
-    class Matrix43;
+    class Matrix34;
 }
 
 namespace lanim
@@ -29,8 +29,8 @@ namespace lanim
         inline JointPose* getPoses();
         inline const JointPose* getPoses() const;
 
-        inline lmath::Matrix43* getMatrices();
-        inline const lmath::Matrix43* getMatrices() const;
+        inline lmath::Matrix34* getMatrices();
+        inline const lmath::Matrix34* getMatrices() const;
 
 
         /// スワップ
@@ -38,7 +38,7 @@ namespace lanim
     private:
         u32 numJoints_;
         JointPose* localPoses_;
-        lmath::Matrix43* matrix_;
+        lmath::Matrix34* matrix_;
     };
 
     // ジョイント数取得
@@ -57,12 +57,12 @@ namespace lanim
         return localPoses_;
     }
 
-    inline lmath::Matrix43* SkeletonPose::getMatrices()
+    inline lmath::Matrix34* SkeletonPose::getMatrices()
     {
         return matrix_;
     }
 
-    inline const lmath::Matrix43* SkeletonPose::getMatrices() const
+    inline const lmath::Matrix34* SkeletonPose::getMatrices() const
     {
         return matrix_;
     }

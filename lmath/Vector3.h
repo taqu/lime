@@ -9,7 +9,7 @@
 
 namespace lmath
 {
-    class Matrix43;
+    class Matrix34;
     class Matrix44;
     class Quaternion;
 
@@ -25,12 +25,12 @@ namespace lmath
         {}
 
         Vector3(f32 x, f32 y, f32 z)
-            :_x(x), _y(y), _z(z)
+            :x_(x), y_(y), z_(z)
         {}
 
         inline void set(f32 x, f32 y, f32 z)
         {
-            _x = x; _y = y; _z = z;
+            x_ = x; y_ = y; z_ = z;
         }
 
         inline f32 operator[](s32 index) const;
@@ -75,13 +75,14 @@ namespace lmath
         */
         Vector3& lerp(const Vector3& v0, const Vector3& v1, f32 f0, f32 f1);
 
-        void mul(const Matrix43& matrix, const Vector3& vector);
-        void mul(const Vector3& v, const Matrix43& m);
+        void mul(const Matrix34& m, const Vector3& v);
+        void mul(const Vector3& v, const Matrix34& m);
 
-        void mul33(const Vector3& vector, const Matrix43& matrix);
-        void mul33(const Matrix43& matrix, const Vector3& vector);
-        void mul33(const Vector3& vector, const Matrix44& matrix);
-        void mul33(const Matrix44& matrix, const Vector3& vector);
+        void mul33(const Matrix34& m, const Vector3& v);
+        void mul33(const Vector3& v, const Matrix34& m);
+
+        void mul33(const Matrix44& m, const Vector3& v);
+        void mul33(const Vector3& v, const Matrix44& m);
 
         void rotate(const Quaternion& rotation);
 
@@ -89,7 +90,7 @@ namespace lmath
 
         inline bool isNan() const;
 
-        f32 _x, _y, _z;
+        f32 x_, y_, z_;
     };
 
     //--------------------------------------------
@@ -99,9 +100,9 @@ namespace lmath
     //--------------------------------------------
     inline const Vector3& Vector3::cross(const Vector3& v1, const Vector3& v2)
     {
-        _x = v1._y * v2._z - v1._z * v2._y;
-        _y = v1._z * v2._x - v1._x * v2._z;
-        _z = v1._x * v2._y - v1._y * v2._x;
+        x_ = v1.y_ * v2.z_ - v1.z_ * v2.y_;
+        y_ = v1.z_ * v2.x_ - v1.x_ * v2.z_;
+        z_ = v1.x_ * v2.y_ - v1.y_ * v2.x_;
         return *this;
     }
 
@@ -109,58 +110,58 @@ namespace lmath
     {
         LASSERT(0<=index
             && index < 3);
-        return (&_x)[index];
+        return (&x_)[index];
     }
 
     inline f32& Vector3::operator[](s32 index)
     {
         LASSERT(0<=index
             && index < 3);
-        return (&_x)[index];
+        return (&x_)[index];
     }
 
     inline Vector3 Vector3::operator-() const
     {
-        return Vector3(-_x, -_y, -_z);
+        return Vector3(-x_, -y_, -z_);
     }
 
     inline Vector3 Vector3::operator*(f32 f) const
     {
-        return Vector3(f*_x, f*_y, f*_z);
+        return Vector3(f*x_, f*y_, f*z_);
     }
 
     inline Vector3 Vector3::operator/(f32 f) const
     {
         f32 inv = 1.0f/f;
-        return Vector3(inv*_x, inv*_y, inv*_z);
+        return Vector3(inv*x_, inv*y_, inv*z_);
     }
 
     inline f32 Vector3::dot(const Vector3& v) const
     {
-        return ( _x * v._x + _y * v._y + _z * v._z);
+        return ( x_ * v.x_ + y_ * v.y_ + z_ * v.z_);
     }
 
     inline Vector3& Vector3::operator+=(const Vector3& v)
     {
-        _x += v._x;
-        _y += v._y;
-        _z += v._z;
+        x_ += v.x_;
+        y_ += v.y_;
+        z_ += v.z_;
         return *this;
     }
 
     inline Vector3& Vector3::operator-=(const Vector3& v)
     {
-        _x -= v._x;
-        _y -= v._y;
-        _z -= v._z;
+        x_ -= v.x_;
+        y_ -= v.y_;
+        z_ -= v.z_;
         return *this;
     }
 
     inline Vector3& Vector3::operator*=(f32 f)
     {
-        _x *= f;
-        _y *= f;
-        _z *= f;
+        x_ *= f;
+        y_ *= f;
+        z_ *= f;
         return *this;
     }
 
@@ -168,24 +169,24 @@ namespace lmath
     {
         LASSERT(f != 0.0f);
         f = 1.0f / f;
-        _x *= f;
-        _y *= f;
-        _z *= f;
+        x_ *= f;
+        y_ *= f;
+        z_ *= f;
         return *this;
     }
 
     inline bool Vector3::isEqual(const Vector3& v) const
     {
-        return ( lmath::isEqual(_x, v._x)
-            && lmath::isEqual(_y, v._y)
-            && lmath::isEqual(_z, v._z) );
+        return ( lmath::isEqual(x_, v.x_)
+            && lmath::isEqual(y_, v.y_)
+            && lmath::isEqual(z_, v.z_) );
     }
 
     inline bool Vector3::isEqual(const Vector3& v, f32 epsilon) const
     {
-        return ( lmath::isEqual(_x, v._x, epsilon)
-            && lmath::isEqual(_y, v._y, epsilon)
-            && lmath::isEqual(_z, v._z, epsilon) );
+        return ( lmath::isEqual(x_, v.x_, epsilon)
+            && lmath::isEqual(y_, v.y_, epsilon)
+            && lmath::isEqual(z_, v.z_, epsilon) );
     }
 
     inline bool Vector3::operator==(const Vector3& v) const
@@ -205,7 +206,7 @@ namespace lmath
 
     inline f32 Vector3::lengthSqr() const
     {
-        return ( _x * _x + _y * _y + _z * _z);
+        return ( x_ * x_ + y_ * y_ + z_ * z_);
     }
 
     inline void Vector3::normalize()
@@ -224,14 +225,14 @@ namespace lmath
 
     inline void Vector3::swap(Vector3& rhs)
     {
-        lcore::swap(_x, rhs._x);
-        lcore::swap(_y, rhs._y);
-        lcore::swap(_z, rhs._z);
+        lcore::swap(x_, rhs.x_);
+        lcore::swap(y_, rhs.y_);
+        lcore::swap(z_, rhs.z_);
     }
 
     inline bool Vector3::isNan() const
     {
-        return (lcore::isNan(_x) || lcore::isNan(_y) || lcore::isNan(_z));
+        return (lcore::isNan(x_) || lcore::isNan(y_) || lcore::isNan(z_));
     }
 
 }

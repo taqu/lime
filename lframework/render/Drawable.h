@@ -13,7 +13,7 @@
 
 namespace lmath
 {
-    class Matrix43;
+    class Matrix34;
 }
 
 namespace lscene
@@ -31,7 +31,7 @@ namespace lrender
     {
     public:
         virtual u32 getNumJointPoses() const{ return 0; }
-        virtual const lmath::Matrix43* getGlobalJointPoses() const{ return NULL;}
+        virtual const lmath::Matrix34* getGlobalJointPoses() const{ return NULL;}
 
 
         void initializeShader();

@@ -19,7 +19,7 @@ int APIENTRY WinMain(HINSTANCE /*hInstance*/,
     param.backBufferWidth_ = viewer::Application::Width;
     param.backBufferHeight_ = viewer::Application::Height;
 
-    param.interval_ = lgraphics::PresentInterval_Immediate;
+    //param.interval_ = lgraphics::PresentInterval_Immediate;
     param.refreshRate_ = 60;
     //param.format_ = lgraphics::Display_X8R8G8B8;
 

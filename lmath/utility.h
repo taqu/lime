@@ -9,7 +9,7 @@
 namespace lmath
 {
     class Vector3;
-    class Matrix43;
+    class Matrix34;
     class Quaternion;
 
     /**
@@ -45,7 +45,7 @@ namespace lmath
 
     慣性座標は、原点がオブジェクト座標と等しく、軸がワールド座標と平行な座標系
     */
-    void getEulerInertialToObject(f32& head, f32& pitch, f32& bank, const lmath::Matrix43& m);
+    void getEulerInertialToObject(f32& head, f32& pitch, f32& bank, const lmath::Matrix34& m);
 
     /**
     @brief 慣性座標からオブジェクト座標へのオイラー角を取得
@@ -60,7 +60,7 @@ namespace lmath
 
     慣性座標は、原点がオブジェクト座標と等しく、軸がワールド座標と平行な座標系
     */
-    void getEulerObjectToInertial(f32& head, f32& pitch, f32& bank, const lmath::Matrix43& m);
+    void getEulerObjectToInertial(f32& head, f32& pitch, f32& bank, const lmath::Matrix34& m);
 
     /**
     @brief オブジェクト座標から慣性座標へのオイラー角を取得

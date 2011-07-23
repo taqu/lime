@@ -19,8 +19,6 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "linput", "linput\project\li
 		{37544678-7AEF-4A27-AFB1-EE98C75DD8A0} = {37544678-7AEF-4A27-AFB1-EE98C75DD8A0}
 	EndProjectSection
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lrenderlib", "lrenderlib\project\lrenderlib_dx9.vcproj", "{99F7D3F3-C128-496C-8AFF-14A00674A2E1}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "lframework", "lframework\project\lframework_dx9.vcproj", "{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}"
 	ProjectSection(ProjectDependencies) = postProject
 		{AA50E557-01AD-486E-9818-B6EE71DBBDDE} = {AA50E557-01AD-486E-9818-B6EE71DBBDDE}
@@ -53,10 +51,6 @@ Global
 		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Debug|Win32.Build.0 = Debug|Win32
 		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Release|Win32.ActiveCfg = Release|Win32
 		{6F989857-BFE8-432B-87BC-A1A8E34D10A0}.Release|Win32.Build.0 = Release|Win32
-		{99F7D3F3-C128-496C-8AFF-14A00674A2E1}.Debug|Win32.ActiveCfg = Debug|Win32
-		{99F7D3F3-C128-496C-8AFF-14A00674A2E1}.Debug|Win32.Build.0 = Debug|Win32
-		{99F7D3F3-C128-496C-8AFF-14A00674A2E1}.Release|Win32.ActiveCfg = Release|Win32
-		{99F7D3F3-C128-496C-8AFF-14A00674A2E1}.Release|Win32.Build.0 = Release|Win32
 		{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}.Debug|Win32.ActiveCfg = Debug|Win32
 		{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}.Debug|Win32.Build.0 = Debug|Win32
 		{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}.Release|Win32.ActiveCfg = Release|Win32

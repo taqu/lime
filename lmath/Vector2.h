@@ -21,17 +21,17 @@ namespace lmath
         {}
 
         Vector2(f32 x, f32 y)
-            :_x(x), _y(y)
+            :x_(x), y_(y)
         {}
 
         Vector2(const Vector2& v)
-            :_x(v._x), _y(v._y)
+            :x_(v.x_), y_(v.y_)
         {}
 
         void set(f32 x, f32 y)
         {
-            _x = x;
-            _y = y;
+            x_ = x;
+            y_ = y;
         }
 
         inline explicit Vector2(const f32 *xy);
@@ -66,7 +66,7 @@ namespace lmath
 
         inline bool isNan() const;
 
-        f32 _x, _y;
+        f32 x_, y_;
     };
 
     //--------------------------------------------
@@ -78,39 +78,39 @@ namespace lmath
     {
         LASSERT(0<=index
             && index < 2);
-        return (&_x)[index];
+        return (&x_)[index];
     }
 
     inline f32& Vector2::operator[](s32 index)
     {
         LASSERT(0<=index
             && index < 2);
-        return (&_x)[index];
+        return (&x_)[index];
     }
 
     inline Vector2 Vector2::operator-() const
     {
-        return Vector2(-_x, -_y);
+        return Vector2(-x_, -y_);
     }
 
     inline Vector2& Vector2::operator+=(const Vector2& v)
     {
-        _x += v._x;
-        _y += v._y;
+        x_ += v.x_;
+        y_ += v.y_;
         return *this;
     }
 
     inline Vector2& Vector2::operator-=(const Vector2& v)
     {
-        _x -= v._x;
-        _y -= v._y;
+        x_ -= v.x_;
+        y_ -= v.y_;
         return *this;
     }
 
     inline Vector2& Vector2::operator*=(f32 f)
     {
-        _x *= f;
-        _y *= f;
+        x_ *= f;
+        y_ *= f;
         return *this;
     }
 
@@ -118,21 +118,21 @@ namespace lmath
     {
         LASSERT(f != 0.0f);
         f = 1.0f/f;
-        _x *= f;
-        _y *= f;
+        x_ *= f;
+        y_ *= f;
         return *this;
     }
 
     inline bool Vector2::isEqual(const Vector2& v) const
     {
-        return ( lmath::isEqual(_x, v._x)
-            && lmath::isEqual(_y, v._y) );
+        return ( lmath::isEqual(x_, v.x_)
+            && lmath::isEqual(y_, v.y_) );
     }
 
     inline bool Vector2::isEqual(const Vector2& v, f32 epsilon) const
     {
-        return ( lmath::isEqual(_x, v._x, epsilon)
-            && lmath::isEqual(_y, v._y, epsilon) );
+        return ( lmath::isEqual(x_, v.x_, epsilon)
+            && lmath::isEqual(y_, v.y_, epsilon) );
     }
 
     inline bool Vector2::operator==(const Vector2& v) const
@@ -152,7 +152,7 @@ namespace lmath
 
     inline f32 Vector2::lengthSqr() const
     {
-        return ( _x * _x + _y * _y );
+        return ( x_ * x_ + y_ * y_ );
     }
 
     inline void Vector2::normalize()
@@ -165,7 +165,7 @@ namespace lmath
 
     inline f32 Vector2::dot(const Vector2& v) const
     {
-        return ( _x * v._x + _y * v._y );
+        return ( x_ * v.x_ + y_ * v.y_ );
     }
 
     inline f32 Vector2::distance(const Vector2& v) const
@@ -175,14 +175,14 @@ namespace lmath
 
     inline f32 Vector2::distanceSqr(const Vector2& v) const
     {
-        f32 dx = v._x - _x;
-        f32 dy = v._y - _y;
+        f32 dx = v.x_ - x_;
+        f32 dy = v.y_ - y_;
         return (dx*dx + dy*dy); 
     }
 
     inline bool Vector2::isNan() const
     {
-        return (lcore::isNan(_x) || lcore::isNan(_y));
+        return (lcore::isNan(x_) || lcore::isNan(y_));
     }
 
 }

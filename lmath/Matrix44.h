@@ -10,20 +10,23 @@
 
 namespace lmath
 {
-    class Matrix43;
+    class Matrix34;
 
     //--------------------------------------------
     //---
     //--- Matrix44
     //---
     //--------------------------------------------
+    /**
+    右手座標系、列ベクトル、ベクトルに対して左から掛けて変換する。
+    */
     class Matrix44
     {
     public:
         Matrix44()
         {}
 
-        Matrix44(const Matrix43& mat);
+        explicit Matrix44(const Matrix34& mat);
 
         ~Matrix44()
         {}
@@ -32,11 +35,13 @@ namespace lmath
         inline f32& operator()(s32 c, s32 r);
 
         Matrix44& operator*=(f32 f);
-        Matrix44& operator*=(const Matrix44& m);
-        Matrix44& operator+=(const Matrix44& m);
-        Matrix44& operator-=(const Matrix44& m);
+        Matrix44& operator*=(const Matrix44& rhs);
+        Matrix44& operator+=(const Matrix44& rhs);
+        Matrix44& operator-=(const Matrix44& rhs);
         Matrix44& operator=(const Matrix44& rhs);
-        Matrix44& operator=(const Matrix43& rhs);
+
+        Matrix44& operator*=(const Matrix34& rhs);
+        Matrix44& operator=(const Matrix34& rhs);
 
         Matrix44 operator-() const;
 
@@ -58,20 +63,28 @@ namespace lmath
         void translate(f32 x, f32 y, f32 z);
 
         /// 前から平行移動
-        void preTranslate(const Vector3& v);
+        inline void preTranslate(const Vector3& v);
 
         /// 前から平行移動
         void preTranslate(f32 x, f32 y, f32 z);
 
+        /// 後から回転
         void rotateX(f32 radian);
+
+        /// 後から回転
         void rotateY(f32 radian);
+
+        /// 後から回転
         void rotateZ(f32 radian);
-        void rotateAxis(const Vector3& axis, f32 radian)
+
+        /// 軸回転
+        void setRotateAxis(const Vector3& axis, f32 radian)
         {
-            rotateAxis(axis._x, axis._y, axis._z, radian);
+            setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
         }
 
-        void rotateAxis(f32 x, f32 y, f32 z, f32 radian);
+        /// 軸回転
+        void setRotateAxis(f32 x, f32 y, f32 z, f32 radian);
 
         inline void setScale(f32 s);
         inline void scale(f32 s);
@@ -87,61 +100,67 @@ namespace lmath
 
         void getTranslate(Vector3& trans) const
         {
-            trans.set(_elem[3][0], _elem[3][1], _elem[3][2]);
+            trans.set(m_[0][3], m_[1][3], m_[2][3]);
         }
 
         bool isNan() const;
 
-        f32 _elem[4][4];
+        f32 m_[4][4];
     };
 
-    inline f32 Matrix44::operator()(s32 c, s32 r) const
+    inline f32 Matrix44::operator()(s32 r, s32 c) const
     {
-        LASSERT(0<= c
-            && c < 4);
         LASSERT(0<= r
             && r < 4);
-        return _elem[c][r];
+        LASSERT(0<= c
+            && c < 4);
+        return m_[r][c];
     }
 
-    inline f32& Matrix44::operator()(s32 c, s32 r)
+    inline f32& Matrix44::operator()(s32 r, s32 c)
     {
-        LASSERT(0<= c
-            && c < 4);
         LASSERT(0<= r
             && r < 4);
-        return _elem[c][r];
+        LASSERT(0<= c
+            && c < 4);
+        return m_[r][c];
     }
 
     // 平行移動セット
     inline void Matrix44::setTranslate(const Vector3& v)
     {
-        _elem[3][0] = v._x;
-        _elem[3][1] = v._y;
-        _elem[3][2] = v._z;
+        m_[0][3] = v.x_;
+        m_[1][3] = v.y_;
+        m_[2][3] = v.z_;
 
     }
 
     // 平行移動セット
     inline void Matrix44::setTranslate(f32 x, f32 y, f32 z)
     {
-        _elem[3][0] = x;
-        _elem[3][1] = y;
-        _elem[3][2] = z;
+        m_[0][3] = x;
+        m_[1][3] = y;
+        m_[2][3] = z;
+    }
+
+    // 前から平行移動
+    inline void Matrix44::preTranslate(const Vector3& v)
+    {
+        preTranslate(v.x_, v.y_, v.z_);
     }
 
     inline void Matrix44::setScale(f32 s)
     {
-        _elem[0][0] = s;
-        _elem[1][1] = s;
-        _elem[2][2] = s;
+        m_[0][0] = s;
+        m_[1][1] = s;
+        m_[2][2] = s;
     }
 
     inline void Matrix44::scale(f32 s)
     {
-        _elem[0][0] *= s;
-        _elem[1][1] *= s;
-        _elem[2][2] *= s;
+        m_[0][0] *= s;
+        m_[1][1] *= s;
+        m_[2][2] *= s;
     }
 }
 

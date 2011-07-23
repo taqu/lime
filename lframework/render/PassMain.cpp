@@ -210,15 +210,12 @@ namespace lrender
                 Batch& batch = drawable.getBatch(j);
                 const lscene::Material* material = batch.getMaterial();
 
-#if 0
-                batches_.push_back(&batch);
-#else
                 if(material->getRenderState().getAlphaBlendEnable()){
                     alphaBatches_.push_back(&batch);
                 }else{
                     batches_.push_back(&batch);
                 }
-#endif
+
             }
         }// for(Drawable
 

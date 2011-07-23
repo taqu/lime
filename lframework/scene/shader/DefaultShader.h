@@ -6,7 +6,6 @@
 @date 2010/12/13 create
 */
 #include <lcore/FixedArray.h>
-#include <lmath/Matrix43.h>
 #include <lgraphics/lgraphicscore.h>
 #include <lframework/scene/ShaderBase.h>
 
@@ -168,18 +167,6 @@ namespace lscene
     private:
 
         lgraphics::HANDLE params_[shader::ParamVS_Num];
-#if defined(LIME_GL)
-        /**
-        @brief 行列の要素を転置する。
-
-        dstとsrcが同じ場合、結果を保障しない。
-        */
-        inline void toMatrix34(lmath::Matrix43& dst, const lmath::Matrix43& src);
-
-        inline void setInitializeMatrix34(lmath::Matrix43& dst);
-
-        lmath::Matrix43 palette_[lgraphics::LIME_MAX_SKINNING_MATRICES];
-#endif
     };
 
 

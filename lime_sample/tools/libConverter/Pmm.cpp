@@ -699,7 +699,7 @@ namespace pmm
     void Loader::readAccessory()
     {
         AccessoryInfo accInfo;
-        lmath::Matrix43 matrix;
+        lmath::Matrix34 matrix;
         lx::XLoader xloader;
 
         if(loadAccessoryIndex_<numAccessories_){
@@ -849,7 +849,7 @@ namespace pmm
 
 
     // VACファイルかチェックし、そうならばパラメータロード
-    bool Loader::checkVac(AccessoryInfo& accInfo, lmath::Matrix43& matrix)
+    bool Loader::checkVac(AccessoryInfo& accInfo, lmath::Matrix34& matrix)
     {
         static const Char AccessoryDirectory[] = "Accessory/";
         static const u32 LenAccessoryDir = sizeof(AccessoryDirectory) - 1;

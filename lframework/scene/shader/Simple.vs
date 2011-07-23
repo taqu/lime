@@ -10,16 +10,7 @@ static const float f_1_100 = 0.01;
 
 uniform float4x4 mwvp; //World * View * Projection Matrix
 
-#if defined(VDIFFUSE) && defined(PCOLOR)
-
-uniform float3 dlDir;
-uniform float4 dlColor;
-
-//マテリアル設定
-uniform float3 ambient;
-
-#endif
-
+// 
 #ifdef SKINNING
 
 #define NUM_PALETTE_MATRICES 80
@@ -30,13 +21,13 @@ void skinning(uniform float4 position, uniform float3 normal, out float3 retPosi
     float weight = indices.z * f_1_100;
     int index = int(indices.x);
 
-    retPosition = mul(position * palette[index]) * weight;
-    retNormal = mul(normal * palette[index]) * weight;
+    retPosition = mul(position, palette[index]) * weight;
+    retNormal = mul(normal, palette[index]) * weight;
 
     weight = float(c_ione) - weight;
     index = int(indices.y);
-    retPosition += mul(position * palette[index]) * weight;
-    retNormal += mul(normal * palette[index]) * weight;
+    retPosition += mul(position, palette[index]) * weight;
+    retNormal += mul(normal, palette[index]) * weight;
 }
 #endif
 
@@ -67,20 +58,28 @@ struct VS_OUTPUT
     float4 position : POSITION0;
 
 #ifdef PNORMAL
-    float3 normal : TEXCOORD1;
+    float3 normal : TEXCOORD0;
 #endif
 
 #ifdef PCOLOR
-    float3 color : COLOR0;
+    float4 color : COLOR0;
 #endif
 
 #ifdef PTEX0
-    float2 tex0 : TEXCOORD0;
+    float4 tex0 : TEXCOORD1;
 #endif
 
 #ifdef PPOS
     float3 pos0 : TEXCOORD2;
 #endif
+
+#ifdef LIGHTVS
+    float4 specular0 : TEXCOORD3;
+
+#ifdef TEXSHADE
+    float2 tex2 : TEXCOORD4;
+#endif
+#endif //LIGHTVS
 };
 
 
@@ -91,6 +90,8 @@ VS_OUTPUT main(VSInput input)
     float3 position;
     float3 normal;
 #ifdef SKINNING
+    //position = input.position;
+    //normal = input.normal;
     skinning(input.position, input.normal, position, normal, input.bones);
 #else
     position = input.position.xyz;
@@ -101,6 +102,10 @@ VS_OUTPUT main(VSInput input)
 
 #ifdef PPOS
     output.pos0 = position;
+#endif
+
+#ifdef LIGHTVS
+    float3 posLighting = position.xyz;
 #endif
 
 //linear-z or non-linear-z
@@ -117,14 +122,38 @@ VS_OUTPUT main(VSInput input)
 #endif
 
 #ifdef PTEX0
-    output.tex0 = input.tex0;
+    output.tex0.xy = input.tex0;
 #endif
 
-#if defined(VDIFFUSE) && defined(PCOLOR)
-    // ライティング計算
-    float3 L = dlDir;
-    output.color = ambient + dlColor.w * max(dlColor.xyz * dot(normal, L), 0.0f);//Irradiance。たぶんこんな感じ
+#ifdef PTEX1
+    output.tex0.zw = input.tex1;
 #endif
+
+///////////////////////////////////////////////////
+#ifdef LIGHTVS
+
+#ifdef VNORMAL
+
+    float3 N = normalize(normal);
+    float3 E = normalize(camPos - posLighting);
+    float3 H = normalize(dlDir+E);
+
+    float cosNH = max(c_fzero, dot(N,H));
+
+#ifdef TEXSHADE
+
+    output.tex2 = vec2( (c_fone + dot(N, dlDir))*c_fhalf );
+
+#endif //TEXSHADE
+    output.specular0.xyz = specular.xyz * pow(cosNH, specular.w);
+    output.specular0.w = cosNH;
+#else
+
+    output.specular0.xyz = vec3(c_fzero);
+    output.specular0.w = c_fone;
+#endif
+
+#endif //LIGHTVS
 
     return output;
 }

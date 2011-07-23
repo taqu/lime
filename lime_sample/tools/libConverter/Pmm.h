@@ -157,7 +157,7 @@ namespace pmm
         @param accInfo ... pathがvacファイルならロードしてXファイル名に書き換え
         @param matrix ... vacファイルならオフセットをロード
         */
-        bool checkVac(AccessoryInfo& accInfo, lmath::Matrix43& matrix);
+        bool checkVac(AccessoryInfo& accInfo, lmath::Matrix34& matrix);
 
         /**
         @brief アニメーションデータロード

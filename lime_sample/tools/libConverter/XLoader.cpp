@@ -9,6 +9,7 @@
 #include <lcore/liostream.h>
 #include <lmath/Matrix44.h>
 
+#include <lgraphics/api/Enumerations.h>
 #include <lgraphics/api/RenderStateRef.h>
 #include <lgraphics/api/TextureRef.h>
 
@@ -609,7 +610,7 @@ namespace
 #endif
         //透過
         f32 emissivePower = material.emissive_.lengthSqr();
-        if( material.diffuse_._w > 0.999f){
+        if( material.diffuse_.w_ > 0.999f){
         }else{
 
             //発光が0でなければ、フラグ立てる
@@ -881,7 +882,7 @@ namespace
             material.getFlags().setFlag(lscene::Material::MatFlag_TexAlbedo);
 
             if(lconverter::Config::getInstance().isAlphaTest()
-                && (material.diffuse_._w > 0.999f))
+                && (material.diffuse_.w_ > 0.999f))
             {
 
                 s32 format = texRef->getFormat();
@@ -1310,7 +1311,7 @@ namespace
             obj.getGeometry(i).setPrimitiveCount(numIndicesInMaterial/3);
 
             //アルファブレンドするか
-            if( obj.getMaterial(i).diffuse_._w > 0.999f){
+            if( obj.getMaterial(i).diffuse_.w_ > 0.999f){
                 obj.getMaterial(i).setRenderState(renderState);
             }else{
                 obj.getMaterial(i).setRenderState(renderStateAlpha);
@@ -1319,7 +1320,7 @@ namespace
             indexOffset += numIndicesInMaterial;
         }
 
-        ib = lgraphics::IndexBuffer::create(indexOffset, lgraphics::Pool_Default, lgraphics::Usage_None);
+        ib = lgraphics::IndexBuffer::create(indexOffset, lgraphics::Pool_Default, lgraphics::Usage_WriteOnly);
 #if defined(LIME_GLES2)
         ib.blit( &(tmpIndices[0]) );
 #else

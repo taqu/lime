@@ -638,7 +638,7 @@ namespace pmm
         pose.angle_.set(frame.angle_[0], frame.angle_[1], frame.angle_[2]);
 
         static const f32 Limit = (PI_2*0.98f);
-        lmath::clamp(pose.angle_._x, -Limit, Limit);
+        lmath::clamp(pose.angle_.x_, -Limit, Limit);
 
         pose.length_ = frame.length_;
 
@@ -737,7 +737,7 @@ namespace pmm
         matrix_.translate( pose.translation_ );
 
 
-        lmath::Matrix43& mat = object_->getWorldMatrix();
+        lmath::Matrix34& mat = object_->getWorldMatrix();
         mat = matrix_;
 
         u8 bindModel = pose.getBindModel();
@@ -755,10 +755,12 @@ namespace pmm
 
         const lanim::Joint& joint = target->getSkeleton()->getJoint( bindBone_ );
 
-        const lmath::Matrix43* targetMatrices = target->getSkeletonPose()->getMatrices();
+        const lmath::Matrix34* targetMatrices = target->getSkeletonPose()->getMatrices();
+
         mat.translate(joint.getPosition());
-        mat.mul( mat, target->getWorldMatrix() );
-        mat.mul( mat, targetMatrices[bindBone_] );
+
+        mat.mul( targetMatrices[bindBone_], mat );
+        mat.mul( target->getWorldMatrix(), mat );
 
 
         targetObject_ = target;
@@ -773,11 +775,12 @@ namespace pmm
 
         const lanim::Joint& joint = targetObject_->getSkeleton()->getJoint( bindBone_ );
 
-        lmath::Matrix43& mat = object_->getWorldMatrix();
+        lmath::Matrix34& mat = object_->getWorldMatrix();
         mat = matrix_;
         mat.translate( joint.getPosition() );
 
-        mat.mul(mat, targetObject_->getWorldMatrix());
-        mat.mul(mat, *targetMat_);
+        mat.mul( *targetMat_, mat );
+        mat.mul( targetObject_->getWorldMatrix(), mat );
+        
     }
 }

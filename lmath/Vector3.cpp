@@ -4,7 +4,7 @@
 @date 2009/01/17 create
 */
 #include "Vector3.h"
-#include "Matrix43.h"
+#include "Matrix34.h"
 #include "Matrix44.h"
 #include "Quaternion.h"
 
@@ -12,9 +12,9 @@ namespace lmath
 {
     f32 Vector3::distanceSqr(const Vector3& v) const
     {
-        const f32 dx = _x - v._x;
-        const f32 dy = _y - v._y;
-        const f32 dz = _z - v._z;
+        const f32 dx = x_ - v.x_;
+        const f32 dy = y_ - v.y_;
+        const f32 dz = z_ - v.z_;
         return ( dx * dx + dy * dy + dz * dz);
     }
 
@@ -45,81 +45,58 @@ namespace lmath
         return *this;
     }
 
-    void Vector3::mul(const Vector3& v, const Matrix43& m)
+    void Vector3::mul(const Matrix34& m, const Vector3& v)
     {
-        f32 value[3];
-
-        value[0] = v[0] * m(0,0) + v[1] * m(1,0) + v[2] * m(2,0);
-        value[1] = v[0] * m(0,1) + v[1] * m(1,1) + v[2] * m(2,1);
-        value[2] = v[0] * m(0,2) + v[1] * m(1,2) + v[2] * m(2,2);
-
-        (*this)[0] = value[0] + m(3, 0);
-        (*this)[1] = value[1] + m(3, 1);
-        (*this)[2] = value[2] + m(3, 2);
+        f32 x,y,z;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[0][1] + v.z_ * m.m_[0][2] + m.m_[0][3];
+        y = v.x_ * m.m_[1][0] + v.y_ * m.m_[1][1] + v.z_ * m.m_[1][2] + m.m_[1][3];
+        z = v.x_ * m.m_[2][0] + v.y_ * m.m_[2][1] + v.z_ * m.m_[2][2] + m.m_[2][3];
+        x_ = x; y_ = y; z_ = z;
     }
 
-    void Vector3::mul(const Matrix43& matrix, const Vector3& vector)
+    void Vector3::mul(const Vector3& v, const Matrix34& m)
     {
-        f32 value[3];
-        for(s32 i=0; i<3; ++i){
-            value[i] = vector[0] * matrix(i, 0) + vector[1] * matrix(i, 1) + vector[2] * matrix(i, 2);
-        }
-        f32 w = vector[0] * matrix(3, 0) + vector[1] * matrix(3, 1) + vector[2] * matrix(3, 2);
-
-        for(s32 i=0; i<3; ++i){
-            (*this)[i] = value[i];
-        }
-        if( !lmath::isEqual(w, 0.0f) ){
-            (*this) /= w;
-        }
+        f32 x,y,z;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[1][0] + v.z_ * m.m_[2][0] + m.m_[0][3];
+        y = v.x_ * m.m_[0][1] + v.y_ * m.m_[1][1] + v.z_ * m.m_[2][1] + m.m_[1][3];
+        z = v.x_ * m.m_[0][2] + v.y_ * m.m_[1][2] + v.z_ * m.m_[2][2] + m.m_[2][3];
+        x_ = x; y_ = y; z_ = z;
     }
 
-    void Vector3::mul33(const Vector3& vector, const Matrix43& matrix)
+    void Vector3::mul33(const Matrix34& m, const Vector3& v)
     {
-        f32 value[3];
-        for(s32 i=0; i<3; ++i){
-            value[i] = vector[0] * matrix(0, i) + vector[1] * matrix(1, i) + vector[2] * matrix(2, i);
-        }
-
-        for(s32 i=0; i<3; ++i){
-            (*this)[i] = value[i];
-        }
+        f32 x,y,z;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[0][1] + v.z_ * m.m_[0][2];
+        y = v.x_ * m.m_[1][0] + v.y_ * m.m_[1][1] + v.z_ * m.m_[1][2];
+        z = v.x_ * m.m_[2][0] + v.y_ * m.m_[2][1] + v.z_ * m.m_[2][2];
+        x_ = x; y_ = y; z_ = z;
     }
 
-    void Vector3::mul33(const Matrix43& matrix, const Vector3& vector)
+    void Vector3::mul33(const Vector3& v, const Matrix34& m)
     {
-        f32 value[3];
-        for(s32 i=0; i<3; ++i){
-            value[i] = vector[0] * matrix(i, 0) + vector[1] * matrix(i, 1) + vector[2] * matrix(i, 2);
-        }
-
-        for(s32 i=0; i<3; ++i){
-            (*this)[i] = value[i];
-        }
+        f32 x,y,z;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[1][0] + v.z_ * m.m_[2][0];
+        y = v.x_ * m.m_[0][1] + v.y_ * m.m_[1][1] + v.z_ * m.m_[2][1];
+        z = v.x_ * m.m_[0][2] + v.y_ * m.m_[1][2] + v.z_ * m.m_[2][2];
+        x_ = x; y_ = y; z_ = z;
     }
 
-    void Vector3::mul33(const Vector3& vector, const Matrix44& matrix)
+    void Vector3::mul33(const Matrix44& m, const Vector3& v)
     {
-        f32 value[3];
-        for(s32 i=0; i<3; ++i){
-            value[i] = vector[0] * matrix(i, 0) + vector[1] * matrix(i, 1) + vector[2] * matrix(i, 2);
-        }
-
-        for(s32 i=0; i<3; ++i){
-            (*this)[i] = value[i];
-        }
+        f32 x,y,z;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[0][1] + v.z_ * m.m_[0][2];
+        y = v.x_ * m.m_[1][0] + v.y_ * m.m_[1][1] + v.z_ * m.m_[1][2];
+        z = v.x_ * m.m_[2][0] + v.y_ * m.m_[2][1] + v.z_ * m.m_[2][2];
+        x_ = x; y_ = y; z_ = z;
     }
 
-    void Vector3::mul33(const Matrix44& matrix, const Vector3& vector)
+    void Vector3::mul33(const Vector3& v, const Matrix44& m)
     {
-        f32 value[3];
-        for(s32 i=0; i<3; ++i){
-            value[i] = vector[0] * matrix(i, 0) + vector[1] * matrix(i, 1) + vector[2] * matrix(i, 2);
-        }
-
-        for(s32 i=0; i<3; ++i){
-            (*this)[i] = value[i];
-        }
+        f32 x,y,z;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[1][0] + v.z_ * m.m_[2][0];
+        y = v.x_ * m.m_[0][1] + v.y_ * m.m_[1][1] + v.z_ * m.m_[2][1];
+        z = v.x_ * m.m_[0][2] + v.y_ * m.m_[1][2] + v.z_ * m.m_[2][2];
+        x_ = x; y_ = y; z_ = z;
     }
 
     void Vector3::rotate(const Quaternion& rotation)
@@ -128,11 +105,17 @@ namespace lmath
         Quaternion conjugate(rotation.w_, -rotation.x_, -rotation.y_, -rotation.z_);
 
         Quaternion rot;
-        rot.mul(conjugate, *this);
-        rot.mul(rot, rotation);
 
-        _x = rot.x_;
-        _y = rot.y_;
-        _z = rot.z_;
+#if 0
+        rot.mul(rotation, conjugate);
+        rot.mul(rot, *this);
+#else
+        rot.mul(rotation, *this);
+        rot.mul(rot, conjugate);
+#endif
+
+        x_ = rot.x_;
+        y_ = rot.y_;
+        z_ = rot.z_;
     }
 }

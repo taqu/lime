@@ -134,7 +134,9 @@ public class GLSurfaceView extends SurfaceView implements
         egl.eglChooseConfig(display, initAttribs, null, 0, numConfigs);
 
         if (numConfigs[0] <= 0) {
-            throw new IllegalArgumentException("No configs match config attributes");
+            //throw new IllegalArgumentException("No configs match config attributes");
+            LogOut.d("Cannot initialize OpenGL ES 2.0");
+            return null;
         }
         
         EGLConfig[] configs = new EGLConfig[numConfigs[0]];

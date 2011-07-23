@@ -18,8 +18,6 @@ namespace lscene
         Scene(){}
         ~Scene(){}
 
-        void updateMatrix();
-
         const lmath::Matrix44& getViewMatrix() const
         {
             return camera_.getViewMatrix();

@@ -572,8 +572,8 @@ namespace lfont
 
         f32 pixx = static_cast<f32>( column * pixelWidth) - halfWidth_;
         f32 pixy = halfHeight_ - static_cast<f32>( row * pixelHeight);
-        f32 uvx = static_cast<f32>(cx) * uvw_;// - uvoffset_._x; //半テクセルずらし
-        f32 uvy = static_cast<f32>(cy) * uvh_;// + uvoffset_._y; //半テクセルずらし
+        f32 uvx = static_cast<f32>(cx) * uvw_;// - uvoffset_.x_; //半テクセルずらし
+        f32 uvy = static_cast<f32>(cy) * uvh_;// + uvoffset_.y_; //半テクセルずらし
 
         lgraphics::PrimitiveVertex buff[6] =
         {
