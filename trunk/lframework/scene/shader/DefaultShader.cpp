@@ -5,6 +5,8 @@
 */
 #include "DefaultShader.h"
 
+#include <lmath/Matrix34.h>
+
 #include <lgraphics/lgraphics.h>
 #include <lgraphics/lgraphicsAPIInclude.h>
 #include <lgraphics/api/SamplerState.h>
@@ -23,56 +25,17 @@ namespace lscene
     using namespace lgraphics;
     using namespace shader;
 
+    namespace
+    {
+        /// パレット行列転送用バッファ
+        lmath::Matrix34 TempPalette[lgraphics::LIME_MAX_SKINNING_MATRICES];
+    }
+
     //---------------------------------------------------
     //---
     //--- DefaultShaderVS
     //---
     //---------------------------------------------------
-#if defined(LIME_GL)
-    // 行列の要素を転置する
-    inline void DefaultShaderVS::toMatrix34(lmath::Matrix43& dst, const lmath::Matrix43& src)
-    {
-        /*
-        00 01 02 10 <- 00 10 20 30
-        11 12 20 21 <- 01 11 21 31
-        22 30 31 32 <- 02 12 22 32
-        */
-        dst._elem[0][0] = src._elem[0][0];
-        dst._elem[0][1] = src._elem[1][0];
-        dst._elem[0][2] = src._elem[2][0];
-        dst._elem[1][0] = src._elem[3][0];
-        dst._elem[1][1] = src._elem[0][1];
-        dst._elem[1][2] = src._elem[1][1];
-        dst._elem[2][0] = src._elem[2][1];
-        dst._elem[2][1] = src._elem[3][1];
-        dst._elem[2][2] = src._elem[0][2];
-        dst._elem[3][0] = src._elem[1][2];
-        dst._elem[3][1] = src._elem[2][2];
-        dst._elem[3][2] = src._elem[3][2];
-    }
-
-    inline void DefaultShaderVS::setInitializeMatrix34(lmath::Matrix43& dst)
-    {
-        /*
-        00 01 02 10 <- 00 10 20 30
-        11 12 20 21 <- 01 11 21 31
-        22 30 31 32 <- 02 12 22 32
-        */
-        dst._elem[0][0] = 1.0f;
-        dst._elem[0][1] = 0.0f;
-        dst._elem[0][2] = 0.0f;
-        dst._elem[1][0] = 0.0f;
-        dst._elem[1][1] = 0.0f;
-        dst._elem[1][2] = 1.0f;
-        dst._elem[2][0] = 0.0f;
-        dst._elem[2][1] = 0.0f;
-        dst._elem[2][2] = 0.0f;
-        dst._elem[3][0] = 0.0f;
-        dst._elem[3][1] = 1.0f;
-        dst._elem[3][2] = 0.0f;
-    }
-#endif
-
     DefaultShaderVS::DefaultShaderVS(const lgraphics::VertexShaderRef& ref)
         :ShaderVSBase(ref)
     {
@@ -98,15 +61,15 @@ namespace lscene
         const lscene::Material* material = batch.getMaterial();
 
 
-        lmath::Matrix44 mat( drawable->getWorldMatrix() );
-        mat *= scene.getViewProjMatrix();
+        lmath::Matrix44 mat( scene.getViewProjMatrix() );
+        mat *= drawable->getWorldMatrix();
 
         shader_.setMatrix(params_[ParamVS_WVP], mat);
 
         if(geometry->getFlags().checkFlag( Geometry::GeomFlag_LightingVS )){
             const lscene::LightEnvironment& lightEnv = scene.getLightEnv();
 
-            lmath::Matrix43 toLocal = drawable->getWorldMatrix();
+            lmath::Matrix34 toLocal = drawable->getWorldMatrix();
             toLocal.invert();
 
             // ライト方向をローカルへ変換
@@ -116,13 +79,13 @@ namespace lscene
             shader_.setVector3(params_[ParamVS_DLightDirection], lightDirection);
             //shader_.setVector4(params_[ParamVS_DLightColor], lightEnv.getDirectionalLight().getColor());
 
-            lmath::Matrix43 cameraToLocal = drawable->getWorldMatrix();
-            cameraToLocal *= scene.getViewMatrix();
+            lmath::Matrix34 cameraToLocal( scene.getViewMatrix() );
+            cameraToLocal *= drawable->getWorldMatrix();
             cameraToLocal.invert();
 
             // カメラ位置をローカルへ変換
             lmath::Vector3 cameraPos(0.0f,0.0f,0.0f);
-            cameraPos.mul(cameraPos, cameraToLocal);
+            cameraPos.mul(cameraToLocal, cameraPos);
 
             shader_.setVector3(params_[ParamVS_CameraPosition], cameraPos);
 
@@ -137,58 +100,36 @@ namespace lscene
             //shader_.setVector3(params_[ParamVS_Ambient], material->ambient_);
             //shader_.setVector3(params_[ParamVS_Emissive], material->emissive_);
 
-        }else{
-
-
-            if( geometry->getFlags().checkFlag(Geometry::GeomFlag_DiffuseVS) ){
-                lmath::Matrix43 toLocal = drawable->getWorldMatrix();
-                toLocal.invert();
-
-                const lscene::LightEnvironment& lightEnv = scene.getLightEnv();
-
-                // ライト方向をローカルへ変換
-                lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
-                lightDirection.mul33(lightDirection, toLocal);
-
-                shader_.setVector3(params_[ParamVS_DLightDirection], lightDirection);
-
-                shader_.setVector4(params_[ParamVS_DLightColor], lightEnv.getDirectionalLight().getColor());
-
-                //マテリアル
-                shader_.setVector3(params_[ParamVS_Ambient], material->ambient_);
-            }
         }
 
         //スキニング。マトリックスセット
         if(geometry->getFlags().checkFlag(lscene::Geometry::GeomFlag_Skinning)){
 #if defined(LIME_GL)
             if(drawable->getNumJointPoses()>0){
-                const lmath::Matrix43* poses = drawable->getGlobalJointPoses();
+                const lmath::Matrix34* poses = drawable->getGlobalJointPoses();
 
                 u8 count = geometry->getNumBonesInPalette();
                 for(u8 i=0; i<count; ++i){
-                    toMatrix34(palette_[i], poses[ geometry->getBoneInPalette(i) ]);
+                    TempPalette[i] = poses[ geometry->getBoneInPalette(i) ];
                 }
 
-                count *= 3;
-                shader_.setVector4Array(params_[ParamVS_MatrixPalette], reinterpret_cast<const lmath::Vector4*>(palette_), count);
-
-            }else{
-                //空をセット
-                u8 count = geometry->getNumBonesInPalette();
-                for(u8 i=0; i<count; ++i){
-                    setInitializeMatrix34(palette_[i]);
-                }
-                count *= 3;
-                shader_.setVector4Array(params_[ParamVS_MatrixPalette], reinterpret_cast<const lmath::Vector4*>(palette_), count);
-
+                shader_.setVector4Array(params_[ParamVS_MatrixPalette], reinterpret_cast<const lmath::Vector4*>(TempPalette), 3*count);
             }
 #else
-            const lmath::Matrix43* poses = drawable->getGlobalJointPoses();
+            const lmath::Matrix34* poses = drawable->getGlobalJointPoses();
 
-            u8 count = geometry->getNumBonesInPalette();
-            count *= 3;
+
+            u8 count = geometry->getNumBonesInPalette() * 3;
+#if 1
+            lmath::Matrix34 palette[lgraphics::LIME_MAX_SKINNING_MATRICES];
+            for(u32 i=0; i<count; ++i){
+                palette[i].identity();
+            }
+
+            shader_.setVector4Array(params_[ParamVS_MatrixPalette], reinterpret_cast<const lmath::Vector4*>(palette), count);
+#else
             shader_.setVector4Array(params_[ParamVS_MatrixPalette], reinterpret_cast<const lmath::Vector4*>(poses), count);
+#endif
 
 #endif
         }
@@ -238,23 +179,23 @@ namespace lscene
 
         }else{
 
-            lmath::Matrix43 toLocal = drawable->getWorldMatrix();
+            lmath::Matrix34 toLocal = drawable->getWorldMatrix();
             toLocal.invert();
 
             // ライト方向をローカルへ変換
             lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
-            lightDirection.mul33(lightDirection, toLocal);
+            lightDirection.mul33(toLocal, lightDirection);
 
             shader_.setVector3(params_[ParamPS_DLightDirection], lightDirection);
             shader_.setVector4(params_[ParamPS_DLightColor], lightEnv.getDirectionalLight().getColor());
 
-            lmath::Matrix43 cameraToLocal = drawable->getWorldMatrix();
-            cameraToLocal *= scene.getViewMatrix();
+            lmath::Matrix34 cameraToLocal( scene.getViewMatrix() );
+            cameraToLocal *= drawable->getWorldMatrix();
             cameraToLocal.invert();
 
             // カメラ位置をローカルへ変換
             lmath::Vector3 cameraPos(0.0f,0.0f,0.0f);
-            cameraPos.mul(cameraPos, cameraToLocal);
+            cameraPos.mul(cameraToLocal, cameraPos);
 
             shader_.setVector3(params_[ParamPS_CameraPosition], cameraPos);
 

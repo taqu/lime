@@ -11,7 +11,7 @@
 namespace lmath
 {
     class Vector3;
-    class Matrix43;
+    class Matrix34;
 
     class Quaternion
     {
@@ -72,7 +72,7 @@ namespace lmath
         f32 getRotationAngle() const;
 
         void getRotationAxis(lmath::Vector3& axis) const;
-        void getMatrix(lmath::Matrix43& mat) const;
+        void getMatrix(lmath::Matrix34& mat) const;
 
         void exp(f32 exponent);
 
@@ -129,7 +129,7 @@ namespace lmath
 
     inline void Quaternion::setRotateAxis(const lmath::Vector3& axis, f32 radian)
     {
-        setRotateAxis(axis._x, axis._y, axis._z, radian);
+        setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
     }
 
     inline f32 Quaternion::length() const

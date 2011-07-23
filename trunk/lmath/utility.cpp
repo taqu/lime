@@ -4,16 +4,16 @@
 @date 2009/11/10 create
 */
 #include "lmathcore.h"
-#include "Matrix43.h"
+#include "Matrix34.h"
 #include "Quaternion.h"
 #include "utility.h"
 
 namespace lmath
 {
     // 慣性座標からオブジェクト座標へのオイラー角を取得
-    void getEulerInertialToObject(f32& head, f32& pitch, f32& bank, const lmath::Matrix43& m)
+    void getEulerInertialToObject(f32& head, f32& pitch, f32& bank, const lmath::Matrix34& m)
     {
-        f32 sinPitch = -m._elem[1][2];
+        f32 sinPitch = -m.m_[2][1];
         if(sinPitch <= -1.0f){
             pitch = -PI_2;
         }else if(sinPitch >= 1.0f){
@@ -26,11 +26,11 @@ namespace lmath
         if(absolute(sinPitch) > F32_ANGLE_LIMIT1){
             // バンクを0として、ヘディングを計算
             bank = 0.0f;
-            head = atan2(-m._elem[2][0], m._elem[0][0]);
+            head = atan2(-m.m_[0][2], m.m_[0][0]);
         }else{
-            head = atan2(m._elem[0][2], m._elem[2][2]);
+            head = atan2(m.m_[2][0], m.m_[2][2]);
 
-            bank = atan2(m._elem[1][0], m._elem[1][1]);
+            bank = atan2(m.m_[0][1], m.m_[1][1]);
         }
     }
 
@@ -55,9 +55,9 @@ namespace lmath
 
 
     // オブジェクト座標から慣性座標へのオイラー角を取得
-    void getEulerObjectToInertial(f32& head, f32& pitch, f32& bank, const lmath::Matrix43& m)
+    void getEulerObjectToInertial(f32& head, f32& pitch, f32& bank, const lmath::Matrix34& m)
     {
-        f32 sinPitch = -m._elem[2][1];
+        f32 sinPitch = -m.m_[1][2];
         if(sinPitch <= -1.0f){
             pitch = -PI_2;
         }else if(sinPitch >= 1.0f){
@@ -70,11 +70,11 @@ namespace lmath
         if(absolute(sinPitch) > F32_ANGLE_LIMIT1){
             // バンクを0として、ヘディングを計算
             bank = 0.0f;
-            head = atan2(-m._elem[0][2], m._elem[0][0]);
+            head = atan2(-m.m_[2][0], m.m_[0][0]);
         }else{
-            head = atan2(m._elem[2][0], m._elem[2][2]);
+            head = atan2(m.m_[0][2], m.m_[2][2]);
 
-            bank = atan2(m._elem[0][1], m._elem[1][1]);
+            bank = atan2(m.m_[1][0], m.m_[1][1]);
         }
     }
 

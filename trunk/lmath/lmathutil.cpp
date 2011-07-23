@@ -11,9 +11,9 @@ namespace lmath
 {
     void calcBBox_SSE(Vector3& bmin, Vector3& bmax, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
-        __m128 x0 = _mm_set_ps(v0._x, v0._y, v0._z, 0.0f);
-        __m128 x1 = _mm_set_ps(v1._x, v1._y, v1._z, 0.0f);
-        __m128 x2 = _mm_set_ps(v2._x, v2._y, v2._z, 0.0f);
+        __m128 x0 = _mm_set_ps(v0.x_, v0.y_, v0.z_, 0.0f);
+        __m128 x1 = _mm_set_ps(v1.x_, v1.y_, v1.z_, 0.0f);
+        __m128 x2 = _mm_set_ps(v2.x_, v2.y_, v2.z_, 0.0f);
 
         __m128 retMin = _mm_min_ps(x0, x1);
         __m128 retMax = _mm_max_ps(x0, x1);
@@ -55,9 +55,9 @@ namespace lmath
     {
         const f32 invNum = (1.0f/3.0f);
 
-        __m128 x0 = _mm_set_ps(v0._x, v0._y, v0._z, 0.0f);
-        __m128 x1 = _mm_set_ps(v1._x, v1._y, v1._z, 0.0f);
-        __m128 x2 = _mm_set_ps(v2._x, v2._y, v2._z, 0.0f);
+        __m128 x0 = _mm_set_ps(v0.x_, v0.y_, v0.z_, 0.0f);
+        __m128 x1 = _mm_set_ps(v1.x_, v1.y_, v1.z_, 0.0f);
+        __m128 x2 = _mm_set_ps(v2.x_, v2.y_, v2.z_, 0.0f);
         __m128 inv = _mm_set_ps1(invNum);
 
         __m128 mRet = _mm_add_ps(x0, x1);

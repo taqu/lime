@@ -49,13 +49,13 @@ namespace lmath
         }
 
         // デュアルパート
-        dq[1][0] = -0.5f * ( trans._x * quat.x_ + trans._y * quat.y_ + trans._z * quat.z_);
+        dq[1][0] = -0.5f * ( trans.x_ * quat.x_ + trans.y_ * quat.y_ + trans.z_ * quat.z_);
 
-        dq[1][1] =  0.5f * ( trans._x * quat.w_ + trans._y * quat.z_ - trans._z * quat.y_);
+        dq[1][1] =  0.5f * ( trans.x_ * quat.w_ + trans.y_ * quat.z_ - trans.z_ * quat.y_);
 
-        dq[1][2] =  0.5f * (-trans._x * quat.z_ + trans._y * quat.w_ + trans._z * quat.x_);
+        dq[1][2] =  0.5f * (-trans.x_ * quat.z_ + trans.y_ * quat.w_ + trans.z_ * quat.x_);
 
-        dq[1][3] =  0.5f * ( trans._x * quat.y_ - trans._y * quat.x_ + trans._z * quat.w_);
+        dq[1][3] =  0.5f * ( trans.x_ * quat.y_ - trans.y_ * quat.x_ + trans.z_ * quat.w_);
 
     }
 
@@ -70,11 +70,11 @@ namespace lmath
         // デュアルパート
         dq[1][0] = 0.0f;
 
-        dq[1][1] = 0.5f * trans._x;
+        dq[1][1] = 0.5f * trans.x_;
 
-        dq[1][2] = 0.5f * trans._y;
+        dq[1][2] = 0.5f * trans.y_;
 
-        dq[1][3] = 0.5f * trans._z;
+        dq[1][3] = 0.5f * trans.z_;
 
     }
 
@@ -85,9 +85,9 @@ namespace lmath
         quat.set(dq[0][0], dq[0][1], dq[0][2], dq[0][3]);
 
         // 移動ベクトル
-        trans._x = 2.0f * (-dq[1][0]*dq[0][1] + dq[1][1]*dq[0][0] - dq[1][2]*dq[0][3] + dq[1][3]*dq[0][2]);
-        trans._y = 2.0f * (-dq[1][0]*dq[0][2] + dq[1][1]*dq[0][3] + dq[1][2]*dq[0][0] - dq[1][3]*dq[0][1]);
-        trans._z = 2.0f * (-dq[1][0]*dq[0][3] - dq[1][1]*dq[0][2] + dq[1][2]*dq[0][1] + dq[1][3]*dq[0][0]);
+        trans.x_ = 2.0f * (-dq[1][0]*dq[0][1] + dq[1][1]*dq[0][0] - dq[1][2]*dq[0][3] + dq[1][3]*dq[0][2]);
+        trans.y_ = 2.0f * (-dq[1][0]*dq[0][2] + dq[1][1]*dq[0][3] + dq[1][2]*dq[0][0] - dq[1][3]*dq[0][1]);
+        trans.z_ = 2.0f * (-dq[1][0]*dq[0][3] - dq[1][1]*dq[0][2] + dq[1][2]*dq[0][1] + dq[1][3]*dq[0][0]);
     }
 
     // デュアルクウォータニオンを単位四元数と移動ベクトルに変換
@@ -106,8 +106,8 @@ namespace lmath
 
         // 移動ベクトル
         length *= 2.0f;
-        trans._x = length * (-dq[1][0]*dq[0][1] + dq[1][1]*dq[0][0] - dq[1][2]*dq[0][3] + dq[1][3]*dq[0][2]);
-        trans._y = length * (-dq[1][0]*dq[0][2] + dq[1][1]*dq[0][3] + dq[1][2]*dq[0][0] - dq[1][3]*dq[0][1]);
-        trans._z = length * (-dq[1][0]*dq[0][3] - dq[1][1]*dq[0][2] + dq[1][2]*dq[0][1] + dq[1][3]*dq[0][0]);
+        trans.x_ = length * (-dq[1][0]*dq[0][1] + dq[1][1]*dq[0][0] - dq[1][2]*dq[0][3] + dq[1][3]*dq[0][2]);
+        trans.y_ = length * (-dq[1][0]*dq[0][2] + dq[1][1]*dq[0][3] + dq[1][2]*dq[0][0] - dq[1][3]*dq[0][1]);
+        trans.z_ = length * (-dq[1][0]*dq[0][3] - dq[1][1]*dq[0][2] + dq[1][2]*dq[0][1] + dq[1][3]*dq[0][0]);
     }
 }

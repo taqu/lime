@@ -119,7 +119,7 @@ namespace lanim
         SkeletonPose& pose = *skeletonPose_;
 
         JointPose* poses = pose.getPoses();
-        lmath::Matrix43* matrices = pose.getMatrices();
+        lmath::Matrix34* matrices = pose.getMatrices();
 
         lmath::Vector3 tmp;
         for(u32 i=0; i<pose.getNumJoints(); ++i){
@@ -147,9 +147,6 @@ namespace lanim
             tmp += jointPose.offset_;
             matrices[i].identity();
             matrices[i].translate(tmp);
-
-            LASSERT(false == jointPose.translation_.isNan());
-            LASSERT(false == jointPose.rotation_.isNan());
         }
 #if 0
         for(u32 i=0; i<jointMap_.size(); ++i){
@@ -193,7 +190,7 @@ namespace lanim
                 const JointPoseWithFrame& animPose = jointAnim.getPose(animIndex);
 
                 if(animIndex == jointAnim.getNumPoses() - 1){
-                    //ジョイントアニメーションの中で最後のフレームだたよ
+                    //ジョイントアニメーションの中で最後のフレーム
                     jointPose.translation_ = animPose.translation_;
                     jointPose.rotation_ = animPose.rotation_;
                 }else{
@@ -235,41 +232,24 @@ namespace lanim
         SkeletonPose& pose = *skeletonPose_;
 
         JointPose* poses = pose.getPoses();
-        lmath::Matrix43* matrices = pose.getMatrices();
+        lmath::Matrix34* matrices = pose.getMatrices();
 
         for(u32 i=0; i<pose.getNumJoints(); ++i){
 
             JointPose& jointPose = poses[i];
             Joint& joint = skeleton_->getJoint(i);
 
+            jointPose.rotation_.getMatrix( matrices[i] );
 
-            LASSERT(false == jointPose.translation_.isNan());
-            LASSERT(false == jointPose.rotation_.isNan());
-            LASSERT(false == jointPose.offset_.isNan());
-            LASSERT(false == joint.getPosition().isNan());
-
-
-            jointPose.rotation_.getMatrix( matrices[ i ] );
-
-            LASSERT(false == matrices[i].isNan());
-
-            matrices[ i ].translate( jointPose.translation_ );
-
-            LASSERT(false == matrices[i].isNan());
-
-            matrices[ i ].translate( jointPose.offset_ );
-
-            LASSERT(false == matrices[i].isNan());
+            matrices[i].preTranslate( -joint.getPosition() );
+            matrices[i].translate( jointPose.translation_ );
+            matrices[i].translate( jointPose.offset_ );
 
             if(joint.getParentIndex() != lanim::InvalidJointIndex){
                 //親有
-                matrices[ i ] *= matrices[ joint.getParentIndex() ];
-
-                LASSERT(false == matrices[i].isNan());
+                matrices[i].mul( matrices[ joint.getParentIndex() ], matrices[i]);
             }
 
-            //パレットの行列更新
-            matrices[ i ].preTranslate( -joint.getPosition() );
             LASSERT(false == matrices[i].isNan());
         }
     }

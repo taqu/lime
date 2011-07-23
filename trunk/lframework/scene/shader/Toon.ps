@@ -3,20 +3,29 @@ struct VS_OUTPUT
     float4 position : POSITION0;
 
 #ifdef PNORMAL
-    float3 normal : TEXCOORD1;
+    float3 normal : TEXCOORD0;
 #endif
 
 #ifdef PCOLOR
-    float3 color : COLOR0;
+    float4 color : COLOR0;
 #endif
 
 #ifdef PTEX0
-    float2 tex0 : TEXCOORD0;
+    float4 tex0 : TEXCOORD1;
 #endif
 
 #ifdef PPOS
     float3 pos0 : TEXCOORD2;
 #endif
+
+#ifdef LIGHTVS
+    float4 specular0 : TEXCOORD3;
+
+#ifdef TEXSHADE
+    float2 tex2 : TEXCOORD4;
+#endif
+#endif //LIGHTVS
+
 };
 static const float c_fzero = 0.0;
 static const float c_fone = 1.0;
@@ -25,9 +34,31 @@ static const float PI2 = 6.28318530717958647692;
 static const float INV_PI = 0.31830988618379067153;
 static const float INV_PI2 = 0.15915494309189533576;
 
+////////////////////////////////////
+#ifdef LIGHTVS
+uniform float3 ambient;
+uniform float4 dlColor;
+
+uniform float4 diffuse;
+uniform float3 emissive;
+
+#else //LIGHTVS
+
 uniform float3 dlDir;
 uniform float4 dlColor;
 uniform float3 camPos;
+
+uniform float4 diffuse;
+uniform float3 ambient;
+uniform float3 emissive;
+
+#endif //LIGHTVS
+
+// textures
+#ifdef PTEX0
+sampler texAlbedo;
+sampler texAlbedo2;
+#endif
 
 #ifdef FRESNEL
 
@@ -65,108 +96,77 @@ void calc_fresnel(out float fd, out float fs, float eh, float nl)
   fd = c_fresnel + F2*pow((c_fone - nl), c_ffive);
 }
 
-//#elif defined(P_NORMAL)
-//static const float c_ftwo = 2.0
-//uniform float4 specular;
 #endif
 
-
-//マテリアル設定
-uniform float4 diffuse;
-uniform float3 ambient;
-uniform float3 eimissive;
-
-//テクスチャ
-#ifdef PTEX0
-sampler texAlbedo;
-sampler texAlbedo2;
-#endif
 
 float4 main(VS_OUTPUT input) : COLOR
 {
     // 色計算
     //-------------
     float4 color;
-#if defined(TEXALBEDO)
+#ifdef TEXALBEDO
     //ディフューズテクスチャ参照
-    color = tex2D(texAlbedo, input.tex0);
-    color *= diffuse;
+    color = tex2D(texAlbedo, input.tex0.xy);
 #else
     color = diffuse;
 #endif
 
-#ifdef FRESNEL
+#ifdef PCOLOR
+    color *= input.color0;
+#endif
 
-    float3 L = dlDir;
-    float3 N = normalize(input.normal);
-    float3 E = normalize(camPos - input.pos0);
-    float3 H = normalize(L+E); //ハーフベクトル
+#ifdef LIGHTVS
 
-    float cosNL = max(c_fzero, dot(N,L));
-    float cosEH = max(c_fzero, dot(E,H));
-    float cosNH = max(c_fzero, dot(N,H));
+#ifdef TEXSHADE
+    float3 c = tex2D(texAlbedo2, input.tex2).xyz;
+    float3 power = min(dlColor.xyz * diffuse.xyz + ambient, c_fone);
 
-    float fd, fs;
-    calc_fresnel(fd, fs, fresnel, cosEH, cosNL);
+    color.xyz = (color.xyz * c) * power + dlColor.xyz*input.specular0.xyz;
 
-    float shininess = specular.w;
-
-    float rs = (c_fresnel0 * shininess + c_fresnel1) * fs * pow(cosNH, shininess);
-    float3 rd = (float3(c_fone, c_fone, c_fone) - specular.xyz*fd) * INV_PI;
-    color.xyz = (color.xyz * rd * cosNL + specular.xyz * rs) * dlColor.xyz + ambient * rd;
+#else
+    float3 power = min(dlColor.xyz * diffuse.xyz + ambient, c_fone);
+    color.xyz = (color.xyz * input.specular0.w) * power + dlColor.xyz*input.specular0.xyz;
+#endif //TEXSHADE
 
 #elif defined(TEXSHADE)
     float3 N = normalize(input.normal);
     float3 L = dlDir;
     float3 E = normalize(camPos - input.pos0);
-    //float3 E = normalize(input.pos0 - camPos);
-    float3 H = normalize(L+E); //ハーフベクトル
+    float3 H = normalize(L+E); //half vector
 
     float cosNL = max(c_fzero, dot(N,L));
-    float cosEH = max(c_fzero, dot(E,H));
     float cosNH = max(c_fzero, dot(N,H));
-    float cosNE = max(c_fzero, dot(N,E));
+    //float cosNE = max(c_fzero, dot(N,E));
 
     float2 sample;
-    sample.x = cosNE;
+    //sample.x = cosNE; //こちら側はカット
+    sample.x = cosNL;
     sample.y = cosNL;
 
     float3 c = tex2D(texAlbedo2, sample).xyz;
 
-    float fd, fs;
-    calc_fresnel(fd, fs, cosEH, cosNL);
-
     float shininess = specular.w;
 
-    float rs = (c_fresnel0 * shininess + c_fresnel1) * fs * pow(cosNH, shininess);
-    float3 rd = (float3(c_fone, c_fone, c_fone) - specular.xyz*fd);
+    float rs = pow(cosNH, shininess);
 
-    color.xyz = (color.xyz * c * rd + specular.xyz * rs) * dlColor.xyz + ambient * color.xyz;
+    color.xyz = (color.xyz * c + specular.xyz * rs) * dlColor.xyz + ambient * color.xyz;
 
 #elif defined(PNORMAL)
-    float3 N = normalize(input.normal);
+    float3 N = normalize(v_normal);
     float3 L = dlDir;
-    float3 E = normalize(camPos - input.pos0);
-    float3 H = normalize(L+E); //ハーフベクトル
+    float3 E = normalize(camPos - v_pos0);
+    float3 H = normalize(L+E); //half vector
 
-    float cosNL = max(c_fzero, dot(N,L));
-    float cosEH = max(c_fzero, dot(E,H));
     float cosNH = max(c_fzero, dot(N,H));
-
-    float fd, fs;
-    calc_fresnel(fd, fs, cosEH, cosNL);
+    //float cosNE = max(c_fzero, dot(N,E));
 
     float shininess = specular.w;
+    float rs = pow(cosNH, shininess);
 
-    float rs = (c_fresnel0 * shininess + c_fresnel1) * fs * pow(cosNH, shininess);
-    float3 rd = (float3(c_fone, c_fone, c_fone) - specular.xyz*fd);
-    color.xyz = (color.xyz * rd * cosNH + specular.xyz * rs) * dlColor.xyz + ambient * color.xyz;
+    color.xyz = (color.xyz * cosNH + specular.xyz * rs) * dlColor.xyz + ambient * color.xyz;
+
 #else
     color.xyz *= dlColor.xyz;
-#endif
-
-#ifdef PCOLOR
-    color.xyz *= input.color;
 #endif
 
 #ifdef EMISSIVE

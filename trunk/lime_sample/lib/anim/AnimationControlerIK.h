@@ -57,7 +57,7 @@ namespace lanim
         AnimationControlerIK(const AnimationControlerIK&);
         AnimationControlerIK& operator=(const AnimationControlerIK&);
 
-        void updateMatrix(const JointPose& jointPose, lmath::Matrix43* matrices, u8 jointIndex);
+        void updateMatrix(const JointPose& jointPose, lmath::Matrix34* matrices, u8 jointIndex);
 
         void updateMatrices(SkeletonPose& pose, u8 childIndex);
 

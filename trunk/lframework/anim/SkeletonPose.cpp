@@ -6,7 +6,7 @@
 */
 #include "SkeletonPose.h"
 #include "JointPose.h"
-#include <lmath/Matrix43.h>
+#include <lmath/Matrix34.h>
 
 namespace lanim
 {
@@ -23,7 +23,7 @@ namespace lanim
     {
         LASSERT(numJoints_>=0);
         localPoses_ = LIME_NEW JointPose[numJoints_];
-        matrix_ = LIME_NEW lmath::Matrix43[numJoints_];
+        matrix_ = LIME_NEW lmath::Matrix34[numJoints_];
         for(u32 i=0; i<numJoints_; ++i){
             matrix_[i].identity();
         }

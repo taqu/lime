@@ -67,6 +67,14 @@ namespace lgraphics
         bool lock(u32 offset, u32 size, void** data, Lock lock=Lock_None);
         void unlock();
 
+        /*
+        @brief データ転送。GL的インターフェイス
+        */
+        void blit(void* data, bool )
+        {
+            blit(data, 0, vertexSize_*vertexNum_);
+        }
+
         // データ転送
         void blit(const void* data, u32 offset, u32 size);
 

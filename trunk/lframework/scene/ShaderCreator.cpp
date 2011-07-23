@@ -104,6 +104,7 @@ namespace lscene
                 }
             }
         }
+
     }
 
 #if defined(LIME_GLES2)
@@ -153,7 +154,7 @@ namespace lscene
 
         u32 inputPSFlags = inputVSFlags;
 
-        lgraphics::ShaderKey vsKey(0, inputVSFlags, featureVSFlags); //頂点シェーダのフラグは上位ワードへ
+        lgraphics::ShaderKey vsKey(0, inputVSFlags, featureVSFlags);
         lgraphics::ShaderKey psKey(material.getShaderID(), inputPSFlags, featurePSFlags);
 
         // すでに登録されているか
@@ -185,17 +186,6 @@ namespace lscene
                     macros[numMacros++] = MacroNames[Macro_PPOS];
                 }
 
-                // 頂点カラーがあるか、拡散反射を頂点で計算するなら色出力。TODO:おかしい
-                //if( (featureVSFlags & Geometry::GeomFlag_DiffuseVS)
-                //    && (inputVSFlags & VFlag_Normal))
-                //{
-                //    macros[numMacros++] = MacroNames[Macro_PCOLOR];
-                //    macros[numMacros++] = MacroNames[Macro_VDIFFUSE];
-                //}else{
-                //    if(inputVSFlags & VFlag_Color0){
-                //        macros[numMacros++] = MacroNames[Macro_PCOLOR];
-                //    }
-                //}
                 if(featureVSFlags & Geometry::GeomFlag_Emissive){
                     macros[numMacros++] = MacroNames[Macro_PCOLOR];
                     macros[numMacros++] = MacroNames[Macro_EMISSIVE];
@@ -235,17 +225,6 @@ namespace lscene
                 }
 
             }else{
-
-                // 頂点カラーがあるか、拡散反射を頂点で計算するなら色出力。TODO:おかしい
-                //if( (featureVSFlags & Geometry::GeomFlag_DiffuseVS)
-                //    && (inputVSFlags & VFlag_Normal))
-                //{
-                //    macros[numMacros++] = MacroNames[Macro_PCOLOR];
-                //}else{
-                //    if(inputVSFlags & VFlag_Color0){
-                //        macros[numMacros++] = MacroNames[Macro_PCOLOR];
-                //    }
-                //}
 
                 if(inputPSFlags & VFlag_Normal){ //頂点フォーマットに法線があれば
                     if(featurePSFlags & Material::MatFlag_Fresnel)
@@ -347,15 +326,39 @@ namespace lscene
             ShaderVSBase*& retVS,
             ShaderPSBase*& retPS) const
     {
-        // TODO:とりあえず仮で頂点フォーマット決めうちフル
-        //----------------------------------------------------------
+        shader::ShaderID shaderID = shader::getShaderID( material.getShaderID() );
+
         u32 inputVSFlags = createGeometryInputFlags(geometry) | shader::VFlag_Pos0;
-        u32 inputPSFlags = inputVSFlags;
 
         u32 featureVSFlags = geometry.getFlags().get();
         u32 featurePSFlags = material.getFlags().get();
 
-        lgraphics::ShaderKey vsKey(0, (inputVSFlags<<16), featureVSFlags); //頂点シェーダのフラグは上位ワードへ
+        if(inputVSFlags & VFlag_Normal){ //法線の入力はあるが使用しない場合
+            if((featurePSFlags & Material::MatFlag_Fresnel)
+                || (featurePSFlags & Material::MatFlag_TexGrad)
+                || (shaderID == Shader_Phong))
+            {
+            }else{
+                inputVSFlags &= ~(VFlag_Normal);
+            }
+        }
+
+
+        if(featurePSFlags & Material::MatFlag_LightingVS){
+            featureVSFlags |= Geometry::GeomFlag_LightingVS;
+            geometry.getFlags().setFlag( Geometry::GeomFlag_LightingVS );
+
+            //
+            if(featurePSFlags & Material::MatFlag_TexGrad){
+
+                featureVSFlags |= Geometry::GeomFlag_TexGrad;
+                geometry.getFlags().setFlag( Geometry::GeomFlag_TexGrad );
+            }
+        }
+
+        u32 inputPSFlags = inputVSFlags;
+
+        lgraphics::ShaderKey vsKey(0, inputVSFlags, featureVSFlags);
         lgraphics::ShaderKey psKey(material.getShaderID(), inputPSFlags, featurePSFlags);
 
         // すでに登録されているか
@@ -373,27 +376,29 @@ namespace lscene
             // 入力のマクロ生成
             addVertexDeclarationMacrosVS(geometry.getGeometryBuffer()->getDecl(), macros, numMacros);
 
-            if(featurePSFlags & Material::MatFlag_Fresnel
-                || featurePSFlags & Material::MatFlag_TexGrad
-                || inputVSFlags & VFlag_Normal)
-            {
-                macros[numMacros++] = MacroNames[Macro_PPOS];
+            if(featureVSFlags & Geometry::GeomFlag_LightingVS){
+                macros[numMacros++] = MacroNames[Macro_LightingVS];
+
+                if(featureVSFlags & Geometry::GeomFlag_TexGrad){
+                    macros[numMacros++] = MacroNames[Macro_TEXSHADE];
+                }
+
+            }else{
+
+                if(inputVSFlags & VFlag_Normal){
+                    macros[numMacros++] = MacroNames[Macro_PNORMAL];
+                    macros[numMacros++] = MacroNames[Macro_PPOS];
+                }
+
+                if(featureVSFlags & Geometry::GeomFlag_Emissive){
+                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+                    macros[numMacros++] = MacroNames[Macro_EMISSIVE];
+                }
+
             }
 
             if(inputVSFlags & VFlag_Tex0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
-            }
-
-            // 頂点カラーがあるか、拡散反射を頂点で計算するなら色出力
-            if( (featureVSFlags & Geometry::GeomFlag_DiffuseVS)
-                && (inputVSFlags & VFlag_Normal))
-            {
-                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
-                    macros[numMacros++] = MacroNames[Macro_VDIFFUSE];
-            }else{
-                if(inputVSFlags & VFlag_Color0){
-                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
-                }
             }
 
             //スキニングあり？
@@ -420,50 +425,52 @@ namespace lscene
             const char* macros[Macro_Num];
             u32 numMacros = 0;
 
-            macros[numMacros++] = MacroNames[Macro_PPOS];
+            if( featurePSFlags & Material::MatFlag_LightingVS){
+                macros[numMacros++] = MacroNames[Macro_LightingVS];
 
-            // 頂点カラーがあるか、拡散反射を頂点で計算するなら色出力
-            if( (featureVSFlags & Geometry::GeomFlag_DiffuseVS)
-                && (inputVSFlags & VFlag_Normal))
-            {
-                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
-            }else{
-                if(inputVSFlags & VFlag_Color0){
-                    macros[numMacros++] = MacroNames[Macro_PCOLOR];
+                if(featurePSFlags & Material::MatFlag_TexGrad){
+                    macros[numMacros++] = MacroNames[Macro_TEXSHADE];
                 }
+
+            }else{
+
+                if(inputPSFlags & VFlag_Normal){ //頂点フォーマットに法線があれば
+                    if(featurePSFlags & Material::MatFlag_Fresnel)
+                    {
+                        macros[numMacros++] = MacroNames[Macro_FRESNEL];
+                        macros[numMacros++] = MacroNames[Macro_PNORMAL];
+                        macros[numMacros++] = MacroNames[Macro_PPOS];
+
+                    }else if(featurePSFlags & Material::MatFlag_TexGrad){
+                        macros[numMacros++] = MacroNames[Macro_TEXSHADE];
+                        macros[numMacros++] = MacroNames[Macro_PNORMAL];
+                        macros[numMacros++] = MacroNames[Macro_PPOS];
+
+                    }else if(shaderID == Shader_Phong){
+                        macros[numMacros++] = MacroNames[Macro_PNORMAL];
+                        macros[numMacros++] = MacroNames[Macro_PPOS];
+                    }
+                }
+
             }
 
-            if(inputVSFlags & VFlag_Normal){ //頂点フォーマットに法線があれば
-                macros[numMacros++] = MacroNames[Macro_PNORMAL];
-                macros[numMacros++] = MacroNames[Macro_PPOS];
-            }
-
-            if(inputVSFlags & VFlag_Normal
-                && featurePSFlags & Material::MatFlag_Fresnel){
-                macros[numMacros++] = MacroNames[Macro_FRESNEL];
-            }
-
+            //発光
             if(featurePSFlags & Material::MatFlag_Emissive){
                 macros[numMacros++] = MacroNames[Macro_EMISSIVE];
             }
 
-            if((inputVSFlags & VFlag_Tex0) && material.getTextureNum()>0){
+            //アルファテスト
+            if(featurePSFlags & Material::MatFlag_AlphaTest){
+                macros[numMacros++] = MacroNames[Macro_ALPHATEST];
+                //lcore::Log("alpha test");
+            }
+
+            if(inputPSFlags & VFlag_Tex0){
                 macros[numMacros++] = MacroNames[Macro_PTEX0];
+            }
 
-                // 法線あり、テクスチャでグラディエーションフラグ、テクスチャありなら
-                if(inputVSFlags & VFlag_Normal
-                    && featurePSFlags & Material::MatFlag_TexGrad
-                    && material.getTextureNum()>=2
-                    && material.getTexture(1).valid())
-                {
-                    macros[numMacros++] = MacroNames[Macro_TEXSHADE];
-                }
-
-                if(featurePSFlags & Material::MatFlag_TexAlbedo
-                    && material.getTexture(0).valid())
-                {
-                    macros[numMacros++] = MacroNames[Macro_TEXALBEDO];
-                }
+            if(featurePSFlags & Material::MatFlag_TexAlbedo){
+                macros[numMacros++] = MacroNames[Macro_TEXALBEDO];
             }
 
             shader::ShaderID shaderID = shader::getShaderID( material.getShaderID() );

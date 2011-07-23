@@ -61,6 +61,7 @@ namespace lgraphics
         Usage_DoNotClip,
         Usage_Dynamic,
         Usage_RenderTarget,
+        Usage_WriteOnly,
     };
 
     enum Lock

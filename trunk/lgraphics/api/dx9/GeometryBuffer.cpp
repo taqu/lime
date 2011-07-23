@@ -23,7 +23,7 @@ namespace lgraphics
     GeometryBuffer::GeometryBuffer(PrimitiveType type, const VertexDeclarationRef& decl, const VertexBufferRef& vb, const IndexBufferRef& ib)
         :refCount_(0)
         ,type_(type)
-        ,numStreams_(0)
+        ,numStreams_(1)
         ,decl_(decl)
         ,indexBuffer_(ib)
     {

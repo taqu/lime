@@ -23,18 +23,18 @@ namespace viewer
         {
             static const f32 ratio = (1.0f/255.0f);
 
-            dst._x = ratio * c0[0];
-            dst._y = ratio * c0[1];
-            dst._z = ratio * c0[2];
+            dst.x_ = ratio * c0[0];
+            dst.y_ = ratio * c0[1];
+            dst.z_ = ratio * c0[2];
         }
 
         inline void lerp(lmath::Vector4& dst, const u8* c0, const u8* c1, f32 blend)
         {
             blend *= (1.0f/255.0f);
             f32 b2= (1.0f/255.0f) - blend;
-            dst._x = b2 * c0[0] + blend * c1[0];
-            dst._y = b2 * c0[1] + blend * c1[1];
-            dst._z = b2 * c0[2] + blend * c1[2];
+            dst.x_ = b2 * c0[0] + blend * c1[0];
+            dst.y_ = b2 * c0[1] + blend * c1[1];
+            dst.z_ = b2 * c0[2] + blend * c1[2];
         }
     }
 

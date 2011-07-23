@@ -6,7 +6,7 @@
 #include <lcore/lcore.h>
 #include "Quaternion.h"
 #include "Vector3.h"
-#include "Matrix43.h"
+#include "Matrix34.h"
 
 namespace lmath
 {
@@ -138,27 +138,8 @@ namespace lmath
 
     }
 
-    void Quaternion::getMatrix(lmath::Matrix43& mat) const
+    void Quaternion::getMatrix(lmath::Matrix34& mat) const
     {
-//#if defined(ANDROID)
-#if 0
-        f64 x2 = x_ * x_ * 2.0;
-        f64 y2 = y_ * y_ * 2.0;
-        f64 z2 = z_ * z_ * 2.0;
-
-        f64 wx = w_ * x_ * 2.0;
-        f64 wy = w_ * y_ * 2.0;
-        f64 wz = w_ * z_ * 2.0;
-        f64 xy = x_ * y_ * 2.0;
-        f64 xz = x_ * z_ * 2.0;
-        f64 yz = y_ * z_ * 2.0;
-
-        mat.set(1.0-y2-z2,      xy+wz,      xz-wy,
-            xy-wz, 1.0-x2-z2,      yz+wx,
-            xz+wy,      yz-wx, 1.0-x2-y2,
-            0.0, 0.0, 0.0);
-
-#else
         f32 x2 = x_ * x_ * 2.0f;
         f32 y2 = y_ * y_ * 2.0f;
         f32 z2 = z_ * z_ * 2.0f;
@@ -170,10 +151,15 @@ namespace lmath
         f32 xz = x_ * z_ * 2.0f;
         f32 yz = y_ * z_ * 2.0f;
 
-        mat.set(1.0f-y2-z2,      xy+wz,      xz-wy,
-            xy-wz, 1.0f-x2-z2,      yz+wx,
-            xz+wy,      yz-wx, 1.0f-x2-y2,
-            0.0f, 0.0f, 0.0f);
+#if 0
+        mat.set(1.0f-y2-z2, xy+wz,      xz-wy,      0.0f,
+                xy-wz,      1.0f-x2-z2, yz+wx,      0.0f,
+                xz+wy,      yz-wx,      1.0f-x2-y2, 0.0f);
+
+#else
+        mat.set(1.0f-y2-z2, xy-wz,      xz+wy,      0.0f,
+                xy+wz,      1.0f-x2-z2, yz-wx,      0.0f,
+                xz-wy,      yz+wx,      1.0f-x2-y2, 0.0f);
 #endif
     }
 
@@ -238,15 +224,15 @@ namespace lmath
     void Quaternion::mul(const Vector3& v, const Quaternion& q)
     {
 #if 0
-        f32 w = - v._x * q.x_ - v._y * q.y_ - v._z * q.z_;
-        f32 x = + v._x * q.w_ + v._y * q.z_ - v._z * q.y_;
-        f32 y = - v._x * q.z_ + v._y * q.w_ + v._z * q.x_;
-        f32 z = + v._x * q.y_ - v._y * q.x_ + v._z * q.w_;
+        f32 w = - v.x_ * q.x_ - v.y_ * q.y_ - v.z_ * q.z_;
+        f32 x = + v.x_ * q.w_ + v.y_ * q.z_ - v.z_ * q.y_;
+        f32 y = - v.x_ * q.z_ + v.y_ * q.w_ + v.z_ * q.x_;
+        f32 z = + v.x_ * q.y_ - v.y_ * q.x_ + v.z_ * q.w_;
 #else
-        f32 w = - v._x * q.x_ - v._y * q.y_ - v._z * q.z_;
-        f32 x = + v._x * q.w_ - v._y * q.z_ + v._z * q.y_;
-        f32 y = + v._x * q.z_ + v._y * q.w_ - v._z * q.x_;
-        f32 z = - v._x * q.y_ + v._y * q.x_ + v._z * q.w_;
+        f32 w = - v.x_ * q.x_ - v.y_ * q.y_ - v.z_ * q.z_;
+        f32 x = + v.x_ * q.w_ - v.y_ * q.z_ + v.z_ * q.y_;
+        f32 y = + v.x_ * q.z_ + v.y_ * q.w_ - v.z_ * q.x_;
+        f32 z = - v.x_ * q.y_ + v.y_ * q.x_ + v.z_ * q.w_;
 #endif
         w_ = w;
         x_ = x;
@@ -257,16 +243,16 @@ namespace lmath
     void Quaternion::mul(const Quaternion& q, const Vector3& v)
     {
 #if 0
-        f32 w =             - q.x_ * v._x - q.y_ * v._y - q.z_ * v._z;
-        f32 x = q.w_ * v._x               + q.y_ * v._z - q.z_ * v._y;
-        f32 y = q.w_ * v._y - q.x_ * v._z               + q.z_ * v._x;
-        f32 z = q.w_ * v._z + q.x_ * v._y - q.y_ * v._x;
+        f32 w =             - q.x_ * v.x_ - q.y_ * v.y_ - q.z_ * v.z_;
+        f32 x = q.w_ * v.x_               + q.y_ * v.z_ - q.z_ * v.y_;
+        f32 y = q.w_ * v.y_ - q.x_ * v.z_               + q.z_ * v.x_;
+        f32 z = q.w_ * v.z_ + q.x_ * v.y_ - q.y_ * v.x_;
 #else
         
-        f32 w =             - q.x_ * v._x - q.y_ * v._y - q.z_ * v._z;
-        f32 x = q.w_ * v._x               - q.y_ * v._z + q.z_ * v._y;
-        f32 y = q.w_ * v._y + q.x_ * v._z               - q.z_ * v._x;
-        f32 z = q.w_ * v._z - q.x_ * v._y + q.y_ * v._x;
+        f32 w =             - q.x_ * v.x_ - q.y_ * v.y_ - q.z_ * v.z_;
+        f32 x = q.w_ * v.x_               - q.y_ * v.z_ + q.z_ * v.y_;
+        f32 y = q.w_ * v.y_ + q.x_ * v.z_               - q.z_ * v.x_;
+        f32 z = q.w_ * v.z_ - q.x_ * v.y_ + q.y_ * v.x_;
 #endif
         w_ = w;
         x_ = x;

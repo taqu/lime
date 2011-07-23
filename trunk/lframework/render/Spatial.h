@@ -18,7 +18,7 @@ namespace lrender
         /**
         @brief ワールドマトリックスセット
         */
-        void setWorldMatrix(const lmath::Matrix43& matrix)
+        void setWorldMatrix(const lmath::Matrix34& matrix)
         {
             matrix_ = matrix;
         }
@@ -26,7 +26,7 @@ namespace lrender
         /**
         @brief ワールドマトリックス取得
         */
-        const lmath::Matrix43& getWorldMatrix() const
+        const lmath::Matrix34& getWorldMatrix() const
         {
             return matrix_;
         }
@@ -36,7 +36,7 @@ namespace lrender
 
         直に触りたいこともあるよね
         */
-        lmath::Matrix43& getWorldMatrix()
+        lmath::Matrix34& getWorldMatrix()
         {
             return matrix_;
         }
@@ -66,7 +66,7 @@ namespace lrender
 
         ~Spatial(){}
 
-        lmath::Matrix43 matrix_;
+        lmath::Matrix34 matrix_;
         //lmath::Vector4 BSphere_; //境界球
     };
 }

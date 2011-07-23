@@ -23,12 +23,12 @@ namespace lmath
         {}
 
         Vector4(f32 x, f32 y, f32 z, f32 w)
-            :_x(x), _y(y), _z(z), _w(w)
+            :x_(x), y_(y), z_(z), w_(w)
         {}
 
         inline void set(f32 x, f32 y, f32 z, f32 w)
         {
-            _x = x; _y = y; _z = z; _w = w;
+            x_ = x; y_ = y; z_ = z; w_ = w;
         }
 
         inline f32 operator[](s32 index) const;
@@ -56,14 +56,14 @@ namespace lmath
 
         void setLerp(const Vector4& v1, const Vector4& v2, f32 f);
 
-        void mul(const Vector4& vector, const Matrix44& matrix);
-        void mul(const Matrix44& matrix, const Vector4& vector);
+        void mul(const Matrix44& m, const Vector4& v);
+        void mul(const Vector4& v, const Matrix44& m);
 
         inline void swap(Vector4& rhs);
 
         inline bool isNan() const;
 
-        f32 _x, _y, _z, _w;
+        f32 x_, y_, z_, w_;
     };
 
     //--------------------------------------------
@@ -76,7 +76,7 @@ namespace lmath
         LASSERT(0<=index
             && index < 4);
 
-        return (&_x)[index];
+        return (&x_)[index];
     }
 
     inline f32& Vector4::operator[](s32 index)
@@ -84,38 +84,38 @@ namespace lmath
         LASSERT(0<=index
             && index < 4);
 
-        return (&_x)[index];
+        return (&x_)[index];
     }
 
     inline Vector4 Vector4::operator-() const
     {
-        return Vector4(-_x, -_y, -_z, -_w);
+        return Vector4(-x_, -y_, -z_, -w_);
     }
 
     inline Vector4& Vector4::operator+=(const Vector4& v)
     {
-        _x += v._x;
-        _y += v._y;
-        _z += v._z;
-        _w += v._w;
+        x_ += v.x_;
+        y_ += v.y_;
+        z_ += v.z_;
+        w_ += v.w_;
         return *this;
     }
 
     inline Vector4& Vector4::operator-=(const Vector4& v)
     {
-        _x -= v._x;
-        _y -= v._y;
-        _z -= v._z;
-        _w -= v._w;
+        x_ -= v.x_;
+        y_ -= v.y_;
+        z_ -= v.z_;
+        w_ -= v.w_;
         return *this;
     }
 
     inline Vector4& Vector4::operator*=(f32 f)
     {
-        _x *= f;
-        _y *= f;
-        _z *= f;
-        _w *= f;
+        x_ *= f;
+        y_ *= f;
+        z_ *= f;
+        w_ *= f;
         return *this;
     }
 
@@ -123,10 +123,10 @@ namespace lmath
     {
         LASSERT(!lmath::isEqual(f, 0.0f));
         f = 1.0f / f;
-        _x *= f;
-        _y *= f;
-        _z *= f;
-        _w *= f;
+        x_ *= f;
+        y_ *= f;
+        z_ *= f;
+        w_ *= f;
         return *this;
     }
 
@@ -148,7 +148,7 @@ namespace lmath
 
     inline f32 Vector4::lengthSqr() const
     {
-        return ( _x * _x + _y * _y + _z * _z + _w * _w);
+        return ( x_ * x_ + y_ * y_ + z_ * z_ + w_ * w_);
     }
 
     inline f32 Vector4::distance(const Vector4& v) const
@@ -168,15 +168,15 @@ namespace lmath
 
     inline void Vector4::swap(Vector4& rhs)
     {
-        lcore::swap(_x, rhs._x);
-        lcore::swap(_y, rhs._y);
-        lcore::swap(_z, rhs._z);
-        lcore::swap(_w, rhs._w);
+        lcore::swap(x_, rhs.x_);
+        lcore::swap(y_, rhs.y_);
+        lcore::swap(z_, rhs.z_);
+        lcore::swap(w_, rhs.w_);
     }
 
     inline bool Vector4::isNan() const
     {
-        return (lcore::isNan(_x) || lcore::isNan(_y) || lcore::isNan(_z) || lcore::isNan(_w));
+        return (lcore::isNan(x_) || lcore::isNan(y_) || lcore::isNan(z_) || lcore::isNan(w_));
     }
 }
 

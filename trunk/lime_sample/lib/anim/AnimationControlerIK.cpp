@@ -69,9 +69,9 @@ namespace
 
     namespace
     {
-        inline void transformPosition(lmath::Vector3& dst, const lmath::Vector3& src, lmath::Matrix43 *matrices, s32 index)
+        inline void transformPosition(lmath::Vector3& dst, const lmath::Vector3& src, lmath::Matrix34 *matrices, s32 index)
         {
-            dst.mul(src, matrices[index]);
+            dst.mul(matrices[index], src);
         }
 
         /**
@@ -84,7 +84,7 @@ namespace
                 return false;
             }
             f32 l = lmath::rsqrt_22bit(length);
-            dst.set( src._x*l, src._y*l, src._z*l);
+            dst.set( src.x_*l, src.y_*l, src.z_*l);
             return true;
         }
     }
@@ -96,7 +96,7 @@ namespace
             return 0.0f;
         }
 
-        lmath::Matrix43 *matrices = pose.getMatrices();
+        lmath::Matrix34 *matrices = pose.getMatrices();
 
         lmath::Vector3 targetPos, effectorPos, jointPos, parentPos;
 
@@ -158,8 +158,8 @@ namespace
         }
 
         JointPose* poses = pose.getPoses();
-        lmath::Matrix43 *matrices = pose.getMatrices();
-        lmath::Matrix43 matInv;
+        lmath::Matrix34 *matrices = pose.getMatrices();
+        lmath::Matrix34 matInv;
         lmath::Quaternion rotation;
         lmath::Vector3 targetPos, effectorPos;
         lmath::Vector3 localTargetPos, localEffectorPos;
@@ -202,8 +202,8 @@ namespace
                     matInv.preTranslate( child.getPosition() );
                     matInv.invert();
 
-                    localTargetPos.mul(targetPos, matInv);
-                    localEffectorPos.mul(effectorPos, matInv);
+                    localTargetPos.mul(matInv, targetPos);
+                    localEffectorPos.mul(matInv, effectorPos);
 
                     //原点からの距離が0ならなにもしない
                     ltot = localTargetPos.lengthSqr();
@@ -275,6 +275,7 @@ namespace
                     }
 
                     LASSERT(false == rotation.isNan());
+                    //poses[childIndex].rotation_ *= rotation;
                     poses[childIndex].rotation_.mul(rotation, poses[childIndex].rotation_);
                     poses[childIndex].rotation_.normalize();
 
@@ -289,28 +290,29 @@ namespace
 
     }
 
-    void AnimationControlerIK::updateMatrix(const JointPose& jointPose, lmath::Matrix43* matrices, u8 jointIndex)
+    void AnimationControlerIK::updateMatrix(const JointPose& jointPose, lmath::Matrix34* matrices, u8 jointIndex)
     {
-        lmath::Matrix43& mat = matrices[ jointIndex ];
+        lmath::Matrix34& mat = matrices[ jointIndex ];
+        const Joint& joint = skeleton_->getJoint(jointIndex);
 
         jointPose.rotation_.getMatrix( mat );
+
+        mat.preTranslate( -joint.getPosition() );
         mat.translate( jointPose.translation_ );
         mat.translate( jointPose.offset_ );
 
-        const Joint& joint = skeleton_->getJoint(jointIndex);
+
 
         //親有なら親のマトリックスかける
         if(joint.getParentIndex() != lanim::InvalidJointIndex){
-            mat *= matrices[ joint.getParentIndex() ];
+            mat.mul( matrices[ joint.getParentIndex() ], mat );
         }
-
-        mat.preTranslate( -joint.getPosition() );
     }
 
     void AnimationControlerIK::updateMatrices(SkeletonPose& pose, u8 childIndex)
     {
         JointPose* poses = pose.getPoses();
-        lmath::Matrix43 *matrices = pose.getMatrices();
+        lmath::Matrix34 *matrices = pose.getMatrices();
 
         const JointPose& jointPose = poses[childIndex];
 
@@ -330,7 +332,7 @@ namespace
     {
         //TODO:再帰を無くすorスタック消費を抑える
         JointPose* poses = pose.getPoses();
-        lmath::Matrix43 *matrices = pose.getMatrices();
+        lmath::Matrix34 *matrices = pose.getMatrices();
 
         //子更新
         for(u8 i=jointIndex+1; i<pose.getNumJoints(); ++i){
@@ -348,7 +350,7 @@ namespace
     inline void AnimationControlerIK::updateMatrices(SkeletonPose& pose, const IKEntry& entry, u16 ikIndex)
     {
         JointPose* poses = pose.getPoses();
-        lmath::Matrix43 *matrices = pose.getMatrices();
+        lmath::Matrix34 *matrices = pose.getMatrices();
 
 
         for(s32 i=ikIndex; i>=0; --i){

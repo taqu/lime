@@ -10,26 +10,26 @@ namespace lmath
 {
     bool Vector4::isEqual(const Vector4& v) const
     {
-        return ( lmath::isEqual(_x, v._x)
-            && lmath::isEqual(_y, v._y)
-            && lmath::isEqual(_z, v._z)
-            && lmath::isEqual(_w, v._w));
+        return ( lmath::isEqual(x_, v.x_)
+            && lmath::isEqual(y_, v.y_)
+            && lmath::isEqual(z_, v.z_)
+            && lmath::isEqual(w_, v.w_));
     }
 
     bool Vector4::isEqual(const Vector4& v, f32 epsilon) const
     {
-        return ( lmath::isEqual(_x, v._x, epsilon)
-            && lmath::isEqual(_y, v._y, epsilon)
-            && lmath::isEqual(_z, v._z, epsilon)
-            && lmath::isEqual(_w, v._w, epsilon));
+        return ( lmath::isEqual(x_, v.x_, epsilon)
+            && lmath::isEqual(y_, v.y_, epsilon)
+            && lmath::isEqual(z_, v.z_, epsilon)
+            && lmath::isEqual(w_, v.w_, epsilon));
     }
 
     f32 Vector4::distanceSqr(const Vector4& v) const
     {
-        const f32 dx = _x - v._x;
-        const f32 dy = _y - v._y;
-        const f32 dz = _z - v._z;
-        const f32 dw = _w - v._w;
+        const f32 dx = x_ - v.x_;
+        const f32 dy = y_ - v.y_;
+        const f32 dz = z_ - v.z_;
+        const f32 dw = w_ - v.w_;
         return ( dx * dx + dy * dy + dz * dz + dw * dw);
     }
 
@@ -47,17 +47,30 @@ namespace lmath
         }
     }
 
-    void Vector4::mul(const Vector4& vector, const Matrix44& matrix)
+    void Vector4::mul(const Matrix44& m, const Vector4& v)
     {
-        for(s32 i=0; i<4; ++i){
-            (*this)[i] = vector[0] * matrix(0, i) + vector[1] * matrix(1, i) + vector[2] * matrix(2, i) + vector[3] * matrix(i, 3);
-        }
+        f32 x, y, z, w;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[0][1] + v.z_ * m.m_[0][2] + v.w_ * m.m_[0][3];
+        y = v.x_ * m.m_[1][0] + v.y_ * m.m_[1][1] + v.z_ * m.m_[1][2] + v.w_ * m.m_[1][3];
+        z = v.x_ * m.m_[2][0] + v.y_ * m.m_[2][1] + v.z_ * m.m_[2][2] + v.w_ * m.m_[2][3];
+        w = v.x_ * m.m_[3][0] + v.y_ * m.m_[3][1] + v.z_ * m.m_[3][2] + v.w_ * m.m_[3][3];
+        x_ = x;
+        y_ = y;
+        z_ = z;
+        w_ = w;
     }
 
-    void Vector4::mul(const Matrix44& matrix, const Vector4& vector)
+    void Vector4::mul(const Vector4& v, const Matrix44& m)
     {
-        for(s32 i=0; i<4; ++i){
-            (*this)[i] = vector[0] * matrix(i, 0) + vector[1] * matrix(i, 1) + vector[2] * matrix(i, 2) + vector[3] * matrix(i, 3);
-        }
+        f32 x, y, z, w;
+        x = v.x_ * m.m_[0][0] + v.y_ * m.m_[1][0] + v.z_ * m.m_[2][0] + v.w_ * m.m_[3][0];
+        y = v.x_ * m.m_[0][1] + v.y_ * m.m_[1][1] + v.z_ * m.m_[2][1] + v.w_ * m.m_[3][1];
+        z = v.x_ * m.m_[0][2] + v.y_ * m.m_[1][2] + v.z_ * m.m_[2][2] + v.w_ * m.m_[3][2];
+        w = v.x_ * m.m_[0][3] + v.y_ * m.m_[1][3] + v.z_ * m.m_[2][3] + v.w_ * m.m_[3][3];
+
+        x_ = x;
+        y_ = y;
+        z_ = z;
+        w_ = w;
     }
 }

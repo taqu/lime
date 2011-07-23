@@ -217,11 +217,11 @@
 			>
 		</File>
 		<File
-			RelativePath="..\Matrix43.cpp"
+			RelativePath="..\Matrix34.cpp"
 			>
 		</File>
 		<File
-			RelativePath="..\Matrix43.h"
+			RelativePath="..\Matrix34.h"
 			>
 		</File>
 		<File

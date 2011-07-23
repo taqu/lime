@@ -413,7 +413,7 @@ namespace
             Skin& skin = skins[0];
             skinIndices = LIME_NEW u16[skin.numVertices_];
             for(u32 i=0; i<skin.numVertices_; ++i){
-                skinIndices[i] = skin.vertices_[i].index_;
+                skinIndices[i] = static_cast<u16>( skin.vertices_[i].index_ );
             }
         }
 

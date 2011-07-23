@@ -4,7 +4,7 @@
 @date 2009/11/16
 */
 #include "DualQuaternion.h"
-#include "Matrix43.h"
+#include "Matrix34.h"
 
 namespace lmath
 {
@@ -19,7 +19,7 @@ namespace lmath
         dq_[1] *= -invRot;
     }
 
-    void DualQuaternion::getMatrix(lmath::Matrix43& mat) const
+    void DualQuaternion::getMatrix(lmath::Matrix34& mat) const
     {
         f32 length2 = dq_[0].lengthSqr();
 
@@ -35,21 +35,21 @@ namespace lmath
         const f32 t2 = dq_[1].y_;
         const f32 t3 = dq_[1].z_;
 
-        mat(0,0) = w*w + x*x - y*y - z*z;
-        mat(1,0) = 2.0f * (x*y - w*z);
-        mat(2,0) = 2.0f * (x*z + w*y);
+        mat.m_[0][0] = w*w + x*x - y*y - z*z;
+        mat.m_[0][1] = 2.0f * (x*y - w*z);
+        mat.m_[0][2] = 2.0f * (x*z + w*y);
 
-        mat(0,1) = 2.0f * (x*y + w*z);
-        mat(1,1) = w*w + y*y - x*x - z*z;
-        mat(2,1) = 2.0f * (y*z - w*x);
+        mat.m_[1][0] = 2.0f * (x*y + w*z);
+        mat.m_[1][1] = w*w + y*y - x*x - z*z;
+        mat.m_[1][2] = 2.0f * (y*z - w*x);
 
-        mat(0,2) = 2.0f * (x*z - w*y);
-        mat(1,2) = 2.0f * (y*z + w*x);
-        mat(2,2) = w*w + z*z - x*x - y*y;
+        mat.m_[2][0] = 2.0f * (x*z - w*y);
+        mat.m_[2][1] = 2.0f * (y*z + w*x);
+        mat.m_[2][2] = w*w + z*z - x*x - y*y;
 
-        mat(3,0) = 2.0f * (-t0*x + t1*w - t2*z + t3*y);
-        mat(3,1) = 2.0f * (-t0*y + t1*z - t3*x + t2*w);
-        mat(3,2) = 2.0f * (-t0*z + t2*x + t3*w - t1*y);
+        mat.m_[0][3] = 2.0f * (-t0*x + t1*w - t2*z + t3*y);
+        mat.m_[1][3] = 2.0f * (-t0*y + t1*z - t3*x + t2*w);
+        mat.m_[2][3] = 2.0f * (-t0*z + t2*x + t3*w - t1*y);
 
         f32 invLeng2 = 1.0f/length2;
         mat *= invLeng2;

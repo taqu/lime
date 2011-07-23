@@ -1,0 +1,189 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectName>lframework</ProjectName>
+    <ProjectGuid>{3CC20D0E-9C08-4364-BD1B-CB5C5A6C9251}</ProjectGuid>
+    <RootNamespace>lframework</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)\lib\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(Configuration)\</IntDir>
+    <OutDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)\lib\</OutDir>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>..\..\;..\..\ext\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LIME_DX9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <ProgramDataBaseFileName>$(OutDir)$(ProjectName)_dx9_vc100_d.pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level4</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <DisableSpecificWarnings>4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <Lib>
+      <AdditionalDependencies>lcore_vc100_d.lib;lmath_vc100_d.lib;lgraphics_dx9_vc100_d.lib;lfont_vc100_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(ProjectName)_dx9_vc100_d.lib</OutputFile>
+      <AdditionalLibraryDirectories>..\..\lib;..\..\ext\win32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>MaxSpeed</Optimization>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <AdditionalIncludeDirectories>..\..\;..\..\ext\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;LIME_DX9;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <ProgramDataBaseFileName>$(OutDir)$(ProjectName)_dx9_vc100.pdb</ProgramDataBaseFileName>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DisableSpecificWarnings>4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <Lib>
+      <AdditionalDependencies>lcore_vc100.lib;lmath_vc100.lib;lgraphics_dx9_vc100.lib;lfont_vc100.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(ProjectName)_dx9_vc100.lib</OutputFile>
+      <AdditionalLibraryDirectories>..\..\lib;..\..\ext\win32\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+    </Lib>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\render\Batch.cpp" />
+    <ClCompile Include="..\render\Drawable.cpp" />
+    <ClCompile Include="..\render\PassMain.cpp" />
+    <ClCompile Include="..\render\RenderingSystem.cpp" />
+    <ClCompile Include="..\anim\AnimationClip.cpp" />
+    <ClCompile Include="..\anim\AnimationControler.cpp" />
+    <ClCompile Include="..\anim\AnimationControlerPartial.cpp" />
+    <ClCompile Include="..\anim\AnimationSystem.cpp" />
+    <ClCompile Include="..\anim\IKPack.cpp" />
+    <ClCompile Include="..\anim\JointAnimation.cpp" />
+    <ClCompile Include="..\anim\Skeleton.cpp" />
+    <ClCompile Include="..\anim\SkeletonPose.cpp" />
+    <ClCompile Include="..\scene\AnimObject.cpp" />
+    <ClCompile Include="..\scene\Geometry.cpp" />
+    <ClCompile Include="..\scene\IOGeometry.cpp" />
+    <ClCompile Include="..\scene\IOHeader.cpp" />
+    <ClCompile Include="..\scene\IOMaterial.cpp" />
+    <ClCompile Include="..\scene\IOObject.cpp" />
+    <ClCompile Include="..\scene\Material.cpp" />
+    <ClCompile Include="..\scene\Object.cpp" />
+    <ClCompile Include="..\scene\ShaderCreator.cpp" />
+    <ClCompile Include="..\scene\ShaderManager.cpp" />
+    <ClCompile Include="..\scene\StaticString.cpp" />
+    <ClCompile Include="..\scene\shader\DefaultShader.cpp" />
+    <ClCompile Include="..\debug\DebugPrimitive.cpp" />
+    <ClCompile Include="..\Application.cpp" />
+    <ClCompile Include="..\IOUtil.cpp" />
+    <ClCompile Include="..\MessageDriven.cpp" />
+    <ClCompile Include="..\Static.cpp" />
+    <ClCompile Include="..\System.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\render\Batch.h" />
+    <ClInclude Include="..\render\Drawable.h" />
+    <ClInclude Include="..\render\lrender.h" />
+    <ClInclude Include="..\render\PassMain.h" />
+    <ClInclude Include="..\render\RenderingSystem.h" />
+    <ClInclude Include="..\render\Spatial.h" />
+    <ClInclude Include="..\anim\AnimationClip.h" />
+    <ClInclude Include="..\anim\AnimationControler.h" />
+    <ClInclude Include="..\anim\AnimationControlerPartial.h" />
+    <ClInclude Include="..\anim\AnimationSystem.h" />
+    <ClInclude Include="..\anim\IKPack.h" />
+    <ClInclude Include="..\anim\Joint.h" />
+    <ClInclude Include="..\anim\JointAnimation.h" />
+    <ClInclude Include="..\anim\JointPose.h" />
+    <ClInclude Include="..\anim\lanim.h" />
+    <ClInclude Include="..\anim\Skeleton.h" />
+    <ClInclude Include="..\anim\SkeletonPose.h" />
+    <ClInclude Include="..\scene\AnimObject.h" />
+    <ClInclude Include="..\scene\Camera.h" />
+    <ClInclude Include="..\scene\DirectionalLight.h" />
+    <ClInclude Include="..\scene\Geometry.h" />
+    <ClInclude Include="..\scene\IOGeometry.h" />
+    <ClInclude Include="..\scene\IOHeader.h" />
+    <ClInclude Include="..\scene\IOMaterial.h" />
+    <ClInclude Include="..\scene\IOObject.h" />
+    <ClInclude Include="..\scene\LightEnvironment.h" />
+    <ClInclude Include="..\scene\lscene.h" />
+    <ClInclude Include="..\scene\Material.h" />
+    <ClInclude Include="..\scene\Object.h" />
+    <ClInclude Include="..\scene\Scene.h" />
+    <ClInclude Include="..\scene\ShaderBase.h" />
+    <ClInclude Include="..\scene\ShaderCreator.h" />
+    <ClInclude Include="..\scene\ShaderManager.h" />
+    <ClInclude Include="..\scene\StaticString.h" />
+    <ClInclude Include="..\scene\shader\DefaultShader.h" />
+    <ClInclude Include="..\debug\DebugPrimitive.h" />
+    <ClInclude Include="..\Application.h" />
+    <ClInclude Include="..\Flags.h" />
+    <ClInclude Include="..\IOUtil.h" />
+    <ClInclude Include="..\lframework.h" />
+    <ClInclude Include="..\MessageDriven.h" />
+    <ClInclude Include="..\SectionID.h" />
+    <ClInclude Include="..\Static.h" />
+    <ClInclude Include="..\System.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\lcore\project\lcore.vcxproj">
+      <Project>{37544678-7aef-4a27-afb1-ee98c75dd8a0}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lfont\project\lfont.vcxproj">
+      <Project>{15fd3f76-cc09-4080-8be2-b636370fbb59}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lgraphics\project\lgraphics_dx9.vcxproj">
+      <Project>{aa50e557-01ad-486e-9818-b6ee71dbbdde}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+    <ProjectReference Include="..\..\lmath\project\lmath.vcxproj">
+      <Project>{47a8a0ce-31c1-420b-83a4-3097833e734f}</Project>
+      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
+    </ProjectReference>
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

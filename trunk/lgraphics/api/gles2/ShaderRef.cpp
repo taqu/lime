@@ -249,7 +249,7 @@ namespace lgraphics
         glUniformMatrix4fv(handle, 1, transpose, reinterpret_cast<const f32*>(&matrix));
     }
 
-    void ShaderRefBase::setMatrix(HANDLE handle, const lmath::Matrix43& matrix)
+    void ShaderRefBase::setMatrix(HANDLE handle, const lmath::Matrix34& matrix)
     {
         LASSERT(handle >=0);
         LASSERT(programID_ != NULL);
@@ -268,21 +268,21 @@ namespace lgraphics
     {
         LASSERT(handle >=0);
         LASSERT(programID_ != NULL);
-        glUniform2f(handle, vector._x, vector._y);
+        glUniform2f(handle, vector.x_, vector.y_);
     }
 
     void ShaderRefBase::setVector3(HANDLE handle, const lmath::Vector3& vector)
     {
         //LASSERT(handle >=0);
         LASSERT(programID_ != NULL);
-        glUniform3f(handle, vector._x, vector._y, vector._z);
+        glUniform3f(handle, vector.x_, vector.y_, vector.z_);
     }
 
     void ShaderRefBase::setVector4(HANDLE handle, const lmath::Vector4& vector)
     {
         //LASSERT(handle >=0);
         LASSERT(programID_ != NULL);
-        glUniform4f(handle, vector._x, vector._y, vector._z, vector._w);
+        glUniform4f(handle, vector.x_, vector.y_, vector.z_, vector.w_);
     }
 
     void ShaderRefBase::setVector4Array(HANDLE handle, const lmath::Vector4* vector, u32 count)

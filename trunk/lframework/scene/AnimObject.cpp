@@ -42,7 +42,7 @@ namespace lscene
         return (skeletonPose_ != NULL)? skeletonPose_->getNumJoints() : 0;
     }
 
-    const lmath::Matrix43* AnimObject::getGlobalJointPoses() const
+    const lmath::Matrix34* AnimObject::getGlobalJointPoses() const
     {
         LASSERT(skeletonPose_ != NULL);
         return skeletonPose_->getMatrices();

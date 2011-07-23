@@ -32,7 +32,6 @@ namespace lscene
             GeomFlag_Texture1 = (0x01U<<1),
             GeomFlag_TextureN = (0x01U<<2),
             GeomFlag_TextureS = (0x01U<<3),
-            GeomFlag_DiffuseVS = (0x01U<<4),
             GeomFlag_Skinning = (0x01U<<5),
             GeomFlag_LightingVS = (0x01U<<6),
             GeomFlag_Emissive = (0x01U<<7),

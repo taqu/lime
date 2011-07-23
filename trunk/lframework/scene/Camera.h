@@ -55,8 +55,8 @@ namespace lscene
 
         void updateMatrix()
         {
-            viewProjMatrix_ = viewMatrix_;
-            viewProjMatrix_ *= projMatrix_;
+            viewProjMatrix_ = projMatrix_;
+            viewProjMatrix_ *= viewMatrix_;
         }
 
     protected:

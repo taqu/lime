@@ -50,7 +50,7 @@ namespace lscene
         GeomHeader header;
 
         header.id_ = GeometryID;
-        header.primCount_ = geom.getPrimitiveCount();
+        header.primCount_ = static_cast<u16>( geom.getPrimitiveCount() );
         header.indexOffset_ = geom.getIndexOffset();
         header.numIndices_ = geom.getNumIndices();
         header.materialIndex_ = geom.getMaterialIndex();

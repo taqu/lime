@@ -9,7 +9,7 @@
 #include "Vector2.h"
 #include "Vector3.h"
 #include "Vector4.h"
-#include "Matrix43.h"
+#include "Matrix34.h"
 #include "Matrix44.h"
 
 #endif /*INC_LMATH_H__*/

@@ -68,7 +68,7 @@ namespace lscene
         void setColor(const lmath::Vector3& color, f32 intensity)
         {
             //先に明るさをかけておく
-            lightColor_.set(color._x*intensity, color._y*intensity, color._z*intensity, intensity);
+            lightColor_.set(color.x_*intensity, color.y_*intensity, color.z_*intensity, intensity);
         }
 
     private:

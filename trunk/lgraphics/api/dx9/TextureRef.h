@@ -65,6 +65,11 @@ namespace lgraphics
         u16 getLevels();
         bool getLevelDesc(u32 level, SurfaceDesc& desc);
 
+        /**
+        TODO:GLとインターフェイスを合わせるためだが、意味がないので混乱の元
+        */
+        void attach() const{}
+
         void attach(u32 index) const;
         void detach(){}
 

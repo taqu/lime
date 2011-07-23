@@ -109,7 +109,7 @@
 "#ifdef LIGHTVS\n"
 "    vec3 posLighting = position.xyz;\n"
 "#endif\n"
-"    position = mwvp * position;\n"
+"    position *= mwvp;\n"
 "//linear-z\n"
 "    position.z *= position.w;\n"
 "    gl_Position = position;\n"

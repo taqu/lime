@@ -11,7 +11,7 @@
 #include <lcore/Buffer.h>
 #include <lmath/Vector3.h>
 #include <lmath/Vector4.h>
-#include <lmath/Matrix43.h>
+#include <lmath/Matrix34.h>
 #include <lframework/anim/AnimationClip.h>
 #include "Pmd.h"
 
@@ -645,15 +645,15 @@ namespace pmm
         bool isDisp() const{ return isDisp_;}
         void setIsDisp(bool enable){ isDisp_ = enable;}
 
-        void setMatrix(const lmath::Matrix43& matrix){ matrix_ = matrix;}
+        void setMatrix(const lmath::Matrix34& matrix){ matrix_ = matrix;}
 
         void reset(u32 numModels, ModelPack* models);
         void update(u32 frame);
     private:
-        lmath::Matrix43 matrix_;
+        lmath::Matrix34 matrix_;
         lscene::Object* object_;
         const lscene::AnimObject* targetObject_;
-        const lmath::Matrix43* targetMat_;
+        const lmath::Matrix34* targetMat_;
         u8 bindBone_;
         bool alphaBlendEnable_;
         bool isDisp_;

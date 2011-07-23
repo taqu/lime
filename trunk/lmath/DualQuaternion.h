@@ -74,7 +74,7 @@ namespace lmath
 
         void inverse();
 
-        void getMatrix(lmath::Matrix43& mat) const;
+        void getMatrix(lmath::Matrix34& mat) const;
 
         void transform(lmath::Vector3& v) const;
 
