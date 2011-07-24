@@ -29,6 +29,7 @@ public class Config
 	private static final String TagCameraMode = "camera_mode";
 	private static final String TagScreenMode = "screen_mode";
 	private static final String TagAlphaTest = "alpha_test";
+	private static final String TagMipmap = "mipmap";
 	private static final String TagTextureCompress = "tex_compress";
 
 	public static final int Camera_Manual = 0;
@@ -127,6 +128,16 @@ public class Config
 	{
 	    alphaTest_ = alphaTest;
 	}
+	
+	public boolean isMipmap()
+	{
+		return mipmap_;
+	}
+	
+	public void setMipmap(boolean mipmap)
+	{
+		mipmap_ = mipmap;
+	}
 
 	public boolean isTextureCompress()
     {
@@ -195,6 +206,9 @@ public class Config
                         }else if(xmlPullParser.getName().equals(TagAlphaTest)){
                             alphaTest_ = Boolean.parseBoolean(xmlPullParser.nextText() );
                             
+                        } else if(xmlPullParser.getName().equals(TagMipmap)){
+                        	mipmap_ = Boolean.parseBoolean(xmlPullParser.nextText());
+                        	
                         }else if(xmlPullParser.getName().equals(TagTextureCompress)){
                             textureCompress_ = Boolean.parseBoolean( xmlPullParser.nextText() );
                         }
@@ -249,6 +263,10 @@ public class Config
             xmlSerializer.startTag(Empty, TagAlphaTest);
             xmlSerializer.text( Boolean.toString(alphaTest_) );
             xmlSerializer.endTag(Empty, TagAlphaTest);
+
+            xmlSerializer.startTag(Empty, TagMipmap);
+            xmlSerializer.text( Boolean.toString(mipmap_) );
+            xmlSerializer.endTag(Empty, TagMipmap);
             
             xmlSerializer.startTag(Empty, TagTextureCompress);
             xmlSerializer.text( Boolean.toString(textureCompress_) );
@@ -273,6 +291,7 @@ public class Config
 		cameraMode_ = Camera_Animation;
 	    screenMode_ = Screen_Rot0;
 	    alphaTest_ = false;
+	    mipmap_ = false;
 	    textureCompress_ = false;
 	}
 
@@ -284,5 +303,6 @@ public class Config
 	private int cameraMode_ = Camera_Animation;
 	private int screenMode_ = Screen_Rot0;
 	private boolean alphaTest_ = false;
+	private boolean mipmap_ = false;
 	private boolean textureCompress_ = false;
 }

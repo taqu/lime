@@ -31,8 +31,8 @@ namespace lmath
         ~Matrix44()
         {}
 
-        inline f32 operator()(s32 c, s32 r) const;
-        inline f32& operator()(s32 c, s32 r);
+        inline f32 operator()(s32 r, s32 c) const;
+        inline f32& operator()(s32 r, s32 c);
 
         Matrix44& operator*=(f32 f);
         Matrix44& operator*=(const Matrix44& rhs);

@@ -261,7 +261,7 @@ namespace io
         if(ret){
             texture = Texture::create(width, height, 1, Usage_None, format, Pool_Managed);
             if(texture.valid()){
-                texture.blit(0, width, height, buffer);
+                texture.blit(buffer);
             }else{
                 ret = false;
             }

@@ -253,6 +253,7 @@ namespace lgraphics
         case Buffer_B8G8R8:
             align = 1; //1バイトアライメント
             internalFormat = GL_RGB;
+
             break;
 
         case Buffer_A8R8G8B8: //バイト並び反転の必要あり

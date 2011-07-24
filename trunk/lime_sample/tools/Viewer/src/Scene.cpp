@@ -12,6 +12,7 @@
 #include <Pmd.h>
 #include <Vmd.h>
 #include <PmmDef.h>
+#include <Pmm.h>
 
 #include <lcore/liostream.h>
 #include <lgraphics/lgraphics.h>
@@ -57,13 +58,7 @@ namespace viewer
     struct Scene::Impl
     {
         Impl();
-        Impl(
-            u32 numModels,
-            pmm::ModelPack* modelPacks,
-            pmm::CameraAnimPack& cameraAnimPack,
-            pmm::LightAnimPack& lightAnimPack,
-            u32 numAccessories,
-            pmm::AccessoryPack* accPacks);
+        Impl(pmm::Loader& loader);
 
         ~Impl();
 
@@ -75,9 +70,13 @@ namespace viewer
 
         void setState(Scene::State state);
 
+        /// フレーム進行リセット
+        void resetFrame();
+
         Scene::State state_;
 
         u32 frameCounter_;
+        u32 startFrame_;
         u32 lastFrame_;
 
         u32 numModels_;
@@ -96,6 +95,7 @@ namespace viewer
     Scene::Impl::Impl()
         :state_(Scene::State_Stop)
         ,frameCounter_(0)
+        ,startFrame_(0)
         ,lastFrame_(0)
         ,numModels_(0)
         ,modelPacks_(NULL)
@@ -104,23 +104,24 @@ namespace viewer
     {
     }
 
-    Scene::Impl::Impl(
-        u32 numModels,
-        pmm::ModelPack* modelPacks,
-        pmm::CameraAnimPack& cameraAnimPack,
-        pmm::LightAnimPack& lightAnimPack,
-        u32 numAccessories,
-        pmm::AccessoryPack* accPacks)
+    Scene::Impl::Impl(pmm::Loader& loader)
         :state_(Scene::State_Stop)
         ,frameCounter_(0)
+        ,startFrame_(0)
         ,lastFrame_(0)
-        ,numModels_(numModels)
-        ,modelPacks_(modelPacks)
-        ,numAccessories_(numAccessories)
-        ,accPacks_(accPacks)
     {
-        cameraAnimPack_.swap( cameraAnimPack );
-        lightAnimPack_.swap( lightAnimPack );
+        numModels_ = loader.getNumModels();
+        numAccessories_ = loader.getNumAccessories();
+
+        modelPacks_ = loader.releaseModelPacks();
+        accPacks_ = loader.releaseAccessoryPacks();
+
+        cameraAnimPack_.swap( loader.getCameraAnimPack() );
+        lightAnimPack_.swap( loader.getLightAnimPack() );
+
+        startFrame_ = loader.getStartFrame();
+        lastFrame_ = loader.getLastFrame();
+
     }
 
     Scene::Impl::~Impl()
@@ -160,22 +161,9 @@ namespace viewer
     // シーン初期化
     void Scene::Impl::initialize(f32 aspect)
     {
-        frameCounter_ = 0;
-
         lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
 
-        f32 lastFrame = 0.0f; //フレーム数を統一する
-
-        for(u32 i=0; i<numModels_; ++i){
-            lanim::AnimationClip::pointer& animClip = modelPacks_[i].getAnimationClip();
-            if(animClip){
-                if(animClip->getLastFrame() > lastFrame){
-                    lastFrame = animClip->getLastFrame();
-                }
-            }
-
-        }
-
+        f32 startFrame = static_cast<f32>(startFrame_);
         for(u32 i=0; i<numModels_; ++i){
             lscene::AnimObject* object = modelPacks_[i].getObject();
             LASSERT(object != NULL);
@@ -193,9 +181,6 @@ namespace viewer
                 animCtrlIK->setIKPack( object->getIKPack() );
                 animCtrlIK->setClip(animClip);
 
-                //animCtrlIK->getFlags().set( lanim::AnimFlag_Active );
-                animClip->setLastFrame(lastFrame);
-
                 animCtrlIK->initialize();
                 animSys.add(animCtrlIK);
                 modelPacks_[i].setAnimationControler(animCtrlIK);
@@ -208,15 +193,14 @@ namespace viewer
                 object->setSkeletonPose( &(animCtrl->getSkeletonPose()) );
                 animCtrl->setClip(animClip);
 
-                //animCtrlIK->getFlags().set( lanim::AnimFlag_Active );
-                animClip->setLastFrame(lastFrame);
-
                 animCtrl->initialize();
                 animSys.add(animCtrl);
                 modelPacks_[i].setAnimationControler(animCtrl);
 
                 modelPacks_[i].resetMorph();
             }
+
+            modelPacks_[i].getAnimationControler()->reset(startFrame);
         }
 
 
@@ -238,6 +222,7 @@ namespace viewer
             const pmm::CameraPose& cameraPose = cameraAnimPack_.getPose(0);
             camera_.setInitial(cameraPose, aspect);
             camera_.setCameraAnim(&cameraAnimPack_, aspect);
+            camera_.update(Camera::Mode_FrameAnim, startFrame_);
 
             camera_.setMode(Camera::Mode_FrameAnim);
             //camera_.setMode(Camera::Mode_Manual);
@@ -245,15 +230,14 @@ namespace viewer
 
         {
             //ライト初期化
-            light_.setLightAnim(&lightAnimPack_, static_cast<u32>(lastFrame));
+            light_.setLightAnim(&lightAnimPack_);
+            light_.update(startFrame_);
         }
 
-        lastFrame_ = static_cast<u32>(lastFrame);
         state_ = State_Play;
         //state_ = State_Stop;
 
-        frameCounter_ = 0;
-        //frameCounter_ = 1500;
+        frameCounter_ = startFrame_;
     }
 
 
@@ -283,21 +267,14 @@ namespace viewer
             }
 
             if(Input::isClick(Input::Key_2)){
-                lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
-                animSys.update();
-
                 if(++frameCounter_>lastFrame_){
-                    frameCounter_ = 0;
+                    resetFrame();
                     nextFrame = (lastFrame_>1)? 1 : 0;
-
-                    for(u32 i=1; i<numAccessories_; ++i){
-                        accPacks_[i].initialize();
-                    }
-
-                    camera_.initialize();
-                    light_.initialize();
                 }else{
                     nextFrame = (frameCounter_ == lastFrame_)? 0 : (frameCounter_+1);
+
+                    lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
+                    animSys.update();
                 }
 
                 //アクセサリ更新
@@ -306,7 +283,7 @@ namespace viewer
                 }
 
                 camera_.update(frameCounter_);
-                light_.update();
+                light_.update(frameCounter_);
 
                 for(u32 i=0; i<numModels_; ++i){
                     modelPacks_[i].updateMorph(frameCounter_, nextFrame);
@@ -317,20 +294,14 @@ namespace viewer
 
         case State_Play:
             {
-                lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
-                animSys.update();
-
                 if(++frameCounter_>lastFrame_){
-                    frameCounter_ = 0;
+                    resetFrame();
                     nextFrame = (lastFrame_>1)? 1 : 0;
-                    for(u32 i=1; i<numAccessories_; ++i){
-                        accPacks_[i].initialize();
-                    }
-
-                    camera_.initialize();
-                    light_.initialize();
                 }else{
-                    nextFrame = (frameCounter_ == lastFrame_)? 0 : (frameCounter_+1);
+                    nextFrame = (frameCounter_ == lastFrame_)? startFrame_ : (frameCounter_+1);
+
+                    lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
+                    animSys.update();
                 }
 
                 //アクセサリ更新
@@ -339,7 +310,7 @@ namespace viewer
                 }
 
                 camera_.update(frameCounter_);
-                light_.update();
+                light_.update(frameCounter_);
 
                 for(u32 i=0; i<numModels_; ++i){
                     modelPacks_[i].updateMorph(frameCounter_, nextFrame);
@@ -356,6 +327,26 @@ namespace viewer
         state_ = state;
     }
 
+    // フレーム進行リセット
+    void Scene::Impl::resetFrame()
+    {
+        frameCounter_ = startFrame_;
+        f32 startFrame = static_cast<f32>(startFrame_);
+
+        for(u32 i=0; i<numModels_; ++i){
+
+            modelPacks_[i].getAnimationControler()->reset(startFrame);
+        }
+
+        for(u32 i=1; i<numAccessories_; ++i){
+            accPacks_[i].initialize();
+        }
+
+        camera_.update(Camera::Mode_FrameAnim, startFrame_);
+        light_.update(startFrame_);
+    }
+
+
     //---------------------------------------------
     //---
     //--- Scene
@@ -367,21 +358,9 @@ namespace viewer
 
     }
 
-    Scene::Scene(
-        u32 numModels,
-        pmm::ModelPack* modelPacks,
-        pmm::CameraAnimPack& cameraAnimPack,
-        pmm::LightAnimPack& lightAnimPack,
-        u32 numAccessories,
-        pmm::AccessoryPack* accPacks)
+    Scene::Scene(pmm::Loader& loader)
     {
-        impl_ = LIME_NEW Impl(
-            numModels,
-            modelPacks,
-            cameraAnimPack,
-            lightAnimPack,
-            numAccessories,
-            accPacks);
+        impl_ = LIME_NEW Impl(loader);
     }
 
     Scene::~Scene()

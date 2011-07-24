@@ -33,6 +33,7 @@ namespace lanim
 
         virtual void initialize();
         virtual void update();
+        virtual void reset(f32 frame);
 
         /// スケルトンセット
         inline void setSkeleton(Skeleton::pointer& skeleton)
@@ -116,6 +117,23 @@ namespace lanim
         }
     }
 
+    template<class Resource, class Ctrl, class CtrlIK>
+    void AnimCtrlSimpleIK<Resource, Ctrl, CtrlIK>::reset(f32 frame)
+    {
+        if(controler_.getClip() != NULL){
+            controler_.setFrame(frame);
+
+            if(controler_.getFlags().checkFlag(AnimFlag_Loop)){
+                controler_.getPoseLoop();
+            }else{
+                controler_.getPose();
+            }
+
+            controler_.updateMatrix();
+            controlerIK_.blendPose( resource_.getSkeletonPose() );
+        }
+    }
+
 
     //-----------------------------------------------
     //---
@@ -138,6 +156,7 @@ namespace lanim
 
         virtual void initialize();
         virtual void update();
+        virtual void reset(f32 frame);
 
         /// スケルトンセット
         inline void setSkeleton(Skeleton::pointer& skeleton)
@@ -200,6 +219,22 @@ namespace lanim
     {
         if(controler_.getClip() != NULL){
             controler_.updateFrame( resource_.getFrameDuration() );
+
+            if(controler_.getFlags().checkFlag(AnimFlag_Loop)){
+                controler_.getPoseLoop();
+            }else{
+                controler_.getPose();
+            }
+
+            controler_.updateMatrix();
+        }
+    }
+
+    template<class Resource, class Ctrl>
+    void AnimCtrlSimple<Resource, Ctrl>::reset(f32 frame)
+    {
+        if(controler_.getClip() != NULL){
+            controler_.setFrame(frame);
 
             if(controler_.getFlags().checkFlag(AnimFlag_Loop)){
                 controler_.getPoseLoop();

@@ -32,6 +32,7 @@ namespace lanim
 
         virtual void initialize() = 0;
         virtual void update() =0;
+        virtual void reset(f32 frame) =0;
 
         virtual void setSkeleton(Skeleton::pointer& skeleton) = 0;
 

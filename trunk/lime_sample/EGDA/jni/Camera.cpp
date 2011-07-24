@@ -168,10 +168,9 @@ namespace egda
 
         rot *= rotX;
 
-        Matrix43 mat;
+        Matrix34 mat;
         rot.getMatrix(mat);
-        //mat.identity();
-        camZ.mul33(camZ, mat);
+        camZ.mul33(mat, camZ);
         camZ.normalize();
 
         position_ = camZ;
@@ -209,15 +208,15 @@ namespace egda
 
         initTarget_ = center;
 
-        lmath::Matrix43 rot;
+        lmath::Matrix34 rot;
         rot.identity();
-        rot.rotateX( -pose.angle_[0] );
-        rot.rotateY( -pose.angle_[1] );
         rot.rotateZ(  pose.angle_[2] );
+        rot.rotateY( -pose.angle_[1] );
+        rot.rotateX( -pose.angle_[0] );
 
 
         initPosition_.set(0.0f, 0.0f, pose.length_);
-        initPosition_.mul33( initPosition_, rot );
+        initPosition_.mul33( rot, initPosition_);
         initPosition_ += center;
 
         reset();
@@ -252,7 +251,7 @@ namespace egda
         }
 
         virtual void update(u32 counter);
-        virtual void reset();
+        virtual void reset(){}
 
         void calcMatrix();
         void setMatrix();
@@ -286,10 +285,12 @@ namespace egda
 
     void Camera::FrameAnim::update(u32 counter)
     {
-        LASSERT(cameraAnimPack_ != NULL);
+        if(cameraAnimPack_ == NULL){
+            return;
+        }
 
-        //u32 animIndex = cameraAnimPack_->binarySearchIndex(counter);
-        u32 animIndex = cameraAnimPack_->getNextIndex(counter);
+        u32 animIndex = cameraAnimPack_->binarySearchIndex(counter);
+        //u32 animIndex = cameraAnimPack_->getNextIndex(counter);
         const pmm::CameraPose& cameraPose = cameraAnimPack_->getPose(animIndex);
 
         if(animIndex == cameraAnimPack_->getNumPoses() - 1){
@@ -321,26 +322,12 @@ namespace egda
 
     }
 
-    void Camera::FrameAnim::reset()
-    {
-        cameraAnimPack_->initialize();
-
-        const pmm::CameraPose& cameraPose = cameraAnimPack_->getPose(0);
-        center_ = cameraPose.center_;
-        angle_ = cameraPose.angle_;
-        length_ = cameraPose.length_;
-        fov_ = cameraPose.fov_;
-
-        calcMatrix();
-    }
-
     void Camera::FrameAnim::calcMatrix()
     {
-        lmath::Matrix43 rot;
+        lmath::Matrix34 rot;
         rot.identity();
-        rot.rotateX( -angle_._x );
-        rot.rotateY( -angle_._y );
-        //rot.rotateZ(  angle_._z );
+        rot.rotateY( -angle_.y_ );
+        rot.rotateX( -angle_.x_ );
 
         lmath::Vector3 zaxis(0.0f, 0.0f, length_);
         zaxis.mul33( zaxis, rot );
@@ -349,11 +336,11 @@ namespace egda
         lmath::Vector3 pos( zaxis );
         pos += center_;
 
-        f32 sn = -lmath::sinf(angle_._z);
-        f32 cs = lmath::cosf(angle_._z);
+        f32 sn = -lmath::sinf(angle_.z_);
+        f32 cs =  lmath::cosf(angle_.z_);
 
-        up_._x = sn;
-        up_._y = cs;
+        up_.x_ = sn;
+        up_.y_ = cs;
 
         matrix_.lookAt(pos, center_, up_);
     }
@@ -376,8 +363,7 @@ namespace egda
     {
         LASSERT(pack != NULL);
         cameraAnimPack_ = pack;
-
-        reset();
+        cameraAnimPack_->initialize();
     }
 
     //------------------------------------------------

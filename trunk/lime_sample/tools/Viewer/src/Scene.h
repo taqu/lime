@@ -7,6 +7,7 @@
 */
 namespace pmm
 {
+    class Loader;
     class ModelPack;
     class CameraAnimPack;
     class LightAnimPack;
@@ -26,13 +27,7 @@ namespace viewer
         };
 
         Scene();
-        Scene(
-            u32 numModels,
-            pmm::ModelPack* modelPacks,
-            pmm::CameraAnimPack& cameraAnimPack,
-            pmm::LightAnimPack& lightAnimPack,
-            u32 numAccessories,
-            pmm::AccessoryPack* accPacks);
+        Scene(pmm::Loader& loader);
         ~Scene();
 
         void release();

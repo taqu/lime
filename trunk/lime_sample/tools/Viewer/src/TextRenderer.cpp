@@ -355,6 +355,7 @@ namespace
         if(count_>0){
             lgraphics::GraphicsDeviceRef& device = lgraphics::Graphics::getDevice();
 
+            device.setZEnable(false);
             device.setAlphaBlendEnable(false);
 
             material_.applyRenderState();
@@ -521,7 +522,7 @@ namespace
         batch_->material_.setTextureNum(1);
         batch_->material_.setTexture(0, texture);
 
-#if defined(LIME_GLES2)
+#if defined(LIME_GL)
         //サンプラステートセット
         texture.attach();
         batch_->material_.getSamplerState(0).apply(0);
@@ -550,7 +551,6 @@ namespace
         batch_->material_.setTexture(0, texture);
 
 #if defined(LIME_GLES2)
-        //サンプラステートセット
         texture.attach();
         batch_->material_.getSamplerState(0).apply(0);
         texture.detach();

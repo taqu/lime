@@ -20,7 +20,7 @@ namespace lanim
         ,blendRate_(1.0f)
         ,skeletonPose_(NULL)
     {
-        flags_.set( AnimFlag_Active | AnimFlag_AutoDisactive);
+        flags_.set( AnimFlag_Active );
     }
 
     AnimationControlerPartial::AnimationControlerPartial(const AnimationControlerPartial& rhs)

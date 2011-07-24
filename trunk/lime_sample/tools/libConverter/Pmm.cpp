@@ -103,7 +103,7 @@ namespace pmm
         ,filename_(NULL)
         ,directory_(NULL)
         ,startFrame_(0)
-        ,endFrame_(0)
+        ,lastFrame_(0)
         ,loadModelIndex_(0)
         ,numModels_(0)
         ,modelPacks_(NULL)
@@ -282,6 +282,19 @@ namespace pmm
                 if(errorCode_ != Error_None
                     || numAccessories_<=loadAccessoryIndex_)
                 {
+
+                    //ここで、開始・終了フレームをロード
+                    EnvironmentInfo info;
+                    info.readAfter(file_);
+
+                    startFrame_ = info.startFrame_;
+                    if(info.lastFrame_ > 0){
+                        lastFrame_ = info.lastFrame_;
+                    }
+                    if(startFrame_>lastFrame_){
+                        startFrame_ = lastFrame_;
+                    }
+
                     status_ = Status_Finish;
                     file_.close();
                 }
@@ -303,8 +316,8 @@ namespace pmm
     //----------------------------------------------
     void Loader::readEnvironment()
     {
-        Char buffer[UnknownEnvSize];
-        LPMM_CHECK_READ_BUFF(file_, buffer, UnknownEnvSize, Error_Read);
+        EnvironmentInfo info;
+        info.readPrev(file_);
     }
 
     //----------------------------------------------
@@ -389,11 +402,6 @@ namespace pmm
 
                 //フレームロード
                 readJointPoses(loadModelIndex_, dispLabel);
-
-                modelPacks_[loadModelIndex_].getAnimationClip()->setLastFrame( static_cast<f32>(modelInfo_.endFrame_) );
-                if(endFrame_<modelInfo_.endFrame_){
-                    endFrame_ = modelInfo_.endFrame_;
-                }
 
                 readSkinMorphPoses(loadModelIndex_);
 
@@ -523,6 +531,7 @@ namespace pmm
         LASSERT(boneMap != NULL);
 
         u32 poseIndex = 0;
+        u32 lastFrame = 0;
         lanim::AnimationClip::pointer animClip( LIME_NEW lanim::AnimationClip(numJoints) );
         for(u32 i=0; i<numJoints; ++i){
             lanim::JointAnimation& jointAnim = animClip->getJointAnimation(i);
@@ -538,6 +547,9 @@ namespace pmm
                 jointPose.frameNo_ = jointFrames[next].frameNo_;
                 jointPose.translation_ = jointFrames[next].position_;
                 jointPose.rotation_ = jointFrames[next].rotation_;
+                if(lastFrame<jointPose.frameNo_){
+                    lastFrame = jointPose.frameNo_;
+                }
 
                 ++poseIndex;
                 next = jointFrames[next].nextDataID_;
@@ -545,6 +557,11 @@ namespace pmm
                     break;
                 }
             }while(next<totalJointFrames);
+        }
+
+        animClip->setLastFrame( static_cast<f32>(lastFrame) );
+        if(lastFrame_<lastFrame){
+            lastFrame_ = lastFrame;
         }
 
         //名前セット

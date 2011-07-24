@@ -30,4 +30,5 @@
 <string name="texture_compression">Texture Compression</string>
 <string name="On">On</string>
 <string name="Off">Off</string>
+<string name="mipmap">Mipmap</string>
 </resources>
