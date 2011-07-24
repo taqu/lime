@@ -12,7 +12,7 @@
 #include <lcore/String.h>
 
 //#define LIME_LIBCONVERTER_DEBUGLOG_ENABLE (1)
-//#define LIME_LIBCONVERT_PMD_USE_MULTISTREAM
+#define LIME_LIBCONVERT_PMD_USE_MULTISTREAM
 #define LIME_LIBCONVERT_USE_ETC1
 //#define LIME_LIBCONVERT_USE_MIPMAP_DEBUG
 
@@ -84,6 +84,7 @@ namespace lconverter
         {
             alphaTest_ = false;
             textureCompress_ = false;
+            useMipMap_ = false;
         }
 
         bool isAlphaTest() const{ return alphaTest_;}

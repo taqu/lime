@@ -143,9 +143,12 @@ public class GLSurfaceView extends SurfaceView implements
         egl.eglChooseConfig(display, initAttribs, configs, numConfigs[0], numConfigs);
 
 
+        //深度バッファ24bitがだめなら16bitにしたいが、やはり16bitの方が速い
         EGLConfig  config = chooseConfig(egl, display, configs,
                 5,6,5,0, 16, 0);
-        
+        //if(null == config){
+        //	config = chooseConfig(egl, display, configs, 5,6,5,0, 16, 0);
+        //}
         return config;
     }
 

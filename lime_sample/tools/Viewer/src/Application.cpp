@@ -109,8 +109,9 @@ namespace viewer
             loader_ = LIME_NEW pmm::Loader;
             //loader_->open("HelloP.pmm", "data/HelloP/");
             //loader_->open("mikumiku.pmm", "data/MikuMiku/");
-            //loader_->open("kkhscene01.pmm", "data/StrobeNights/");
-            loader_->open("SampleAllStar.pmm", "data/pmm/");
+            //loader_->open("test.pmm", "data/MikuMiku/");
+            loader_->open("kkhscene01.pmm", "data/StrobeNights/");
+            //loader_->open("SampleAllStar.pmm", "data/pmm/");
             //loader_->open("Sample.pmm", "data/pmm/");
             if(loader_->getErrorCode() != pmm::Loader::Error_None){
                 LIME_DELETE(loader_);
@@ -118,42 +119,6 @@ namespace viewer
             }else{
                 status_ = Status_Load;
             }
-#if 0
-            //pmmLoader.load("Sample.pmm", "data/pmm/");
-            //pmmLoader.load("StrobeNights.pmm", "data/StrobeNights/");
-            //pmmLoader.load("SampleAllStar.pmm", "data/pmm/");
-            pmmLoader.load("HelloP.pmm", "data/HelloP/");
-            if(pmm::Loader::Error_None == pmmLoader.getErrorCode()){
-
-                //release時に0になるので先に取得
-                u32 numModels = pmmLoader.getNumModels();
-                u32 numAccessories = pmmLoader.getNumAccessories();
-                viewer::Scene scene(
-                    numModels,
-                    pmmLoader.releaseModelPacks(),
-                    pmmLoader.getCameraAnimPack(),
-                    pmmLoader.getLightAnimPack(),
-                    numAccessories,
-                    pmmLoader.releaseAccessoryPacks()
-                    );
-
-                scene_.swap(scene);
-
-                f32 aspect = static_cast<f32>( window_.getViewWidth() ) / window_.getViewHeight();
-                scene_.initialize(aspect);
-
-
-#if defined(_DEBUG)
-                lframework::System::attachDebugDraw();
-#endif
-
-                //デバッグ用ログ
-#if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)
-                g_debugLog = pmmLoader.debugLog_;
-#endif
-            }
-            return;
-#endif
         }
 #endif
 
@@ -186,16 +151,7 @@ namespace viewer
                     if(loader_->getErrorCode() == pmm::Loader::Error_None){
 
                         //release時に0になるので先に取得
-                        u32 numModels = loader_->getNumModels();
-                        u32 numAccessories = loader_->getNumAccessories();
-                        viewer::Scene scene(
-                            numModels,
-                            loader_->releaseModelPacks(),
-                            loader_->getCameraAnimPack(),
-                            loader_->getLightAnimPack(),
-                            numAccessories,
-                            loader_->releaseAccessoryPacks()
-                            );
+                        viewer::Scene scene(*loader_);
 
                         scene_.swap(scene);
 
@@ -221,7 +177,7 @@ namespace viewer
         //textRenderer_.print(3, 0, "PQRSTUVWXYZ[\\]^_");
         //textRenderer_.print(4, 0, "`abcdefghijklmno");
         //textRenderer_.print(5, 0, "pqrstuvwxyz{|}");
-#if 0
+#if 1
         {//なうろーでぃんぐ
 
             static const lcore::Char NowLoading[] = "Now Loading";

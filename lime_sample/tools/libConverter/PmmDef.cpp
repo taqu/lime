@@ -26,6 +26,43 @@ namespace pmm
 {
     //----------------------------------------------------------------------
     //---
+    //--- EnvironmentInfo
+    //---
+    //----------------------------------------------------------------------
+    void EnvironmentInfo::readPrev(lcore::istream& is)
+    {
+        u8 buffer[UnknownPrevEnvSize];
+        io::read(is, buffer, EnvironmentInfo::UnknownPrevEnvSize);
+    }
+
+    void EnvironmentInfo::readAfter(lcore::istream& is)
+    {
+        startFrame_ = 0;
+        lastFrame_ = 0;
+
+        //フレーム設定の位置までシークする
+        //-----------------------------------
+        s32 pos = is.tellg();
+        is.seekg(0, lcore::ios::end);
+
+        //残りサイズが少な過ぎれば終了
+        s32 size = is.tellg() - pos;
+        if(size < ReadAfterSize){
+            return;
+        }
+
+        pos += OffsetToFrames;
+        is.seekg(pos, lcore::ios::beg);
+
+        //u8 buffer[OffsetToFrames];
+        //io::read(is, buffer, OffsetToFrames);
+
+        io::read(is, startFrame_);
+        io::read(is, lastFrame_);
+    }
+
+    //----------------------------------------------------------------------
+    //---
     //--- ModelInfo
     //---
     //----------------------------------------------------------------------
@@ -67,6 +104,10 @@ namespace pmm
 
         io::read(is, rhs.startFrame_);
         io::read(is, rhs.endFrame_);
+
+        if(rhs.startFrame_>rhs.endFrame_){
+            rhs.startFrame_ = rhs.endFrame_;
+        }
         return is;
     }
 
@@ -514,7 +555,8 @@ namespace pmm
 
     void ModelPack::updateMorph(u32 /*frame*/, u32 nextFrame)
     {
-        if(skinPack_.getNumSkins()<=0){
+        if(skinPack_.getNumSkins()<=0
+            || skinAnimPack_.noAnim()){
             return;
         }
 
@@ -536,15 +578,19 @@ namespace pmm
         }
 
         for(u32 i=1; i<skinPack_.getNumSkins(); ++i){
-            f32 weight = skinAnimPack_.searchSkinWeight(i-1, nextFrame);
+            u32 index = i-1;
+            if(skinAnimPack_.getNumSkinPoses(index) == 0){
+                continue;
+            }
+            f32 weight = skinAnimPack_.searchSkinWeight(index, nextFrame);
 
             pmd::Skin& offsetSkin = skinPack_.getSkin(i);
 
             for(u32 j=0; j<offsetSkin.numVertices_; ++j){
                 u32 index = skin.vertices_[ offsetSkin.vertices_[j].index_ ].index_ - minIndex;
-                vertices[index]._x += weight * offsetSkin.vertices_[j].position_[0];
-                vertices[index]._y += weight * offsetSkin.vertices_[j].position_[1];
-                vertices[index]._z += weight * offsetSkin.vertices_[j].position_[2];
+                vertices[index].x_ += weight * offsetSkin.vertices_[j].position_[0];
+                vertices[index].y_ += weight * offsetSkin.vertices_[j].position_[1];
+                vertices[index].z_ += weight * offsetSkin.vertices_[j].position_[2];
             }
         }
 
@@ -552,7 +598,6 @@ namespace pmm
         u32 size = (skinPack_.getMaxIndex() - skinPack_.getMinIndex()) + 1;
         size *= sizeof(lmath::Vector3);
 
-        //vb.blit(vertices, offset, size);
         back.blit(vertices, offset, size); //バックバッファに転送
     }
 
@@ -582,9 +627,10 @@ namespace pmm
         vb.blit(vertices, offset, size);
     }
 
-    void ModelPack::updateMorph(u32 frame, u32 nextFrame)
+    void ModelPack::updateMorph(u32 frame, u32 /*nextFrame*/)
     {
-        if(skinPack_.getNumSkins()<=0){
+        if(skinPack_.getNumSkins()<=0
+            || skinAnimPack_.noAnim()){
             return;
         }
 
@@ -600,7 +646,11 @@ namespace pmm
         }
 
         for(u32 i=1; i<skinPack_.getNumSkins(); ++i){
-            f32 weight = skinAnimPack_.searchSkinWeight(i-1, frame);
+            u32 index = i-1;
+            if(skinAnimPack_.getNumSkinPoses(index) == 0){
+                continue;
+            }
+            f32 weight = skinAnimPack_.searchSkinWeight(index, frame);
 
             pmd::Skin& offsetSkin = skinPack_.getSkin(i);
 

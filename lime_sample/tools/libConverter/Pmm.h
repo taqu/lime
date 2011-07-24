@@ -67,6 +67,11 @@ namespace pmm
         */
         void load();
 
+        inline u32 getStartFrame() const;
+        inline u32 getLastFrame() const;
+
+        inline const ModelInfo& getModelInfo() const;
+
         //TODO:インターフェイスをよくする
         inline u32 getNumModels() const;
         inline ModelPack* releaseModelPacks();
@@ -77,6 +82,7 @@ namespace pmm
         //TODO:インターフェイスをよくする
         inline u32 getNumAccessories() const;
         inline AccessoryPack* releaseAccessoryPacks();
+
     private:
         Loader(const Loader&);
         Loader& operator=(const Loader&);
@@ -179,8 +185,8 @@ namespace pmm
         u32 lenDirectory_;      /// ディレクトリ名長さ
         const Char* directory_; /// ディレクトリ名
 
-        u32 startFrame_; /// 開始フレーム数
-        u32 endFrame_;   /// 終了フレーム数
+        u32 startFrame_; /// 開始フレーム
+        u32 lastFrame_; /// 終了フレーム
 
         pmd::Pack pmdPack_; ///PMDローダ
 
@@ -227,6 +233,16 @@ namespace pmm
     inline Loader::Status Loader::getStatus() const
     {
         return status_;
+    }
+
+    inline u32 Loader::getStartFrame() const
+    {
+        return startFrame_;
+    }
+
+    inline u32 Loader::getLastFrame() const
+    {
+        return lastFrame_;
     }
 
     inline u32 Loader::getNumModels() const

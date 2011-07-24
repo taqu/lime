@@ -46,6 +46,9 @@ namespace viewer
         lmath::Vector3 up_;
         lmath::Vector3 position_;
         lmath::Vector3 target_;
+
+        lmath::Vector3 translation_;
+
         lmath::Matrix44 viewMat_;
     };
 
@@ -57,6 +60,7 @@ namespace viewer
         ,initAspect_(1.0f)
         ,position_(0.0f, 0.0f, 1.0f)
         ,target_(0.0f, 0.0f, 0.0f)
+        ,translation_(0.0f, 0.0f, 0.0f)
     {
         viewMat_.lookAt(position_, target_, up_);
     }
@@ -69,15 +73,11 @@ namespace viewer
     {
         lscene::Scene& scene = lframework::System::getRenderSys().getScene();
         lscene::Camera& camera = scene.getCamera();
-#if 0
-        Vector3 camX(viewMat_(0,0), viewMat_(1,0), viewMat_(2,0));
-        Vector3 camY(viewMat_(0,1), viewMat_(1,1), viewMat_(2,1));
-        Vector3 camZ(viewMat_(0,2), viewMat_(1,2), viewMat_(2,2));
-#else
+
         Vector3 camX(1.0f, 0.0f, 0.0f);
         Vector3 camY(0.0f, 1.0f, 0.0f);
         Vector3 camZ(0.0f, 0.0f, -1.0f);
-#endif
+
         f32 zoomLength = target_.distance(position_);
         Vector3 rotation(0.0f, 0.0f, 0.0f);
 
@@ -104,6 +104,20 @@ namespace viewer
             }
         }
 
+        // 平行移動
+        if(Input::isOn(Input::Button_2)){
+
+            f32 tx = -0.2f*Input::getAnalogDuration(Input::Analog_X);
+            f32 ty = 0.2f*Input::getAnalogDuration(Input::Analog_Y);
+
+            tx = lmath::clamp(tx, -1.0f, 1.0f);
+            ty = lmath::clamp(ty, -1.0f, 1.0f);
+
+            target_.x_ += tx * viewMat_.m_[0][0] + ty * viewMat_.m_[1][0];
+            target_.y_ += tx * viewMat_.m_[0][1] + ty * viewMat_.m_[1][1];
+            target_.z_ += tx * viewMat_.m_[0][2] + ty * viewMat_.m_[1][2];
+        }
+
 
         // カメラをセット
 
@@ -116,7 +130,6 @@ namespace viewer
 
         Matrix34 mat;
         rot.getMatrix(mat);
-        //mat.identity();
         camZ.mul33(mat, camZ);
         camZ.normalize();
 
@@ -185,7 +198,7 @@ namespace viewer
         }
 
         virtual void update(u32 counter);
-        virtual void reset();
+        virtual void reset(){}
 
         void calcMatrix();
         void setMatrix();
@@ -223,8 +236,8 @@ namespace viewer
     {
         LASSERT(cameraAnimPack_ != NULL);
 
-        //u32 animIndex = cameraAnimPack_->binarySearchIndex(counter);
-        u32 animIndex = cameraAnimPack_->getNextIndex(counter);
+        u32 animIndex = cameraAnimPack_->binarySearchIndex(counter);
+        //u32 animIndex = cameraAnimPack_->getNextIndex(counter);
         const pmm::CameraPose& cameraPose = cameraAnimPack_->getPose(animIndex);
 
         if(animIndex == cameraAnimPack_->getNumPoses() - 1){
@@ -254,19 +267,6 @@ namespace viewer
         calcMatrix();
         setMatrix();
 
-    }
-
-    void Camera::FrameAnim::reset()
-    {
-        cameraAnimPack_->initialize();
-
-        const pmm::CameraPose& cameraPose = cameraAnimPack_->getPose(0);
-        center_ = cameraPose.center_;
-        angle_ = cameraPose.angle_;
-        length_ = cameraPose.length_;
-        fov_ = cameraPose.fov_;
-
-        calcMatrix();
     }
 
     void Camera::FrameAnim::calcMatrix()
@@ -311,7 +311,7 @@ namespace viewer
         cameraAnimPack_ = pack;
         aspect_ = aspect;
 
-        reset();
+        cameraAnimPack_->initialize();
     }
 
 

@@ -521,12 +521,13 @@ namespace
 #if defined(LIME_GL)
         //サンプラステートセット
         texture.attach();
+
         lgraphics::SamplerState& sampler = batch_->material_.getSamplerState(0);
         sampler.setAddressU(lgraphics::TexAddress_Clamp);
         sampler.setAddressV(lgraphics::TexAddress_Clamp);
         sampler.setMinFilter(lgraphics::TexFilter_Point);
-
         sampler.apply(0);
+
         texture.detach();
 #endif
 

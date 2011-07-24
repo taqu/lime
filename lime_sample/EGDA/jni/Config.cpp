@@ -27,10 +27,10 @@ namespace egda
         f32 yscale = 1.0f / lmath::tan(0.5f * fovy);
         f32 xscale = yscale / aspect_;
 
-                                                  mat._elem[0][2] = 0.0f; mat._elem[0][3] = 0.0f;
-                                                  mat._elem[1][2] = 0.0f; mat._elem[1][3] = 0.0f;
-        mat._elem[2][0] = 0.0f; mat._elem[2][1] = 0.0f; mat._elem[2][2] = 1.0f / (zfar_ - znear_); mat._elem[2][3] = 1.0f;
-        mat._elem[3][0] = 0.0f; mat._elem[3][1] = 0.0f; mat._elem[3][2] = znear_ / (znear_ - zfar_); mat._elem[3][3] = 0.0f;
+                                                  mat.m_[0][2] = 0.0f; mat.m_[0][3] = 0.0f;
+                                                  mat.m_[1][2] = 0.0f; mat.m_[1][3] = 0.0f;
+        mat.m_[2][0] = 0.0f; mat.m_[2][1] = 0.0f; mat.m_[2][2] = 1.0f / (zfar_ - znear_); mat.m_[2][3] = znear_ / (znear_ - zfar_);
+        mat.m_[3][0] = 0.0f; mat.m_[3][1] = 0.0f; mat.m_[3][2] = 1.0f; mat.m_[3][3] = 0.0f;
 
         //ÉÇÅ[ÉhÇ…ÇÊÇ¡ÇƒzâÒì]
 
@@ -38,27 +38,27 @@ namespace egda
         {
         case ScreenMode_Rot90:
             {
-                mat._elem[0][0] = 0.0f; mat._elem[0][1] = xscale;
-                mat._elem[1][0] = -yscale; mat._elem[1][1] = 0.0f;
+                mat.m_[0][0] = 0.0f; mat.m_[0][1] = -yscale;
+                mat.m_[1][0] = xscale; mat.m_[1][1] = 0.0f;
             }
             break;
         case ScreenMode_Rot180:
             {
-                mat._elem[0][0] = -xscale; mat._elem[0][1] = 0.0f;
-                mat._elem[1][0] = 0.0f; mat._elem[1][1] = -yscale;
+                mat.m_[0][0] = -xscale; mat.m_[0][1] = 0.0f;
+                mat.m_[1][0] = 0.0f; mat.m_[1][1] = -yscale;
             }
             break;
         case ScreenMode_Rot270:
             {
-                mat._elem[0][0] = 0.0f; mat._elem[0][1] = -xscale;
-                mat._elem[1][0] = yscale; mat._elem[1][1] = 0.0f;
+                mat.m_[0][0] = 0.0f; mat.m_[0][1] = yscale;
+                mat.m_[1][0] = -xscale; mat.m_[1][1] = 0.0f;
             }
             break;
 
         default:
             {
-                mat._elem[0][0] = xscale; mat._elem[0][1] = 0.0f;
-                mat._elem[1][0] = 0.0f; mat._elem[1][1] = yscale;
+                mat.m_[0][0] = xscale; mat.m_[0][1] = 0.0f;
+                mat.m_[1][0] = 0.0f; mat.m_[1][1] = yscale;
             }
             break;
         };

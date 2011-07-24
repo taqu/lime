@@ -24,16 +24,13 @@ namespace egda
         ~Light();
 
         void initialize();
-        void update();
+        void update(u32 frame);
 
-        void setLightAnim(pmm::LightAnimPack* pack, u32 lastFrame);
+        void setLightAnim(pmm::LightAnimPack* pack);
 
         void reset();
+
     private:
-
-        u32 frame_;
-        u32 lastFrame_;
-
         pmm::LightAnimPack* lightAnimPack_;
     };
 }

@@ -25,7 +25,7 @@ LOCAL_SRC_FILES := $(LIME_DIR)/lmath/lmathcore.cpp\
                    $(LIME_DIR)/lmath/Vector3.cpp\
                    $(LIME_DIR)/lmath/Vector4.cpp\
                    $(LIME_DIR)/lmath/Quaternion.cpp\
-                   $(LIME_DIR)/lmath/Matrix43.cpp\
+                   $(LIME_DIR)/lmath/Matrix34.cpp\
                    $(LIME_DIR)/lmath/Matrix44.cpp\
                    $(LIME_DIR)/lmath/DualQuaternion.cpp\
                    $(LIME_DIR)/lmath/utility_DualQuaternion.cpp\

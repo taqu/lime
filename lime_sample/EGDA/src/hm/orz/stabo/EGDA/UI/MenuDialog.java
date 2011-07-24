@@ -39,6 +39,7 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
         screenMode_ = config.getScreenMode();
         cameraMode_ = config.getCameraMode();
         isAlphaTest_ = config.isAlhpaTest();
+        isMipmap_ = config.isMipmap();
         isTextureCompress_ = config.isTextureCompress();
 
         // スクリーン回転
@@ -66,15 +67,24 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
         cameraRadioGroup.setOnCheckedChangeListener( this );
         
         // ロード設定
-        RadioGroup alphaTestRadioGroup = (RadioGroup)findViewById(R.id.alpha_test_radioGroup);
+        //----------------------------------------
+        // アルファテスト
+        RadioGroup group = (RadioGroup)findViewById(R.id.alpha_test_radioGroup);
         int id = (isAlphaTest_)? R.id.alpha_test_on : R.id.alpha_test_off;
-        alphaTestRadioGroup.check(id);
-        alphaTestRadioGroup.setOnCheckedChangeListener( this );
+        group.check(id);
+        group.setOnCheckedChangeListener( this );
 
-        RadioGroup texCompRadioGroup = (RadioGroup)findViewById(R.id.texcomp_radioGroup);
+        // ミップマップ
+        group = (RadioGroup)findViewById(R.id.mipmap_radioGroup);
+        id = (isMipmap_)? R.id.mipmap_on : R.id.mipmap_off;
+        group.check(id);
+        group.setOnCheckedChangeListener( this );
+        
+        // テクスチャ圧縮
+        group = (RadioGroup)findViewById(R.id.texcomp_radioGroup);
         id = (isTextureCompress_)? R.id.texcomp_on : R.id.texcomp_off;
-        texCompRadioGroup.check(id);
-        texCompRadioGroup.setOnCheckedChangeListener( this );
+        group.check(id);
+        group.setOnCheckedChangeListener( this );
     }
 
     public void onCheckedChanged(RadioGroup group, int checkedId)
@@ -95,6 +105,14 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
             
         case R.id.alpha_test_off:
             isAlphaTest_ = false;
+            break;
+            
+        case R.id.mipmap_on:
+        	isMipmap_ = true;
+            break;
+            
+        case R.id.mipmap_off:
+        	isMipmap_ = false;
             break;
             
         case R.id.texcomp_on:
@@ -135,11 +153,13 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
                    (screenMode_ != config.getScreenMode())
                 || (cameraMode_ != config.getCameraMode())
                 || (isAlphaTest_ != config.isAlhpaTest())
+                || (isMipmap_ != config.isMipmap())
                 || (isTextureCompress_ != config.isTextureCompress());
 
                 config.setCameraMode(cameraMode_);
                 config.setScreenMode(screenMode_);
                 config.setAlphaTest(isAlphaTest_);
+                config.setMipmap(isMipmap_);
                 config.setTextureCompress(isTextureCompress_);
 
                 if(changed){
@@ -147,7 +167,7 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
                 }
             }
             commandManager_.push(CommandManager.createChangeMode(
-                    commandManager_, screenMode_, cameraMode_, isAlphaTest_, isTextureCompress_));
+                    commandManager_, screenMode_, cameraMode_, isAlphaTest_, isMipmap_, isTextureCompress_));
             this.dismiss();
             break;
             
@@ -160,6 +180,7 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
     int cameraMode_ = 0;
     int screenMode_ = 0;
     boolean isAlphaTest_ = false;
+    boolean isMipmap_ = false;
     boolean isTextureCompress_ = false;
     private CommandManager commandManager_ = null;
 }

@@ -28,8 +28,8 @@ namespace egda
     Application::Application()
         :prevMSec_(0)
         ,currentMSec_(0)
-        ,loadingCounter_(0)
         ,loadingIndex_(0)
+        ,loadingCounter_(0)
         ,loader_(NULL)
     {
     }
@@ -60,9 +60,6 @@ namespace egda
 
         lframework::System::InitParam sysParam("", 32);
         lframework::System::initialize(sysParam, animInitParam);
-
-        //lrender::RenderingSystem &renderSys = lframework::System::getRenderSys();
-        //renderSys.setClearTarget(lgraphics::ClearTarget_Depth);
 
         textRenderer_.initialize(MaxChars, CharW, CharH, Rows, Cols);
 
@@ -211,22 +208,11 @@ namespace egda
 
         if(loader_->getStatus() == pmm::Loader::Status_Finish){
             if(loader_->getErrorCode() == pmm::Loader::Error_None){
-                u32 numModels = loader_->getNumModels();
-                u32 numAccessories = loader_->getNumAccessories();
-
-                egda::Scene scene(
-                    numModels,
-                    loader_->releaseModelPacks(),
-                    loader_->getCameraAnimPack(),
-                    loader_->getLightAnimPack(),
-                    numAccessories,
-                    loader_->releaseAccessoryPacks()
-                    );
+                egda::Scene scene(*loader_);
 
                 scene.setCameraMode( scene_.getCameraMode() );
 
                 scene_.swap(scene);
-
                 scene_.initialize();
 
 #if defined(_DEBUG)

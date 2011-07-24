@@ -83,7 +83,8 @@ public class EGDALib
      * @param screenMode
      * @param cameraMode
      * @param alphaTest
+     * @param mipmap
      * @param texComp
      */
-    public static native void setMode(int screenMode, int cameraMode, boolean alphaTest, boolean texComp);
+    public static native void setMode(int screenMode, int cameraMode, boolean alphaTest, boolean mipmap, boolean texComp);
 }

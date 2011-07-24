@@ -165,7 +165,8 @@ namespace lanim
     // 現在のフレーム時間セット
     inline void AnimationControlerPartial::setFrame(f32 frame)
     {
-        frame_ = frame;
+        LASSERT(frame>=0.0f);
+        frame_ = (frame > clip_->getLastFrame())? clip_->getLastFrame() : frame;
     }
 
     // ブレンド率取得

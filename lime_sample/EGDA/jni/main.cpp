@@ -63,7 +63,7 @@ extern "C"
     /**
     @brief モードセット
     */
-    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setMode(JNIEnv *, jclass, jint, jint, jboolean, jboolean);
+    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setMode(JNIEnv *, jclass, jint, jint, jboolean, jboolean, jboolean);
 
     //--------------------------------------------------------------------------
     // システム初期化
@@ -184,7 +184,7 @@ extern "C"
 
     //--------------------------------------------------------------------------
     // モードセット
-    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setMode(JNIEnv *, jclass, jint screenMode, jint cameraMode, jboolean  alphaTest, jboolean texCompress)
+    JNIEXPORT void JNICALL Java_hm_orz_stabo_EGDA_EGDALib_setMode(JNIEnv *, jclass, jint screenMode, jint cameraMode, jboolean  alphaTest, jboolean mipmap, jboolean texCompress)
     {
         egda::Config::getInstance().setScreenMode((egda::ScreenMode)screenMode);
         egda::Application::getInstance().setCameraMode(cameraMode);
@@ -193,6 +193,7 @@ extern "C"
         //ロード設定
         lconverter::Config& config = lconverter::Config::getInstance();
         config.setAlphaTest(alphaTest);
+        config.setUseMipMap(mipmap);
         config.setTextureCompress(texCompress);
     }
 

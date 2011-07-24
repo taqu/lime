@@ -23,6 +23,7 @@ namespace viewer
         {
             Button_0 =0,
             Button_1,
+            Button_2,
             Button_Num,
         };
 

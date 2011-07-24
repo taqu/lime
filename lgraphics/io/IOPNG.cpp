@@ -185,7 +185,7 @@ namespace io
 
         if(ret){
             texture = Texture::create(width, height, 1, Usage_None, format, Pool_Managed);
-            texture.blit(0, width, height, buffer);
+            texture.blit(buffer);
         }
 
         LIME_DELETE_ARRAY(buffer);

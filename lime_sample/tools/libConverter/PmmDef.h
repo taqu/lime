@@ -46,8 +46,27 @@ namespace pmm
     using lconverter::StringBuffer;
 
     static const u32 MagicVersionSize = 24;
-    static const u32 UnknownEnvSize = 29;
     static const u32 NameSize = 20;
+
+    //----------------------------------------------------------------------
+    //---
+    //--- EnvironmentInfo
+    //---
+    //----------------------------------------------------------------------
+    struct EnvironmentInfo
+    {
+        static const u32 UnknownPrevEnvSize = 29;
+
+        static const s32 ReadAfterSize = 28;
+        static const u32 OffsetToFrames = 20;
+
+
+        void readPrev(lcore::istream& is);
+        void readAfter(lcore::istream& is);
+
+        u32 startFrame_; /// 再生開始フレーム
+        u32 lastFrame_;  /// 再生終了フレーム
+    };
 
     //----------------------------------------------------------------------
     //---
@@ -430,6 +449,8 @@ namespace pmm
 
         void create(u32 totalFrames, u32 numSkins);
 
+        inline bool noAnim() const;
+
         inline u32 getNumSkinPoses(u32 index) const;
         inline void setNumSkinPoses(u32 index, u32 numSkinPoses);
 
@@ -454,6 +475,11 @@ namespace pmm
         SkinPose* skinPoses_;
         lcore::Buffer buffer_;
     };
+
+    inline bool SkinAnimPack::noAnim() const
+    {
+        return (numSkinPoses_ == NULL);
+    }
 
     inline u32 SkinAnimPack::getNumSkinPoses(u32 index) const
     {

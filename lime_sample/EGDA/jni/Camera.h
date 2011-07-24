@@ -39,6 +39,8 @@ namespace egda
         inline void changeMode();
 
         inline void update(u32 counter);
+        inline void update(Mode mode, u32 counter);
+
         inline void reset();
         inline void reset(Mode mode);
 
@@ -89,6 +91,12 @@ namespace egda
     inline void Camera::update(u32 counter)
     {
         impl_[mode_]->update(counter);
+    }
+
+    inline void Camera::update(Mode mode, u32 counter)
+    {
+        LASSERT(0<=mode && mode<Mode_Num);
+        impl_[mode]->update(counter);
     }
 
     inline void Camera::reset()
