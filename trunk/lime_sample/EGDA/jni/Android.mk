@@ -122,6 +122,7 @@ LOCAL_SRC_FILES := $(LIBCONVERTER_DIR)/converter.cpp\
                    $(LIBCONVERTER_DIR)/Pmm.cpp\
                    $(LIBCONVERTER_DIR)/XLoaderDef.cpp\
                    $(LIBCONVERTER_DIR)/XLoader.cpp\
+                   $(LIBCONVERTER_DIR)/RigidBodyData.cpp\
                    $(LIBCONVERTER_DIR)/charcode/conv_charcode.cpp\
                    $(LIBCONVERTER_DIR)/charcode/jis_level1_utf16.cpp\
                    $(LIBCONVERTER_DIR)/charcode/jis_level2_utf16.cpp
@@ -147,13 +148,24 @@ LOCAL_SRC_FILES := ../../../ext/arm/lib/$(TARGET_ARCH_ABI)/libjpeg.a
 include $(PREBUILT_STATIC_LIBRARY)
 
 ##################################
+# libbullet
+include $(CLEAR_VARS)
+
+LOCAL_MODULE := bullet
+LOCAL_SRC_FILES := ../../../ext/arm/lib/$(TARGET_ARCH_ABI)/libbullet.a
+include $(PREBUILT_STATIC_LIBRARY)
+
+##################################
 # egda
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := egda
 LOCAL_USER_STATIC_LIBRARIES := libConverter liblframework liblgraphics liblmath liblcore
-LOCAL_STATIC_LIBRARIES := $(LOCAL_USER_STATIC_LIBRARIES) libjpeg libpng
+LOCAL_STATIC_LIBRARIES := $(LOCAL_USER_STATIC_LIBRARIES) libjpeg libpng libbullet
 LOCAL_SRC_FILES:= $(LIBANIM_DIR)/AnimationControlerIK.cpp\
+                  $(LIBDYNAMICS_DIR)/DynamicsWorld.cpp\
+                  $(LIBDYNAMICS_DIR)/RigidBodySkeleton.cpp\
+                  $(LIBDYNAMICS_DIR)/DynamicsDebugDraw.cpp\
                   ./stdafx.cpp\
                   ./main.cpp\
                   ./Application.cpp\

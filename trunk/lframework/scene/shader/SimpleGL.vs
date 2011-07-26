@@ -16,6 +16,7 @@ const MP float c_fone = 1.0;
 const MP float c_fhalf = 0.5;
 
 uniform mat4 mwvp; //World * View * Projection Matrix
+uniform mat4 mwv; //World * View Matrix
 
 #if defined(VDIFFUSE) && defined(PCOLOR)
 
@@ -110,7 +111,7 @@ varying vec4 v_tex3;
 void main()
 {
     vec4 position;
-    vec3 normal;
+    vec4 normal;
 
 #ifdef SKINNING
 
@@ -132,7 +133,7 @@ void main()
 #if defined(PNORMAL) || (defined(LIGHTVS) && defined(VNORMAL))
     vec3 n0 = skinning_normal(a_normal0.xyz, index0);
     vec3 n1 = skinning_normal(a_normal0.xyz, index1);
-    normal = mix(n1, n0, weight);
+    normal = vec4(mix(n1, n0, weight), c_fzero);
 
 #endif //PNORMAL
 
@@ -140,7 +141,7 @@ void main()
 
     position = vec4(a_pos0.xyz, c_fone);
 #ifdef VNORMAL
-    normal = a_normal0.xyz;
+    normal = vec4(a_normal0.xyz, c_fzero);
 #endif //VNORMAL
 
 #endif //SKINNING
@@ -155,6 +156,7 @@ void main()
 #endif
 
     position *= mwvp;
+    normal *= mwv;
 
 //linear-z
     position.z *= position.w;
@@ -163,7 +165,7 @@ void main()
 
 
 #ifdef PNORMAL
-    v_normal = normal;
+    v_normal = normal.xyz;
 #endif
 
 #ifdef PTEX0
@@ -185,25 +187,25 @@ void main()
 #ifdef VNORMAL
 
 #ifdef TEXSHADE
-    normal = normalize(normal);
+    normal.xyz = normalize(normal.xyz);
     MP vec3 E = normalize(camPos - posLighting);
     MP vec3 H = normalize(dlDir+E);
 
     MP vec4 tex3;
-    tex3.xy = vec2(c_fone + dot(normal, dlDir));
+    tex3.xy = vec2(c_fone + dot(normal.xyz, dlDir));
     tex3.zw = vec2(normal.xy + vec2(c_fone, c_fone));
     v_tex3 = tex3 * c_fhalf;
 
-    MP float cosNH = max(c_fzero, dot(normal,H));
+    MP float cosNH = max(c_fzero, dot(normal.xyz, H));
     v_specular0.xyz = specular.xyz * pow(cosNH, specular.w);
     v_specular0.w = cosNH;
 
 #else //TEXSHADE
-    normal = normalize(normal);
+    normal.xyz = normalize(normal.xyz);
     MP vec3 E = normalize(camPos - posLighting);
     MP vec3 H = normalize(dlDir+E);
 
-    MP float cosNH = max(c_fzero, dot(normal,H));
+    MP float cosNH = max(c_fzero, dot(normal.xyz, H));
 
     v_specular0.xyz = specular.xyz *  pow(cosNH, specular.w);
     v_specular0.w = cosNH;

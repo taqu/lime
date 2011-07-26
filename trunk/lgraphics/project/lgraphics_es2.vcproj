@@ -347,22 +347,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\io\IOGeometryBuffer.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOGeometryBuffer.h"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOIndexBuffer.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOIndexBuffer.h"
-				>
-			</File>
-			<File
 				RelativePath="..\io\IOJPEG.cpp"
 				>
 			</File>
@@ -379,38 +363,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\io\IORenderState.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IORenderState.h"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOSamplerState.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOSamplerState.h"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOShaderKey.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOShaderKey.h"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOTexture.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOTexture.h"
-				>
-			</File>
-			<File
 				RelativePath="..\io\IOTextureUtil.cpp"
 				>
 			</File>
@@ -424,22 +376,6 @@
 			</File>
 			<File
 				RelativePath="..\io\IOTGA.h"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOVertexBuffer.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOVertexBuffer.h"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOVertexDeclaration.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\io\IOVertexDeclaration.h"
 				>
 			</File>
 			<File

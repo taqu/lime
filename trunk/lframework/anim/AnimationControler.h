@@ -38,6 +38,7 @@ namespace lanim
 
         /// ポーズ取得
         virtual const SkeletonPose& getSkeletonPose() const = 0;
+        virtual SkeletonPose& getSkeletonPose() = 0;
     protected:
         AnimationControler()
         {}

@@ -63,6 +63,7 @@ namespace lscene
         enum ParamVS
         {
             ParamVS_WVP =0,
+            ParamVS_WV,
             ParamVS_DLightDirection,
             ParamVS_DLightColor,
             ParamVS_CameraPosition,

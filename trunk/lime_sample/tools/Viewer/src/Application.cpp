@@ -31,6 +31,8 @@
 #include "AnimationControlerImpl.h"
 
 #include "Input.h"
+#include "DynamicsWorld.h"
+
 #include <converter.h>
 
 namespace
@@ -66,7 +68,7 @@ namespace viewer
         lframework::System::initialize(sysParam, animInitParam);
 
 #if defined(LIME_GLES2)
-        textRenderer_.initialize(256, 9, 20, 6, 16);
+        textRenderer_.initialize(64, 9, 20, 6, 16);
         textRenderer_.setTextureFromFile("data/M_plus_1m_regular10.png");
 #endif
 
@@ -100,6 +102,7 @@ namespace viewer
             lconverter::Config::getInstance().setAlphaTest(true);
             lconverter::Config::getInstance().setTextureCompress(false);
 
+            dynamics::DynamicsWorld::initialize();
         }
 
 #if 1
@@ -110,9 +113,9 @@ namespace viewer
             //loader_->open("HelloP.pmm", "data/HelloP/");
             //loader_->open("mikumiku.pmm", "data/MikuMiku/");
             //loader_->open("test.pmm", "data/MikuMiku/");
-            loader_->open("kkhscene01.pmm", "data/StrobeNights/");
+            //loader_->open("kkhscene01.pmm", "data/StrobeNights/");
             //loader_->open("SampleAllStar.pmm", "data/pmm/");
-            //loader_->open("Sample.pmm", "data/pmm/");
+            loader_->open("Sample.pmm", "data/pmm/");
             if(loader_->getErrorCode() != pmm::Loader::Error_None){
                 LIME_DELETE(loader_);
                 status_ = Status_Play;
@@ -233,9 +236,13 @@ namespace viewer
         renderSys.beginDraw();
         renderSys.draw();
 
+        //物理演算デバッグ描画
+        dynamics::DynamicsWorld::getInstance().debugDraw();
+
 #if defined(LIME_GLES2)
         textRenderer_.draw();
 #endif
+
         renderSys.endDraw();
 
         lframework::System::debugDrawClear();
@@ -270,6 +277,7 @@ namespace viewer
         textRenderer_.terminate();
 #endif
 
+        dynamics::DynamicsWorld::terminate();
         lframework::System::terminate();
     }
 

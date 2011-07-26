@@ -21,7 +21,7 @@ namespace egda
     class Application
     {
     public:
-        static const u32 MaxChars = 256;
+        static const u32 MaxChars = 32;
         static const u32 CharW = 9;
         static const u32 CharH = 20;
 

@@ -76,7 +76,7 @@ namespace pmm
         io::read(is, rhs.path_, 256);
         rhs.path_[255] = '\0';
 
-        extractFileNameUTF8(rhs.path_);
+        extractFileNameUTF8(rhs.path_, 256);
 
         io::read(is, rhs.elements_[ ModelInfo::Element_SelectedIndex ]);
         io::read(is, rhs.elements_[ ModelInfo::Element_Visible ]);
@@ -362,7 +362,7 @@ namespace pmm
         io::read(is, rhs.path_, 256);
         rhs.path_[255] = '\0';
 
-        extractFileNameUTF8(rhs.path_);
+        extractFileNameUTF8(rhs.path_, 256);
 
         io::read(is, rhs.unknown_);
         return is;
@@ -671,6 +671,11 @@ namespace pmm
     }
 #endif
 
+    void ModelPack::releaseRedandantData()
+    {
+        pmd::RigidBodyPack empty;
+        empty.swap(rigidBodyPack_);
+    }
 
     //----------------------------------------------------------------------
     //---

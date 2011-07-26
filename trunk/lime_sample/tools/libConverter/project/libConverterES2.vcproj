@@ -198,6 +198,10 @@
 			>
 		</File>
 		<File
+			RelativePath="..\PmdDef.h"
+			>
+		</File>
+		<File
 			RelativePath="..\Pmm.cpp"
 			>
 		</File>
@@ -211,6 +215,14 @@
 		</File>
 		<File
 			RelativePath="..\PmmDef.h"
+			>
+		</File>
+		<File
+			RelativePath="..\RigidBodyData.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\RigidBodyData.h"
 			>
 		</File>
 		<File

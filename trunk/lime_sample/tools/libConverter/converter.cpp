@@ -371,7 +371,7 @@ namespace lconverter
     }
 #endif
 
-    void extractFileNameUTF8(Char* dst)
+    void extractFileNameUTF8(Char* dst, u32 buffSize)
     {
         LASSERT(dst);
         StringBuffer path;
@@ -384,6 +384,7 @@ namespace lconverter
         Char* filename = dst + dlen;
         u32 lenFilename = pathLen - dlen;
 #if defined(_WIN32)
+        buffSize;
         for(u32 i=0; i<lenFilename; ++i){
             dst[i] = filename[i];
         }
@@ -396,8 +397,8 @@ namespace lconverter
         path[lenFilename] = '\0';
 
         u32 utf8size = charcode::strSJISToUTF8(NULL, reinterpret_cast<const u8*>(filename));
-        if(utf8size>255){
-            //変換後が255バイトを超える場合サポートしない
+        if(utf8size>=buffSize){
+            //変換後がbuffSizeを超える場合サポートしない
             for(u32 i=0; i<lenFilename; ++i){
                 dst[i] = filename[i];
             }
