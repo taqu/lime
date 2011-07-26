@@ -864,7 +864,7 @@ namespace
         
         u32 length = lcore::strlen(currentStr_);
 
-        u32 buffSize = length*3+1;
+        u32 buffSize = length*2+1;
         lcore::Buffer buffer(buffSize); //UTF8用に大きく確保
         Char* texName = buffer.get<Char>(0);
         lcore::memcpy(texName, currentStr_, length+1); //コピー

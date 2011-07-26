@@ -544,6 +544,9 @@ namespace pmm
         inline const u16* getBoneMap();
         inline void setBoneMap(u16* boneMap);
 
+        pmd::RigidBodyPack& getRigidBodyPack(){ return rigidBodyPack_;}
+
+        void releaseRedandantData();
     private:
         friend class Loader;
 
@@ -557,6 +560,8 @@ namespace pmm
         lanim::AnimationControler* animControler_;
 
         u16* boneMap_;
+
+        pmd::RigidBodyPack rigidBodyPack_;
     };
 
     inline const u16* ModelPack::getBoneMap()

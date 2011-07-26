@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../;../../libConverter;../../../lib/anim"
+				AdditionalIncludeDirectories="../../../../;../../../../ext/include;../../libConverter;../../../lib/anim;../../../../ext/include/bullet;../../../lib/dynamics"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;LIME_GLES2"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,9 +63,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lframework_gles2_vc90_d.lib linput_vc90_d.lib libConverter_gles2_vc90_d.lib libEGL.lib libGLESv2.lib"
+				AdditionalDependencies="lframework_gles2_vc90_d.lib linput_vc90_d.lib libConverter_gles2_vc90_d.lib libEGL.lib libGLESv2.lib LinearMath.lib BulletCollision.lib BulletDynamics.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../../../../lib;../../libConverter/lib"
+				AdditionalLibraryDirectories="../../../../lib;../../../../ext/win32/lib/;../../libConverter/lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../../../;../../libConverter;../../../lib/anim"
+				AdditionalIncludeDirectories="../../../../;../../../../ext/include;../../libConverter;../../../lib/anim;../../../../ext/include/bullet;../../../lib/dynamics"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;LIME_GLES2"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -140,9 +140,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lframework_gles2_vc90.lib linput_vc90.lib libConverter_gles2_vc90.lib libEGL.lib libGLESv2.lib"
+				AdditionalDependencies="lframework_gles2_vc90.lib linput_vc90.lib libConverter_gles2_vc90.lib libEGL.lib libGLESv2.lib LinearMath.lib BulletCollision.lib BulletDynamics.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../../../lib;../../libConverter/lib"
+				AdditionalLibraryDirectories="../../../../lib;../../../../ext/win32/lib/;../../libConverter/lib"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -251,6 +251,38 @@
 				</File>
 				<File
 					RelativePath="..\..\..\lib\anim\AnimationControlerImpl.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="dynamics"
+				>
+				<File
+					RelativePath="..\..\..\lib\dynamics\dynamics.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\lib\dynamics\DynamicsDebugDraw.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\lib\dynamics\DynamicsDebugDraw.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\lib\dynamics\DynamicsWorld.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\lib\dynamics\DynamicsWorld.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\lib\dynamics\RigidBodySkeleton.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\..\lib\dynamics\RigidBodySkeleton.h"
 					>
 				</File>
 			</Filter>

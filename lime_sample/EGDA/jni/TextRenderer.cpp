@@ -308,8 +308,6 @@ namespace
         u32 numMaxCharacters_;
         u32 count_;
 
-        VertexBufferRef vb_;
-
         TextVertex* buffer_;
 
         f32 unitW_;

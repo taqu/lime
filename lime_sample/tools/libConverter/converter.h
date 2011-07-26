@@ -57,7 +57,7 @@ namespace lconverter
     f32 texAddress(f32 value, TextureAddress op);
 
     void strSJISToUTF8(Char* dst, u32 buffSize);
-    void extractFileNameUTF8(Char* dst);
+    void extractFileNameUTF8(Char* dst, u32 buffSize);
 
     typedef lcore::vector_arena<Char> S8Vector;
     typedef lcore::vector_arena<s16> S16Vector;

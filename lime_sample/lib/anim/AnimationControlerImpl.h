@@ -70,6 +70,12 @@ namespace lanim
             return resource_.getSkeletonPose();
         }
 
+        /// ポーズ取得
+        inline SkeletonPose& getSkeletonPose()
+        {
+            return resource_.getSkeletonPose();
+        }
+
         /// フラグセット取得
         inline const Flags& getFlags() const
         {
@@ -182,6 +188,12 @@ namespace lanim
 
         /// ポーズ取得
         inline const SkeletonPose& getSkeletonPose() const
+        {
+            return resource_.getSkeletonPose();
+        }
+
+        /// ポーズ取得
+        inline SkeletonPose& getSkeletonPose()
         {
             return resource_.getSkeletonPose();
         }

@@ -11,7 +11,7 @@
 #include <lgraphics/api/SamplerState.h>
 #include <lgraphics/api/VertexBufferRef.h>
 #include <lframework/scene/lscene.h>
-#include "converter.h"
+#include "RigidBodyData.h"
 
 namespace lmath
 {
@@ -31,30 +31,6 @@ namespace lanim
 
 namespace pmd
 {
-    using lcore::Char;
-    using lcore::s8;
-    using lcore::s16;
-    using lcore::s32;
-
-    using lcore::u8;
-    using lcore::u16;
-    using lcore::u32;
-
-    using lcore::f32;
-
-    typedef lcore::Char CHAR;
-    typedef u8 BYTE;
-    typedef u16 WORD;
-    typedef u32 DWORD;
-    typedef f32 FLOAT;
-
-    static const u32 NameSize = 20;
-    static const u32 FileNameSize = 20;
-    static const u32 CommentSize = 256;
-    static const u32 LabelNameSize = 50;
-    static const u32 ToonTexturePathSize = 100;
-    static const u32 FilePathSize = 256;
-    static const u32 NumToonTextures = 11;
 
     static const u8 MaxBones = lscene::MAX_BONES;
     static const u8 BoneFreeSlot = 0xFFU;
@@ -65,8 +41,8 @@ namespace pmd
     static const u32 NumLimitJoint = 1; ///動き制限するジョイントキーワード数
     extern const Char* LimitJointName[NumLimitJoint]; ///動き制限するジョイントキーワード
 
-    extern const f32 ColorRatio; //色の割合
-    extern const f32 AmbientRatio; //環境光の割合
+    struct RigidBody;
+    struct Constraint;
 
     //--------------------------------------
     //---
@@ -151,7 +127,7 @@ namespace pmd
     //--------------------------------------
     struct Material
     {
-        static const u32 PathBufferSize = FileNameSize*3;
+        static const u32 PathBufferSize = FileNameSize*2;
 
         enum TextureType
         {
@@ -166,7 +142,7 @@ namespace pmd
         FLOAT ambient_[3];
 
         DWORD faceVertexCount_;
-        CHAR textureFileName_[ PathBufferSize ]; //UTF8とヌル文字用にパディング
+        CHAR textureFileName_[ PathBufferSize + 4]; //UTF8とヌル文字用にパディング
 
         CHAR* textureFileNames_[TexType_Num];
 
@@ -672,6 +648,7 @@ namespace pmd
 
         inline DispLabel& getDispLabel();
 
+        RigidBodyPack& getRigidBodyPack(){ return rigidBodyPack_;}
     private:
 
         class ToonTexturePack
@@ -715,6 +692,9 @@ namespace pmd
 
         void createInternalNameTextureMap();
 
+        /// 剛体、拘束データロード
+        void loadRigidBodies();
+
         State state_;
         lcore::ifstream input_;
 
@@ -747,6 +727,8 @@ namespace pmd
         DispLabel dispLabel_;
 
         ToonTexturePack toonTextures_;
+
+        RigidBodyPack rigidBodyPack_; //剛体データ
 
 //デバッグ用ログ
 #if defined(LIME_LIBCONVERTER_DEBUGLOG_ENABLE)

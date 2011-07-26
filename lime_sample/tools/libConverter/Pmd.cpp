@@ -67,9 +67,6 @@ namespace pmd
     static const u32 TexNameSize = lgraphics::MAX_NAME_BUFFER_SIZE;
     typedef lgraphics::NameString TextureName;
 
-    const f32 ColorRatio = 0.4f;
-    const f32 AmbientRatio = 0.6f;
-
 namespace
 {
     /**
@@ -1110,6 +1107,7 @@ namespace
 
         //英語名ロード
         loadNamesForENG();
+
         return true;
     }
 
@@ -1140,6 +1138,10 @@ namespace
 
         case State_LoadToonTexture: //トゥーン用テクスチャロード
             loadToonTextures(directory);
+
+            // 剛体、拘束データここでロード
+            loadRigidBodies();
+
             state_ = State_LoadTexture;
             break;
 
@@ -1597,5 +1599,45 @@ namespace
     {
         NameTextureMap tmp(numMaterials_*2);
         texMapInternal_.swap(tmp);
+    }
+
+
+    //-------------------------------------
+    // 剛体、拘束データロード
+    void Pack::loadRigidBodies()
+    {
+        u32 numRigidBodies = 0;
+        RigidBody* rigidBodies = NULL;
+
+        u32 numConstraints = 0;
+        Constraint* constraints = NULL;
+
+        const u16* boneMap = dispLabel_.getBoneMap();
+
+        lcore::io::read(input_, numRigidBodies);
+        if(numRigidBodies==0){
+            return;
+        }
+
+        rigidBodies = LIME_NEW RigidBody[ numRigidBodies ];
+        for(u32 i=0; i<numRigidBodies; ++i){
+            input_ >> rigidBodies[i];
+
+            //ボーンインデックスを新しいものにマッピング
+            if(rigidBodies[i].boneIndex_ >= numBones_){
+                rigidBodies[i].boneIndex_ = 0xFFFFU;
+            }else{
+                rigidBodies[i].boneIndex_ = boneMap[ rigidBodies[i].boneIndex_ ];
+            }
+        }
+
+        lcore::io::read(input_, numConstraints);
+        constraints = LIME_NEW Constraint[ numConstraints ];
+        for(u32 i=0; i<numConstraints; ++i){
+            input_ >> constraints[i];
+        }
+
+        RigidBodyPack tmp(numRigidBodies, rigidBodies, numConstraints, constraints);
+        rigidBodyPack_.swap(tmp);
     }
 }

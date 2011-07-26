@@ -66,6 +66,13 @@ namespace lscene
 
         shader_.setMatrix(params_[ParamVS_WVP], mat);
 
+        if(params_[ParamVS_WV]>0){
+            mat = scene.getViewMatrix();
+            mat *= drawable->getWorldMatrix();
+            shader_.setMatrix(params_[ParamVS_WV], mat);
+        }
+
+
         if(geometry->getFlags().checkFlag( Geometry::GeomFlag_LightingVS )){
             const lscene::LightEnvironment& lightEnv = scene.getLightEnv();
 
@@ -278,6 +285,7 @@ namespace shader
     const char* ParamVSNames[ParamVS_Num] =
     {
         "mwvp",
+        "mwv",
         "dlDir",
         "dlColor",
         "camPos",

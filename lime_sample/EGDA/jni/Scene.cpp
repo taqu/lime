@@ -33,6 +33,8 @@
 
 #include "AnimationControlerIK.h"
 #include "AnimationControlerImpl.h"
+#include "RigidBodySkeleton.h"
+#include "DynamicsWorld.h"
 
 #include "Input.h"
 
@@ -89,6 +91,8 @@ namespace egda
 
         Camera camera_;
         Light light_;
+
+        dynamics::RigidBodySkeleton* rigidBodySkeletones_;
     };
 
     Scene::Impl::Impl()
@@ -100,6 +104,7 @@ namespace egda
         ,modelPacks_(NULL)
         ,numAccessories_(0)
         ,accPacks_(NULL)
+        ,rigidBodySkeletones_(NULL)
     {
     }
 
@@ -108,6 +113,7 @@ namespace egda
         ,frameCounter_(0)
         ,startFrame_(0)
         ,lastFrame_(0)
+        ,rigidBodySkeletones_(NULL)
     {
         numModels_ = loader.getNumModels();
         numAccessories_ = loader.getNumAccessories();
@@ -130,6 +136,8 @@ namespace egda
     void Scene::Impl::release()
     {
         state_ = Scene::State_Stop;
+
+        LIME_DELETE_ARRAY(rigidBodySkeletones_);
 
         numAccessories_= 0;
         LIME_DELETE_ARRAY(accPacks_);
@@ -231,6 +239,20 @@ namespace egda
             light_.update(startFrame_);
         }
 
+        {//剛体物理初期化
+            rigidBodySkeletones_ = LIME_NEW dynamics::RigidBodySkeleton[numModels_];
+            for(u32 i=0; i<numModels_; ++i){
+                pmd::RigidBodyPack& pack = modelPacks_[i].getRigidBodyPack();
+
+                if(pack.numRigidBodies_>0){
+                    rigidBodySkeletones_[i].create(
+                        modelPacks_[i].getAnimationControler()->getSkeletonPose(),
+                        *( modelPacks_[i].getObject()->getSkeleton() ),
+                        pack);
+                }
+            }
+        }
+
         lgraphics::Graphics::getDevice().flush(); //モーフィング更新のためフラッシュ
     }
 
@@ -259,6 +281,8 @@ namespace egda
                     lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
                     animSys.update();
                 }
+
+                dynamics::DynamicsWorld::getInstance().step(1.0f/30.0f);
 
                 //アクセサリ更新
                 for(u32 i=0; i<numAccessories_; ++i){

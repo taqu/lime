@@ -398,6 +398,7 @@ namespace pmm
 #endif
                 modelPacks_[loadModelIndex_].set(object);
                 modelPacks_[loadModelIndex_].setSkinPack(pmdPack_.getSkinPack());
+                modelPacks_[loadModelIndex_].getRigidBodyPack().swap( pmdPack_.getRigidBodyPack());
                 pmdPack_.release();
 
                 //フレームロード

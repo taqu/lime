@@ -317,38 +317,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\scene\IOGeometry.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\IOGeometry.h"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\IOHeader.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\IOHeader.h"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\IOMaterial.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\IOMaterial.h"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\IOObject.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\IOObject.h"
-				>
-			</File>
-			<File
 				RelativePath="..\scene\LightEnvironment.h"
 				>
 			</File>
