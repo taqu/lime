@@ -1513,6 +1513,7 @@ namespace
         //0î‘ñ⁄ÉçÅ[Éh
         toonTextures_.textures_[0] = loadTexture(tex0, sizeof(tex0)-1, buffer, *nameTexMap_, toonTextures_.samplers_[0], true);
 
+
         u32 utf8size = 0;
         Char name[ToonTexturePathSize+1];
         Char tmp[ToonTexturePathSize+1];

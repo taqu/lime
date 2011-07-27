@@ -42,6 +42,9 @@ namespace dynamics
     class RigidBodySkeleton
     {
     public:
+        class MotionStateBoneDynamics;
+        class MotionStateDynamicsRotation;
+
         RigidBodySkeleton();
         ~RigidBodySkeleton();
 
@@ -55,11 +58,14 @@ namespace dynamics
             lanim::Skeleton& skeleton,
             pmd::RigidBodyPack& rigidBodyPack);
 
+        void reset();
+
+        void updateWorldTransform();
+
         /// ÉfÅ[É^âï˙
         void release();
 
     private:
-
         lmath::Matrix34* matrices_;
 
         u32 numRigidBodies_; /// çÑëÃêî
@@ -69,6 +75,8 @@ namespace dynamics
 
         u32 numConstraints_; /// çSë©êî
         btTypedConstraint** constraints_; /// çSë©
+
+        u32 numMotionStateNotDynamicsRots_;
     };
 }
 #endif //INC_RIGIDBODYSKELETON_H__

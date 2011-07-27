@@ -325,6 +325,12 @@ namespace viewer
                     lanim::AnimationSystem &animSys = lframework::System::getAnimSys();
                     animSys.update();
                 }
+
+                //物理演算
+                for(u32 i=0; i<numModels_; ++i){
+                    rigidBodySkeletones_[i].updateWorldTransform();
+                }
+
                 dynamics::DynamicsWorld::getInstance().step(1.0f/30.0f);
 
                 //アクセサリ更新
@@ -361,6 +367,7 @@ namespace viewer
         for(u32 i=0; i<numModels_; ++i){
 
             modelPacks_[i].getAnimationControler()->reset(startFrame);
+            rigidBodySkeletones_[i].reset();
         }
 
         for(u32 i=1; i<numAccessories_; ++i){

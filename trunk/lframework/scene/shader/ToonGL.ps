@@ -146,12 +146,8 @@ vec2 sample;
     float shininess = specular.w;
     float rs = pow(cosNH, shininess);
 
-    color.xyz = (color.xyz * cosNH + specular.xyz * rs) * dlColor.xyz + ambient * color.xyz;
+    color.xyz = (color.xyz  + specular.xyz * rs) * dlColor.xyz + ambient * color.xyz;
 
-    //color.xyz = (color.xyz * cosNH + specular.xyz * (rs + cosNH * (c_fone - cosNE))) * dlColor.xyz;
-    //color.xyz += ambient * color.xyz;
-
-    //color.xyz = color.xyz * cosNH * dlColor.xyz + ambient * color.xyz; //omit specular
 #else
     color.xyz *= dlColor.xyz;
 #endif

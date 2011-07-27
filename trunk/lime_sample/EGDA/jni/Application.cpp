@@ -89,7 +89,7 @@ namespace egda
             lightEnv.getDirectionalLight().setDirection(lmath::Vector3(0.0f, 1.0f, 0.0f));
         }
 
-        dynamics::DynamicsWorld::initialize();
+        dynamics::DynamicsWorld::initialize(false);
 
         prevMSec_ = lcore::getTime();
         currentMSec_ = prevMSec_;
@@ -139,7 +139,7 @@ namespace egda
         renderSys.draw();
 
         //物理演算デバッグ描画
-        dynamics::DynamicsWorld::getInstance().debugDraw();
+        //dynamics::DynamicsWorld::getInstance().debugDraw();
 
 #if defined(LIME_EGDA_DISP_FPS)
         textRenderer_.draw();
