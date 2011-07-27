@@ -26,7 +26,7 @@ namespace dynamics
     {
     public:
         static DynamicsWorld& getInstance(){ return instance_;}
-        static void initialize();
+        static void initialize(bool debugDraw);
         static void terminate();
 
         btDynamicsWorld* getWorld(){ return dynamicsWorld_; }

@@ -102,7 +102,7 @@ namespace viewer
             lconverter::Config::getInstance().setAlphaTest(true);
             lconverter::Config::getInstance().setTextureCompress(false);
 
-            dynamics::DynamicsWorld::initialize();
+            dynamics::DynamicsWorld::initialize(false);
         }
 
 #if 1
@@ -114,8 +114,8 @@ namespace viewer
             //loader_->open("mikumiku.pmm", "data/MikuMiku/");
             //loader_->open("test.pmm", "data/MikuMiku/");
             //loader_->open("kkhscene01.pmm", "data/StrobeNights/");
-            //loader_->open("SampleAllStar.pmm", "data/pmm/");
-            loader_->open("Sample.pmm", "data/pmm/");
+            loader_->open("SampleAllStar.pmm", "data/pmm/");
+            //loader_->open("Sample.pmm", "data/pmm/");
             if(loader_->getErrorCode() != pmm::Loader::Error_None){
                 LIME_DELETE(loader_);
                 status_ = Status_Play;

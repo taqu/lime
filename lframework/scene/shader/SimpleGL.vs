@@ -14,7 +14,6 @@ const MP float f_1_100 = 0.01;
 const MP float c_fzero = 0.0;
 const MP float c_fone = 1.0;
 const MP float c_fhalf = 0.5;
-
 uniform mat4 mwvp; //World * View * Projection Matrix
 uniform mat4 mwv; //World * View Matrix
 
@@ -155,8 +154,8 @@ void main()
     vec3 posLighting = position.xyz;
 #endif
 
-    position *= mwvp;
-    normal *= mwv;
+    position = position * mwvp;
+    normal = normal * mwv;
 
 //linear-z
     position.z *= position.w;
@@ -185,30 +184,34 @@ void main()
 #ifdef LIGHTVS
 
 #ifdef VNORMAL
+    normal.xyz = normalize(normal.xyz);
 
 #ifdef TEXSHADE
-    normal.xyz = normalize(normal.xyz);
+
     MP vec3 E = normalize(camPos - posLighting);
     MP vec3 H = normalize(dlDir+E);
 
+    MP float cosNL = dot(normal.xyz, dlDir);
+
     MP vec4 tex3;
-    tex3.xy = vec2(c_fone + dot(normal.xyz, dlDir));
+    tex3.xy = vec2(c_fone + cosNL);
     tex3.zw = vec2(normal.xy + vec2(c_fone, c_fone));
     v_tex3 = tex3 * c_fhalf;
 
+    cosNL = max(c_fzero, cosNL);
     MP float cosNH = max(c_fzero, dot(normal.xyz, H));
+
     v_specular0.xyz = specular.xyz * pow(cosNH, specular.w);
-    v_specular0.w = cosNH;
+    v_specular0.w = cosNL;
 
 #else //TEXSHADE
-    normal.xyz = normalize(normal.xyz);
     MP vec3 E = normalize(camPos - posLighting);
     MP vec3 H = normalize(dlDir+E);
 
     MP float cosNH = max(c_fzero, dot(normal.xyz, H));
 
     v_specular0.xyz = specular.xyz *  pow(cosNH, specular.w);
-    v_specular0.w = cosNH;
+    v_specular0.w = c_fone;
 #endif //TEXSHADE
 
 #else

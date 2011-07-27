@@ -27,16 +27,11 @@ namespace dynamics
     {
     }
 
-    void DynamicsWorld::initialize()
+    void DynamicsWorld::initialize(bool debugDraw)
     {
         if(instance_.dynamicsWorld_ != NULL){
             return;
         }
-
-        instance_.debugDraw_ = LIME_NEW DynamicsDebugDraw();
-        instance_.debugDraw_->initialize();
-
-
 
         instance_.collisionConfiguration_ = LIME_NEW btDefaultCollisionConfiguration;
         instance_.dispatcher_ = LIME_NEW btCollisionDispatcher( instance_.collisionConfiguration_ );
@@ -60,7 +55,12 @@ namespace dynamics
             instance_.collisionConfiguration_ );
 
         instance_.dynamicsWorld_->setGravity(btVector3(0.0f,-2.5f*9.8f,0.0f));
-        instance_.dynamicsWorld_->setDebugDrawer( instance_.debugDraw_ );
+
+        if(debugDraw){
+            instance_.debugDraw_ = LIME_NEW DynamicsDebugDraw();
+            instance_.debugDraw_->initialize();
+            instance_.dynamicsWorld_->setDebugDrawer( instance_.debugDraw_ );
+        }
 
     }
 
