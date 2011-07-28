@@ -154,8 +154,8 @@ void main()
     vec3 posLighting = position.xyz;
 #endif
 
-    position = position * mwvp;
-    normal = normal * mwv;
+    position = mwvp * position;
+    normal = mwv * normal;
 
 //linear-z
     position.z *= position.w;
