@@ -64,12 +64,14 @@ namespace lscene
         lmath::Matrix44 mat( scene.getViewProjMatrix() );
         mat *= drawable->getWorldMatrix();
 
-        shader_.setMatrix(params_[ParamVS_WVP], mat);
+        mat.transpose();
+        shader_.setMatrix(params_[ParamVS_WVP], mat, 0);
 
         if(params_[ParamVS_WV]>0){
             mat = scene.getViewMatrix();
             mat *= drawable->getWorldMatrix();
-            shader_.setMatrix(params_[ParamVS_WV], mat);
+            mat.transpose();
+            shader_.setMatrix(params_[ParamVS_WV], mat, 0);
         }
 
 
