@@ -91,8 +91,7 @@ namespace lmath
 
             z = m_[c][0] * rhs.m_[0][2]
                 + m_[c][1] * rhs.m_[1][2]
-                + m_[c][2] * rhs.m_[2][2]
-                + m_[c][3] * rhs.m_[3][2];
+                + m_[c][2] * rhs.m_[2][2];
 
             w = m_[c][0] * rhs.m_[0][3]
                 + m_[c][1] * rhs.m_[1][3]

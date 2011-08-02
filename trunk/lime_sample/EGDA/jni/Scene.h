@@ -45,6 +45,8 @@ namespace egda
         void setCameraMode(s32 mode);
         s32 getCameraMode() const;
 
+        void setPhysics(bool physics);
+
         void swap(Scene& rhs);
 
         void resetProjection();

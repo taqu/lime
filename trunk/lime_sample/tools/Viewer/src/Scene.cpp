@@ -328,10 +328,14 @@ namespace viewer
 
                 //物理演算
                 for(u32 i=0; i<numModels_; ++i){
-                    rigidBodySkeletones_[i].updateWorldTransform();
+                    rigidBodySkeletones_[i].setRigidBodyPosition();
                 }
 
-                dynamics::DynamicsWorld::getInstance().step(1.0f/30.0f);
+                dynamics::DynamicsWorld::getInstance().step(1000.0f/30.0f);
+
+                for(u32 i=0; i<numModels_; ++i){
+                    rigidBodySkeletones_[i].updateBoneMatrix();
+                }
 
                 //アクセサリ更新
                 for(u32 i=0; i<numAccessories_; ++i){
