@@ -63,6 +63,7 @@ namespace egda
 
         void setState(s32 state){ scene_.setState( static_cast<Scene::State>(state) );}
         void setCameraMode(s32 mode){ scene_.setCameraMode(mode);}
+        void setPhysics(bool physics){ scene_.setPhysics(physics);}
 
         void resetProjection(){ scene_.resetProjection(); }
     private:

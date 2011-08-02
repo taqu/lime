@@ -71,6 +71,8 @@ namespace egda
 
         void setState(Scene::State state);
 
+        void setPhysics(bool physics){ physics_ = physics;}
+
         /// フレーム進行リセット
         void resetFrame();
 
@@ -93,6 +95,8 @@ namespace egda
         Light light_;
 
         dynamics::RigidBodySkeleton* rigidBodySkeletones_;
+
+        bool physics_;
     };
 
     Scene::Impl::Impl()
@@ -105,6 +109,7 @@ namespace egda
         ,numAccessories_(0)
         ,accPacks_(NULL)
         ,rigidBodySkeletones_(NULL)
+        ,physics_(false)
     {
     }
 
@@ -114,6 +119,7 @@ namespace egda
         ,startFrame_(0)
         ,lastFrame_(0)
         ,rigidBodySkeletones_(NULL)
+        ,physics_(false)
     {
         numModels_ = loader.getNumModels();
         numAccessories_ = loader.getNumAccessories();
@@ -181,6 +187,7 @@ namespace egda
 
             lanim::AnimationClip::pointer& animClip = modelPacks_[i].getAnimationClip();
 
+            //IK有りか無しか
             if(object->getIKPack() != NULL
                 && object->getIKPack()->getNumIKs() > 0)
             {
@@ -212,29 +219,28 @@ namespace egda
             modelPacks_[i].getAnimationControler()->reset(startFrame);
         }
 
-        //アクセサリ描画登録
-        for(u32 i=0; i<numAccessories_; ++i){
-            lscene::Object* object = accPacks_[i].getObject();
-            LASSERT(object != NULL);
-            
-            if(accPacks_[i].isDisp()){
-                object->initializeShader();
-                object->addDraw();
-                accPacks_[i].reset(numModels_, modelPacks_);
+        {//アクセサリ描画登録
+            for(u32 i=0; i<numAccessories_; ++i){
+                lscene::Object* object = accPacks_[i].getObject();
+                LASSERT(object != NULL);
+
+                if(accPacks_[i].isDisp()){
+                    object->initializeShader();
+                    object->addDraw();
+                    accPacks_[i].reset(numModels_, modelPacks_);
+                }
             }
         }
 
 
-        {
-            // カメラ初期化
+        {// カメラ初期化
             const pmm::CameraPose& cameraPose = cameraAnimPack_.getPose(0);
             camera_.setInitial(cameraPose);
             camera_.setCameraAnim(&cameraAnimPack_);
             camera_.update(Camera::Mode_FrameAnim, startFrame_);
         }
 
-        {
-            //ライト初期化
+        {//ライト初期化
             light_.setLightAnim(&lightAnimPack_);
             light_.update(startFrame_);
         }
@@ -262,6 +268,7 @@ namespace egda
         switch(state_)
         {
         case State_Stop:
+            //アニメーション停止中でもマニュアルカメラ操作
             if(camera_.getMode() == Camera::Mode_Manual){
                 camera_.update(frameCounter_);
             }
@@ -269,7 +276,7 @@ namespace egda
 
         case State_Play:
             {
-                u32 nextFrame;
+                u32 nextFrame; //次の頂点モーフ用バッファ準備のため
 
                 if(++frameCounter_>lastFrame_){
                     resetFrame();
@@ -282,16 +289,30 @@ namespace egda
                     animSys.update();
                 }
 
-                dynamics::DynamicsWorld::getInstance().step(1.0f/30.0f);
+                //物理演算
+                if(physics_){
+                    //剛体位置をボーン位置に修正　→　シュミレーション　→　剛体位置をボーンに書き戻し
+                    for(u32 i=0; i<numModels_; ++i){
+                        rigidBodySkeletones_[i].setRigidBodyPosition();
+                    }
+
+                    dynamics::DynamicsWorld::getInstance().step(1000.0f/30.0f);
+
+                    for(u32 i=0; i<numModels_; ++i){
+                        rigidBodySkeletones_[i].updateBoneMatrix();
+                    }
+                }
 
                 //アクセサリ更新
                 for(u32 i=0; i<numAccessories_; ++i){
                     accPacks_[i].update(frameCounter_);
                 }
 
+                //カメラ・ライト更新
                 camera_.update(frameCounter_);
                 light_.update(frameCounter_);
 
+                //モーフィング。次フレームのデータを準備
                 for(u32 i=0; i<numModels_; ++i){
                     modelPacks_[i].updateMorph(frameCounter_, nextFrame);
                 }
@@ -380,9 +401,15 @@ namespace egda
     {
         return static_cast<s32>( impl_->camera_.getMode() );
     }
+    
+    void Scene::setPhysics(bool physics)
+    {
+        impl_->setPhysics(physics);
+    }
 
     void Scene::swap(Scene& rhs)
     {
+        lcore::swap(impl_->physics_, rhs.impl_->physics_);
         lcore::swap(impl_, rhs.impl_);
     }
 

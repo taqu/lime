@@ -31,4 +31,5 @@
 <string name="On">On</string>
 <string name="Off">Off</string>
 <string name="mipmap">Mipmap</string>
+<string name="physics">Physics</string>
 </resources>

@@ -13,7 +13,7 @@ class btBroadphaseInterface;
 class btCollisionDispatcher;
 class btConstraintSolver;
 class btDefaultCollisionConfiguration;
-class btDynamicsWorld;
+class btDiscreteDynamicsWorld;
 class btCollisionShape;
 class btRigidBody;
 class btTypedCostraint;
@@ -29,7 +29,7 @@ namespace dynamics
         static void initialize(bool debugDraw);
         static void terminate();
 
-        btDynamicsWorld* getWorld(){ return dynamicsWorld_; }
+        btDiscreteDynamicsWorld* getWorld(){ return dynamicsWorld_; }
 
         void step(f32 steptime);
 
@@ -53,7 +53,10 @@ namespace dynamics
 
         btDefaultCollisionConfiguration* collisionConfiguration_;
 
-        btDynamicsWorld* dynamicsWorld_;
+        btDiscreteDynamicsWorld* dynamicsWorld_;
+
+        btCollisionShape *plane_;
+        btRigidBody *planeRigidBody_;
     };
 }
 #endif //INC_DYNAMICSWORLD_H__

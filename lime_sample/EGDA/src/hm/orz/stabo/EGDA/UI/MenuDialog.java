@@ -40,6 +40,7 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
         cameraMode_ = config.getCameraMode();
         isAlphaTest_ = config.isAlhpaTest();
         isMipmap_ = config.isMipmap();
+        isPhysics_ = config.isPhysics();
         isTextureCompress_ = config.isTextureCompress();
 
         // スクリーン回転
@@ -80,6 +81,12 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
         group.check(id);
         group.setOnCheckedChangeListener( this );
         
+        // 物理演算
+        group = (RadioGroup)findViewById(R.id.physics_radioGroup);
+        id = (isPhysics_)? R.id.physics_on : R.id.physics_off;
+        group.check(id);
+        group.setOnCheckedChangeListener( this );
+        
         // テクスチャ圧縮
         group = (RadioGroup)findViewById(R.id.texcomp_radioGroup);
         id = (isTextureCompress_)? R.id.texcomp_on : R.id.texcomp_off;
@@ -113,6 +120,14 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
             
         case R.id.mipmap_off:
         	isMipmap_ = false;
+            break;
+            
+        case R.id.physics_on:
+        	isPhysics_ = true;
+            break;
+            
+        case R.id.physics_off:
+        	isPhysics_ = false;
             break;
             
         case R.id.texcomp_on:
@@ -154,12 +169,14 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
                 || (cameraMode_ != config.getCameraMode())
                 || (isAlphaTest_ != config.isAlhpaTest())
                 || (isMipmap_ != config.isMipmap())
+                || (isPhysics_ != config.isPhysics())
                 || (isTextureCompress_ != config.isTextureCompress());
 
                 config.setCameraMode(cameraMode_);
                 config.setScreenMode(screenMode_);
                 config.setAlphaTest(isAlphaTest_);
                 config.setMipmap(isMipmap_);
+                config.setPhysics(isPhysics_);
                 config.setTextureCompress(isTextureCompress_);
 
                 if(changed){
@@ -167,7 +184,7 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
                 }
             }
             commandManager_.push(CommandManager.createChangeMode(
-                    commandManager_, screenMode_, cameraMode_, isAlphaTest_, isMipmap_, isTextureCompress_));
+                    commandManager_, screenMode_, cameraMode_, isAlphaTest_, isMipmap_, isPhysics_, isTextureCompress_));
             this.dismiss();
             break;
             
@@ -181,6 +198,7 @@ implements RadioGroup.OnCheckedChangeListener, AdapterView.OnItemSelectedListene
     int screenMode_ = 0;
     boolean isAlphaTest_ = false;
     boolean isMipmap_ = false;
+    boolean isPhysics_ = false;
     boolean isTextureCompress_ = false;
     private CommandManager commandManager_ = null;
 }

@@ -19,7 +19,7 @@ import android.util.Xml;
  *
  */
 public class Config
-{
+{ 
 	private static final String FileName = "config.xml";
 	private static final String XmlEncoding = "UTF-8";
 	private static final String Empty = "";
@@ -30,6 +30,7 @@ public class Config
 	private static final String TagScreenMode = "screen_mode";
 	private static final String TagAlphaTest = "alpha_test";
 	private static final String TagMipmap = "mipmap";
+	private static final String TagPhysics = "physics";
 	private static final String TagTextureCompress = "tex_compress";
 
 	public static final int Camera_Manual = 0;
@@ -138,6 +139,16 @@ public class Config
 	{
 		mipmap_ = mipmap;
 	}
+	
+	public boolean isPhysics()
+	{
+		return physics_;
+	}
+	
+	public void setPhysics(boolean physics)
+	{
+		physics_ = physics;
+	}
 
 	public boolean isTextureCompress()
     {
@@ -209,6 +220,9 @@ public class Config
                         } else if(xmlPullParser.getName().equals(TagMipmap)){
                         	mipmap_ = Boolean.parseBoolean(xmlPullParser.nextText());
                         	
+                        } else if(xmlPullParser.getName().equals(TagPhysics)){
+                        	physics_ = Boolean.parseBoolean(xmlPullParser.nextText());
+                        	
                         }else if(xmlPullParser.getName().equals(TagTextureCompress)){
                             textureCompress_ = Boolean.parseBoolean( xmlPullParser.nextText() );
                         }
@@ -268,6 +282,10 @@ public class Config
             xmlSerializer.text( Boolean.toString(mipmap_) );
             xmlSerializer.endTag(Empty, TagMipmap);
             
+            xmlSerializer.startTag(Empty, TagPhysics);
+            xmlSerializer.text( Boolean.toString(physics_) );
+            xmlSerializer.endTag(Empty, TagPhysics);
+            
             xmlSerializer.startTag(Empty, TagTextureCompress);
             xmlSerializer.text( Boolean.toString(textureCompress_) );
             xmlSerializer.endTag(Empty, TagTextureCompress);
@@ -292,6 +310,7 @@ public class Config
 	    screenMode_ = Screen_Rot0;
 	    alphaTest_ = false;
 	    mipmap_ = false;
+	    physics_ = false;
 	    textureCompress_ = false;
 	}
 
@@ -304,5 +323,6 @@ public class Config
 	private int screenMode_ = Screen_Rot0;
 	private boolean alphaTest_ = false;
 	private boolean mipmap_ = false;
+	private boolean physics_ = false;
 	private boolean textureCompress_ = false;
 }

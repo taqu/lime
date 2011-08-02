@@ -42,8 +42,7 @@ namespace dynamics
     class RigidBodySkeleton
     {
     public:
-        class MotionStateBoneDynamics;
-        class MotionStateDynamicsRotation;
+        class MotionStateKinematic;
 
         RigidBodySkeleton();
         ~RigidBodySkeleton();
@@ -60,7 +59,10 @@ namespace dynamics
 
         void reset();
 
-        void updateWorldTransform();
+        void updateBoneMatrix();
+
+        /// 剛体の位置をボーンに合わせる
+        void setRigidBodyPosition();
 
         /// データ解放
         void release();
@@ -76,7 +78,11 @@ namespace dynamics
         u32 numConstraints_; /// 拘束数
         btTypedConstraint** constraints_; /// 拘束
 
-        u32 numMotionStateNotDynamicsRots_;
+        u32 numTypeDynamicsBodies_;
+        btRigidBody** typeDynamicsBodies_;
+
+        u32 numTypeBoneDynamicsBodies_;
+        btRigidBody** typeBoneDynamicsBodies_;
     };
 }
 #endif //INC_RIGIDBODYSKELETON_H__

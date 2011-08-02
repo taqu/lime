@@ -25,115 +25,72 @@ namespace
         lhs.setValue( rhs.x_, rhs.y_, rhs.z_ );
     }
 
-    inline void setTransposed(lmath::Matrix44& dst, const lmath::Matrix34& src)
+    inline void setTransposed(btTransform& dst, const lmath::Matrix34& src)
     {
+        btMatrix3x3& basis = dst.getBasis();
+
         for(s32 i=0; i<3; ++i){
             for(s32 j=0; j<3; ++j){
-                dst.m_[i][j] = src.m_[j][i];
+                basis[i][j] = src.m_[i][j];
             }
         }
-        dst.m_[0][3] = dst.m_[1][3] = dst.m_[2][3] = 0.0f;
-        dst.m_[3][0] = src.m_[0][3]; dst.m_[3][1] = src.m_[1][3]; dst.m_[3][2] = src.m_[2][3];
-        dst.m_[3][3] = 1.0f;
+        dst.setOrigin( btVector3(src.m_[0][3], src.m_[1][3], src.m_[2][3]) );
     }
 
-    inline void setTransposed(lmath::Matrix34& dst, const lmath::Matrix44& src)
+    inline void setTransposed(lmath::Matrix34& dst, const btTransform& src)
     {
+        const btMatrix3x3& basis = src.getBasis();
+
         for(s32 i=0; i<3; ++i){
             for(s32 j=0; j<3; ++j){
-                dst.m_[i][j] = src.m_[j][i];
+                dst.m_[i][j] = basis[i][j];
             }
         }
-        dst.m_[0][3] = src.m_[3][0]; dst.m_[1][3] = src.m_[3][1]; dst.m_[2][3] = src.m_[3][2];
-    }
 
-    inline void setTransposed33(lmath::Matrix34& dst, const lmath::Matrix44& src)
-    {
-        for(s32 i=0; i<3; ++i){
-            for(s32 j=0; j<3; ++j){
-                dst.m_[i][j] = src.m_[j][i];
-            }
-        }
-    }
-
-
-
-
-    void setTransformRelative(btTransform& transform, const pmd::RigidBody& rigidBody, const lmath::Vector3& trans, const lmath::Vector3& rot, const lanim::Joint* joints)
-    {
-        lmath::Matrix34 mat;
-        mat.identity();
-        mat.rotateZ(-rot.z_);
-        mat.rotateY(-rot.y_);
-        mat.rotateX(-rot.x_);
-        mat.translate(trans);
-
-        lmath::Matrix34 matRigidBody;
-        matRigidBody.identity();
-        matRigidBody.rotateZ(-rigidBody.rotation_.z_);
-        matRigidBody.rotateY(-rigidBody.rotation_.y_);
-        matRigidBody.rotateX(-rigidBody.rotation_.x_);
-        matRigidBody.translate(rigidBody.position_);
-
-        if(rigidBody.boneIndex_ != 0xFFFFU){
-            const lanim::Joint& joint = joints[rigidBody.boneIndex_];
-            matRigidBody.translate(joint.getPosition());
-        }
-
-        matRigidBody.invert();
-        mat.mul(matRigidBody, mat);
-
-        lmath::Matrix44 tmp;
-        setTransposed(tmp, mat);
-        transform.setFromOpenGLMatrix(reinterpret_cast<btScalar*>(&tmp));
+        const btVector3& origin = src.getOrigin();
+        dst.m_[0][3] = origin.x();
+        dst.m_[1][3] = origin.y();
+        dst.m_[2][3] = origin.z();
     }
 
 }
 
     // ボーンアニメの結果反映、物理演算反映
-    class RigidBodySkeleton::MotionStateBoneDynamics : public btMotionState
+    class RigidBodySkeleton::MotionStateKinematic : public btMotionState
     {
     public:
-        MotionStateBoneDynamics(lmath::Matrix34* matrix, const lmath::Matrix34& matRigidBody)
-            :matrix_(matrix)
-            ,matRigidBody_(matRigidBody)
-            ,invMatRigidBody_(matRigidBody)
+        MotionStateKinematic(const btTransform& rigidBodyWorld, const btTransform& rigidBodyOffset, lmath::Matrix34* matrix)
+            :rigidBodyWorld_(rigidBodyWorld)
+            ,rigidBodyOffset_(rigidBodyOffset)
+            ,matrix_(matrix)
             ,parent_(NULL)
         {
-            invMatRigidBody_.invert();
+            invRigidBodyWorld_ = rigidBodyWorld_.inverse();
         }
 
 
-        virtual ~MotionStateBoneDynamics()
+        virtual ~MotionStateKinematic()
         {
         }
 
+        // アニメーション後の剛体位置を取得
         virtual void getWorldTransform(btTransform &worldTrans) const
         {
             lmath::Matrix44 tmp;
 
             if(matrix_ != NULL){
-                lmath::Matrix34 mat(*matrix_);
+                btTransform matBone;
+                setTransposed(matBone, *matrix_);
 
-                mat.mul(mat, matRigidBody_);
-
-                setTransposed(tmp, mat);
+                worldTrans = matBone * rigidBodyWorld_;
 
             }else{
-                setTransposed(tmp, matRigidBody_);
+                worldTrans = rigidBodyWorld_;
             }
-
-            worldTrans.setFromOpenGLMatrix( reinterpret_cast<const btScalar*>(&tmp) );
         }
 
         virtual void setWorldTransform(const btTransform &worldTrans)
         {
-            if(matrix_ != NULL){
-                lmath::Matrix44 tmp;
-                worldTrans.getOpenGLMatrix( reinterpret_cast<btScalar*>(&tmp) );
-                setTransposed(*matrix_, tmp);
-                matrix_->mul(*matrix_, invMatRigidBody_);
-            }
         }
 
         void setParent(btRigidBody* parent)
@@ -141,66 +98,64 @@ namespace
             parent_ = parent;
         }
 
+        // 位置リセット
         void reset()
         {
             LASSERT(parent_ != NULL);
-            btTransform worldTrans;
-            getWorldTransform(worldTrans);
-            parent_->setWorldTransform( worldTrans );
+            LASSERT(matrix_ != NULL);
+
+
+            btTransform transform = parent_->getWorldTransform();
+
+            getWorldTransform(transform);
+            parent_->setWorldTransform(transform);
+
+            btVector3 zero(0.0f, 0.0f, 0.0f);
+            parent_->setLinearVelocity(zero);
+            parent_->setAngularVelocity(zero);
+            parent_->setInterpolationLinearVelocity(zero);
+            parent_->setInterpolationAngularVelocity(zero);
+            parent_->setInterpolationWorldTransform(parent_->getWorldTransform());
+            parent_->clearForces();
+
         }
 
-    protected:
-        lmath::Matrix34* matrix_;
-        lmath::Matrix34 matRigidBody_;
-        lmath::Matrix34 invMatRigidBody_;
-        btRigidBody* parent_;
-    };
-
-
-    // ボーンアニメの位置反映、物理演算の回転反映
-    class RigidBodySkeleton::MotionStateDynamicsRotation : public MotionStateBoneDynamics
-    {
-    public:
-        MotionStateDynamicsRotation(lmath::Matrix34* matrix, const lmath::Matrix34& matRigidBody)
-            :MotionStateBoneDynamics(matrix, matRigidBody)
-            ,translation_(0.0f, 0.0f, 0.0f)
+        // スキニング用行列更新
+        void updateBoneMatrix()
         {
+            LASSERT(parent_ != NULL);
+            LASSERT(matrix_ != NULL);
+
+            btTransform tmp = parent_->getWorldTransform() * invRigidBodyWorld_;
+
+            setTransposed(*matrix_, tmp);
         }
 
-
-        virtual ~MotionStateDynamicsRotation()
-        {
-        }
-
-
-        //virtual void setWorldTransform(const btTransform &worldTrans)
-        //{
-        //    if(matrix_ != NULL){
-        //        btTransform world(worldTrans);
-        //        world.setOrigin(btVector3(translation_.x_, translation_.y_, translation_.z_));
-        //        lmath::Matrix44 tmp;
-        //        world.getOpenGLMatrix( reinterpret_cast<btScalar*>(&tmp) );
-        //        setTransposed(*matrix_, tmp);
-        //        matrix_->mul(*matrix_, invMatRigidBody_);
-
-        //        //const btVector3& btTrans = worldTrans.getOrigin();
-        //    }
-        //}
-
+        // 剛体の位置をボーンに合わせる
         void updatePosition()
         {
             LASSERT(parent_ != NULL);
-            btTransform worldTrans;
-            getWorldTransform(worldTrans);
-            parent_->setWorldTransform( worldTrans );
+            LASSERT(matrix_ != NULL);
 
-            const btVector3& btTrans = worldTrans.getOrigin();
-            translation_.set( btTrans.x(), btTrans.y(), btTrans.z() );
+            btTransform matBone;
+            setTransposed(matBone, *matrix_);
+
+            btTransform mat = matBone * rigidBodyWorld_;
+            matBone = matBone * rigidBodyWorld_;
+
+            const btVector3& currentPos = parent_->getWorldTransform().getOrigin();
+
+            btVector3 trans = matBone.getOrigin() - currentPos;
+            parent_->translate( trans );
         }
 
-        lmath::Vector3 translation_;
+    protected:
+        btTransform rigidBodyWorld_;
+        btTransform rigidBodyOffset_;
+        btTransform invRigidBodyWorld_;
+        lmath::Matrix34* matrix_;
+        btRigidBody* parent_;
     };
-
 
     //-----------------------------------------------------------
     RigidBodySkeleton::RigidBodySkeleton()
@@ -210,7 +165,10 @@ namespace
         ,collisionShapes_(NULL)
         ,numConstraints_(0)
         ,constraints_(NULL)
-        ,numMotionStateNotDynamicsRots_(0)
+        ,numTypeDynamicsBodies_(0)
+        ,typeDynamicsBodies_(NULL)
+        ,numTypeBoneDynamicsBodies_(0)
+        ,typeBoneDynamicsBodies_(NULL)
     {
     }
 
@@ -241,7 +199,7 @@ namespace
 
         release(); //解放
 
-        btDynamicsWorld* world = DynamicsWorld::getInstance().getWorld();
+        btDiscreteDynamicsWorld* world = DynamicsWorld::getInstance().getWorld();
         LASSERT(world != NULL);
 
         matrices_ = skeletonPose.getMatrices();
@@ -250,64 +208,69 @@ namespace
         //------------------------------------------------------------
         numRigidBodies_ = numRigidBodies;
 
-        rigidBodies_ = LIME_NEW btRigidBody*[numRigidBodies_];
+        rigidBodies_ = LIME_NEW btRigidBody*[3*numRigidBodies_]; //タイプ別処理用に３倍確保
+        typeDynamicsBodies_ = rigidBodies_ + numRigidBodies_; //タイプ別処理用
+        typeBoneDynamicsBodies_ = typeDynamicsBodies_ + numRigidBodies_; //タイプ別処理用
+
         collisionShapes_ = LIME_NEW btCollisionShape*[numRigidBodies_];
-
-        lanim::JointPose* jointPoses = skeletonPose.getPoses();
-
-        u32 lastIndex = numRigidBodies_-1;
-        u32 startIndex = 0;
 
         for(u32 i=0; i<numRigidBodies_; ++i){
             switch(rigidBodies[i].shapeType_)
             {
             case pmd::RigidBody::Shape_Sphere:
-                collisionShapes_[i] = LIME_NEW 	btSphereShape(1.0f);
+                collisionShapes_[i] = LIME_NEW 	btSphereShape(rigidBodies[i].size_.x_);
                 break;
 
             case pmd::RigidBody::Shape_Box:
                 {
-                    btVector3 size(1.0f, 1.0f, 1.0f);
-                    collisionShapes_[i] = LIME_NEW 	btBoxShape(size);
+                    collisionShapes_[i] = LIME_NEW 	btBoxShape( btVector3(rigidBodies[i].size_.x_, rigidBodies[i].size_.y_, rigidBodies[i].size_.z_) );
                 }
                 break;
 
             case pmd::RigidBody::Shape_Capsule:
             default:
-                collisionShapes_[i] = LIME_NEW btCapsuleShape(1.0f, 1.0f);
+                collisionShapes_[i] = LIME_NEW btCapsuleShape(rigidBodies[i].size_.x_, rigidBodies[i].size_.y_);
                 break;
             }
 
-            collisionShapes_[i]->setLocalScaling( btVector3( rigidBodies[i].size_.x_, rigidBodies[i].size_.y_, rigidBodies[i].size_.z_ ) );
-
+            //ボーン位置、スキニング用マトリックス取得
             lmath::Matrix34* matrix = NULL;
-            lmath::Vector3 bonePos(0.0f, 0.0f, 0.0f); //ボーン位置
+            lmath::Vector3 bonePos(0.0f, 0.0f, 0.0f);
             if(rigidBodies[i].boneIndex_ != 0xFFFFU){
                 matrix = matrices_ + rigidBodies[i].boneIndex_;
                 bonePos = skeleton.getJoint( rigidBodies[i].boneIndex_ ).getPosition();
+                //bonePos.mul( bonePos, *matrix );
+            }else if(skeleton.getNumJoints()>0){
+                matrix = matrices_;
+                bonePos = skeleton.getJoint(0).getPosition();
             }
 
+            //重量は1.0以上にならない
             btVector3 localInertia(0.0f, 0.0f, 0.0f);
-            if(rigidBodies[i].mass_>0.0f){
-                collisionShapes_[i]->calculateLocalInertia(rigidBodies[i].mass_, localInertia);
+            
+            f32 mass = (rigidBodies[i].type_ == pmd::RigidBody::Type_Bone)? 0.0f : rigidBodies[i].mass_;
+
+            if(mass>1.0f){
+                mass = 1.0f;
+            }
+            if(mass>0.0f){
+                collisionShapes_[i]->calculateLocalInertia(mass, localInertia);
             }
 
-            lmath::Matrix34 matRigidBody;
-            matRigidBody.identity();
-            matRigidBody.rotateZ( -rigidBodies[i].rotation_.z_ );
-            matRigidBody.rotateY( -rigidBodies[i].rotation_.y_ );
-            matRigidBody.rotateX( -rigidBodies[i].rotation_.x_ );
-            
-            matRigidBody.translate( rigidBodies[i].position_ );
-            matRigidBody.translate(bonePos);
+            btTransform matRigidBody;
+            matRigidBody.getBasis().setEulerZYX(rigidBodies[i].rotation_.x_, rigidBodies[i].rotation_.y_, rigidBodies[i].rotation_.z_);
+            matRigidBody.setOrigin( btVector3(rigidBodies[i].position_.x_, rigidBodies[i].position_.y_, rigidBodies[i].position_.z_) );
+
+            btTransform matRigidBodyWorld;
+            matRigidBodyWorld.setIdentity();
+            matRigidBodyWorld.setOrigin( btVector3(bonePos.x_, bonePos.y_, bonePos.z_) );
+            matRigidBodyWorld = matRigidBodyWorld * matRigidBody;
 
 
-            MotionStateBoneDynamics* motionState = (rigidBodies[i].type_ == pmd::RigidBody::Type_BoneDynamics)
-                ? LIME_NEW MotionStateBoneDynamics( matrix, matRigidBody )
-                : LIME_NEW MotionStateBoneDynamics( matrix, matRigidBody );
+            MotionStateKinematic* motionState = LIME_NEW MotionStateKinematic( matRigidBodyWorld, matRigidBody, matrix );
 
             btRigidBody::btRigidBodyConstructionInfo rbInfo(
-                rigidBodies[i].mass_,
+                mass,
                 motionState,
                 collisionShapes_[i],
                 localInertia);
@@ -316,11 +279,12 @@ namespace
             rbInfo.m_angularDamping = rigidBodies[i].angularDamping_;
             rbInfo.m_restitution = rigidBodies[i].restitution_;
             rbInfo.m_friction = rigidBodies[i].friction_;
+            rbInfo.m_additionalDamping = true;
 
             btRigidBody* rigidBody = LIME_NEW btRigidBody(rbInfo);
 
             rigidBody->setDeactivationTime(0.8f);
-            rigidBody->setSleepingThresholds(1.6f, 2.5f);
+            rigidBody->setSleepingThresholds(0.0f, 0.0f);
 
             motionState->setParent(rigidBody);
 
@@ -328,33 +292,34 @@ namespace
             switch(rigidBodies[i].type_)
             {
             case pmd::RigidBody::Type_Bone: //ボーンの状態を反映
-                {//Kinematicオブジェクトで、前から詰める
+                {//Kinematicオブジェクト
                     rigidBody->setActivationState(DISABLE_DEACTIVATION);
                     rigidBody->setCollisionFlags( rigidBody->getCollisionFlags() | btCollisionObject::CF_KINEMATIC_OBJECT);
-
-                    rigidBodies_[startIndex++] = rigidBody;
-                    ++numMotionStateNotDynamicsRots_;
                 }
                 break;
 
             case pmd::RigidBody::Type_Dynamics: //物理演算の結果反映
-                {//前から詰める
-                    rigidBodies_[startIndex++] = rigidBody;
-                    ++numMotionStateNotDynamicsRots_;
+                {
+                    //関連ボーンがあれば、タイプ別処理用の配列にも入れる
+                    if(matrix != NULL){
+                        typeDynamicsBodies_[numTypeDynamicsBodies_++] = rigidBody;
+                    }
                 }
                 break;
 
             case pmd::RigidBody::Type_BoneDynamics: //位置はボーン、回転は物理演算の結果反映
-                {//後から詰める
-                    rigidBodies_[startIndex++] = rigidBody;
-                    ++numMotionStateNotDynamicsRots_;
-                    //rigidBodies_[lastIndex--] = rigidBody;
+                {
+                    //関連ボーンがあれば、タイプ別処理用の配列にも入れる
+                    if(matrix != NULL){
+                        typeBoneDynamicsBodies_[numTypeBoneDynamicsBodies_++] = rigidBody;
+                    }
                 }
                 break;
             };
 
+            rigidBodies_[i] = rigidBody;
             u16 group = 0x01U << rigidBodies[i].collideGroup_;
-            world->addRigidBody(rigidBody, group, rigidBodies[i].collideMask_);
+            world->addRigidBody(rigidBody, (short)group, (short)rigidBodies[i].collideMask_);
 
         }
 
@@ -378,18 +343,28 @@ namespace
                 continue;
             }
 
+            const lmath::Vector3& rot = constraints[i].rotation_;
+            const lmath::Vector3& pos = constraints[i].position_;
+
+            btTransform matConstraint;
+            matConstraint.getBasis().setEulerZYX( rot.x_, rot.y_, rot.z_ );
+            matConstraint.setOrigin( btVector3(pos.x_, pos.y_, pos.z_) );
+
             u16 indexA = constraints[i].rigidBodyIndex_[0];
             u16 indexB = constraints[i].rigidBodyIndex_[1];
 
             btRigidBody* bodyA = rigidBodies_[indexA];
             btRigidBody* bodyB = rigidBodies_[indexB];
 
-            const lanim::Joint* joints = &skeleton.getJoint(0);
+            transformA = bodyA->getWorldTransform().inverse();
+            transformB = bodyB->getWorldTransform().inverse();
 
-            setTransformRelative( transformA, rigidBodies[indexA], constraints[i].position_, constraints[i].rotation_, joints);
-            setTransformRelative( transformB, rigidBodies[indexB], constraints[i].position_, constraints[i].rotation_, joints);
+            transformA = transformA * matConstraint;
+            transformB = transformB * matConstraint;
 
-            btGeneric6DofSpringConstraint* constraint = LIME_NEW btGeneric6DofSpringConstraint(*bodyA, *bodyB, transformA, transformB, false);
+
+            btGeneric6DofSpringConstraint* constraint = LIME_NEW btGeneric6DofSpringConstraint(*bodyA, *bodyB, transformA, transformB, true);
+            //btGeneric6DofConstraint* constraint = LIME_NEW btGeneric6DofConstraint(*bodyA, *bodyB, transformA, transformB, false);
 
             set(tmp, constraints[i].limitLowerTrans_);
             constraint->setLinearLowerLimit(tmp);
@@ -403,8 +378,13 @@ namespace
             set(tmp, constraints[i].limitUpperRot_);
             constraint->setAngularUpperLimit(tmp);
 
+
             for(s32 j=0; j<6; ++j){
-                constraint->enableSpring(j, true);
+                if(constraints[i].stiffness_[j]<0.001f){
+                    constraint->enableSpring(j, false);
+                }else{
+                    constraint->enableSpring(j, true);
+                }
                 constraint->setStiffness(j, constraints[i].stiffness_[j]);
             }
 
@@ -420,21 +400,46 @@ namespace
     //-----------------------------------------------------------
     void RigidBodySkeleton::reset()
     {
-        MotionStateBoneDynamics* motionState = NULL;
-        for(u32 i=0; i<numRigidBodies_; ++i){
+        MotionStateKinematic* motionState = NULL;
+        for(u32 i=0; i<numTypeDynamicsBodies_; ++i){
             //g++の-fno-rttiではdynamic_castが使えないため
-            motionState = reinterpret_cast<MotionStateBoneDynamics*>( rigidBodies_[i]->getMotionState() );
+            motionState = reinterpret_cast<MotionStateKinematic*>( typeDynamicsBodies_[i]->getMotionState() );
+            motionState->reset();
+        }
+
+        for(u32 i=0; i<numTypeBoneDynamicsBodies_; ++i){
+            //g++の-fno-rttiではdynamic_castが使えないため
+            motionState = reinterpret_cast<MotionStateKinematic*>( typeBoneDynamicsBodies_[i]->getMotionState() );
             motionState->reset();
         }
     }
 
     //-----------------------------------------------------------
-    void RigidBodySkeleton::updateWorldTransform()
+    void RigidBodySkeleton::updateBoneMatrix()
     {
-        MotionStateDynamicsRotation* motionState = NULL;
-        for(u32 i=numMotionStateNotDynamicsRots_; i<numRigidBodies_; ++i){
+        MotionStateKinematic* motionState = NULL;
+
+        for(u32 i=0; i<numTypeDynamicsBodies_; ++i){
             //g++の-fno-rttiではdynamic_castが使えないため
-            motionState = reinterpret_cast<MotionStateDynamicsRotation*>( rigidBodies_[i]->getMotionState() );
+            motionState = reinterpret_cast<MotionStateKinematic*>( typeDynamicsBodies_[i]->getMotionState() );
+            motionState->updateBoneMatrix();
+        }
+
+        for(u32 i=0; i<numTypeBoneDynamicsBodies_; ++i){
+            //g++の-fno-rttiではdynamic_castが使えないため
+            motionState = reinterpret_cast<MotionStateKinematic*>( typeBoneDynamicsBodies_[i]->getMotionState() );
+            motionState->updateBoneMatrix();
+        }
+    }
+
+    //-----------------------------------------------------------
+    // 剛体の位置をボーンに合わせる
+    void RigidBodySkeleton::setRigidBodyPosition()
+    {
+        MotionStateKinematic* motionState = NULL;
+        for(u32 i=0; i<numTypeBoneDynamicsBodies_; ++i){
+            //g++の-fno-rttiではdynamic_castが使えないため
+            motionState = reinterpret_cast<MotionStateKinematic*>( typeBoneDynamicsBodies_[i]->getMotionState() );
             motionState->updatePosition();
         }
     }
@@ -465,7 +470,11 @@ namespace
         LIME_DELETE_ARRAY(collisionShapes_);
         LIME_DELETE_ARRAY(rigidBodies_);
 
-        numMotionStateNotDynamicsRots_ = 0;
+        numTypeDynamicsBodies_ = 0;
+        typeDynamicsBodies_ = NULL;
+
+        numTypeBoneDynamicsBodies_ = 0;
+        typeBoneDynamicsBodies_ = NULL;
     }
 
 }
