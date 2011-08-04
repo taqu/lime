@@ -118,8 +118,7 @@ namespace
 
         lgraphics::VertexShaderRef vsRef;
         lgraphics::PixelShaderRef psRef;
-        bool ret = lgraphics::Shader::linkShader(vsRef, psRef, 1, decl, vsDesc, psDesc);
-        LASSERT(ret);
+        lgraphics::Shader::linkShader(vsRef, psRef, 1, decl, vsDesc, psDesc);
 
         vs.getShaderRef() = vsRef;
         ps.getShaderRef() = psRef;
@@ -162,6 +161,7 @@ namespace
 
     DynamicsDebugDraw::DynamicsDebugDraw()
         :debugMode_(DBG_DrawWireframe|DBG_FastWireframe|DBG_DrawConstraints)
+        //debugMode_(DBG_DrawConstraints)
         ,numLines_(0)
     {
     }

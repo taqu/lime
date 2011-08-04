@@ -111,10 +111,10 @@ namespace viewer
 
             loader_ = LIME_NEW pmm::Loader;
             //loader_->open("HelloP.pmm", "data/HelloP/");
-            loader_->open("mikumiku.pmm", "data/MikuMiku/");
+            //loader_->open("mikumiku.pmm", "data/MikuMiku/");
             //loader_->open("test.pmm", "data/MikuMiku/");
             //loader_->open("kkhscene01.pmm", "data/StrobeNights/");
-            //loader_->open("SampleAllStar.pmm", "data/pmm/");
+            loader_->open("SampleAllStar.pmm", "data/pmm/");
             //loader_->open("Sample.pmm", "data/pmm/");
             if(loader_->getErrorCode() != pmm::Loader::Error_None){
                 LIME_DELETE(loader_);
