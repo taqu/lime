@@ -339,6 +339,7 @@ namespace egda
         for(u32 i=0; i<numModels_; ++i){
 
             modelPacks_[i].getAnimationControler()->reset(startFrame);
+            rigidBodySkeletones_[i].reset();
         }
 
         for(u32 i=1; i<numAccessories_; ++i){

@@ -25,8 +25,10 @@ namespace
         lhs.setValue( rhs.x_, rhs.y_, rhs.z_ );
     }
 
+
     inline void setTransposed(btTransform& dst, const lmath::Matrix34& src)
     {
+        //btMatrix3x3‚Írow major?
         btMatrix3x3& basis = dst.getBasis();
 
         for(s32 i=0; i<3; ++i){
@@ -39,6 +41,7 @@ namespace
 
     inline void setTransposed(lmath::Matrix34& dst, const btTransform& src)
     {
+        //btMatrix3x3‚Írow major?
         const btMatrix3x3& basis = src.getBasis();
 
         for(s32 i=0; i<3; ++i){
@@ -91,6 +94,14 @@ namespace
 
         virtual void setWorldTransform(const btTransform &worldTrans)
         {
+#if 0
+            LASSERT(parent_ != NULL);
+            LASSERT(matrix_ != NULL);
+
+            btTransform tmp = worldTrans * invRigidBodyWorld_;
+
+            setTransposed(*matrix_, tmp);
+#endif
         }
 
         void setParent(btRigidBody* parent)
@@ -147,6 +158,11 @@ namespace
 
             btVector3 trans = matBone.getOrigin() - currentPos;
             parent_->translate( trans );
+        }
+
+        const btTransform& getRigidBodyWorld() const
+        {
+            return rigidBodyWorld_;
         }
 
     protected:
@@ -250,9 +266,11 @@ namespace
             
             f32 mass = (rigidBodies[i].type_ == pmd::RigidBody::Type_Bone)? 0.0f : rigidBodies[i].mass_;
 
+
             if(mass>1.0f){
                 mass = 1.0f;
             }
+
             if(mass>0.0f){
                 collisionShapes_[i]->calculateLocalInertia(mass, localInertia);
             }
@@ -346,25 +364,26 @@ namespace
             const lmath::Vector3& rot = constraints[i].rotation_;
             const lmath::Vector3& pos = constraints[i].position_;
 
-            btTransform matConstraint;
-            matConstraint.getBasis().setEulerZYX( rot.x_, rot.y_, rot.z_ );
-            matConstraint.setOrigin( btVector3(pos.x_, pos.y_, pos.z_) );
-
             u16 indexA = constraints[i].rigidBodyIndex_[0];
             u16 indexB = constraints[i].rigidBodyIndex_[1];
 
             btRigidBody* bodyA = rigidBodies_[indexA];
             btRigidBody* bodyB = rigidBodies_[indexB];
 
-            transformA = bodyA->getWorldTransform().inverse();
-            transformB = bodyB->getWorldTransform().inverse();
+            const MotionStateKinematic* motionStateA = reinterpret_cast<const MotionStateKinematic*>(bodyA->getMotionState());
+            const MotionStateKinematic* motionStateB = reinterpret_cast<const MotionStateKinematic*>(bodyB->getMotionState());
+
+            btTransform matConstraint;
+            matConstraint.getBasis().setEulerZYX( rot.x_, rot.y_, rot.z_ );
+            matConstraint.setOrigin( btVector3(pos.x_, pos.y_, pos.z_) );
+
+            transformA = motionStateA->getRigidBodyWorld().inverse();
+            transformB = motionStateB->getRigidBodyWorld().inverse();
 
             transformA = transformA * matConstraint;
             transformB = transformB * matConstraint;
 
-
             btGeneric6DofSpringConstraint* constraint = LIME_NEW btGeneric6DofSpringConstraint(*bodyA, *bodyB, transformA, transformB, true);
-            //btGeneric6DofConstraint* constraint = LIME_NEW btGeneric6DofConstraint(*bodyA, *bodyB, transformA, transformB, false);
 
             set(tmp, constraints[i].limitLowerTrans_);
             constraint->setLinearLowerLimit(tmp);
@@ -417,6 +436,7 @@ namespace
     //-----------------------------------------------------------
     void RigidBodySkeleton::updateBoneMatrix()
     {
+#if 1
         MotionStateKinematic* motionState = NULL;
 
         for(u32 i=0; i<numTypeDynamicsBodies_; ++i){
@@ -430,6 +450,7 @@ namespace
             motionState = reinterpret_cast<MotionStateKinematic*>( typeBoneDynamicsBodies_[i]->getMotionState() );
             motionState->updateBoneMatrix();
         }
+#endif
     }
 
     //-----------------------------------------------------------
