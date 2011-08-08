@@ -58,15 +58,8 @@ LOCAL_SRC_FILES := $(LIME_DIR)/lgraphics/lgraphics.cpp\
                    $(LIME_DIR)/lgraphics/io/IOJPEG.cpp\
                    $(LIME_DIR)/lgraphics/io/IOTGA.cpp\
                    $(LIME_DIR)/lgraphics/io/IOPNG.cpp\
-                   $(LIME_DIR)/lgraphics/io/IOGeometryBuffer.cpp\
-                   $(LIME_DIR)/lgraphics/io/IOIndexBuffer.cpp\
-                   $(LIME_DIR)/lgraphics/io/IORenderState.cpp\
-                   $(LIME_DIR)/lgraphics/io/IOSamplerState.cpp\
-                   $(LIME_DIR)/lgraphics/io/IOShaderKey.cpp\
                    $(LIME_DIR)/lgraphics/io/IOTexture.cpp\
-                   $(LIME_DIR)/lgraphics/io/IOTextureUtil.cpp\
-                   $(LIME_DIR)/lgraphics/io/IOVertexBuffer.cpp\
-                   $(LIME_DIR)/lgraphics/io/IOVertexDeclaration.cpp
+                   $(LIME_DIR)/lgraphics/io/IOTextureUtil.cpp
 
 LOCAL_C_INCLUDES := $(APP_C_INCLUDES)
 
