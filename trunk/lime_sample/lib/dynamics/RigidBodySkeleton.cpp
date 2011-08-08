@@ -420,15 +420,9 @@ namespace
     void RigidBodySkeleton::reset()
     {
         MotionStateKinematic* motionState = NULL;
-        for(u32 i=0; i<numTypeDynamicsBodies_; ++i){
+        for(u32 i=0; i<numRigidBodies_; ++i){
             //g++‚Ì-fno-rtti‚Å‚Ídynamic_cast‚ªŽg‚¦‚È‚¢‚½‚ß
-            motionState = reinterpret_cast<MotionStateKinematic*>( typeDynamicsBodies_[i]->getMotionState() );
-            motionState->reset();
-        }
-
-        for(u32 i=0; i<numTypeBoneDynamicsBodies_; ++i){
-            //g++‚Ì-fno-rtti‚Å‚Ídynamic_cast‚ªŽg‚¦‚È‚¢‚½‚ß
-            motionState = reinterpret_cast<MotionStateKinematic*>( typeBoneDynamicsBodies_[i]->getMotionState() );
+            motionState = reinterpret_cast<MotionStateKinematic*>( rigidBodies_[i]->getMotionState() );
             motionState->reset();
         }
     }

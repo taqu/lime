@@ -5,13 +5,11 @@
 @author t-sakai
 @date 2009/04/30 create
 */
-#include "Nothing.h"
-
 namespace lcore
 {
     /// コピー禁止
-    template<class T, class U = lcore::Nothing<T> >
-    class NonCopyable : public U
+    template<class T>
+    class NonCopyable
     {
     protected:
         NonCopyable(){}
