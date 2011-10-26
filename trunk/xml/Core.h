@@ -19,6 +19,7 @@ namespace xml
     using lcore::u32;
     using lcore::f32;
     using lcore::f64;
+    using lcore::Char;
 
 #define XML_ASSERT(exp) LASSERT(exp)
 

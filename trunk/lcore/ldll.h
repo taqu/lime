@@ -24,11 +24,11 @@ namespace lcore
 
         void* getProcAddress(const char* name);
     private:
-        HMODULE module_;
+        LHMODULE module_;
     };
 
-    HMODULE openDLL(const char* path);
-    void closeDLL(HMODULE module);
-    void* getProcAddressDLL(HMODULE module, const char* name);
+    LHMODULE openDLL(const char* path);
+    void closeDLL(LHMODULE module);
+    void* getProcAddressDLL(LHMODULE module, const char* name);
 }
 #endif //INC_LCORE_LDLL_H__

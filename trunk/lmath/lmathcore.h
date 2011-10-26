@@ -6,6 +6,7 @@
 @date 2009/01/17 create
 */
 #include <lcore/lcore.h>
+#include <lcore/clibrary.h>
 
 #include <stdlib.h>
 #include <math.h>
@@ -17,7 +18,6 @@
 #else
 
 #define LMATH_USE_SSE2
-#include <limits>
 
 #endif //defined(ANDROID)
 
@@ -66,55 +66,6 @@ namespace lmath
         return ::tanf(radian);
     }
 
-#if defined(ANDROID)
-    template<class T>
-    inline T absolute(T val)
-    {
-        return fabs(val);
-    }
-
-    template<>
-    inline s8 absolute<s8>(s8 val)
-    {
-        return abs(val);
-    }
-
-    template<>
-    inline s16 absolute<s16>(s16 val)
-    {
-        return abs(val);
-    }
-
-    template<>
-    inline s32 absolute<s32>(s32 val)
-    {
-        return labs(val);
-    }
-
-    template<>
-    inline u8 absolute<u8>(u8 val)
-    {
-        return val;
-    }
-
-    template<>
-    inline u16 absolute<u16>(u16 val)
-    {
-        return val;
-    }
-
-    template<>
-    inline u32 absolute<u32>(u32 val)
-    {
-        return val;
-    }
-#else
-    template<class T>
-    inline T absolute(T val)
-    {
-        return ::abs(val);
-    }
-#endif
 
     template<class T>
     inline T distance(T v0, T v1)
@@ -124,22 +75,22 @@ namespace lmath
 
     inline bool isEqual(f32 x1, f32 x2)
     {
-        return (absolute<f32>(x1 - x2) < F32_EPSILON);
+        return (lcore::absolute<f32>(x1 - x2) < F32_EPSILON);
     }
 
     inline bool isEqual(f32 x1, f32 x2, f32 epsilon)
     {
-        return (absolute<f32>(x1 - x2) < epsilon);
+        return (lcore::absolute<f32>(x1 - x2) < epsilon);
     }
 
     inline bool isEqual(f64 x1, f64 x2)
     {
-        return (absolute<f64>(x1 - x2) < F64_EPSILON);
+        return (lcore::absolute<f64>(x1 - x2) < F64_EPSILON);
     }
 
     inline bool isEqual(f64 x1, f64 x2, f64 epsilon)
     {
-        return (absolute<f64>(x1 - x2) < epsilon);
+        return (lcore::absolute<f64>(x1 - x2) < epsilon);
     }
 
 #if defined(LMATH_USE_SSE2)
@@ -348,13 +299,6 @@ namespace lmath
         return round2S32(val + doublemagicroundeps);
     }
 
-    template<class T>
-    inline T clamp(T val, T low, T high)
-    {
-        if (val <= low) return low;
-        else if (val >= high) return high;
-        else return val;
-    }
 
     //inline float Lerp(float t, float v1, float v2) {
     //    return (1.f - t) * v1 + t * v2;

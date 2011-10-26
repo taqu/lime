@@ -22,7 +22,7 @@ namespace lmath
     class Vector3;
     class Vector4;
 
-    class Matrix43;
+    class Matrix34;
     class Matrix44;
 }
 
@@ -89,7 +89,7 @@ namespace lgraphics
 #endif
 
         void setMatrix(HANDLE handle, const lmath::Matrix44& matrix);
-        void setMatrix(HANDLE handle, const lmath::Matrix43& matrix);
+        void setMatrix(HANDLE handle, const lmath::Matrix34& matrix);
         void setFloat(HANDLE handle, f32 value);
         void setVector2(HANDLE handle, const lmath::Vector2& vector);
         void setVector3(HANDLE handle, const lmath::Vector3& vector);
@@ -147,8 +147,6 @@ namespace lgraphics
         static ShaderType getType(){ return ShaderType_Pixel;}
 
         void attach() const;
-
-        //virtual void setParameters(const lmath::Matrix43& /*world*/, const Material& /*material*/, const Scene& /*scene*/){}
 
         void swap(PixelShaderRef& rhs)
         {

@@ -100,18 +100,18 @@ namespace lmath
     inline bool testRayPlane(f32& t, const Ray& ray, const Plane& plane)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(t, ray, plane);
+        return testRayPlane_NoSIMD(t, ray, plane);
 #else
-        testRayPlane_NoSIMD(t, ray, plane);
+        return testRayPlane_NoSIMD(t, ray, plane);
 #endif
     }
 
     inline bool testRayPlane(f64& t, const Ray& ray, const Plane& plane)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(t, ray, plane);
+        return testRayPlane_NoSIMD(t, ray, plane);
 #else
-        testRayPlane_NoSIMD(t, ray, plane);
+        return testRayPlane_NoSIMD(t, ray, plane);
 #endif
     }
 
@@ -126,18 +126,18 @@ namespace lmath
     inline bool testRaySphere(f32& t, const Ray& ray, const Sphere& sphere)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(t, ray, sphere);
+        return testRaySphere_NoSIMD(t, ray, sphere);
 #else
-        testRayPlane_NoSIMD(t, ray, sphere);
+        return testRaySphere_NoSIMD(t, ray, sphere);
 #endif
     }
 
     inline bool testRaySphere(f64& t, const Ray& ray, const Sphere& sphere)
     {
 #if defined(LMATH_USE_SSE2)
-        testRaySphere_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRaySphere_NoSIMD(t, ray, sphere);
 #else
-        testRaySphere_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRaySphere_NoSIMD(t, ray, sphere);
 #endif
     }
 
@@ -154,27 +154,27 @@ namespace lmath
     inline bool testRayTriangle(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayTriangle_NoSIMD(t, u, v, ray, v0, v1, v2);
 #else
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayTriangle_NoSIMD(t, u, v, ray, v0, v1, v2);
 #endif
     }
 
     inline bool testRayTriangle(f64& t, f64& u, f64& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayTriangle_NoSIMD(t, u, v, ray, v0, v1, v2);
 #else
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayTriangle_NoSIMD(t, u, v, ray, v0, v1, v2);
 #endif
     }
 
     inline bool testRayRectangle(f32& t, const Ray& ray, const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayRectangle_NoSIMD(t, ray, p0, p1, p2, p3);
 #else
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayRectangle_NoSIMD(t, ray, p0, p1, p2, p3);
 #endif
     }
 
@@ -194,27 +194,27 @@ namespace lmath
     inline bool testRayAABB(f32& tmin, f32& tmax, const Ray& ray, const Vector3& bmin, const Vector3& bmax)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayAABB_NoSIMD(tmin, tmax, ray, bmin, bmax);
 #else
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayAABB_NoSIMD(tmin, tmax, ray, bmin, bmax);
 #endif
     }
 
     inline bool testRayAABB(f64& tmin, f64& tmax, const Ray& ray, const Vector3& bmin, const Vector3& bmax)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayAABB_NoSIMD(tmin, tmax, ray, bmin, bmax);
 #else
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayAABB_NoSIMD(tmin, tmax, ray, bmin, bmax);
 #endif
     }
 
     inline bool testRayAABB(const Ray& ray, const Vector3& bmin, const Vector3& bmax)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayAABB_NoSIMD(ray, bmin, bmax);
 #else
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRayAABB_NoSIMD(ray, bmin, bmax);
 #endif
     }
 
@@ -223,9 +223,9 @@ namespace lmath
     inline bool testRaySlab(f32& tmin, f32& tmax, const Ray& ray, f32 slabMin, f32 slabMax, s32 axis)
     {
 #if defined(LMATH_USE_SSE2)
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRaySlab_NoSIMD(tmin, tmax, ray, slabMin, slabMax, axis);
 #else
-        testRayPlane_NoSIMD(bmin, bmax, v0, v1, v2);
+        return testRaySlab_NoSIMD(tmin, tmax, ray, slabMin, slabMax, axis);
 #endif
     }
 }

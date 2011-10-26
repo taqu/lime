@@ -10,7 +10,7 @@
 #include "splitBone.h"
 
 #if defined(_WIN32) && defined(_DEBUG)
-//#define LIME_LIB_CONV_DEBUG (1)
+#define LIME_LIB_CONV_DEBUG (1)
 #endif
 
 #if defined(LIME_LIB_CONV_DEBUG)
@@ -444,8 +444,10 @@ namespace
 
                     faceIndices[ indexOffset+i ].index_ = index;
 
-                    vertex.element_[ Vertex::Index_Bone0 ] = top->palette_->getGlobalToLocal( vertex.element_[ Vertex::Index_Bone0 ] );
-                    vertex.element_[ Vertex::Index_Bone1 ] = top->palette_->getGlobalToLocal( vertex.element_[ Vertex::Index_Bone1 ] );
+                    u8 bone0 = vertex.element_[ Vertex::Index_Bone0 ];
+                    u8 bone1 = vertex.element_[ Vertex::Index_Bone1 ];
+                    vertex.element_[ Vertex::Index_Bone0 ] = top->palette_->getGlobalToLocal( bone0 );
+                    vertex.element_[ Vertex::Index_Bone1 ] = top->palette_->getGlobalToLocal( bone1 );
 
                     vb->elements_.push_back( vertex );
                     indexIndexMap.insert( key, index );

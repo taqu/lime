@@ -166,13 +166,18 @@ namespace xml
             }
         }
 
-        return _nodeStack.top();;
+        return (_nodeStack.count() > 0)? _nodeStack.top() : NULL;
     }
 
     const char* Parser::BOM(const char* text)
     {
         if((unsigned char)*text == 0xEF){
-            text += 3;
+            for(s32 i=0; i<3; ++i){
+                if(*text == '\0'){
+                    break;
+                }
+                ++text;
+            }
         }
         return text;
     }

@@ -5,27 +5,32 @@
 @author t-sakai
 @date 2009/01/17 create
 */
-#define NOMINMAX
+//#define NOMINMAX
 #include <assert.h>
-#include <limits.h>
 #include <float.h>
-#include <utility>
-#include <new>
 
 //-------------------
 #if defined(_WIN32)
 
 #if defined(_DEBUG)
 #define _CRTDBG_MAP_ALLOC
-#include <cstdlib>
 #include <crtdbg.h>
-#endif //_DEBUG
+#include <malloc.h>
+#include <new>
+#else //_DEBUG
+#include <malloc.h>
+#include <new>
+#endif
 
-#if !defined(WIN32_LEAN_AND_MEAN)
-#define WIN32_LEAN_AND_MEAN
-#endif //WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#endif //_WIN32
+//#if !defined(WIN32_LEAN_AND_MEAN)
+//#define WIN32_LEAN_AND_MEAN
+//#endif //WIN32_LEAN_AND_MEAN
+//#include <windows.h>
+
+#else //_WIN32
+#include <malloc.h>
+#include <new>
+#endif
 
 //-------------------
 #if defined(ANDROID) || defined(__linux__)
@@ -110,7 +115,7 @@ namespace lcore
 
     typedef ptrdiff_t  ptrdiff_t;
 
-    typedef HINSTANCE HMODULE;
+    typedef void* LHMODULE;
 
 #elif defined(ANDROID) || defined(__linux__)
     typedef char Char;
@@ -129,7 +134,7 @@ namespace lcore
 
     typedef ptrdiff_t  ptrdiff_t;
 
-    typedef void* HMODULE;
+    typedef void* LHMODULE;
 
 #else
     typedef char Char;
@@ -148,7 +153,7 @@ namespace lcore
 
     typedef ptrdiff_t  ptrdiff_t;
 
-    typedef void* HMODULE;
+    typedef void* LHMODULE;
 #endif
 
 #define LIME_MAKE_FOURCC(c0, c1, c2, c3)\
@@ -201,242 +206,7 @@ namespace lcore
 //#define LIME_ENABLE_LOG (1)
     void Log(const Char* format, ...);
 
-    template<class T>
-    class ScopedPtr
-    {
-    public:
-        ScopedPtr(T* pointer)
-            :pointer_(pointer)
-        {
-        }
 
-        ~ScopedPtr()
-        {
-            LIME_DELETE(pointer_);
-        }
-
-        T* get()
-        {
-            return pointer_;
-        }
-
-        T* release()
-        {
-            T* tmp = pointer_;
-            pointer_ = NULL;
-            return tmp;
-        }
-
-        T* operator->()
-        {
-            LASSERT(pointer_ != NULL);
-            return pointer_;
-        }
-
-        T& operator*() const
-        {
-            LASSERT(pointer_ != NULL);
-            return *pointer_;
-        }
-
-        operator bool() const
-        {
-            return pointer_ != NULL;
-        }
-
-        bool operator!() const
-        {
-            return pointer_ == NULL;
-        }
-    private:
-        // コピー禁止
-        explicit ScopedPtr(const ScopedPtr&);
-        ScopedPtr& operator=(const ScopedPtr&);
-
-        T *pointer_;
-    };
-
-    template<class T>
-    class ScopedArrayPtr
-    {
-    public:
-        ScopedArrayPtr(T* pointer)
-            :pointer_(pointer)
-        {
-        }
-
-        ~ScopedArrayPtr()
-        {
-            LIME_DELETE_ARRAY(pointer_);
-        }
-
-        T* get()
-        {
-            return pointer_;
-        }
-
-        T* release()
-        {
-            T* tmp = pointer_;
-            pointer_ = NULL;
-            return tmp;
-        }
-
-        T& operator[](int index)
-        {
-            LASSERT(pointer_ != NULL);
-            return pointer_[index];
-        }
-
-        const T& operator[](int index) const
-        {
-            LASSERT(pointer_ != NULL);
-            return pointer_[index];
-        }
-
-        operator bool() const
-        {
-            return pointer_ != NULL;
-        }
-
-        bool operator!() const
-        {
-            return pointer_ == NULL;
-        }
-    private:
-        // コピー禁止
-        explicit ScopedArrayPtr(const ScopedArrayPtr&);
-        ScopedArrayPtr& operator=(const ScopedArrayPtr&);
-
-        T *pointer_;
-    };
-
-    //---------------------------------------------------------
-    //---
-    //--- タイム関係
-    //---
-    //---------------------------------------------------------
-    /// CPUクロック取得
-    u32 getPerformanceCounter();
-
-    /// マイクロ秒単位で時間取得
-    u32 getTimeFromPerformanCounter();
-
-    /// ミリ秒単位の時間を取得
-    u32 getTime();
-
-
-    //---------------------------------------------------------
-    //---
-    //--- Utility
-    //---
-    //---------------------------------------------------------
-    template<class T>
-    inline void swap(T& l, T& r)
-    {
-        T tmp = l;
-        l = r;
-        r = tmp;
-    }
-
-
-    template<class Itr>
-    struct iterator_traits
-    {
-        typedef typename Itr::iterator_category iterator_category;
-        typedef typename Itr::value_type value_type;
-        typedef typename Itr::difference_type difference_type;
-        typedef typename Itr::difference_type distance_type;
-        typedef typename Itr::pointer pointer;
-        typedef typename Itr::reference reference;
-    };
-
-    template<class T>
-    struct iterator_traits<T*>
-    {
-        //typedef random_access_iterator_tag iterator_category;
-        typedef T value_type;
-        typedef ptrdiff_t difference_type;
-        typedef ptrdiff_t distance_type;	// retained
-        typedef T *pointer;
-        typedef T& reference;
-    };
-
-    template<class FwdIt, class T>
-    inline FwdIt lower_bound(FwdIt first, FwdIt last, const T& val)
-    {
-        typename iterator_traits<FwdIt>::difference_type count = last - first;
-        while(0<count){
-            typename iterator_traits<FwdIt>::difference_type d = count/2;
-            FwdIt m = first + d;
-            if(*m<val){
-                first = ++m;
-                count -= d+1;
-            }else{
-                count = d;
-            }
-        }
-        return first;
-    }
-
-
-    template<class FwdIt, class T>
-    inline FwdIt upper_bound(FwdIt first, FwdIt last, const T& val)
-    {
-        typename iterator_traits<FwdIt>::difference_type count = last - first;
-        while(0<count){
-            typename iterator_traits<FwdIt>::difference_type d = count/2;
-            FwdIt m = first + d;
-            if(*m<=val){
-                first = ++m;
-                count -= d+1;
-            }else{
-                count = d;
-            }
-        }
-        return first;
-    }
-
-    //---------------------------------------------------------
-    //---
-    //--- numeric_limits
-    //---
-    //---------------------------------------------------------
-    union LimitsDefine32
-    {
-        u8 byte_[4];
-        f32 float_;
-    };
-
-    union LimitsDefine64
-    {
-        u8 byte_[8];
-        f64 double_;
-    };
-
-
-    template<typename T>
-    class numeric_limits
-    {
-    public:
-        static T epsilon() LIME_THROW0
-        {
-            return (T(0));
-        }
-    };
-
-    // 特殊化
-    template<>
-    class numeric_limits<f32>
-    {
-    public:
-
-        static f32 epsilon() LIME_THROW0
-        {
-            return (FLT_EPSILON);
-        }
-    };
 }
 
-#include "CLibrary.h"
 #endif //INC_LCORE_H__

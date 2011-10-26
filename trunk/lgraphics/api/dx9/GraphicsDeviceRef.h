@@ -55,6 +55,12 @@ namespace lgraphics
 
         bool valid() const{ return (d3d_ != NULL && d3dDevice_ != NULL);}
 
+        inline u32 getRenderWidth() const;
+        inline u32 getRenderHeight() const;
+
+        inline u32 getRefreshRate() const;
+
+
         inline IDirect3DDevice9* getD3DDevice();
 
         inline void beginScene();
@@ -151,8 +157,6 @@ namespace lgraphics
         inline IDirect3DVertexShader9* createVertexShader(const u32* function);
         inline void setVertexShader(IDirect3DVertexShader9* shader);
 
-        inline void setAlphaBlendEnable(bool enable);
-
         // RenderState
         //------------------------------------------------------------------
         inline IDirect3DStateBlock9* createStateBlock(StateType type);
@@ -161,6 +165,17 @@ namespace lgraphics
 
         inline void setRenderState(u32 type, u32 value);
         inline u32 getRenderState(u32 type);
+
+        inline void setAlphaTest(u32 enable);
+        inline void setAlphaTestFunc(CmpFunc func);
+        inline void setAlphaTestRef(u32 ref);
+        inline void setCullMode(CullMode mode);
+        inline void setMultiSampleAlias(u32 enable);
+        inline void setZEnable(u32 enable);
+        inline void setZWriteEnable(u32 enable);
+        inline void setAlphaBlendEnable(u32 enable);
+        inline void setAlphaBlend(BlendType src, BlendType dst);
+
 
         // SamplerState
         //------------------------------------------------------------------
@@ -189,11 +204,29 @@ namespace lgraphics
         IDirect3D9* d3d_;
         IDirect3DDevice9 *d3dDevice_;
 
+        u32 width_;
+        u32 height_;
+        u32 refreshRate_;
+
         u32 _clearColor;
         f32 _clearDepth;
         u32 _clearStencil;
     };
 
+    inline u32 GraphicsDeviceRef::getRenderWidth() const
+    {
+        return width_;
+    }
+
+    inline u32 GraphicsDeviceRef::getRenderHeight() const
+    {
+        return height_;
+    }
+
+    inline u32 GraphicsDeviceRef::getRefreshRate() const
+    {
+        return refreshRate_;
+    }
 
     inline IDirect3DDevice9* GraphicsDeviceRef::getD3DDevice()
     {
@@ -519,9 +552,50 @@ namespace lgraphics
         return value;
     }
 
-    inline void GraphicsDeviceRef::setAlphaBlendEnable(bool enable)
+    inline void GraphicsDeviceRef::setAlphaTest(u32 enable)
     {
-        d3dDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, (enable)?TRUE : FALSE);
+        d3dDevice_->SetRenderState(D3DRS_ALPHATESTENABLE, enable);
+    }
+
+    inline void GraphicsDeviceRef::setAlphaTestFunc(CmpFunc func)
+    {
+        d3dDevice_->SetRenderState(D3DRS_ALPHAFUNC, func);
+    }
+
+    inline void GraphicsDeviceRef::setAlphaTestRef(u32 ref)
+    {
+        d3dDevice_->SetRenderState(D3DRS_ALPHAREF, ref);
+    }
+
+    inline void GraphicsDeviceRef::setCullMode(CullMode mode)
+    {
+        d3dDevice_->SetRenderState(D3DRS_CULLMODE, mode);
+    }
+
+    inline void GraphicsDeviceRef::setMultiSampleAlias(u32 enable)
+    {
+        d3dDevice_->SetRenderState(D3DRS_MULTISAMPLEANTIALIAS, enable);
+    }
+
+    inline void GraphicsDeviceRef::setZEnable(u32 enable)
+    {
+        d3dDevice_->SetRenderState(D3DRS_ZENABLE, enable);
+    }
+
+    inline void GraphicsDeviceRef::setZWriteEnable(u32 enable)
+    {
+        d3dDevice_->SetRenderState(D3DRS_ZWRITEENABLE, enable);
+    }
+
+    inline void GraphicsDeviceRef::setAlphaBlendEnable(u32 enable)
+    {
+        d3dDevice_->SetRenderState(D3DRS_ALPHABLENDENABLE, enable);
+    }
+
+    inline void GraphicsDeviceRef::setAlphaBlend(BlendType src, BlendType dst)
+    {
+        d3dDevice_->SetRenderState(D3DRS_SRCBLEND, src);
+        d3dDevice_->SetRenderState(D3DRS_DESTBLEND, dst);
     }
 
 

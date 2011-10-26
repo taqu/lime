@@ -23,7 +23,7 @@ namespace lmath
         }
 
         // sin(pitch)が１ならバンクとヘディングがジンバルロック
-        if(absolute(sinPitch) > F32_ANGLE_LIMIT1){
+        if(lcore::absolute(sinPitch) > F32_ANGLE_LIMIT1){
             // バンクを0として、ヘディングを計算
             bank = 0.0f;
             head = atan2(-m.m_[0][2], m.m_[0][0]);
@@ -40,7 +40,7 @@ namespace lmath
         f32 sinPitch = -2.0f * (q.y_*q.z_ + q.w_*q.x_);
 
         // sin(pitch)が１ならバンクとヘディングがジンバルロック
-        if(absolute(sinPitch) > F32_ANGLE_LIMIT1){
+        if(lcore::absolute(sinPitch) > F32_ANGLE_LIMIT1){
             pitch = PI_2 * sinPitch;
 
             // バンクを0として、ヘディングを計算
@@ -67,7 +67,7 @@ namespace lmath
         }
 
         // sin(pitch)が１ならバンクとヘディングがジンバルロック
-        if(absolute(sinPitch) > F32_ANGLE_LIMIT1){
+        if(lcore::absolute(sinPitch) > F32_ANGLE_LIMIT1){
             // バンクを0として、ヘディングを計算
             bank = 0.0f;
             head = atan2(-m.m_[2][0], m.m_[0][0]);
@@ -84,7 +84,7 @@ namespace lmath
         f32 sinPitch = -2.0f * (q.y_*q.z_ - q.w_*q.x_);
 
         // sin(pitch)が１ならバンクとヘディングがジンバルロック
-        if(absolute(sinPitch) > F32_ANGLE_LIMIT1){
+        if(lcore::absolute(sinPitch) > F32_ANGLE_LIMIT1){
             pitch = PI_2 * sinPitch;
 
             // バンクを0として、ヘディングを計算

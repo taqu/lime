@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @author t-sakai
 @date 2009/06/28 modified
 */
+#include "utility.h"
 
 namespace lcore
 {

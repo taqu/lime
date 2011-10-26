@@ -234,12 +234,23 @@ namespace lanim
         JointPose* poses = pose.getPoses();
         lmath::Matrix34* matrices = pose.getMatrices();
 
+        lmath::Quaternion tmpRot;
         for(u32 i=0; i<pose.getNumJoints(); ++i){
 
             JointPose& jointPose = poses[i];
             Joint& joint = skeleton_->getJoint(i);
 
-            jointPose.rotation_.getMatrix( matrices[i] );
+            //IK影響下ではなくて、従属先が0でないなら回転を合成
+            if(joint.getType() != JointType_UnderIK
+                && joint.getSubjectTo() != 0)
+            {
+                tmpRot.mul(jointPose.rotation_, poses[joint.getSubjectTo()].rotation_);
+                tmpRot.getMatrix( matrices[i] );
+            }else{
+                jointPose.rotation_.getMatrix( matrices[i] );
+            }
+
+            //jointPose.rotation_.getMatrix( matrices[i] );
 
             matrices[i].preTranslate( -joint.getPosition() );
             matrices[i].translate( jointPose.translation_ );

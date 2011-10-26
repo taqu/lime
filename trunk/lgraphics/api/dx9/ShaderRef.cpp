@@ -361,13 +361,13 @@ namespace lgraphics
         _constantTable->SetMatrix(d3ddevice, handle, (const D3DXMATRIX*)&matrix);
     }
 
-    void ShaderRefBase::setMatrix(HANDLE handle, const lmath::Matrix43& matrix)
+    void ShaderRefBase::setMatrix(HANDLE handle, const lmath::Matrix34& matrix)
     {
         LASSERT(handle != NULL);
         LASSERT(_constantTable != NULL);
 
         IDirect3DDevice9 *d3ddevice = Graphics::getDevice().getD3DDevice();
-        _constantTable->SetVectorArray(d3ddevice, handle, (const D3DXVECTOR4*)&matrix, 3);
+        _constantTable->SetFloatArray(d3ddevice, handle, (const FLOAT*)&matrix, 12);
     }
 
     void ShaderRefBase::setFloat(HANDLE handle, f32 value)

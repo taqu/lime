@@ -562,9 +562,14 @@ namespace pmm
 
         lgraphics::VertexBufferRef& vb = object_->getGeometry(0).getGeometryBuffer()->getVertexBuffer(0);
         lgraphics::VertexBufferRef& back = skinPack_.getBackVertexBuffer();
+
         //バックバッファと入れ替え
         vb.swap(back);
 
+
+        //次のフレームのモーフ結果が欲しい
+        //------------------------------------------
+        //ベースのコピー
         lmath::Vector3* vertices = skinPack_.getMorphBaseVertices();
 
         u32 minIndex = skinPack_.getMinIndex();
@@ -577,8 +582,9 @@ namespace pmm
                 skin.vertices_[i].position_[2]);
         }
 
+        //次のフレーム
         for(u32 i=1; i<skinPack_.getNumSkins(); ++i){
-            u32 index = i-1;
+            u32 index = i;
             if(skinAnimPack_.getNumSkinPoses(index) == 0){
                 continue;
             }
@@ -693,7 +699,7 @@ namespace pmm
         pose.angle_.set(frame.angle_[0], frame.angle_[1], frame.angle_[2]);
 
         static const f32 Limit = (PI_2*0.98f);
-        lmath::clamp(pose.angle_.x_, -Limit, Limit);
+        lcore::clamp(pose.angle_.x_, -Limit, Limit);
 
         pose.length_ = frame.length_;
 

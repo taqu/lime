@@ -37,6 +37,7 @@ namespace pmd
     static const u32 MaxIndices = 0xFFFFFFFEU;
     static const u32 MaxVertices = 0xFFFEU;
     static const u16 MaxIKIterations = 8;
+    static const u16 InvalidJointIndexU16 = 0xFFFFU;
 
     static const u32 NumLimitJoint = 1; ///動き制限するジョイントキーワード数
     extern const Char* LimitJointName[NumLimitJoint]; ///動き制限するジョイントキーワード

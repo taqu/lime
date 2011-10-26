@@ -39,9 +39,25 @@ namespace xml
         }
 
         /**
+        @return ノード名
+        */
+        string_type& getName()
+        {
+            return _name;
+        }
+
+        /**
         @return ノードの内容の文字列
         */
         const string_type& getText() const
+        {
+            return _text;
+        }
+
+        /**
+        @return ノードの内容の文字列
+        */
+        string_type& getText()
         {
             return _text;
         }
@@ -95,38 +111,37 @@ namespace xml
             return _childs[index];
         }
 
+        /**
+        @brief 子を追加
+        @param child ... 子ノード
+        */
+        void addChild(Node* child);
+
+        /**
+        @brief 属性を追加
+        @param key ... キー文字列
+        @param value ... 値文字列
+        */
+        void addAttribute(const string_type& key, const string_type& value);
     private:
         // このクラスを通じてだけアクセスさせる
         friend class NodeAccess;
 
         /**
-	@brief 子を追加
-	@param child ... 子ノード
-	*/
-	void addChild(Node* child);
-
-        /**
-	@brief ノードの名前を設定
-	@param nameBegin ... 名前文字列の先頭
+        @brief ノードの名前を設定
+        @param nameBegin ... 名前文字列の先頭
         @param nameEnd ... 名前文字列の末尾のひとつ後
-	*/
+        */
         void setName(const char* nameBegin, const char* nameEnd)
         {
             _name.assign<const char*>(nameBegin, nameEnd);
         }
 
         /**
-	@brief 属性を追加
-	@param key ... キー文字列
-	@param value ... 値文字列
-	*/
-	void addAttribute(const string_type& key, const string_type& value);
-
-        /**
-	@brief ノードの内容文字列に、文字列を追加
-	@param beginText ... 追加文字列の先頭
+        @brief ノードの内容文字列に、文字列を追加
+        @param beginText ... 追加文字列の先頭
         @param endText ... 追加文字列の末尾のひとつ後
-	*/
+        */
         void appendText(const char* beginText, const char* endText)
         {
             _text.append<const char*>(beginText, endText);

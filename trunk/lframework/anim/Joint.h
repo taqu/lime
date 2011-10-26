@@ -16,6 +16,7 @@ namespace lanim
     public:
         Joint()
             :parentIndex_(InvalidJointIndex)
+            ,subjectTo_(InvalidJointIndex)
             ,type_(0)
             ,flag_(0)
         {}
@@ -23,8 +24,11 @@ namespace lanim
         ~Joint()
         {}
 
-        u16 getParentIndex() const{ return parentIndex_;}
-        void setParentIndex(u16 index){ parentIndex_ = index;}
+        u8 getParentIndex() const{ return parentIndex_;}
+        void setParentIndex(u8 index){ parentIndex_ = index;}
+
+        u8 getSubjectTo() const{ return subjectTo_;}
+        void setSubjectTo(u8 index){ subjectTo_ = index;}
 
         /// 位置取得
         const lmath::Vector3& getPosition() const{ return position_;}
@@ -39,7 +43,8 @@ namespace lanim
         void setFlag(u8 flag){ flag_ = flag;}
 
     private:
-        u16 parentIndex_;
+        u8 parentIndex_;
+        u8 subjectTo_;
         u8 type_;
         u8 flag_;
         lmath::Vector3 position_; /// オブジェクトローカル位置

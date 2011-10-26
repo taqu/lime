@@ -4,6 +4,7 @@
 @date 2011/05/14
 */
 #include "ETC1.h"
+#include <lcore/utility.h>
 #include <lmath/lmathcore.h>
 #include <lgraphics/api/TextureRef.h>
 #include <lgraphics/io/IOTextureUtil.h>
@@ -602,7 +603,7 @@ namespace etc
             for(s32 i=0; i<3; ++i){
                 tmp = rgb1[i];
                 tmp += diff[i];
-                tmp = lmath::clamp(tmp, 0, 255);
+                tmp = lcore::clamp(tmp, 0, 255);
 
                 rgb1[i] = (rgb1[i]<<3) | (rgb1[i]>>2);
 
@@ -684,7 +685,7 @@ namespace etc
             for(s32 i=0; i<3; ++i){
                 tmp = rgb1[i];
                 tmp += diff[i];
-                tmp = lmath::clamp(tmp, 0, 255);
+                tmp = lcore::clamp(tmp, 0, 255);
 
                 rgb1[i] = (rgb1[i]<<3) | (rgb1[i]>>2);
 
@@ -775,7 +776,7 @@ namespace etc
                 for(s32 i=0; i<3; ++i){
                     tmp = rgb1[i];
                     tmp += diff[i];
-                    tmp = lmath::clamp(tmp, 0, 255);
+                    tmp = lcore::clamp(tmp, 0, 255);
 
                     rgb1[i] = (rgb1[i]<<3) | (rgb1[i]>>2);
 
@@ -859,7 +860,7 @@ namespace etc
             for(s32 i=0; i<3; ++i){
                 tmp = rgb1[i];
                 tmp += diff[i];
-                tmp = lmath::clamp(tmp, 0, 255);
+                tmp = lcore::clamp(tmp, 0, 255);
 
                 rgb1[i] = (rgb1[i]<<3) | (rgb1[i]>>2);
 
@@ -1127,9 +1128,9 @@ namespace etc
             pix = 0;
 
             for(s32 j=0; j<4; ++j){
-                r = lmath::clamp<s16>(ModifierTable[table][j] + rgb[0], 0, 255) - texel.r_;
-                g = lmath::clamp<s16>(ModifierTable[table][j] + rgb[1], 0, 255) - texel.g_;
-                b = lmath::clamp<s16>(ModifierTable[table][j] + rgb[2], 0, 255) - texel.b_;
+                r = lcore::clamp<s16>(ModifierTable[table][j] + rgb[0], 0, 255) - texel.r_;
+                g = lcore::clamp<s16>(ModifierTable[table][j] + rgb[1], 0, 255) - texel.g_;
+                b = lcore::clamp<s16>(ModifierTable[table][j] + rgb[2], 0, 255) - texel.b_;
 
                 r *= r;
                 g *= g;
@@ -1215,9 +1216,9 @@ namespace etc
                 pix = 0;
 
                 for(s32 k=0; k<4; ++k){
-                    r = lmath::clamp<s32>(ModifierTable[table][k] + rgb[0], 0, 255) - texel.r_;
-                    g = lmath::clamp<s32>(ModifierTable[table][k] + rgb[1], 0, 255) - texel.g_;
-                    b = lmath::clamp<s32>(ModifierTable[table][k] + rgb[2], 0, 255) - texel.b_;
+                    r = lcore::clamp<s32>(ModifierTable[table][k] + rgb[0], 0, 255) - texel.r_;
+                    g = lcore::clamp<s32>(ModifierTable[table][k] + rgb[1], 0, 255) - texel.g_;
+                    b = lcore::clamp<s32>(ModifierTable[table][k] + rgb[2], 0, 255) - texel.b_;
 
                     r *= r;
                     g *= g;

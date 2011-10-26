@@ -31,6 +31,11 @@ namespace lmath
             d_ = normal_.dot(point);
         }
 
+        f32 dot(const lmath::Vector3& p) const
+        {
+            return (normal_.dot(p) - d_);
+        }
+
 
         Vector3 normal_; /// 平面の法線
         f32 d_; /// 原点から平面までの距離

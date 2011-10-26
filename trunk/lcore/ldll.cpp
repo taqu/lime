@@ -6,6 +6,13 @@
 */
 #if defined(_WIN32)
 #include <tchar.h>
+
+#if !defined(WIN32_LEAN_AND_MEAN)
+#define WIN32_LEAN_AND_MEAN
+#endif //WIN32_LEAN_AND_MEAN
+
+#include <windows.h>
+
 #else
 #include <stdlib.h>
 #include <dlfcn.h>
@@ -60,25 +67,25 @@ namespace lcore
 
 #if defined(_WIN32)
 
-    HMODULE openDLL(const char* path)
+    LHMODULE openDLL(const char* path)
     {
         LASSERT(path != NULL);
-        return LoadLibrary(path);
+        return (LHMODULE)LoadLibrary(path);
     }
 
-    void closeDLL(HMODULE module)
+    void closeDLL(LHMODULE module)
     {
         if(module){
-            FreeLibrary(module);
+            FreeLibrary((HMODULE)module);
             module = NULL;
         }
     }
 
-    void* getProcAddressDLL(HMODULE module, const char* name)
+    void* getProcAddressDLL(LHMODULE module, const char* name)
     {
         LASSERT(module != NULL);
         LASSERT(name != NULL);
-        return (void*)GetProcAddress(module, name);
+        return (void*)GetProcAddress((HMODULE)module, name);
     }
 
 #else
@@ -89,14 +96,14 @@ namespace lcore
         return dlopen(path, RTLD_NOW);
     }
 
-    void closeDLL(HMODULE module)
+    void closeDLL(LHMODULE module)
     {
         if(module){
             dlclose(module);
         }
     }
 
-    void* getProcAddressDLL(HMODULE module, const char* name)
+    void* getProcAddressDLL(LHMODULE module, const char* name)
     {
         LASSERT(module != NULL);
         LASSERT(name != NULL);

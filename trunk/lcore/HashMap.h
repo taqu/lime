@@ -37,6 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 @date 2009/06/28 modified
 */
 #include "lcore.h"
+#include "clibrary.h"
 #include "Hash.h"
 
 namespace lcore

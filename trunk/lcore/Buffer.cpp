@@ -5,6 +5,7 @@
 
 */
 #include "lcore.h"
+#include "clibrary.h"
 #include "Buffer.h"
 
 namespace lcore
