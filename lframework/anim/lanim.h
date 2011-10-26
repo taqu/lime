@@ -40,15 +40,15 @@ namespace lanim
 
 #define LANIM_FRAME_DURATION_MIN (1.192092896e-04F)
 
-    static const u16 InvalidJointIndex = 0xFFFFU;
+    static const u8 InvalidJointIndex = 0xFFU;
+    static const u8 MaxJoints = 0xFEU;
 
     enum JointType
     {
         JointType_Rotation =0, //回転
         JointType_RotTrans,    //回転・移動
         JointType_IK,          //IK
-        JointType_UnderIK0,    //IK影響下
-        JointType_UnderIK1,    //IK影響下
+        JointType_UnderIK,    //IK影響下
         JointType_UnderRot,    //回転影響下
         JointType_ToIK,        //IK接続先
         JointType_Hide,        //非表示

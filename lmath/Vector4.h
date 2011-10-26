@@ -6,6 +6,7 @@
 @date 2009/01/17 create
 */
 #include "lmathcore.h"
+#include <lcore/utility.h>
 
 namespace lmath
 {

@@ -6,6 +6,7 @@
 @date 2009/09/12 create
 */
 #include "lcore.h"
+#include "utility.h"
 
 namespace lcore
 {

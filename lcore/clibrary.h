@@ -5,46 +5,61 @@
 @author t-sakai
 @date 2009/02/16 create
 */
+#define NOMINMAX
 #include <ctype.h>
 #include <string.h>
-#include <math.h>
-#include <stdarg.h>
 
 namespace lcore
 {
-
+#if defined(ANDROID)
     template<class T>
-    inline const T& maximum(const T& left, const T& right)
+    inline T absolute(T val)
     {
-        return (left<right)? right : left;
+        return fabs(val);
     }
 
+    template<>
+    inline s8 absolute<s8>(s8 val)
+    {
+        return abs(val);
+    }
+
+    template<>
+    inline s16 absolute<s16>(s16 val)
+    {
+        return abs(val);
+    }
+
+    template<>
+    inline s32 absolute<s32>(s32 val)
+    {
+        return labs(val);
+    }
+
+    template<>
+    inline u8 absolute<u8>(u8 val)
+    {
+        return val;
+    }
+
+    template<>
+    inline u16 absolute<u16>(u16 val)
+    {
+        return val;
+    }
+
+    template<>
+    inline u32 absolute<u32>(u32 val)
+    {
+        return val;
+    }
+#else
     template<class T>
-    inline const T& minimum(const T& left, const T& right)
+    inline T absolute(T val)
     {
-        return (right<left)? right : left;
+        return ::abs(val);
     }
-
-    inline double log(double x)
-    {
-        return ::log(x);
-    }
-
-    inline double log2(double x)
-    {
-        return log(x)/log(2.0);
-    }
-
-    inline double ceil(double x)
-    {
-        return ::ceil(x);
-    }
-
-    /// xのy乗を計算する
-    inline double pow(double x, double y)
-    {
-        return ::pow(x, y);
-    }
+#endif
 
     inline bool isNan(double f)
     {

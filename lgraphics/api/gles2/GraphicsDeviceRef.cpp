@@ -23,7 +23,7 @@ namespace lgraphics
     void Descriptor::release()
     {
         if(--counter_ == 0){
-            lgraphics::Graphics::getDevice().free(this);
+            lgraphics::Graphics::getDevice().freeDesc(this);
         }
     }
 

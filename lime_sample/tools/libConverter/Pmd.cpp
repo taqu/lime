@@ -639,6 +639,14 @@ namespace
             return;
         }
 
+        //ベースを検索
+        for(u32 i=1; i<numSkins_; ++i){
+            if(skins_[i].type_ == 0){
+                skins_[0].swap(skins_[i]);
+            }
+        }
+
+        //インデックス幅計算
         Skin& skin = skins_[0];
 
         for(u32 i=0; i<skin.numVertices_; ++i){
@@ -1032,11 +1040,11 @@ namespace
         sortBones();
 
         for(u16 i=0; i<numBones_; ++i){
-            if(bones_[i].parentIndex_ != lanim::InvalidJointIndex){
+            if(bones_[i].parentIndex_ != InvalidJointIndexU16){
                 bones_[i].parentIndex_ = boneMap_[ bones_[i].parentIndex_ ];
             }
 
-            if(bones_[i].tailPosIndex_ != lanim::InvalidJointIndex){
+            if(bones_[i].tailPosIndex_ != InvalidJointIndexU16){
                 bones_[i].tailPosIndex_ = boneMap_[ bones_[i].tailPosIndex_ ];
             }
 
@@ -1079,6 +1087,7 @@ namespace
 
                 joint.setPosition(headPosition);
                 joint.setParentIndex(bones_[i].parentIndex_);
+                joint.setSubjectTo(bones_[i].ikParentIndex_);
                 joint.setType(bones_[i].type_);
             }
             skeleton->setNameMemory(header_.name_, NameSize);
@@ -1549,7 +1558,7 @@ namespace
         LASSERT(boneMap_ != NULL);
 
         for(u16 i=0; i<numBones_; ++i){
-            boneMap_[i] = lanim::InvalidJointIndex;
+            boneMap_[i] = InvalidJointIndexU16;
         }
 
         Bone *stack = LIME_NEW Bone[numBones_];
@@ -1559,9 +1568,9 @@ namespace
 
             //自分の親をすべてスタックに積む
             u16 j = i;
-            while(bones_[j].parentIndex_ != lanim::InvalidJointIndex){
+            while(bones_[j].parentIndex_ != InvalidJointIndexU16){
                 u16 parent = bones_[j].parentIndex_;
-                if(boneMap_[parent] == lanim::InvalidJointIndex){
+                if(boneMap_[parent] == InvalidJointIndexU16){
                     boneMap_[parent] = stackIndex;
                     stack[stackIndex] = bones_[parent];
                     ++stackIndex;
@@ -1570,7 +1579,7 @@ namespace
             }
 
             //自分をスタックに積む
-            if(boneMap_[i] == lanim::InvalidJointIndex){
+            if(boneMap_[i] == InvalidJointIndexU16){
                 boneMap_[i] = stackIndex;
                 stack[stackIndex] = bones_[i];
                 ++stackIndex;

@@ -198,7 +198,7 @@ namespace lmath
             // Find the row with max value in this column
             s32 rowMax = j; // Points to max abs value row in this column
             for(s32 i=j+1; i<4; i++){
-                if( lmath::absolute(tmp.m_[j][i]) > lmath::absolute(tmp.m_[j][rowMax]) ){
+                if( lcore::absolute(tmp.m_[j][i]) > lcore::absolute(tmp.m_[j][rowMax]) ){
                     rowMax = i;
                 }
             }

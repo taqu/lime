@@ -17,6 +17,11 @@
 
 
 #ifdef _WIN32
+
+#if !defined(WIN32_LEAN_AND_MEAN)
+#define WIN32_LEAN_AND_MEAN
+#endif //WIN32_LEAN_AND_MEAN
+
 #include <windows.h>
 #include <mmsystem.h>
 #else
@@ -173,74 +178,6 @@ typedef TLogger<CharTraitsMultiByte, DebugOutputterStdOut<CharTraitsMultiByte> >
 
         va_end(ap);
 #endif
-    }
-
-    //---------------------------------------------------------
-    //---
-    //--- タイム関係
-    //---
-    //---------------------------------------------------------
-    // CPUクロック取得
-    u32 getPerformanceCounter()
-    {
-#ifdef _WIN32
-        LARGE_INTEGER count;
-        LARGE_INTEGER freq;
-        QueryPerformanceCounter(&count);
-        QueryPerformanceFrequency(&freq);
-        return static_cast<u32>( count.QuadPart );
-#else
-        clock_t t = 0;
-        t = clock();
-        return static_cast<u32>(t);
-#endif
-    }
-
-    // マイクロ秒単位で時間取得
-    u32 getTimeFromPerformanCounter()
-    {
-#ifdef _WIN32
-        LARGE_INTEGER count;
-        LARGE_INTEGER freq;
-        QueryPerformanceCounter(&count);
-        QueryPerformanceFrequency(&freq);
-        return static_cast<u32>( (count.QuadPart*(1000*1000))/freq.QuadPart );
-#else
-        clock_t t = 0;
-        t = clock();
-        return static_cast<u32>( (t * (1000*1000))/CLOCKS_PER_SEC );
-        //rusage t;
-        //getrusage(RUSAGE_SELF, &t);
-        //return static_cast<u32>(t.ru_utime.tv_usec);
-#endif
-    }
-
-    // ミリ秒単位の時間を取得
-    u32 getTime()
-    {
-#ifdef _WIN32
-        DWORD time = timeGetTime();
-        return static_cast<u32>(time);
-#else
-        struct timeval tv;
-        gettimeofday(&tv, NULL);
-
-        return static_cast<u32>(tv.tv_sec*1000 + tv.tv_usec/1000);
-#endif
-    }
-
-    namespace
-    {
-        inline u32 getUsageMSec()
-        {
-#if defined(_WIN32)
-            return 1;
-#else
-            rusage t;
-            getrusage(RUSAGE_SELF, &t);
-            return static_cast<u32>(t.ru_utime.tv_sec * 1000 + t.ru_utime.tv_usec/1000);
-#endif
-        }
     }
 
 }

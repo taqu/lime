@@ -4,6 +4,7 @@
 @date 2011/01/25 create
 
 */
+#include <limits.h>
 #include "converter.h"
 #include "charcode/conv_charcode.h"
 

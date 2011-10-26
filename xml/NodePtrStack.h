@@ -24,14 +24,14 @@ namespace xml
         }
 
         /**
-	@brief プッシュ
-	@param node ... XMLノード
-	*/
-	void push(Node* node);
+        @brief プッシュ
+        @param node ... XMLノード
+        */
+        void push(Node* node);
 
         /**
-	@brief ポップ
-	*/
+        @brief ポップ
+        */
         void pop()
         {
             XML_ASSERT(_count > 0);
@@ -39,9 +39,9 @@ namespace xml
         }
 
         /**
-	@return スタックの先頭
-	*/
-	Node* top()
+        @return スタックの先頭
+        */
+        Node* top()
         {
             XML_ASSERT(_count > 0);
             return _nodes[_count - 1];
@@ -59,10 +59,10 @@ namespace xml
         typedef lcore::FixedArray<Node*> NodeArray;
 
         /**
-	@brief スタック領域を拡張
-	@param newSize ... 新しいサイズ
-	*/
-	void expand(size_t newSize);
+        @brief スタック領域を拡張
+        @param newSize ... 新しいサイズ
+        */
+        void expand(size_t newSize);
 
         /// スタック
         NodeArray _nodes;

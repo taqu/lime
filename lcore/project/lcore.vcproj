@@ -48,7 +48,7 @@
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
 				EnableEnhancedInstructionSet="2"
-				UsePrecompiledHeader="1"
+				UsePrecompiledHeader="0"
 				PrecompiledHeaderThrough="lcore.h"
 				PrecompiledHeaderFile="$(OutDir)\$(TargetName).pch"
 				ProgramDataBaseFileName="$(OutDir)\$(ProjectName)_vc90.pdb"
@@ -179,6 +179,18 @@
 			</File>
 			<File
 				RelativePath="..\smart_ptr\shared_ptr.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="random"
+			>
+			<File
+				RelativePath="..\random\Random.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\random\Random.h"
 				>
 			</File>
 		</Filter>

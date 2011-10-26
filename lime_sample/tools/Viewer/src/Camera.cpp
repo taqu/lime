@@ -110,8 +110,8 @@ namespace viewer
             f32 tx = -0.2f*Input::getAnalogDuration(Input::Analog_X);
             f32 ty = 0.2f*Input::getAnalogDuration(Input::Analog_Y);
 
-            tx = lmath::clamp(tx, -1.0f, 1.0f);
-            ty = lmath::clamp(ty, -1.0f, 1.0f);
+            tx = lcore::clamp(tx, -1.0f, 1.0f);
+            ty = lcore::clamp(ty, -1.0f, 1.0f);
 
             target_.x_ += tx * viewMat_.m_[0][0] + ty * viewMat_.m_[1][0];
             target_.y_ += tx * viewMat_.m_[0][1] + ty * viewMat_.m_[1][1];

@@ -229,7 +229,7 @@ namespace lmath
 
         //sin = -sin
         double x = val;
-        x = absolute(x);
+        x = lcore::absolute(x);
 
         //pi/2の範囲に収める
         x *= inv_pi2;

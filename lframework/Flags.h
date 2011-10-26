@@ -6,6 +6,7 @@
 @date 2010/12/15 create
 
 */
+#include <lcore/utility.h>
 #include "lframework.h"
 
 namespace lframework

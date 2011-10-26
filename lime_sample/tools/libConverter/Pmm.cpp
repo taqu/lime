@@ -583,7 +583,7 @@ namespace pmm
     }
 
     //----------------------------------------------
-    // モデルのジョイントアニメーションロード
+    // モデルのスキンアニメーションロード
     void Loader::readSkinMorphPoses(u32 index)
     {
         ModelPack& modelPack = modelPacks_[index];

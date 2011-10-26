@@ -65,13 +65,13 @@ namespace lscene
         mat *= drawable->getWorldMatrix();
 
         mat.transpose();
-        shader_.setMatrix(params_[ParamVS_WVP], mat, 0);
+        shader_.setMatrix(params_[ParamVS_WVP], mat);
 
         if(params_[ParamVS_WV]>0){
             mat = scene.getViewMatrix();
             mat *= drawable->getWorldMatrix();
             mat.transpose();
-            shader_.setMatrix(params_[ParamVS_WV], mat, 0);
+            shader_.setMatrix(params_[ParamVS_WV], mat);
         }
 
 
@@ -119,7 +119,8 @@ namespace lscene
 
                 u8 count = geometry->getNumBonesInPalette();
                 for(u8 i=0; i<count; ++i){
-                    TempPalette[i] = poses[ geometry->getBoneInPalette(i) ];
+                    u8 boneIndex = geometry->getBoneInPalette(i);
+                    TempPalette[i] = poses[ boneIndex ];
                 }
 
                 shader_.setVector4Array(params_[ParamVS_MatrixPalette], reinterpret_cast<const lmath::Vector4*>(TempPalette), 3*count);

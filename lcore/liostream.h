@@ -7,6 +7,7 @@
 */
 #include <stdio.h>
 #include "lcore.h"
+#include "clibrary.h"
 
 namespace lcore
 {

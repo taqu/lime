@@ -69,7 +69,7 @@ namespace lgraphics
             ret->id_ = 0;
             return ret;
         }
-        void free(Descriptor* ptr){ descAllocator_.push(ptr);}
+        void freeDesc(Descriptor* ptr){ descAllocator_.push(ptr);}
 
         // ビューポート設定
         inline void setViewport(s32 left, s32 top, s32 width, s32 height);

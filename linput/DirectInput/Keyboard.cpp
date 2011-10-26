@@ -4,6 +4,8 @@
 @date 2009/05/13
 */
 #include <lcore/lcore.h>
+#include <lcore/clibrary.h>
+
 #include "Keyboard.h"
 
 namespace linput
@@ -51,7 +53,7 @@ namespace linput
         }
 
         for(u32 i=0; i<BUFFER_NUM; ++i){
-            std::memset(keystate_[i], 0, KEYSTATE_NUM*sizeof(char));
+            lcore::memset(keystate_[i], 0, KEYSTATE_NUM*sizeof(char));
         }
 
         //アクセス権取得、入力開始
