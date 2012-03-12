@@ -158,14 +158,6 @@ namespace lcore
     //--- Utility
     //---
     //---------------------------------------------------------
-    template<class T>
-    inline void swap(T& l, T& r)
-    {
-        T tmp = l;
-        l = r;
-        r = tmp;
-    }
-
 
     template<class Itr>
     struct iterator_traits

@@ -9,6 +9,7 @@
 
 namespace lmath
 {
+#if defined(LMATH_USE_SSE)
     void calcBBox_SSE(Vector3& bmin, Vector3& bmax, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
         __m128 x0 = _mm_set_ps(v0.x_, v0.y_, v0.z_, 0.0f);
@@ -28,6 +29,7 @@ namespace lmath
         _mm_store_ps(ret, retMax);
         bmax.set(ret[3], ret[2], ret[1]);
     }
+#endif
 
     void calcBBox_NoSSE(Vector3& bmin, Vector3& bmax, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
@@ -50,7 +52,7 @@ namespace lmath
 
     }
 
-
+#if defined(LMATH_USE_SSE)
     void calcMedian_SSE(Vector3& median, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
         const f32 invNum = (1.0f/3.0f);
@@ -69,6 +71,7 @@ namespace lmath
         _mm_store_ps(ret, mRet);
         median.set(ret[3], ret[2], ret[1]);
     }
+#endif
 
     void calcMedian_NoSSE(Vector3& median, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {

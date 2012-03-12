@@ -17,8 +17,10 @@ namespace lmath
     {
     public:
         Quaternion()
-        {
-        }
+        {}
+
+        inline Quaternion(const Quaternion& rhs);
+        inline Quaternion& operator=(const Quaternion& rhs);
 
         Quaternion(f32 w, f32 x, f32 y, f32 z)
             :w_(w),
@@ -51,9 +53,9 @@ namespace lmath
 
         inline Quaternion conjugate() const;
 
-        Quaternion& inverse();
+        Quaternion& invert();
 
-        inline f32 length() const;
+        f32 length() const;
         inline f32 lengthSqr() const;
 
         void normalize();
@@ -99,12 +101,62 @@ namespace lmath
 
         inline bool isNan() const;
 
+        inline void swap(Quaternion& rhs);
+
+#if defined(LMATH_USE_SSE)
+        inline static lm128 load(const Quaternion& v)
+        {
+            return _mm_loadu_ps(&v.w_);
+        }
+
+        inline static void store(Quaternion& v, lm128& r)
+        {
+            _mm_storeu_ps(&v.w_, r);
+        }
+#endif
+
         f32 w_, x_, y_, z_;
     };
 
+
+
+    inline Quaternion::Quaternion(const Quaternion& rhs)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 t = load(rhs);
+        store(*this, t);
+#else
+        set(rhs.w_, rhs.x_, rhs.y_, rhs.z_);
+#endif
+    }
+
+    inline Quaternion& Quaternion::operator=(const Quaternion& rhs)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 t = load(rhs);
+        store(*this, t);
+#else
+        set(rhs.w_, rhs.x_, rhs.y_, rhs.z_);
+#endif
+        return *this;
+    }
+
+
     inline Quaternion Quaternion::operator-() const
     {
+#if defined(LMATH_USE_SSE)
+        f32 f;
+        *((u32*)&f) = 0x80000000U;
+        lm128 mask = _mm_set1_ps(f);
+        lm128 r0 = load(*this);
+        r0 = _mm_xor_ps(r0, mask);
+
+        Quaternion ret;
+        store(ret, r0);
+        return ret;
+#else
         return Quaternion(-w_, -x_, -y_, -z_);
+#endif
     }
 
     inline f32 Quaternion::operator[](s32 index) const
@@ -123,18 +175,21 @@ namespace lmath
     // 単位四元数
     inline void Quaternion::identity()
     {
+#if defined(LMATH_USE_SSE)
+        const f32 one = 1.0f;
+
+        lm128 t = _mm_load_ss(&one);
+        _mm_storeu_ps(&w_, t);
+
+#else
         w_ = 1.0f;
         x_ = y_ = z_ = 0.0f;
+#endif
     }
 
     inline void Quaternion::setRotateAxis(const lmath::Vector3& axis, f32 radian)
     {
         setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
-    }
-
-    inline f32 Quaternion::length() const
-    {
-        return lmath::sqrt( lengthSqr() );
     }
 
     inline f32 Quaternion::lengthSqr() const
@@ -152,6 +207,21 @@ namespace lmath
         return (lcore::isNan(w_) || lcore::isNan(x_) || lcore::isNan(y_) || lcore::isNan(z_));
     }
 
+    inline void Quaternion::swap(Quaternion& rhs)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 t0 = load(*this);
+        lm128 t1 = load(rhs);
+
+        store(*this, t1);
+        store(rhs, t0);
+#else
+        lcore::swap(w_, rhs.w_);
+        lcore::swap(x_, rhs.x_);
+        lcore::swap(y_, rhs.y_);
+        lcore::swap(z_, rhs.z_);
+#endif
+    }
 }
 
 #endif //INC_LMATH_QUATERNION_H__

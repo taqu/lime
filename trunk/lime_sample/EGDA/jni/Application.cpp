@@ -7,11 +7,11 @@
 #include <lgraphics/api/InitParam.h>
 #include <lgraphics/api/Enumerations.h>
 
-#include <Pmm.h>
+#include <libConverter/Pmm.h>
 
-#include <lframework/System.h>
+#include <System.h>
 #include <lframework/anim/AnimationSystem.h>
-#include <lframework/render/RenderingSystem.h>
+#include <render/RenderingSystem.h>
 
 #include <lframework/scene/Scene.h>
 #include <lframework/scene/Camera.h>

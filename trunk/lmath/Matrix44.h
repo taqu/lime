@@ -10,6 +10,7 @@
 
 namespace lmath
 {
+    class Vector4;
     class Matrix34;
 
     //--------------------------------------------
@@ -35,15 +36,32 @@ namespace lmath
         inline f32& operator()(s32 r, s32 c);
 
         Matrix44& operator*=(f32 f);
-        Matrix44& operator*=(const Matrix44& rhs);
+        Matrix44& operator*=(const Matrix44& rhs)
+        {
+            mul(*this, rhs);
+            return *this;
+        }
+
         Matrix44& operator+=(const Matrix44& rhs);
         Matrix44& operator-=(const Matrix44& rhs);
         Matrix44& operator=(const Matrix44& rhs);
 
-        Matrix44& operator*=(const Matrix34& rhs);
+        Matrix44& operator*=(const Matrix34& rhs)
+        {
+            mul(*this, rhs);
+            return *this;
+        }
+
         Matrix44& operator=(const Matrix34& rhs);
 
         Matrix44 operator-() const;
+
+        void mul(const Matrix44& m0, const Matrix44& m1);
+        void mul(const Matrix34& m0, const Matrix44& m1);
+        void mul(const Matrix44& m0, const Matrix34& m1);
+
+
+
 
         void identity();
         void transpose();
@@ -89,13 +107,32 @@ namespace lmath
         inline void setScale(f32 s);
         inline void scale(f32 s);
 
+        void lookAt(const Vector4& eye, const Vector4& at, const Vector4& up);
         void lookAt(const Vector3& eye, const Vector3& at, const Vector3& up);
 
+        /**
+        @brief 透視投影
+        */
         void perspective(f32 width, f32 height, f32 znear, f32 zfar);
+
+        /**
+        @brief 透視投影
+        */
         void perspectiveFov(f32 fovy, f32 aspect, f32 znear, f32 zfar);
+
+        /**
+        @brief 平行投影
+        */
         void ortho(f32 width, f32 height, f32 znear, f32 zfar);
 
+        /**
+        @brief 透視投影。リニアＺ版
+        */
         void perspectiveLinearZ(f32 width, f32 height, f32 znear, f32 zfar);
+
+        /**
+        @brief 透視投影。リニアＺ版
+        */
         void perspectiveFovLinearZ(f32 fovy, f32 aspect, f32 znear, f32 zfar);
 
         void getTranslate(Vector3& trans) const
@@ -106,6 +143,13 @@ namespace lmath
         bool isNan() const;
 
         f32 m_[4][4];
+
+#if defined(LMATH_USE_SSE)
+    private:
+        //SSEセット・ストア命令
+        inline static void load(lm128& r0, lm128& r1, lm128& r2, lm128& r3, const Matrix44& m);
+        inline static void store(Matrix44& m, const lm128& r0, const lm128& r1, const lm128& r2, const lm128& r3);
+#endif
     };
 
     inline f32 Matrix44::operator()(s32 r, s32 c) const

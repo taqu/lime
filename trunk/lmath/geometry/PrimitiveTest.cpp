@@ -103,7 +103,7 @@ namespace lmath
     // 球と平面が交差するか
     bool testSphereVsPlane(f32 &t, const Sphere& sphere, const Plane& plane)
     {
-        t = distancePointVsPlane(sphere.position_, plane);
-        return t<=sphere.radius_;
+        t = distancePointVsPlane(Vector3(sphere.s_.x_, sphere.s_.y_, sphere.s_.z_), plane);
+        return (t<=sphere.s_.w_);
     }
 }

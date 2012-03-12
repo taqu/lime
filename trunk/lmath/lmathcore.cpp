@@ -7,7 +7,9 @@
 
 namespace lmath
 {
-#if defined(LMATH_USE_SSE2)
+    const f32 SphereRadiusEpsilon =1.0e-5f;
+
+#if defined(LMATH_USE_SSE)
     namespace
     {
         inline __m128 rcp_22bit_core(const __m128& x)
@@ -154,24 +156,11 @@ namespace lmath
         x4 = ret[3];
     }
 
-
-    void sqrt(f64 ix1, f64 ix2, f64& x1, f64& x2)
-    {
-        LIME_ALIGN16 f64 ret[2];
-        __m128d tmp = _mm_set_pd(ix2, ix1);
-        _mm_store_pd(ret, _mm_sqrt_pd(tmp));
-        x1 = ret[0];
-        x2 = ret[1];
-    }
-
 #endif
 
-    /**
-    @brief cos係数
-    */
-    double cos_series(double x)
+    namespace
     {
-        const double cos_coef[] = 
+        static const f64 cos_coef[] = 
         {
             -5.00000000000000000000e-1,
             4.16666666666666666667e-2,
@@ -181,9 +170,41 @@ namespace lmath
              2.08767569878680989792e-9,
         };
 
-        double x2 = x * x;
-        double ret = cos_coef[4];
-        //ret = cos_coef[4] + ret * x2;
+        static const f64 sin_coef[] = 
+        {
+            -1.66666666666666666667e-1,
+            8.33333333333333333333e-3,
+            -1.98412698412698412698e-4,
+            2.75573192239858906526e-6,
+            -2.50521083854417187751e-8,
+             1.60590438368216145994e-10,
+        };
+    }
+
+    /**
+    @brief cos係数
+    */
+    f64 cos_series(f64 x)
+    {
+        f64 x2 = x * x;
+        f64 ret = cos_coef[4];
+        //f64 ret = cos_coef[3];
+        ret = cos_coef[3] + ret * x2;
+        ret = cos_coef[2] + ret * x2;
+        ret = cos_coef[1] + ret * x2;
+        ret = cos_coef[0] + ret * x2;
+        ret = 1.0 + ret * x2;
+        return ret;
+    };
+
+
+    /**
+    @brief cos係数
+    */
+    f64 cos_series_x2(f64 x2)
+    {
+        f64 ret = cos_coef[4];
+        //f64 ret = cos_coef[3];
         ret = cos_coef[3] + ret * x2;
         ret = cos_coef[2] + ret * x2;
         ret = cos_coef[1] + ret * x2;
@@ -196,21 +217,26 @@ namespace lmath
     /**
     @brief sin係数
     */
-    double sin_series(double x)
+    f64 sin_series(f64 x)
     {
-        const double sin_coef[] = 
-        {
-            -1.66666666666666666667e-1,
-            8.33333333333333333333e-3,
-            -1.98412698412698412698e-4,
-            2.75573192239858906526e-6,
-            -2.50521083854417187751e-8,
-             1.60590438368216145994e-10,
-        };
+        f64 x2 = x * x;
+        f64 ret = sin_coef[4];
+        //f64 ret = sin_coef[3];
+        ret = sin_coef[3] + ret * x2;
+        ret = sin_coef[2] + ret * x2;
+        ret = sin_coef[1] + ret * x2;
+        ret = sin_coef[0] + ret * x2;
+        ret = x + ret * x2 * x;
+        return ret;
+    };
 
-        double x2 = x * x;
-        double ret = sin_coef[4];
-        //ret = sin_coef[4] + ret * x2;
+    /**
+    @brief sin係数
+    */
+    f64 sin_series_x2(f64 x, f64 x2)
+    {
+        f64 ret = sin_coef[4];
+        //f64 ret = sin_coef[3];
         ret = sin_coef[3] + ret * x2;
         ret = sin_coef[2] + ret * x2;
         ret = sin_coef[1] + ret * x2;
@@ -222,13 +248,13 @@ namespace lmath
     /**
     @brief sin演算
     */
-    __inline double sin_core(double val)
+    __inline f64 sin_core(f64 val)
     {
-        const double pi2     = 6.28318530717958647692;
-        const double inv_pi2 = 0.15915494309189533576;
+        const f64 pi2     = 6.28318530717958647692;
+        const f64 inv_pi2 = 0.15915494309189533576;
 
         //sin = -sin
-        double x = val;
+        f64 x = val;
         x = lcore::absolute(x);
 
         //pi/2の範囲に収める
@@ -241,7 +267,7 @@ namespace lmath
         ++s;
         long s2 = s >> 1;
 
-        double offset = -0.25 * s2;
+        f64 offset = -0.25 * s2;
         x = (x+offset)*pi2;
 
         bool sign = (s & 0x04U) == 0;
@@ -265,10 +291,49 @@ namespace lmath
     //
     f32 cosf_fast(f32 f)
     {
-        const double pi_2     = 1.57079632679489661923;
+        const f64 pi_2     = 1.57079632679489661923;
 
-        //cosA = sin(A+pi/2)
         return static_cast<f32>( sin_core(pi_2 + f) );
+    }
+
+
+    void sincos(f32& dsn, f32& dcs, f32 val)
+    {
+        const f64 pi2     = 6.28318530717958647692;
+        const f64 inv_pi2 = 0.15915494309189533576;
+
+        f64 x = val;
+        x = lcore::absolute(x);
+
+        //pi/2の範囲に収める
+        x *= inv_pi2;
+        long v = (long)(x);
+        x -= v;
+
+        //2*piの範囲を８つに分割して、符号とsin,cosどちらの係数で計算するか判別
+        long s = (long)(x*8.0);
+        ++s;
+        long s2 = s >> 1;
+
+        f64 offset = -0.25 * s2;
+        x = (x+offset)*pi2;
+
+        bool sign = (s & 0x04U) == 0;
+        sign = (val<0.0)? !sign : sign;
+
+        bool sign2 = (s<2 || 5<s);
+
+        bool isSin = (s2 & 0x01U) == 0;
+
+        f64 x2 = x*x;
+
+        if(isSin){
+            dsn = (sign)? sin_series_x2(x, x2) : -sin_series_x2(x, x2);
+            dcs = (sign2)? cos_series_x2(x2) : -cos_series_x2(x2);
+        }else{
+            dsn = (sign)? cos_series_x2(x2) : -cos_series_x2(x2);
+            dcs = (sign2)? sin_series_x2(x, x2) : -sin_series_x2(x, x2);
+        }
     }
 }
 

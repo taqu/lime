@@ -88,6 +88,16 @@ namespace smart_ptr
             return _pointer;
         }
 
+        //operator pointer_type()
+        //{
+        //    return _pointer;
+        //}
+
+        //operator const pointer_type() const
+        //{
+        //    return _pointer;
+        //}
+
         reference_type operator*() const
         {
             return *_pointer;

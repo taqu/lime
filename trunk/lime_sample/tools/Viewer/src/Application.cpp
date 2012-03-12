@@ -5,18 +5,18 @@
 */
 #include "stdafx.h"
 #include "Application.h"
-#include <Pmd.h>
-#include <Vmd.h>
-#include <Pmm.h>
-#include <XLoader.h>
+#include "libConverter/Pmd.h"
+#include "libConverter/Vmd.h"
+#include "libConverter/Pmm.h"
+#include "libConverter/XLoader.h"
 
 #include <lgraphics/lgraphics.h>
 
-#include <lframework/scene/AnimObject.h>
-#include <lframework/scene/Object.h>
-#include <lframework/System.h>
+#include "scene/AnimObject.h"
+#include "scene/Object.h"
+#include "System.h"
 #include <lframework/anim/AnimationSystem.h>
-#include <lframework/render/RenderingSystem.h>
+#include "render/RenderingSystem.h"
 
 #include <lframework/scene/Scene.h>
 #include <lframework/scene/Camera.h>
@@ -33,7 +33,7 @@
 #include "Input.h"
 #include "DynamicsWorld.h"
 
-#include <converter.h>
+#include "libConverter/converter.h"
 
 namespace
 {

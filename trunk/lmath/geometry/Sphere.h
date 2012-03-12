@@ -7,6 +7,7 @@
 */
 #include "../lmathcore.h"
 #include "../Vector3.h"
+#include "../Vector4.h"
 
 namespace lmath
 {
@@ -19,13 +20,53 @@ namespace lmath
         }
 
         Sphere(const Vector3& position, f32 radius)
-            :position_(position)
-            ,radius_(radius)
+            :s_(position, radius)
         {
         }
 
-        Vector3 position_; /// 中心
-        f32 radius_; /// 半径
+        Sphere(f32 x, f32 y, f32 z, f32 radius)
+            :s_(x, y, z, radius)
+        {
+        }
+
+        void set(f32 x, f32 y, f32 z, f32 radius)
+        {
+            s_.set(x, y, z, radius);
+        }
+
+        void zero()
+        {
+            s_.zero();
+        }
+
+        /**
+        @brief 点に外接する球を計算
+        */
+        static Sphere circumscribed(const Vector3& p0, const Vector3& p1);
+
+        /**
+        @brief 点に外接する球を計算
+        */
+        static Sphere circumscribed(const Vector3& p0, const Vector3& p1, const Vector3& p2);
+
+        /**
+        @brief 点に外接する球を計算
+        */
+        static Sphere circumscribed(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3);
+
+
+        static Sphere calcMiniSphere(const Vector3* points, u32 numPoints);
+
+        void combine(const Sphere& s0, const Sphere& s1);
+
+        f32 signedDistanceSqr(const Vector3& p) const;
+
+        void swap(Sphere& rhs)
+        {
+            s_.swap(rhs.s_);
+        }
+
+        Vector4 s_; ///半径 中心
     };
 }
 #endif //INC_LMATH_SPHERE_H__

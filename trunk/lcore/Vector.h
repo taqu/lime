@@ -79,7 +79,7 @@ namespace lcore
         void reserve(u32 capacity);
         void resize(u32 size);
 
-        void setIncSize(u32 size);
+        inline void setIncSize(u32 size);
     private:
         u32 incSize_;
         u32 capacity_;
@@ -251,7 +251,234 @@ namespace lcore
     }
 
     template<class T>
-    void vector_arena<T>::setIncSize(u32 size)
+    inline void vector_arena<T>::setIncSize(u32 size)
+    {
+        LASSERT(size>0);
+        incSize_ = size;
+    }
+
+
+
+    //-----------------------------------------------------------------
+    //---
+    //--- vector_arena ポインタ特殊化
+    //---
+    //-----------------------------------------------------------------
+    template<class T>
+    class vector_arena<T*>
+    {
+    public:
+        static const s32 DEFAULT_INCREMENT_SIZE = 64;
+
+        typedef u32 size_type;
+        typedef T** iterator;
+        typedef const T** const_iterator;
+
+        vector_arena();
+        explicit vector_arena(u32 incSize);
+        vector_arena(u32 size, u32 incSize);
+        vector_arena(const vector_arena<T*>& rhs);
+        ~vector_arena();
+
+        u32 size() const{ return size_;}
+        u32 capacity() const{ return capacity_;}
+
+        T*& operator[](u32 index)
+        {
+            LASSERT(0<=index && index<size_);
+            return items_[index];
+        }
+
+        const T*& operator[](u32 index) const
+        {
+            LASSERT(0<=index && index<size_);
+            return items_[index];
+        }
+
+        T*& front()
+        {
+            LASSERT(0<size_);
+            return items_[0];
+        }
+
+        const T*& front() const
+        {
+            LASSERT(0<size_);
+            return items_[0];
+        }
+
+        T*& back()
+        {
+            LASSERT(0<size_);
+            return items_[size_-1];
+        }
+
+        const T*& back() const
+        {
+            LASSERT(0<size_);
+            return items_[size_-1];
+        }
+
+
+        void push_back(T* const t);
+        void pop_back();
+
+        iterator begin(){ return items_;}
+        const_iterator begin() const{ return items_;}
+
+        iterator end(){ return items_ + size_;}
+        const_iterator end() const{ return items_ + size_;}
+
+        void clear();
+        void swap(vector_arena& rhs);
+        void reserve(u32 capacity);
+        void resize(u32 size);
+
+        inline void setIncSize(u32 size);
+    private:
+        u32 incSize_;
+        u32 capacity_;
+        u32 size_;
+        T** items_;
+    };
+
+    template<class T>
+    vector_arena<T*>::vector_arena()
+        :incSize_(DEFAULT_INCREMENT_SIZE)
+        ,capacity_(0)
+        ,size_(0)
+    {
+        items_ = NULL;
+    }
+
+    template<class T>
+    vector_arena<T*>::vector_arena(u32 incSize)
+        :incSize_(incSize)
+        ,capacity_(0)
+        ,size_(0)
+    {
+        LASSERT(incSize>0);
+        items_ = NULL;
+    }
+
+    template<class T>
+    vector_arena<T*>::vector_arena(u32 size, u32 incSize)
+        :incSize_(incSize)
+        ,capacity_( (size>incSize)? size : incSize )
+        ,size_(size)
+    {
+        LASSERT(incSize>0);
+
+        items_ = LIME_NEW T*[capacity_];
+
+        for(u32 i=0; i<size_; ++i){
+            items_[i] = NULL;
+        }
+    }
+
+    template<class T>
+    vector_arena<T*>::vector_arena(const vector_arena<T*>& rhs)
+        :incSize_(rhs.incSize_)
+        ,capacity_(rhs.capacity_)
+        ,size_(rhs.size_)
+    {
+        LASSERT(incSize_>0);
+
+        items_ = LIME_NEW T*[capacity_];
+
+        for(u32 i=0; i<size_; ++i){
+            items_[i] = rhs.items_[i];
+        }
+    }
+
+    template<class T>
+    vector_arena<T*>::~vector_arena()
+    {
+        LIME_DELETE_ARRAY(items_);
+    }
+
+    template<class T>
+    void vector_arena<T*>::push_back(T* const t)
+    {
+        if(size_ >= capacity_){
+            //新しいバッファ確保
+            u32 newCapacity = capacity_ + incSize_;
+            T** newItems = LIME_NEW T*[newCapacity];
+
+            //コピーコンストラクタでコピー。古い要素のデストラクト
+            for(u32 i=0; i<size_; ++i){
+                newItems[i] = items_[i];
+            }
+            newItems[size_] = t;
+
+            //古いバッファ破棄
+            LIME_DELETE_ARRAY(items_);
+
+            items_ = newItems;
+            ++size_;
+            capacity_ = newCapacity;
+
+        }else{
+            items_[size_] = t;
+            ++size_;
+        }
+    }
+
+    template<class T>
+    void vector_arena<T*>::pop_back()
+    {
+        LASSERT(size_>0);
+        --size_;
+    }
+
+    template<class T>
+    void vector_arena<T*>::clear()
+    {
+        size_ = 0;
+    }
+
+    template<class T>
+    void vector_arena<T*>::swap(vector_arena& rhs)
+    {
+        lcore::swap(incSize_, rhs.incSize_);
+        lcore::swap(capacity_, rhs.capacity_);
+        lcore::swap(size_, rhs.size_);
+        lcore::swap(items_, rhs.items_);
+    }
+
+    template<class T>
+    void vector_arena<T*>::reserve(u32 capacity)
+    {
+        if(capacity<=capacity_){
+            return;
+        }
+
+        //新しいバッファ確保
+        T** newItems = LIME_NEW T*[capacity];
+
+        //コピーコンストラクタでコピー。古い要素のデストラクト
+        for(u32 i=0; i<size_; ++i){
+            newItems[i] = items_[i];
+        }
+
+        //古いバッファ破棄
+        LIME_DELETE_ARRAY(items_);
+
+        items_ = newItems;
+        capacity_ = capacity;
+    }
+
+    template<class T>
+    void vector_arena<T*>::resize(u32 size)
+    {
+        if(size > size_){
+            reserve(size);
+        }
+        size_ = size;
+    }
+
+    template<class T>
+    inline void vector_arena<T*>::setIncSize(u32 size)
     {
         LASSERT(size>0);
         incSize_ = size;

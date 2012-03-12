@@ -16,6 +16,6 @@
 #include <malloc.h>
 #include <memory.h>
 #include <tchar.h>
-
+#include <math.h>
 
 // TODO: プログラムに必要な追加ヘッダーをここで参照してください。

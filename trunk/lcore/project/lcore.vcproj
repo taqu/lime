@@ -12,6 +12,9 @@
 		<Platform
 			Name="Win32"
 		/>
+		<Platform
+			Name="x64"
+		/>
 	</Platforms>
 	<ToolFiles>
 	</ToolFiles>
@@ -154,6 +157,146 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Debug|x64"
+			OutputDirectory="$(SolutionDir)lib\$(PlatformName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="0"
+				AdditionalIncludeDirectories="..\..\"
+				PreprocessorDefinitions="WIN64;_DEBUG;_LIB;LIME_ENABLE_LOG"
+				MinimalRebuild="true"
+				BasicRuntimeChecks="3"
+				RuntimeLibrary="3"
+				EnableFunctionLevelLinking="true"
+				EnableEnhancedInstructionSet="0"
+				UsePrecompiledHeader="0"
+				PrecompiledHeaderThrough="lcore.h"
+				PrecompiledHeaderFile="$(OutDir)\$(TargetName).pch"
+				ProgramDataBaseFileName="$(OutDir)\$(ProjectName)_vc90.pdb"
+				WarningLevel="4"
+				DebugInformationFormat="3"
+				DisableSpecificWarnings="4819"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				AdditionalDependencies="winmm.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_vc90_d.lib"
+				IgnoreAllDefaultLibraries="true"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|x64"
+			OutputDirectory="$(SolutionDir)lib\$(PlatformName)"
+			IntermediateDirectory="$(PlatformName)\$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+				TargetEnvironment="3"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				AdditionalIncludeDirectories="..\..\"
+				PreprocessorDefinitions="WIN64;NDEBUG;_LIB;LIME_ENABLE_LOG"
+				StringPooling="true"
+				RuntimeLibrary="2"
+				EnableFunctionLevelLinking="false"
+				EnableEnhancedInstructionSet="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				DebugInformationFormat="3"
+				DisableSpecificWarnings="4819"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				AdditionalDependencies="winmm.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_vc90.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
@@ -220,6 +363,14 @@
 		</File>
 		<File
 			RelativePath="..\Container.h"
+			>
+		</File>
+		<File
+			RelativePath="..\CPU.cpp"
+			>
+		</File>
+		<File
+			RelativePath="..\CPU.h"
 			>
 		</File>
 		<File
@@ -292,6 +443,10 @@
 		</File>
 		<File
 			RelativePath="..\Singleton.h"
+			>
+		</File>
+		<File
+			RelativePath="..\Sort.h"
 			>
 		</File>
 		<File

@@ -23,7 +23,7 @@ namespace lmath
 
     inline void calcBBox(Vector3& bmin, Vector3& bmax, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
-#if defined(LMATH_USE_SSE2)
+#if defined(LMATH_USE_SSE)
         calcBBox_SSE(bmin, bmax, v0, v1, v2);
 #else
         calcBBox_NoSIMD(bmin, bmax, v0, v1, v2);
@@ -32,7 +32,7 @@ namespace lmath
 
     inline void calcMedian(Vector3& median, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
-#if defined(LMATH_USE_SSE2)
+#if defined(LMATH_USE_SSE)
         calcMedian_SSE(median, v0, v1, v2);
 #else
         calcMedian_NoSIMD(median, v0, v1, v2);

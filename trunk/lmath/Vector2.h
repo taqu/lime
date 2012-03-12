@@ -66,6 +66,9 @@ namespace lmath
 
         inline bool isNan() const;
 
+        inline void add(const Vector2& v0, const Vector2& v1);
+        inline void sub(const Vector2& v0, const Vector2& v1);
+
         f32 x_, y_;
     };
 
@@ -185,6 +188,17 @@ namespace lmath
         return (lcore::isNan(x_) || lcore::isNan(y_));
     }
 
+    inline void Vector2::add(const Vector2& v0, const Vector2& v1)
+    {
+        x_ = v0.x_ + v1.x_;
+        y_ = v0.y_ + v1.y_;
+    }
+
+    inline void Vector2::sub(const Vector2& v0, const Vector2& v1)
+    {
+        x_ = v0.x_ - v1.x_;
+        y_ = v0.y_ - v1.y_;
+    }
 }
 
 #endif //INC_LMATH_VECTOR2_H__

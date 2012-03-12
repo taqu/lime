@@ -72,7 +72,6 @@ include $(CLEAR_VARS)
 LOCAL_MODULE    := lframework
 LOCAL_SRC_FILES := $(LIME_DIR)/lframework/IOUtil.cpp\
                    $(LIME_DIR)/lframework/Static.cpp\
-                   $(LIME_DIR)/lframework/System.cpp\
                    $(LIME_DIR)/lframework/anim/AnimationClip.cpp\
                    $(LIME_DIR)/lframework/anim/AnimationControler.cpp\
                    $(LIME_DIR)/lframework/anim/AnimationControlerPartial.cpp\
@@ -81,48 +80,13 @@ LOCAL_SRC_FILES := $(LIME_DIR)/lframework/IOUtil.cpp\
                    $(LIME_DIR)/lframework/anim/JointAnimation.cpp\
                    $(LIME_DIR)/lframework/anim/Skeleton.cpp\
                    $(LIME_DIR)/lframework/anim/SkeletonPose.cpp\
-                   $(LIME_DIR)/lframework/render/Batch.cpp\
-                   $(LIME_DIR)/lframework/render/Drawable.cpp\
-                   $(LIME_DIR)/lframework/render/PassMain.cpp\
-                   $(LIME_DIR)/lframework/render/RenderingSystem.cpp\
-                   $(LIME_DIR)/lframework/scene/shader/DefaultShader.cpp\
-                   $(LIME_DIR)/lframework/scene/AnimObject.cpp\
-                   $(LIME_DIR)/lframework/scene/Geometry.cpp\
-                   $(LIME_DIR)/lframework/scene/IOGeometry.cpp\
-                   $(LIME_DIR)/lframework/scene/IOHeader.cpp\
-                   $(LIME_DIR)/lframework/scene/IOMaterial.cpp\
-                   $(LIME_DIR)/lframework/scene/IOObject.cpp\
-                   $(LIME_DIR)/lframework/scene/Material.cpp\
-                   $(LIME_DIR)/lframework/scene/Object.cpp\
-                   $(LIME_DIR)/lframework/scene/ShaderCreator.cpp\
-                   $(LIME_DIR)/lframework/scene/ShaderManager.cpp\
+                   $(LIME_DIR)/lframework/scene/Camera.cpp\
                    $(LIME_DIR)/lframework/scene/StaticString.cpp
 
 LOCAL_C_INCLUDES := $(APP_C_INCLUDES)
 
 include $(BUILD_STATIC_LIBRARY)
 
-##################################
-# libConverter
-include $(CLEAR_VARS)
-
-LOCAL_MODULE    := Converter
-LOCAL_SRC_FILES := $(LIBCONVERTER_DIR)/converter.cpp\
-                   $(LIBCONVERTER_DIR)/Pmd.cpp\
-                   $(LIBCONVERTER_DIR)/Vmd.cpp\
-                   $(LIBCONVERTER_DIR)/SplitBone.cpp\
-                   $(LIBCONVERTER_DIR)/PmmDef.cpp\
-                   $(LIBCONVERTER_DIR)/Pmm.cpp\
-                   $(LIBCONVERTER_DIR)/XLoaderDef.cpp\
-                   $(LIBCONVERTER_DIR)/XLoader.cpp\
-                   $(LIBCONVERTER_DIR)/RigidBodyData.cpp\
-                   $(LIBCONVERTER_DIR)/charcode/conv_charcode.cpp\
-                   $(LIBCONVERTER_DIR)/charcode/jis_level1_utf16.cpp\
-                   $(LIBCONVERTER_DIR)/charcode/jis_level2_utf16.cpp
-
-LOCAL_C_INCLUDES := $(APP_C_INCLUDES) $(LIBCONVERTER_DIR)
-
-include $(BUILD_STATIC_LIBRARY)
 
 ##################################
 # libpng
@@ -153,12 +117,37 @@ include $(PREBUILT_STATIC_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := egda
-LOCAL_USER_STATIC_LIBRARIES := libConverter liblframework liblgraphics liblmath liblcore
+LOCAL_USER_STATIC_LIBRARIES := liblframework liblgraphics liblmath liblcore
 LOCAL_STATIC_LIBRARIES := $(LOCAL_USER_STATIC_LIBRARIES) libjpeg libpng libbullet
-LOCAL_SRC_FILES:= $(LIBANIM_DIR)/AnimationControlerIK.cpp\
+LOCAL_SRC_FILES:= $(VIEWER_DIR)/libConverter/converter.cpp\
+                  $(VIEWER_DIR)/libConverter/Pmd.cpp\
+                  $(VIEWER_DIR)/libConverter/Vmd.cpp\
+                  $(VIEWER_DIR)/libConverter/SplitBone.cpp\
+                  $(VIEWER_DIR)/libConverter/PmmDef.cpp\
+                  $(VIEWER_DIR)/libConverter/Pmm.cpp\
+                  $(VIEWER_DIR)/libConverter/XLoaderDef.cpp\
+                  $(VIEWER_DIR)/libConverter/XLoader.cpp\
+                  $(VIEWER_DIR)/libConverter/RigidBodyData.cpp\
+                  $(VIEWER_DIR)/libConverter/charcode/conv_charcode.cpp\
+                  $(VIEWER_DIR)/libConverter/charcode/jis_level1_utf16.cpp\
+                  $(VIEWER_DIR)/libConverter/charcode/jis_level2_utf16.cpp\
+                  $(LIBANIM_DIR)/AnimationControlerIK.cpp\
                   $(LIBDYNAMICS_DIR)/DynamicsWorld.cpp\
                   $(LIBDYNAMICS_DIR)/RigidBodySkeleton.cpp\
                   $(LIBDYNAMICS_DIR)/DynamicsDebugDraw.cpp\
+                  $(VIEWER_DIR)/System.cpp\
+                  $(VIEWER_DIR)/render/Batch.cpp\
+                  $(VIEWER_DIR)/render/Drawable.cpp\
+                  $(VIEWER_DIR)/render/PassMain.cpp\
+                  $(VIEWER_DIR)/render/RenderingSystem.cpp\
+                  $(VIEWER_DIR)/scene/shader/DefaultShader.cpp\
+                  $(VIEWER_DIR)/scene/AnimObject.cpp\
+                  $(VIEWER_DIR)/scene/Geometry.cpp\
+                  $(VIEWER_DIR)/scene/IOHeader.cpp\
+                  $(VIEWER_DIR)/scene/Material.cpp\
+                  $(VIEWER_DIR)/scene/Object.cpp\
+                  $(VIEWER_DIR)/scene/ShaderCreator.cpp\
+                  $(VIEWER_DIR)/scene/ShaderManager.cpp\
                   ./stdafx.cpp\
                   ./main.cpp\
                   ./Application.cpp\
@@ -169,6 +158,6 @@ LOCAL_SRC_FILES:= $(LIBANIM_DIR)/AnimationControlerIK.cpp\
                   ./Config.cpp\
                   ./TextRenderer.cpp\
 
-LOCAL_C_INCLUDES := $(APP_C_INCLUDES) $(LIBCONVERTER_DIR)
+LOCAL_C_INCLUDES := $(APP_C_INCLUDES)
 LOCAL_LDLIBS    := -lGLESv2 -ldl -llog -lz
 include $(BUILD_SHARED_LIBRARY)

@@ -6,7 +6,7 @@
 */
 #include <lmath/lmath.h>
 #include <lmath/utility.h>
-#include <lframework/System.h>
+#include <System.h>
 #include "AnimationControlerIK.h"
 
 //#define LIME_ANIM_IK_DEBUG (1)

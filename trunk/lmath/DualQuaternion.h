@@ -72,7 +72,7 @@ namespace lmath
         /// 前から回転
         inline void preRotate(const lmath::Quaternion& r);
 
-        void inverse();
+        void invert();
 
         void getMatrix(lmath::Matrix34& mat) const;
 
