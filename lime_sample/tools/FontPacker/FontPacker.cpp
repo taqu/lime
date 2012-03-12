@@ -1,6 +1,8 @@
 #include "stdafx.h"
 
 #include "FontPacker.h"
+#include "DistanceField.h"
+
 
 FontPacker::FontPacker()
 :font_(NULL)
@@ -9,6 +11,7 @@ FontPacker::FontPacker()
 ,dataBmp_(NULL)
 ,dataOutlined_(NULL)
 ,textHeight_(0)
+,spaceWidth_(0)
 {
 }
 
@@ -17,14 +20,46 @@ FontPacker::~FontPacker()
     release();
 }
 
-void FontPacker::create(HWND hwnd, const FontInfo& info)
+bool FontPacker::create(HWND hwnd, const FontInfo& info)
 {
     release();
 
+    info_ = info;
+
+    bool ret = draw(hwnd);
+    return ret;
+}
+
+void FontPacker::release()
+{
+    if(bmp_ != NULL){
+        DeleteObject(bmp_);
+        bmp_ = NULL;
+        dataBmp_ = NULL;
+    }else if(dataBmp_ != NULL){
+        delete[] dataBmp_;
+        dataBmp_ = NULL;
+    }
+
+    if(bmpOutlined_ != NULL){
+        DeleteObject(bmpOutlined_);
+        bmpOutlined_ = NULL;
+        dataOutlined_ = NULL;
+    }
+
+    if(font_ != NULL){
+        DeleteObject(font_);
+        font_ = NULL;
+    }
+}
+
+
+bool FontPacker::draw(HWND hwnd)
+{
     BITMAPINFO bmi;
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = info.width_;
-    bmi.bmiHeader.biHeight = -info.height_;
+    bmi.bmiHeader.biWidth = info_.width_;
+    bmi.bmiHeader.biHeight = -info_.height_;
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
@@ -55,41 +90,12 @@ void FontPacker::create(HWND hwnd, const FontInfo& info)
         NULL,
         0);
 
-    info_ = info;
-
-    draw(hwnd);
-}
-
-void FontPacker::release()
-{
-    if(bmp_ != NULL){
-        DeleteObject(bmp_);
-        bmp_ = NULL;
-        dataBmp_ = NULL;
+    if(NULL == bmp_ || NULL == bmpOutlined_){
+        return false;
     }
 
-    if(bmpOutlined_ != NULL){
-        DeleteObject(bmpOutlined_);
-        bmpOutlined_ = NULL;
-        dataOutlined_ = NULL;
-    }
-
-    if(font_ != NULL){
-        DeleteObject(font_);
-        font_ = NULL;
-    }
-}
-
-
-void FontPacker::draw(HWND hwnd)
-{
-    if(bmp_ != NULL){
-        memset(dataBmp_, 0, sizeof(DWORD)*info_.width_*info_.height_);
-    }
-
-    if(bmpOutlined_ != NULL){
-        memset(dataOutlined_, 0, sizeof(DWORD)*info_.width_*info_.height_);
-    }
+    memset(dataBmp_, 0, sizeof(DWORD)*info_.width_*info_.height_);
+    memset(dataOutlined_, 0, sizeof(DWORD)*info_.width_*info_.height_);
 
     int fontWeight = (info_.bold_)? FW_BOLD : FW_NORMAL;
     font_ = CreateFontA(
@@ -156,6 +162,10 @@ void FontPacker::draw(HWND hwnd)
         {0,1}, {0,0},
         {0,0}, {0,1}
     };
+
+    //‹ó”’ƒTƒCƒY
+    GetGlyphOutlineA(memDC, 32, GGO_METRICS, &glyphMetrics, 0, NULL, &mat);
+    spaceWidth_ = glyphMetrics.gmCellIncX + outlineWidth;
 
     GlyphInfo* tmpInfo[NumCode];
     for(unsigned int i=0; i<NumCode; ++i){
@@ -231,7 +241,10 @@ void FontPacker::draw(HWND hwnd)
 
     ReleaseDC(hwnd, memDC);
     ReleaseDC(hwnd, memDCOutlined);
+
+    return true;
 }
+
 
 void FontPacker::sort(GlyphInfo** info)
 {
@@ -247,7 +260,28 @@ void FontPacker::sort(GlyphInfo** info)
 
 void FontPacker::save(const char* bmppath, const char* infopath)
 {
+    saveBMP(bmppath);
 
+    HANDLE file = CreateFile(infopath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+    if(NULL != file){
+        PackHeader header;
+        header.textHeight_ = textHeight_;
+        header.spaceWidth_ = spaceWidth_;
+        header.startCode_ = StartCode;
+        header.endCode_ = EndCode;
+        header.resolutionX_ = info_.width_;
+        header.resolutionY_ = info_.height_;
+        header.distanceField_ = (info_.distanceField_)? 1 : 0;
+
+        DWORD written = 0;
+        WriteFile(file, &header, sizeof(PackHeader), &written, NULL);
+        WriteFile(file, glyphInfo_, sizeof(GlyphInfo)*NumCode, &written, NULL);
+        CloseHandle(file);
+    }
+}
+
+void FontPacker::saveBMP(const char* bmppath)
+{
     BITMAPINFOHEADER bmpih;
     memset(&bmpih, 0, sizeof(BITMAPINFOHEADER));
 
@@ -298,18 +332,6 @@ void FontPacker::save(const char* bmppath, const char* infopath)
     }
 
     delete[] tmp;
-
-    file = CreateFile(infopath, GENERIC_WRITE, FILE_SHARE_WRITE, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-    if(NULL != file){
-        PackHeader header;
-        header.textHeight_ = textHeight_;
-        header.startCode_ = StartCode;
-        header.endCode_ = EndCode;
-        header.resolutionX_ = info_.width_;
-        header.resolutionY_ = info_.height_;
-
-        WriteFile(file, &header, sizeof(PackHeader), &written, NULL);
-        WriteFile(file, glyphInfo_, sizeof(GlyphInfo)*NumCode, &written, NULL);
-        CloseHandle(file);
-    }
 }
+
+

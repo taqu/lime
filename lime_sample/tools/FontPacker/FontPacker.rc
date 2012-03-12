@@ -28,14 +28,6 @@ LANGUAGE LANG_JAPANESE, SUBLANG_DEFAULT
 
 /////////////////////////////////////////////////////////////////////////////
 //
-// Icon
-//
-
-// Icon with lowest ID value placed first to ensure application icon
-// remains consistent on all systems.
-
-/////////////////////////////////////////////////////////////////////////////
-//
 // Menu
 //
 
@@ -77,7 +69,7 @@ BEGIN
         LEFTMARGIN, 7
         RIGHTMARGIN, 177
         TOPMARGIN, 7
-        BOTTOMMARGIN, 75
+        BOTTOMMARGIN, 137
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -119,15 +111,19 @@ END
 // Dialog
 //
 
-IDD_FONTDIALOG DIALOGEX 0, 0, 184, 82
+IDD_FONTDIALOG DIALOGEX 0, 0, 184, 144
 STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON   "OK",IDC_OK,71,61,50,14
-    PUSHBUTTON      "キャンセル",IDCANCEL,127,61,50,14
+    DEFPUSHBUTTON   "OK",IDC_OK,71,123,50,14
+    PUSHBUTTON      "キャンセル",IDCANCEL,127,123,50,14
     PUSHBUTTON      "Choose Font",IDC_BUTTON_FONT,7,7,50,14
-    COMBOBOX        IDC_COMBO_OUTLINE,69,7,48,46,CBS_DROPDOWN | CBS_SORT | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_OUTLINE,69,7,48,58,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_RESOLUTION,129,7,48,53,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    CONTROL         "DistanceField",IDC_CHECK_DISTANCE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,26,58,10
+    COMBOBOX        IDC_COMBO_DISTANCESCALE,66,68,48,53,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    COMBOBOX        IDC_COMBO_DISTANCESPREAD,129,69,48,53,CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
 END
 
 

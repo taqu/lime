@@ -8,10 +8,10 @@
 
 namespace lmath
 {
-    void DualQuaternion::inverse()
+    void DualQuaternion::invert()
     {
         Quaternion invRot = dq_[0];
-        invRot.inverse();
+        invRot.invert();
         dq_[0] = invRot;
 
         invRot *= invRot;

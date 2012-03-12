@@ -12,7 +12,7 @@
 #include <lframework/anim/SkeletonPose.h>
 #include <lframework/anim/JointPose.h>
 
-#include <RigidBodyData.h>
+#include "libConverter/RigidBodyData.h"
 
 #include "DynamicsWorld.h"
 

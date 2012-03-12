@@ -9,18 +9,18 @@
 #include "Camera.h"
 #include "Light.h"
 
-#include <Pmd.h>
-#include <Vmd.h>
-#include <PmmDef.h>
-#include <Pmm.h>
+#include <libConverter/Pmd.h>
+#include <libConverter/Vmd.h>
+#include <libConverter/PmmDef.h>
+#include <libConverter/Pmm.h>
 
 #include <lgraphics/lgraphics.h>
 
-#include <lframework/scene/AnimObject.h>
-#include <lframework/scene/Object.h>
-#include <lframework/System.h>
+#include <scene/AnimObject.h>
+#include <scene/Object.h>
+#include <System.h>
 #include <lframework/anim/AnimationSystem.h>
-#include <lframework/render/RenderingSystem.h>
+#include <render/RenderingSystem.h>
 
 #include <lframework/scene/Scene.h>
 #include <lframework/scene/Camera.h>

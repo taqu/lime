@@ -175,7 +175,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DistanceField.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\FontPacker.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\FontPackerDF.cpp"
 				>
 			</File>
 			<File
@@ -217,7 +225,15 @@
 				>
 			</File>
 			<File
+				RelativePath=".\DistanceField.h"
+				>
+			</File>
+			<File
 				RelativePath=".\FontPacker.h"
+				>
+			</File>
+			<File
+				RelativePath=".\FontPackerDF.h"
 				>
 			</File>
 			<File

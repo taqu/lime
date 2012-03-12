@@ -98,7 +98,7 @@ namespace lcore
 {
 
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     typedef char Char;
     typedef __int8 s8;
     typedef __int16 s16;
@@ -114,6 +114,7 @@ namespace lcore
     typedef double f64;
 
     typedef ptrdiff_t  ptrdiff_t;
+    typedef size_t lsize_t;
 
     typedef void* LHMODULE;
 
@@ -133,6 +134,7 @@ namespace lcore
     typedef double f64;
 
     typedef ptrdiff_t  ptrdiff_t;
+    typedef size_t lsize_t;
 
     typedef void* LHMODULE;
 
@@ -152,9 +154,22 @@ namespace lcore
     typedef double f64;
 
     typedef ptrdiff_t  ptrdiff_t;
+    typedef size_t lsize_t;
 
     typedef void* LHMODULE;
 #endif
+
+    //---------------------------------------------------------
+    //--- Utility
+    //---------------------------------------------------------
+    template<class T>
+    inline void swap(T& l, T& r)
+    {
+        T tmp = l;
+        l = r;
+        r = tmp;
+    }
+
 
 #define LIME_MAKE_FOURCC(c0, c1, c2, c3)\
     ( (lcore::u32)(c0) | ((lcore::u32)(c1) << 8) | ((lcore::u32)(c2) << 16) | ((lcore::u32)(c3) << 24) )

@@ -17,15 +17,20 @@
 
 #else
 
-#define LMATH_USE_SSE2
-
 #endif //defined(ANDROID)
 
 
-#if defined(LMATH_USE_SSE2)
+#if defined(LMATH_USE_SSE)
 //#include <mmintrin.h>  //MMX命令セット
-//#include <xmmintrin.h> //SSE命令セット
-#include <emmintrin.h> //SSE2命令セット
+#include <xmmintrin.h> //SSE命令セット
+//#include <emmintrin.h> //SSE2命令セット
+
+namespace lmath
+{
+    typedef __m128 lm128; /// XMMレジスタに対応した単精度浮動小数点型
+    typedef __m64 lm64;
+}
+
 #endif
 
 namespace lmath
@@ -53,6 +58,8 @@ namespace lmath
 #define F32_EPSILON (FLT_EPSILON)
 #define F64_EPSILON (DBL_EPSILON)
 #endif
+
+    extern const f32 SphereRadiusEpsilon; //=1.0e-5f;
 
 // 三角関数において、１とみなす下限
 #define F32_ANGLE_LIMIT1 (0.9999f)
@@ -93,7 +100,7 @@ namespace lmath
         return (lcore::absolute<f64>(x1 - x2) < epsilon);
     }
 
-#if defined(LMATH_USE_SSE2)
+#if defined(LMATH_USE_SSE)
     /**
 
     11bit近似値をNewton-Raphson法で22bitに高精度化
@@ -157,7 +164,6 @@ namespace lmath
         x4 = ret[3];
     }
 
-    void sqrt(f64 ix1, f64 ix2, f64& x1, f64& x2);
 #else
 
     /**
@@ -172,7 +178,7 @@ namespace lmath
 
     inline f32 sqrt(f32 x)
     {
-#if defined(LMATH_USE_SSE2)
+#if defined(LMATH_USE_SSE)
         f32 ret;
         __m128 tmp = _mm_set_ss(x);
         _mm_store_ss(&ret, _mm_sqrt_ss(tmp));
@@ -182,23 +188,9 @@ namespace lmath
 #endif
     }
 
-
-    
-    inline f64 sqrt(f64 x)
-    {
-#if defined(LMATH_USE_SSE2)
-        f64 ret;
-        __m128d tmp = _mm_set_sd(x);
-        _mm_store_sd(&ret, _mm_sqrt_sd(tmp, tmp));
-        return ret;
-#else
-        return sqrt(x);
-#endif
-    }
-
-
     f32 sinf_fast(f32 x);
     f32 cosf_fast(f32 x);
+    void sincos(f32& dsn, f32& dcs, f32 x);
 
     inline f32 sinf(f32 x)
     {

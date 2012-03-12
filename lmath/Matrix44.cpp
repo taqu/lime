@@ -4,6 +4,8 @@
 @date 2009/01/18 create
 */
 #include "Matrix44.h"
+
+#include "Vector4.h"
 #include "Matrix34.h"
 
 namespace lmath
@@ -13,150 +15,371 @@ namespace lmath
     //--- Matrix44
     //---
     //--------------------------------------------
-    Matrix44::Matrix44(const Matrix34& mat)
+    Matrix44::Matrix44(const Matrix34& rhs)
     {
-        for(s32 i=0; i<3; ++i){
-            for(s32 j=0; j<4; ++j){
-                m_[i][j] = mat.m_[i][j];
-            }
-        }
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
+
+        _mm_storeu_ps(&m_[0][0], r0);
+        _mm_storeu_ps(&m_[1][0], r1);
+        _mm_storeu_ps(&m_[2][0], r2);
+#else
+        lcore::memcpy(m_, rhs.m_, sizeof(Matrix34));
+#endif
         m_[3][0] = m_[3][1] = m_[3][2] = 0.0f;
         m_[3][3] = 1.0f;
     }
 
     Matrix44& Matrix44::operator=(const Matrix44& rhs)
     {
-        for(s32 i=0; i<4; ++i){
-            for(s32 j=0; j<4; ++j){
-                m_[i][j] = rhs.m_[i][j];
-            }
-        }
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
+        lm128 r3 = _mm_loadu_ps(&rhs.m_[3][0]);
+
+        _mm_storeu_ps(&m_[0][0], r0);
+        _mm_storeu_ps(&m_[1][0], r1);
+        _mm_storeu_ps(&m_[2][0], r2);
+        _mm_storeu_ps(&m_[3][0], r3);
+#else
+        lcore::memcpy(m_, rhs.m_, sizeof(Matrix44));
+#endif
         return *this;
     }
 
 
     Matrix44& Matrix44::operator*=(f32 f)
     {
+#if defined(LMATH_USE_SSE)
+        lm128 r0, r1, r2, r3;
+        load(r0, r1, r2, r3, *this);
+
+        lm128 v = _mm_set1_ps(f);
+
+        r0 = _mm_mul_ps(r0, v);
+        r1 = _mm_mul_ps(r1, v);
+        r2 = _mm_mul_ps(r2, v);
+        r3 = _mm_mul_ps(r3, v);
+
+        store(*this, r0, r1, r2, r3);
+
+#else
         for(s32 i=0; i<4; ++i){
             for(s32 j=0; j<4; ++j){
                 m_[i][j] *= f;
             }
         }
+#endif
         return *this;
     }
 
+
     Matrix44& Matrix44::operator+=(const Matrix44& rhs)
     {
+#if defined(LMATH_USE_SSE)
+        lm128 r0, r1, r2, r3;
+        load(r0, r1, r2, r3, rhs);
+
+        lm128 t0, t1, t2, t3;
+        load(t0, t1, t2, t3, *this);
+
+        t0 = _mm_add_ps(t0, r0);
+        t1 = _mm_add_ps(t1, r1);
+        t2 = _mm_add_ps(t2, r2);
+        t3 = _mm_add_ps(t3, r3);
+
+        store(*this, t0, t1, t2, t3);
+
+#else
         for(s32 i=0; i<4; ++i){
             for(s32 j=0; j<4; ++j){
                 m_[i][j] += rhs.m_[i][j];
             }
         }
+#endif
         return *this;
     }
 
     Matrix44& Matrix44::operator-=(const Matrix44& rhs)
     {
+#if defined(LMATH_USE_SSE)
+        lm128 r0, r1, r2, r3;
+        load(r0, r1, r2, r3, rhs);
+
+        lm128 t0, t1, t2, t3;
+        load(t0, t1, t2, t3, *this);
+
+        t0 = _mm_sub_ps(t0, r0);
+        t1 = _mm_sub_ps(t1, r1);
+        t2 = _mm_sub_ps(t2, r2);
+        t3 = _mm_sub_ps(t3, r3);
+
+        store(*this, t0, t1, t2, t3);
+
+#else
         for(s32 i=0; i<4; ++i){
             for(s32 j=0; j<4; ++j){
                 m_[i][j] -= rhs.m_[i][j];
             }
         }
+#endif
         return *this;
     }
 
     Matrix44 Matrix44::operator-() const
     {
         Matrix44 ret;
+#if defined(LMATH_USE_SSE)
+        f32 f;
+        *((u32*)&f) = 0x80000000U;
+        lm128 mask = _mm_set1_ps(f);
+        lm128 r0, r1, r2, r3;
+        load(r0, r1, r2, r3, *this);
+
+        r0 = _mm_xor_ps(r0, mask);
+        r1 = _mm_xor_ps(r1, mask);
+        r2 = _mm_xor_ps(r2, mask);
+        r3 = _mm_xor_ps(r3, mask);
+
+        store(ret, r0, r1, r2, r3);
+
+#else
         for(s32 i=0; i<4; ++i){
             for(s32 j=0; j<4; ++j){
                 ret.m_[i][j] = -m_[i][j];
             }
         }
+#endif
         return ret;
-    }
-
-
-    Matrix44& Matrix44::operator*=(const Matrix34& rhs)
-    {
-        f32 x, y, z, w;
-        for(s32 c=0; c<4; ++c){
-            x = m_[c][0] * rhs.m_[0][0]
-                + m_[c][1] * rhs.m_[1][0]
-                + m_[c][2] * rhs.m_[2][0];
-
-            y = m_[c][0] * rhs.m_[0][1]
-                + m_[c][1] * rhs.m_[1][1]
-                + m_[c][2] * rhs.m_[2][1];
-
-            z = m_[c][0] * rhs.m_[0][2]
-                + m_[c][1] * rhs.m_[1][2]
-                + m_[c][2] * rhs.m_[2][2];
-
-            w = m_[c][0] * rhs.m_[0][3]
-                + m_[c][1] * rhs.m_[1][3]
-                + m_[c][2] * rhs.m_[2][3]
-                + m_[c][3];
-
-            m_[c][0] = x;
-            m_[c][1] = y;
-            m_[c][2] = z;
-            m_[c][3] = w;
-        }
-        return *this;
     }
 
 
     Matrix44& Matrix44::operator=(const Matrix34& rhs)
     {
-        for(s32 i=0; i<3; ++i){
-            for(s32 j=0; j<4; ++j){
-                m_[i][j] = rhs.m_[i][j];
-            }
-        }
+
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
+
+        _mm_storeu_ps(&m_[0][0], r0);
+        _mm_storeu_ps(&m_[1][0], r1);
+        _mm_storeu_ps(&m_[2][0], r2);
+#else
+        lcore::memcpy(m_, rhs.m_, sizeof(Matrix34));
+#endif
         m_[3][0] = m_[3][1] = m_[3][2] = 0.0f;
         m_[3][3] = 1.0f;
         return *this;
     }
 
-    void Matrix44::identity()
-    {
-        m_[0][0] = 1.0f; m_[0][1] = 0.0f; m_[0][2] = 0.0f; m_[0][3] = 0.0f;
-        m_[1][0] = 0.0f; m_[1][1] = 1.0f; m_[1][2] = 0.0f; m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f; m_[2][1] = 0.0f; m_[2][2] = 1.0f; m_[2][3] = 0.0f;
-        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
-    }
 
-    Matrix44& Matrix44::operator*=(const Matrix44& rhs)
+    void Matrix44::mul(const Matrix44& m0, const Matrix44& m1)
     {
+#if defined(LMATH_USE_SSE)
+        lm128 rm0 = _mm_loadu_ps(&(m1.m_[0][0]));
+        lm128 rm1 = _mm_loadu_ps(&(m1.m_[1][0]));
+        lm128 rm2 = _mm_loadu_ps(&(m1.m_[2][0]));
+        lm128 rm3 = _mm_loadu_ps(&(m1.m_[3][0]));
+
+        lm128 t0, t1, t2, t3;
+        for(s32 c=0; c<4; ++c){
+            t0 = _mm_load1_ps(&(m0.m_[c][0]));
+            t1 = _mm_load1_ps(&(m0.m_[c][1]));
+            t2 = _mm_load1_ps(&(m0.m_[c][2]));
+            t3 = _mm_load1_ps(&(m0.m_[c][3]));
+
+            t0 = _mm_mul_ps(t0, rm0);
+            t1 = _mm_mul_ps(t1, rm1);
+            t2 = _mm_mul_ps(t2, rm2);
+            t3 = _mm_mul_ps(t3, rm3);
+
+            t0 = _mm_add_ps(t0, t1);
+            t0 = _mm_add_ps(t0, t2);
+            t0 = _mm_add_ps(t0, t3);
+
+            _mm_storeu_ps(&(m_[c][0]), t0);
+        }
+
+#else
+        Matrix44 tmp = m1;
+
         f32 x, y, z, w;
         for(s32 c=0; c<4; ++c){
-            x = m_[c][0] * rhs.m_[0][0]
-                + m_[c][1] * rhs.m_[1][0]
-                + m_[c][2] * rhs.m_[2][0]
-                + m_[c][3] * rhs.m_[3][0];
+            x = m0.m_[c][0] * tmp.m_[0][0]
+                + m0.m_[c][1] * tmp.m_[1][0]
+                + m0.m_[c][2] * tmp.m_[2][0]
+                + m0.m_[c][3] * tmp.m_[3][0];
 
-            y = m_[c][0] * rhs.m_[0][1]
-                + m_[c][1] * rhs.m_[1][1]
-                + m_[c][2] * rhs.m_[2][1]
-                + m_[c][3] * rhs.m_[3][1];
+            y = m0.m_[c][0] * tmp.m_[0][1]
+                + m0.m_[c][1] * tmp.m_[1][1]
+                + m0.m_[c][2] * tmp.m_[2][1]
+                + m0.m_[c][3] * tmp.m_[3][1];
 
-            z = m_[c][0] * rhs.m_[0][2]
-                + m_[c][1] * rhs.m_[1][2]
-                + m_[c][2] * rhs.m_[2][2]
-                + m_[c][3] * rhs.m_[3][2];
+            z = m0.m_[c][0] * tmp.m_[0][2]
+                + m0.m_[c][1] * tmp.m_[1][2]
+                + m0.m_[c][2] * tmp.m_[2][2]
+                + m0.m_[c][3] * tmp.m_[3][2];
 
-            w = m_[c][0] * rhs.m_[0][3]
-                + m_[c][1] * rhs.m_[1][3]
-                + m_[c][2] * rhs.m_[2][3]
-                + m_[c][3] * rhs.m_[3][3];
+            w = m0.m_[c][0] * tmp.m_[0][3]
+                + m0.m_[c][1] * tmp.m_[1][3]
+                + m0.m_[c][2] * tmp.m_[2][3]
+                + m0.m_[c][3] * tmp.m_[3][3];
 
             m_[c][0] = x;
             m_[c][1] = y;
             m_[c][2] = z;
             m_[c][3] = w;
         }
-        return *this;
+#endif
+    }
+
+    void Matrix44::mul(const Matrix34& m0, const Matrix44& m1)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 rm0 = _mm_loadu_ps(&(m1.m_[0][0]));
+        lm128 rm1 = _mm_loadu_ps(&(m1.m_[1][0]));
+        lm128 rm2 = _mm_loadu_ps(&(m1.m_[2][0]));
+        lm128 rm3 = _mm_loadu_ps(&(m1.m_[3][0]));
+
+        lm128 t0, t1, t2, t3;
+        for(s32 c=0; c<3; ++c){
+            t0 = _mm_load1_ps(&(m0.m_[c][0]));
+            t1 = _mm_load1_ps(&(m0.m_[c][1]));
+            t2 = _mm_load1_ps(&(m0.m_[c][2]));
+            t3 = _mm_load1_ps(&(m0.m_[c][3]));
+
+            t0 = _mm_mul_ps(t0, rm0);
+            t1 = _mm_mul_ps(t1, rm1);
+            t2 = _mm_mul_ps(t2, rm2);
+            t3 = _mm_mul_ps(t3, rm3);
+
+            t0 = _mm_add_ps(t0, t1);
+            t0 = _mm_add_ps(t0, t2);
+            t0 = _mm_add_ps(t0, t3);
+
+            _mm_storeu_ps(&(m_[c][0]), t0);
+        }
+        _mm_storeu_ps(&(m_[3][0]), rm3);
+
+#else
+        Matrix44 tmp = m1;
+
+        f32 x, y, z, w;
+        for(s32 c=0; c<3; ++c){
+            x = m0.m_[c][0] * tmp.m_[0][0]
+                + m0.m_[c][1] * tmp.m_[1][0]
+                + m0.m_[c][2] * tmp.m_[2][0]
+                + m0.m_[c][3] * tmp.m_[3][0];
+
+            y = m0.m_[c][0] * tmp.m_[0][1]
+                + m0.m_[c][1] * tmp.m_[1][1]
+                + m0.m_[c][2] * tmp.m_[2][1]
+                + m0.m_[c][3] * tmp.m_[3][1];
+
+            z = m0.m_[c][0] * tmp.m_[0][2]
+                + m0.m_[c][1] * tmp.m_[1][2]
+                + m0.m_[c][2] * tmp.m_[2][2]
+                + m0.m_[c][3] * tmp.m_[3][2];
+
+            w = m0.m_[c][0] * tmp.m_[0][3]
+                + m0.m_[c][1] * tmp.m_[1][3]
+                + m0.m_[c][2] * tmp.m_[2][3]
+                + m0.m_[c][3] * tmp.m_[3][3];
+
+            m_[c][0] = x;
+            m_[c][1] = y;
+            m_[c][2] = z;
+            m_[c][3] = w;
+        }
+
+        m_[3][0] = tmp.m_[3][0];
+        m_[3][1] = tmp.m_[3][1];
+        m_[3][2] = tmp.m_[3][2];
+        m_[3][3] = tmp.m_[3][3];
+#endif
+    }
+
+    void Matrix44::mul(const Matrix44& m0, const Matrix34& m1)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 rm0 = _mm_loadu_ps(&(m1.m_[0][0]));
+        lm128 rm1 = _mm_loadu_ps(&(m1.m_[1][0]));
+        lm128 rm2 = _mm_loadu_ps(&(m1.m_[2][0]));
+
+        lm128 t0, t1, t2, t3;
+        for(s32 c=0; c<4; ++c){
+            t0 = _mm_load1_ps(&(m0.m_[c][0]));
+            t1 = _mm_load1_ps(&(m0.m_[c][1]));
+            t2 = _mm_load1_ps(&(m0.m_[c][2]));
+            t3 = _mm_load_ss(&(m0.m_[c][3]));
+            t3 = _mm_shuffle_ps(t3, t3, 0x3F);
+
+            t0 = _mm_mul_ps(t0, rm0);
+            t1 = _mm_mul_ps(t1, rm1);
+            t2 = _mm_mul_ps(t2, rm2);
+
+            t0 = _mm_add_ps(t0, t1);
+            t0 = _mm_add_ps(t0, t2);
+            t0 = _mm_add_ps(t0, t3);
+
+            _mm_storeu_ps(&(m_[c][0]), t0);
+        }
+
+#else
+
+        f32 x, y, z, w;
+        for(s32 c=0; c<4; ++c){
+            x = m0.m_[c][0] * m1.m_[0][0]
+                + m0.m_[c][1] * m1.m_[1][0]
+                + m0.m_[c][2] * m1.m_[2][0];
+
+            y = m0.m_[c][0] * m1.m_[0][1]
+                + m0.m_[c][1] * m1.m_[1][1]
+                + m0.m_[c][2] * m1.m_[2][1];
+
+            z = m0.m_[c][0] * m1.m_[0][2]
+                + m0.m_[c][1] * m1.m_[1][2]
+                + m0.m_[c][2] * m1.m_[2][2];
+
+            w = m0.m_[c][0] * m1.m_[0][3]
+                + m0.m_[c][1] * m1.m_[1][3]
+                + m0.m_[c][2] * m1.m_[2][3]
+                + m0.m_[c][3];
+
+            m_[c][0] = x;
+            m_[c][1] = y;
+            m_[c][2] = z;
+            m_[c][3] = w;
+        }
+#endif
+    }
+
+    void Matrix44::identity()
+    {
+#if defined(LMATH_USE_SSE)
+        f32 one = 1.0f;
+        static const u32 rotmask = 147; //上位桁方向へ回転
+        lm128 t = _mm_load_ss(&one);
+        _mm_storeu_ps(&(m_[0][0]), t);
+
+        t = _mm_shuffle_ps(t, t, rotmask);
+        _mm_storeu_ps(&(m_[1][0]), t);
+
+        t = _mm_shuffle_ps(t, t, rotmask);
+        _mm_storeu_ps(&(m_[2][0]), t);
+
+        t = _mm_shuffle_ps(t, t, rotmask);
+        _mm_storeu_ps(&(m_[3][0]), t);
+#else
+        m_[0][0] = 1.0f; m_[0][1] = 0.0f; m_[0][2] = 0.0f; m_[0][3] = 0.0f;
+        m_[1][0] = 0.0f; m_[1][1] = 1.0f; m_[1][2] = 0.0f; m_[1][3] = 0.0f;
+        m_[2][0] = 0.0f; m_[2][1] = 0.0f; m_[2][2] = 1.0f; m_[2][3] = 0.0f;
+        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
+#endif
     }
 
     void Matrix44::transpose()
@@ -171,6 +394,74 @@ namespace lmath
 
     f32 Matrix44::determinant() const
     {
+//#if defined(LMATH_USE_SSE)
+#if 0
+        lm128 det;
+
+        lm128 c0 = _mm_loadu_ps(&m_[0][0]);
+        lm128 c1 = _mm_loadu_ps(&m_[1][0]);
+        lm128 c2 = _mm_loadu_ps(&m_[2][0]);
+        lm128 c3 = _mm_loadu_ps(&m_[3][0]);
+
+        lm128 t0 = _mm_shuffle_ps(c1, c1, 0x01);//11 10 10 10
+        lm128 t1 = _mm_shuffle_ps(c2, c2, 0x9E);//22 23 21 22
+        lm128 t2 = _mm_shuffle_ps(c3, c3, 0x6A);//33 32 32 31
+
+        det = _mm_mul_ps(t0, t1);
+        det = _mm_mul_ps(det, t2);
+
+
+        t0 = _mm_shuffle_ps(c1, c1, 0x5A);//12 12 11 11
+        t1 = _mm_shuffle_ps(c2, c2, 0x33);//23 20 23 20
+        t2 = _mm_shuffle_ps(c3, c3, 0x87);//31 33 30 32
+
+        t0 = _mm_mul_ps(t0, t1);
+        t0 = _mm_mul_ps(t0, t2);
+        det = _mm_add_ps(det, t0);
+
+
+        t0 = _mm_shuffle_ps(c1, c1, 0xBF);//13 13 13 12
+        t1 = _mm_shuffle_ps(c2, c2, 0x49);//21 22 20 21
+        t2 = _mm_shuffle_ps(c3, c3, 0x21);//32 30 31 30
+
+        t0 = _mm_mul_ps(t0, t1);
+        t0 = _mm_mul_ps(t0, t2);
+        det = _mm_add_ps(det, t0);
+
+
+        t0 = _mm_shuffle_ps(c1, c1, 0x01);//11 10 10 10
+        t1 = _mm_shuffle_ps(c2, c2, 0x7B);//23 22 23 21
+        t2 = _mm_shuffle_ps(c3, c3, 0x9E);//32 33 31 32
+
+        t0 = _mm_mul_ps(t0, t1);
+        t0 = _mm_mul_ps(t0, t2);
+        det = _mm_sub_ps(det, t0);
+
+
+        t0 = _mm_shuffle_ps(c1, c1, 0x5A);//12 12 11 11
+        t1 = _mm_shuffle_ps(c2, c2, 0x87);//21 23 20 22
+        t2 = _mm_shuffle_ps(c3, c3, 0x33);//33 30 33 30
+
+        t0 = _mm_mul_ps(t0, t1);
+        t0 = _mm_mul_ps(t0, t2);
+        det = _mm_sub_ps(det, t0);
+
+
+        t0 = _mm_shuffle_ps(c1, c1, 0xBF);//13 13 13 12
+        t1 = _mm_shuffle_ps(c2, c2, 0x12);//22 20 21 20
+        t2 = _mm_shuffle_ps(c3, c3, 0x49);//31 32 30 31
+
+        t0 = _mm_mul_ps(t0, t1);
+        t0 = _mm_mul_ps(t0, t2);
+        det = _mm_sub_ps(det, t0);
+
+        det = _mm_mul_ps(det, c0);
+
+        LIME_ALIGN16 f32 buffer[4];
+        _mm_store_ps(buffer, det);
+
+        return (buffer[0] + buffer[1] + buffer[2] + buffer[3]);
+#else
         f32 tmp[4];
         tmp[0] = m_[0][0] * (m_[1][1]*m_[2][2]*m_[3][3] + m_[1][2]*m_[2][3]*m_[3][1] + m_[1][3]*m_[2][1]*m_[3][2]
                            - m_[1][1]*m_[2][3]*m_[3][2] - m_[1][2]*m_[2][1]*m_[3][3] - m_[1][3]*m_[2][2]*m_[3][1]);
@@ -185,11 +476,124 @@ namespace lmath
                            - m_[1][0]*m_[2][1]*m_[3][2] - m_[1][1]*m_[2][2]*m_[3][0] - m_[1][2]*m_[2][0]*m_[3][1]);
 
         return (tmp[0] + tmp[1] + tmp[2] + tmp[3]);
+#endif
     }
 
     void Matrix44::invert()
     {
+#if defined(LMATH_USE_SSE)
 
+
+        // -----------------------------------------------
+        lm128 m0, m1, m2, m3;
+        lm128 r0, r1, r2, r3;
+
+        lm128 tmp;
+
+        tmp = _mm_setzero_ps();
+        r1 = tmp;
+        r3 = tmp;
+
+        tmp = _mm_loadh_pi(_mm_loadl_pi(tmp, (lm64*)&m_[0][0]), (lm64*)&m_[1][0]);
+        r1 = _mm_loadh_pi(_mm_loadl_pi(r1, (lm64*)&m_[2][0]), (lm64*)&m_[3][0]);
+        r0 = _mm_shuffle_ps(tmp, r1, 0x88);
+        r1 = _mm_shuffle_ps(r1, tmp, 0xDD);
+        tmp = _mm_loadh_pi(_mm_loadl_pi(tmp, (lm64*)&m_[0][2]), (lm64*)&m_[1][2]);
+        r3 = _mm_loadh_pi(_mm_loadl_pi(r3, (lm64*)&m_[2][2]), (lm64*)&m_[3][2]);
+        r2 = _mm_shuffle_ps(tmp, r3, 0x88);
+        r3 = _mm_shuffle_ps(r3, tmp, 0xDD);
+
+        // -----------------------------------------------
+        tmp = _mm_mul_ps(r2, r3);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0xB1);
+        m0 = _mm_mul_ps(r1, tmp);
+        m1 = _mm_mul_ps(r0, tmp);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0x4E);
+        m0 = _mm_sub_ps( _mm_mul_ps(r1, tmp), m0);
+        m1 = _mm_sub_ps( _mm_mul_ps(r0, tmp), m1);
+        m1 = _mm_shuffle_ps(m1, m1, 0x4E);
+
+        // -----------------------------------------------
+        tmp = _mm_mul_ps(r1, r2);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0xB1);
+        m0 = _mm_add_ps( _mm_mul_ps(r3, tmp), m0);
+        m3 = _mm_mul_ps(r0, tmp);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0x4E);
+        m0 = _mm_sub_ps(m0, _mm_mul_ps(r3, tmp));
+        m3 = _mm_sub_ps( _mm_mul_ps(r0, tmp), m3);
+        m3 = _mm_shuffle_ps(m3, m3, 0x4E);
+
+        // -----------------------------------------------
+        tmp = _mm_mul_ps( _mm_shuffle_ps(r1, r1, 0x4E), r3);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0xB1);
+        r2 = _mm_shuffle_ps(r2, r2, 0x4E);
+        m0 = _mm_add_ps( _mm_mul_ps(r2, tmp), m0);
+        m2 = _mm_mul_ps(r0, tmp);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0x4E);
+        m0 = _mm_sub_ps(m0, _mm_mul_ps(r2, tmp));
+        m2 = _mm_sub_ps( _mm_mul_ps(r0, tmp), m2);
+        m2 = _mm_shuffle_ps(m2, m2, 0x4E);
+
+        // -----------------------------------------------
+        tmp = _mm_mul_ps(r0, r1);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0xB1);
+        m2 = _mm_add_ps( _mm_mul_ps(r3, tmp), m2);
+        m3 = _mm_sub_ps( _mm_mul_ps(r2, tmp), m3);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0x4E);
+        m2 = _mm_sub_ps( _mm_mul_ps(r3, tmp), m2);
+        m3 = _mm_sub_ps(m3, _mm_mul_ps(r2, tmp));
+
+        // -----------------------------------------------
+        tmp = _mm_mul_ps(r0, r3);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0xB1);
+        m1 = _mm_sub_ps(m1, _mm_mul_ps(r2, tmp));
+        m2 = _mm_add_ps( _mm_mul_ps(r1, tmp), m2);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0x4E);
+        m1 = _mm_add_ps( _mm_mul_ps(r2, tmp), m1);
+        m2 = _mm_sub_ps(m2, _mm_mul_ps(r1, tmp));
+
+        // -----------------------------------------------
+        tmp = _mm_mul_ps(r0, r2);
+        tmp = _mm_shuffle_ps(tmp, tmp, 0xB1);
+        m1 = _mm_add_ps( _mm_mul_ps(r3, tmp), m1);
+        m3 = _mm_sub_ps(m3, _mm_mul_ps(r1, tmp));
+        tmp = _mm_shuffle_ps(tmp, tmp, 0x4E);
+        m1 = _mm_sub_ps(m1, _mm_mul_ps(r3, tmp));
+        m3 = _mm_add_ps( _mm_mul_ps(r1, tmp), m3);
+
+        // -----------------------------------------------
+        lm128 det = _mm_mul_ps(r0, m0);
+        det = _mm_add_ps( _mm_shuffle_ps(det, det, 0x4E), det);
+        det = _mm_add_ps( _mm_shuffle_ps(det, det, 0xB1), det);
+        tmp = _mm_rcp_ss(det);
+        
+        //Newton-Raphson法で、行列式の逆数を計算
+        {
+            tmp = _mm_rcp_ss(det);
+            det = _mm_mul_ss(det, tmp);
+            det = _mm_mul_ss(det, tmp);
+            tmp = _mm_add_ss(tmp, tmp);
+            det = _mm_sub_ss(tmp, det);
+            det = _mm_shuffle_ps(det, det, 0);
+        }
+
+        m0 = _mm_mul_ps(det, m0);
+        _mm_storel_pi((lm64*)&m_[0][0], m0);
+        _mm_storeh_pi((lm64*)&m_[0][2], m0);
+
+        m1 = _mm_mul_ps(det, m1);
+        _mm_storel_pi((lm64*)&m_[1][0], m1);
+        _mm_storeh_pi((lm64*)&m_[1][2], m1);
+
+        m2 = _mm_mul_ps(det, m2);
+        _mm_storel_pi((lm64*)&m_[2][0], m2);
+        _mm_storeh_pi((lm64*)&m_[2][2], m2);
+
+        m3 = _mm_mul_ps(det, m3);
+        _mm_storel_pi((lm64*)&m_[3][0], m3);
+        _mm_storeh_pi((lm64*)&m_[3][2], m3);
+
+#else
         Matrix44 tmp(*this);
         Matrix44 tmp2;
         tmp2.identity();
@@ -238,6 +642,7 @@ namespace lmath
         }
 
         (*this) = tmp2;
+#endif
     }
 
     void Matrix44::translate(const Vector3& v)
@@ -360,33 +765,168 @@ namespace lmath
         y *= norm;
         z *= norm;
 
-        f32 xSqr = x*x;
-        f32 ySqr = y*y;
-        f32 zSqr = z*z;
+        f32 xx = x*x;
+        f32 xy = x*y;
+        f32 xz = x*z;
+
+        f32 yx = y*x;
+        f32 yy = y*y;
+        f32 yz = y*z;
+
+        f32 zx = z*x;
+        f32 zy = z*y;
+        f32 zz = z*z;
 
         f32 cosA = lmath::cosf(radian);
         f32 sinA = lmath::sinf(radian);
+        f32 sx = sinA * x;
+        f32 sy = sinA * y;
+        f32 sz = sinA * z;
+
         f32 invCosA = 1.0f - cosA;
 
-        m_[0][0] = (invCosA * xSqr) + cosA;
-        m_[1][0] = (invCosA * x * y) - (sinA * z);
-        m_[2][0] = (invCosA * x * z) + (sinA * y);
+        m_[0][0] = (invCosA * xx) + cosA;
+        m_[1][0] = (invCosA * xy) - (sz);
+        m_[2][0] = (invCosA * xz) + (sy);
         m_[3][0] = 0.0f;
 
-        m_[0][1] = (invCosA * x * y) + (sinA * z);
-        m_[1][1] = (invCosA * ySqr) + (cosA);
-        m_[2][1] = (invCosA * y * z) - (sinA * x);
+        m_[0][1] = (invCosA * yx) + (sz);
+        m_[1][1] = (invCosA * yy) + (cosA);
+        m_[2][1] = (invCosA * yz) - (sx);
         m_[3][1] = 0.0f;
 
-        m_[0][2] = (invCosA * x * z) - (sinA * y);
-        m_[1][2] = (invCosA * y * z) + (sinA * x);
-        m_[2][2] = (invCosA * zSqr) + (cosA);
+        m_[0][2] = (invCosA * zx) - (sy);
+        m_[1][2] = (invCosA * zy) + (sx);
+        m_[2][2] = (invCosA * zz) + (cosA);
         m_[3][2] = 0.0f;
 
         m_[0][3] = 0.0f;
         m_[1][3] = 0.0f;
         m_[2][3] = 0.0f;
         m_[3][3] = 1.0f;
+    }
+
+#if defined(LMATH_USE_SSE)
+    namespace
+    {
+        lm128 dot(const lm128& v0, const lm128& v1)
+        {
+            lm128 tmp = _mm_mul_ps(v0, v1);
+            tmp = _mm_add_ps( _mm_shuffle_ps(tmp, tmp, 0x4E), tmp);
+            tmp = _mm_add_ps( _mm_shuffle_ps(tmp, tmp, 0xB1), tmp);
+            tmp = _mm_shuffle_ps(tmp, tmp, 0);
+            return tmp;
+        }
+
+        lm128 dotForLookAt(const lm128& v, const lm128& eye)
+        {
+            f32 f;
+            *((u32*)&f) = 0x80000000U;
+            lm128 mask = _mm_set1_ps(f);
+
+            lm128 tmp = _mm_mul_ps(v, eye);
+            tmp = _mm_add_ps( _mm_shuffle_ps(tmp, tmp, 0x4E), tmp);
+            tmp = _mm_add_ps( _mm_shuffle_ps(tmp, tmp, 0xB1), tmp);
+            tmp = _mm_xor_ps(tmp, mask);
+
+            //x,y,z,v
+            tmp = _mm_shuffle_ps(v, tmp, 0x0A);
+            tmp = _mm_shuffle_ps(v, tmp, 0xC4);
+
+            return tmp;
+        }
+
+        void rcp(lm128& r)
+        {
+            //Newton-Raphson法で、行列式の逆数を計算
+            lm128 tmp = _mm_rcp_ss(r);
+            r = _mm_mul_ss(r, tmp);
+            r = _mm_mul_ss(r, tmp);
+            tmp = _mm_add_ss(tmp, tmp);
+            r = _mm_sub_ss(tmp, r);
+            r = _mm_shuffle_ps(r, r, 0);
+        }
+
+        void normalize(lm128& v)
+        {
+            lm128 r1 = v;
+            v = _mm_mul_ps(v, v);
+            v = _mm_add_ps( _mm_shuffle_ps(v, v, 0x4E), v);
+            v = _mm_add_ps( _mm_shuffle_ps(v, v, 0xB1), v);
+
+            v = _mm_sqrt_ss(v);
+            v = _mm_shuffle_ps(v, v, 0);
+
+            rcp(v);
+            v = _mm_mul_ps(r1, v);
+        }
+
+        lm128 cross3(const lm128& xv0, const lm128& xv1)
+        {
+            lm128 xv2 = _mm_shuffle_ps(xv1, xv1, 0xC9);
+
+            lm128 tmp0 = _mm_mul_ps(xv0, xv2);
+            lm128 tmp1 = _mm_shuffle_ps(xv0, xv0, 0xC9);
+            tmp1 = _mm_mul_ps(tmp1, xv1);
+
+            tmp0 = _mm_sub_ps(tmp0, tmp1);
+
+            tmp0 = _mm_shuffle_ps(tmp0, tmp0, 0xC9);
+            return tmp0;
+        }
+    }
+#endif
+
+    void Matrix44::lookAt(const Vector4& eye, const Vector4& at, const Vector4& up)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 xaxis, yaxis, zaxis, teye;
+        teye = _mm_loadu_ps(&eye.x_);
+
+        zaxis = _mm_loadu_ps(&at.x_);
+        zaxis = _mm_sub_ps(zaxis, teye);
+
+        normalize(zaxis);
+        
+        xaxis = cross3(_mm_loadu_ps(&up.x_), zaxis);
+        normalize(xaxis);
+
+        yaxis = cross3(zaxis, xaxis);
+
+        xaxis = dotForLookAt(xaxis, teye);
+        yaxis = dotForLookAt(yaxis, teye);
+        zaxis = dotForLookAt(zaxis, teye);
+
+        _mm_storeu_ps(&m_[0][0], xaxis);
+        _mm_storeu_ps(&m_[1][0], yaxis);
+        _mm_storeu_ps(&m_[2][0], zaxis);
+
+
+        LIME_ALIGN16 f32 buffer[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        lm128 t = _mm_load_ps(buffer);
+        _mm_storeu_ps(&m_[3][0], t);
+
+#else
+        Vector4 xaxis, yaxis, zaxis = at;
+        zaxis -= eye;
+        zaxis.normalize();
+        
+        xaxis.cross3(up, zaxis);
+        xaxis.normalize();
+
+        yaxis.cross3(zaxis, xaxis);
+#if 0
+        m_[0][0] = xaxis.x_; m_[0][1] = yaxis.x_; m_[0][2] = zaxis.x_; m_[0][3] = 0.0f;
+        m_[1][0] = xaxis.y_; m_[1][1] = yaxis.y_; m_[1][2] = zaxis.y_; m_[1][3] = 0.0f;
+        m_[2][0] = xaxis.z_; m_[2][1] = yaxis.z_; m_[2][2] = zaxis.z_; m_[2][3] = 0.0f;
+        m_[3][0] = -eye.dot(xaxis); m_[3][1] = -eye.dot(yaxis); m_[3][2] = -eye.dot(zaxis); m_[3][3] = 1.0f;
+#else
+        m_[0][0] = xaxis.x_; m_[0][1] = xaxis.y_; m_[0][2] = xaxis.z_; m_[0][3] = -eye.dot(xaxis);
+        m_[1][0] = yaxis.x_; m_[1][1] = yaxis.y_; m_[1][2] = yaxis.z_; m_[1][3] = -eye.dot(yaxis);
+        m_[2][0] = zaxis.x_; m_[2][1] = zaxis.y_; m_[2][2] = zaxis.z_; m_[2][3] = -eye.dot(zaxis);
+        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
+#endif
+#endif
     }
 
     void Matrix44::lookAt(const Vector3& eye, const Vector3& at, const Vector3& up)
@@ -509,4 +1049,24 @@ namespace lmath
         }
         return false;
     }
+
+
+#if defined(LMATH_USE_SSE)
+    //SSEセット・ストア命令
+    inline void Matrix44::load(lm128& r0, lm128& r1, lm128& r2, lm128& r3, const Matrix44& m)
+    {
+        r0 = _mm_loadu_ps(&m.m_[0][0]);
+        r1 = _mm_loadu_ps(&m.m_[1][0]);
+        r2 = _mm_loadu_ps(&m.m_[2][0]);
+        r3 = _mm_loadu_ps(&m.m_[3][0]);
+    }
+
+    inline void Matrix44::store(Matrix44& m, const lm128& r0, const lm128& r1, const lm128& r2, const lm128& r3)
+    {
+        _mm_storeu_ps(&m.m_[0][0], r0);
+        _mm_storeu_ps(&m.m_[1][0], r1);
+        _mm_storeu_ps(&m.m_[2][0], r2);
+        _mm_storeu_ps(&m.m_[3][0], r3);
+    }
+#endif
 }

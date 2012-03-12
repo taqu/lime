@@ -15,15 +15,22 @@ struct FontInfo
     int height_;
     int outline_;
     bool bold_;
+    bool distanceField_;
+    bool dummy0_;
+    bool dummy1_;
+    int distanceScale_;
+    int distanceSpread_;
 };
 
 struct PackHeader
 {
     int textHeight_;
+    int spaceWidth_;
     unsigned int startCode_;
     unsigned int endCode_;
     int resolutionX_;
     int resolutionY_;
+    int distanceField_;
 };
 
 struct GlyphInfo
@@ -49,14 +56,16 @@ public:
     FontPacker();
     ~FontPacker();
 
-    void create(HWND hwnd, const FontInfo& info);
+    bool create(HWND hwnd, const FontInfo& info);
 
     HBITMAP getBitmap(){ return bmp_;}
 
     void save(const char* bmppath, const char* infopath);
 private:
     void release();
-    void draw(HWND hwnd);
+    bool draw(HWND hwnd);
+
+    void saveBMP(const char* bmppath);
 
     void sort(GlyphInfo** info);
 
@@ -69,6 +78,7 @@ private:
     DWORD* dataOutlined_;
 
     short textHeight_;
+    short spaceWidth_;
     GlyphInfo glyphInfo_[NumCode];
 };
 

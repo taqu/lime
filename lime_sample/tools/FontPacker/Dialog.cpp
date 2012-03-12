@@ -3,18 +3,25 @@
 @author t-sakai
 @date 2011/09/23
 */
+#include "stdafx.h"
 #include "Dialog.h"
 
 #include <Commdlg.h>
 #include "Resource.h"
 
+#include "FontPackerDF.h"
+
 namespace font
 {
     FontDialog::FontDialog()
     {
-        fontInfo_.height_ = 256;
-        fontInfo_.width_ = 256;
+        fontInfo_.height_ = 128;
+        fontInfo_.width_ = 128;
         fontInfo_.outline_ = 0;
+
+        fontInfo_.distanceField_ = false;
+        fontInfo_.distanceScale_ = 4;
+        fontInfo_.distanceSpread_ = 3;
     }
 
     FontDialog::~FontDialog()
@@ -39,6 +46,44 @@ namespace font
         outline_.setCurSel(0);
         outline_.setTopIndex(0);
 
+        resolution_.set( GetDlgItem(hDlg, IDC_COMBO_RESOLUTION) );
+        resolution_.resetContent();
+        resolution_.addString("128");
+        resolution_.addString("256");
+        resolution_.addString("512");
+        resolution_.addString("1024");
+        resolution_.addString("2048");
+        resolution_.setCurSel(1);
+        resolution_.setTopIndex(1);
+
+        distanceScale_.set( GetDlgItem(hDlg, IDC_COMBO_DISTANCESCALE) );
+        distanceScale_.resetContent();
+        distanceScale_.addString("1");
+        distanceScale_.addString("2");
+        distanceScale_.addString("3");
+        distanceScale_.addString("4");
+        distanceScale_.addString("5");
+        distanceScale_.addString("6");
+        distanceScale_.addString("7");
+        distanceScale_.addString("8");
+        distanceScale_.setCurSel(7);
+        distanceScale_.setTopIndex(7);
+
+        distanceSpread_.set( GetDlgItem(hDlg, IDC_COMBO_DISTANCESPREAD) );
+        distanceSpread_.resetContent();
+        distanceSpread_.addString("1");
+        distanceSpread_.addString("2");
+        distanceSpread_.addString("3");
+        distanceSpread_.addString("4");
+        distanceSpread_.addString("5");
+        distanceSpread_.addString("6");
+        distanceSpread_.addString("7");
+        distanceSpread_.addString("8");
+        distanceSpread_.setCurSel(7);
+        distanceSpread_.setTopIndex(7);
+
+        checkDistanceField_.set( GetDlgItem(hDlg, IDC_CHECK_DISTANCE) );
+        checkDistanceField_.setUnCheck();
 
         return (INT_PTR)TRUE;
     }
@@ -50,9 +95,17 @@ namespace font
         case IDC_OK:
             {
                 if(fontInfo_.face_.size()>0){
-                    fontInfo_.outline_ = outline_.getCurSel();
-                    fontPacker_.create(hDlg, fontInfo_);
-                    fontPacker_.save("out.bmp", "out.def");
+                    readBack();
+
+                    if(fontInfo_.distanceField_){
+                        FontPackerDF fontPacker;
+                        fontPacker.create(hDlg, fontInfo_);
+                        fontPacker.save("out.bmp", "out.def");
+                    }else{
+                        FontPacker fontPacker;
+                        fontPacker.create(hDlg, fontInfo_);
+                        fontPacker.save("out.bmp", "out.def");
+                    }
                 }
             }
             EndDialog(hDlg, LOWORD(wParam));
@@ -93,7 +146,6 @@ namespace font
                     fontInfo_.face_ = logFont.lfFaceName;
                     fontInfo_.size_ = logFont.lfHeight;
                     fontInfo_.bold_ = (logFont.lfWeight >= FW_BOLD);
-
                 }
             }
             break;
@@ -103,5 +155,54 @@ namespace font
         };
 
         return (INT_PTR)FALSE;
+    }
+
+    void FontDialog::readBack()
+    {
+        fontInfo_.outline_ = outline_.getCurSel();
+
+        fontInfo_.distanceField_ = (checkDistanceField_.getCheck() != 0);
+
+        LRESULT curSel = resolution_.getCurSel();
+        switch(curSel)
+        {
+        case 0:
+            fontInfo_.height_ = fontInfo_.width_ = 128;
+            break;
+
+        case 1:
+            fontInfo_.height_ = fontInfo_.width_ = 256;
+            break;
+
+        case 2:
+            fontInfo_.height_ = fontInfo_.width_ = 512;
+            break;
+
+        case 3:
+            fontInfo_.height_ = fontInfo_.width_ = 1024;
+            break;
+
+        default:
+            fontInfo_.height_ = fontInfo_.width_ = 2048;
+            break;
+        };
+
+        curSel = distanceScale_.getCurSel();
+        if(curSel<0){
+            fontInfo_.distanceScale_ = 1;
+        }else if(curSel>5){
+            fontInfo_.distanceScale_ = 6;
+        }else{
+            fontInfo_.distanceScale_ = curSel+1;
+        }
+
+        curSel = distanceSpread_.getCurSel();
+        if(curSel<0){
+            fontInfo_.distanceSpread_ = 1;
+        }else if(curSel>5){
+            fontInfo_.distanceSpread_ = 6;
+        }else{
+            fontInfo_.distanceSpread_ = curSel+1;
+        }
     }
 }

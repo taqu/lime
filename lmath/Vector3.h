@@ -26,7 +26,9 @@ namespace lmath
         {}
 
         Vector3(f32 x, f32 y, f32 z)
-            :x_(x), y_(y), z_(z)
+            :x_(x)
+            ,y_(y)
+            ,z_(z)
         {}
 
         inline void set(f32 x, f32 y, f32 z)
@@ -38,14 +40,14 @@ namespace lmath
         inline f32& operator[](s32 index);
         inline Vector3 operator-() const;
 
-        inline Vector3 operator*(f32 f) const;
-        inline Vector3 operator/(f32 f) const;
+        //inline Vector3 operator*(f32 f) const;
+        //inline Vector3 operator/(f32 f) const;
 
         inline Vector3& operator+=(const Vector3& v);
         inline Vector3& operator-=(const Vector3& v);
 
         inline Vector3& operator*=(f32 f);
-        inline Vector3& operator/=(f32 f);
+        Vector3& operator/=(f32 f);
 
         inline bool isEqual(const Vector3& v) const;
         inline bool isEqual(const Vector3& v, f32 epsilon) const;
@@ -55,12 +57,12 @@ namespace lmath
 
         inline f32 length() const;
         inline f32 lengthSqr() const;
-        inline void normalize();
+        void normalize();
         inline f32 dot(const Vector3& v) const;
         f32 distanceSqr(const Vector3& v) const;
         inline f32 distance(const Vector3& v) const;
 
-        inline const Vector3& cross(const Vector3& v1, const Vector3& v2);
+        void cross(const Vector3& v1, const Vector3& v2);
 
         /**
         @brief 線形補間。v = (1-t)*v0 + t*v1
@@ -91,7 +93,49 @@ namespace lmath
 
         inline bool isNan() const;
 
-        f32 x_, y_, z_;
+        inline void add(const Vector3& v0, const Vector3& v1);
+        inline void sub(const Vector3& v0, const Vector3& v1);
+
+#if defined(LMATH_USE_SSE)
+        //SSEセット・ストア命令
+
+        inline static lm128 load(const Vector3& v)
+        {
+#if 0
+            static const u32 Shuffle = 196;
+
+            lm128 t = _mm_load_ss(&v.z_);
+            t = _mm_shuffle_ps(t, t, Shuffle);
+            t = _mm_loadl_pi(t, reinterpret_cast<const __m64*>(&v.x_));
+            return t;
+#else
+            return _mm_set_ps(1.0f, v.z_, v.y_, v.x_);
+#endif
+        }
+
+        inline static lm128 load(f32 x, f32 y, f32 z)
+        {
+            return _mm_set_ps(1.0f, z, y, x);
+        }
+
+        inline static lm128 load(f32 v)
+        {
+            return _mm_set1_ps(v);
+        }
+
+        inline static void store(Vector3& v, const lm128& r)
+        {
+            _mm_storel_pi(reinterpret_cast<__m64*>(&v.x_), r);
+
+            static const u32 Shuffle = 170;
+            lm128 t = _mm_shuffle_ps(r, r, Shuffle);
+            _mm_store_ss(&v.z_, t);
+        }
+#endif
+
+        f32 x_;
+        f32 y_;
+        f32 z_;
     };
 
     //--------------------------------------------
@@ -99,13 +143,36 @@ namespace lmath
     //--- 実装
     //---
     //--------------------------------------------
-    inline const Vector3& Vector3::cross(const Vector3& v1, const Vector3& v2)
+#if 0
+    inline void Vector3::cross(const Vector3& v0, const Vector3& v1)
     {
-        x_ = v1.y_ * v2.z_ - v1.z_ * v2.y_;
-        y_ = v1.z_ * v2.x_ - v1.x_ * v2.z_;
-        z_ = v1.x_ * v2.y_ - v1.y_ * v2.x_;
-        return *this;
+#if defined(LMATH_USE_SSE)
+//#if 0
+        static const u32 RotMaskR = 201;
+        static const u32 RotMaskL = 210;
+
+        lm128 xv0 = load(v0.y_, v0.z_, v0.x_);
+        lm128 xv1 = load(v1.z_, v1.x_, v1.y_);
+        lm128 xv2 = _mm_mul_ps(xv0, xv1);
+
+        xv0 = _mm_shuffle_ps(xv0, xv0, RotMaskR);
+        xv1 = _mm_shuffle_ps(xv1, xv1, RotMaskL);
+
+        lm128 xv3 = _mm_mul_ps(xv0, xv1);
+
+        xv3 = _mm_sub_ps(xv2, xv3);
+        store(*this, xv3);
+
+#else
+        f32 x = v0.y_ * v1.z_ - v0.z_ * v1.y_;
+        f32 y = v0.z_ * v1.x_ - v0.x_ * v1.z_;
+        f32 z = v0.x_ * v1.y_ - v0.y_ * v1.x_;
+        x_ = x;
+        y_ = y;
+        z_ = z;
+#endif
     }
+#endif
 
     inline f32 Vector3::operator[](s32 index) const
     {
@@ -126,16 +193,16 @@ namespace lmath
         return Vector3(-x_, -y_, -z_);
     }
 
-    inline Vector3 Vector3::operator*(f32 f) const
-    {
-        return Vector3(f*x_, f*y_, f*z_);
-    }
+    //inline Vector3 Vector3::operator*(f32 f) const
+    //{
+    //    return Vector3(f*x_, f*y_, f*z_);
+    //}
 
-    inline Vector3 Vector3::operator/(f32 f) const
-    {
-        f32 inv = 1.0f/f;
-        return Vector3(inv*x_, inv*y_, inv*z_);
-    }
+    //inline Vector3 Vector3::operator/(f32 f) const
+    //{
+    //    f32 inv = 1.0f/f;
+    //    return Vector3(inv*x_, inv*y_, inv*z_);
+    //}
 
     inline f32 Vector3::dot(const Vector3& v) const
     {
@@ -160,16 +227,6 @@ namespace lmath
 
     inline Vector3& Vector3::operator*=(f32 f)
     {
-        x_ *= f;
-        y_ *= f;
-        z_ *= f;
-        return *this;
-    }
-
-    inline Vector3& Vector3::operator/=(f32 f)
-    {
-        LASSERT(f != 0.0f);
-        f = 1.0f / f;
         x_ *= f;
         y_ *= f;
         z_ *= f;
@@ -210,15 +267,6 @@ namespace lmath
         return ( x_ * x_ + y_ * y_ + z_ * z_);
     }
 
-    inline void Vector3::normalize()
-    {
-        f32 l = lengthSqr();
-        LASSERT( !(lmath::isEqual(l, 0.0f)) );
-        //l = lmath::rsqrt(l);
-        l = 1.0f/ lmath::sqrt(l);
-        *this *= l;
-    }
-
     inline f32 Vector3::distance(const Vector3& v) const
     {
         return lmath::sqrt( distanceSqr(v) );
@@ -234,6 +282,20 @@ namespace lmath
     inline bool Vector3::isNan() const
     {
         return (lcore::isNan(x_) || lcore::isNan(y_) || lcore::isNan(z_));
+    }
+
+    inline void Vector3::add(const Vector3& v0, const Vector3& v1)
+    {
+        x_ = v0.x_ + v1.x_;
+        y_ = v0.y_ + v1.y_;
+        z_ = v0.z_ + v1.z_;
+    }
+
+    inline void Vector3::sub(const Vector3& v0, const Vector3& v1)
+    {
+        x_ = v0.x_ - v1.x_;
+        y_ = v0.y_ - v1.y_;
+        z_ = v0.z_ - v1.z_;
     }
 
 }

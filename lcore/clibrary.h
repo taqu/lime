@@ -8,6 +8,8 @@
 #define NOMINMAX
 #include <ctype.h>
 #include <string.h>
+#include <math.h>
+#include <stdlib.h>
 
 namespace lcore
 {
@@ -15,25 +17,13 @@ namespace lcore
     template<class T>
     inline T absolute(T val)
     {
-        return fabs(val);
-    }
-
-    template<>
-    inline s8 absolute<s8>(s8 val)
-    {
-        return abs(val);
-    }
-
-    template<>
-    inline s16 absolute<s16>(s16 val)
-    {
         return abs(val);
     }
 
     template<>
     inline s32 absolute<s32>(s32 val)
     {
-        return labs(val);
+        return abs(val);
     }
 
     template<>
@@ -53,11 +43,65 @@ namespace lcore
     {
         return val;
     }
+
+    template<>
+    inline f32 absolute<f32>(f32 val)
+    {
+#if 1
+        *((u32*)&val) &= 0x7FFFFFFFU;
+        return val;
+#else
+        return fabs(val);
+#endif
+    }
+
+    template<>
+    inline f64 absolute<f64>(f64 val)
+    {
+        return fabs(val);
+    }
+
 #else
     template<class T>
     inline T absolute(T val)
     {
-        return ::abs(val);
+        return abs(val);
+    }
+
+
+    template<>
+    inline u8 absolute<u8>(u8 val)
+    {
+        return val;
+    }
+
+    template<>
+    inline u16 absolute<u16>(u16 val)
+    {
+        return val;
+    }
+
+    template<>
+    inline u32 absolute<u32>(u32 val)
+    {
+        return val;
+    }
+
+    template<>
+    inline f32 absolute<f32>(f32 val)
+    {
+#if 1
+        *((u32*)&val) &= 0x7FFFFFFFU;
+        return val;
+#else
+        return fabs(val);
+#endif
+    }
+
+    template<>
+    inline f64 absolute<f64>(f64 val)
+    {
+        return fabs(val);
     }
 #endif
 
@@ -97,7 +141,7 @@ namespace lcore
 
     inline char* strncpy(Char* dst, size_t dstSize, const Char* src, size_t count)
     {
-#if defined(WIN32)
+#if defined(_WIN32) || defined(_WIN64)
         strncpy_s(dst, dstSize, src, count);
         return dst;
 #else

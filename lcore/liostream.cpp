@@ -152,7 +152,7 @@ namespace lcore
         return current_;
     }
 
-    u32 sstream_base<istream>::read(Char* dst, u32 count)
+    lsize_t sstream_base<istream>::read(Char* dst, u32 count)
     {
         s32 end = current_ + count;
         end = (end>capacity_)? capacity_ : end;

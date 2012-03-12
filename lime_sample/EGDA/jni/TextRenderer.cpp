@@ -19,12 +19,12 @@
 
 #include <lgraphics/io/IOPNG.h>
 
-#include <lframework/scene/Material.h>
-#include <lframework/scene/Geometry.h>
+#include <scene/Material.h>
+#include <scene/Geometry.h>
 #include <lframework/scene/ShaderBase.h>
-#include <lframework/scene/shader/DefaultShader.h>
+#include <scene/shader/DefaultShader.h>
 
-#include <lframework/render/Batch.h>
+#include <render/Batch.h>
 
 using namespace lgraphics;
 namespace egda

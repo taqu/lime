@@ -123,6 +123,12 @@ namespace lmath
 
         bool isNan() const;
 
+#if defined(LMATH_USE_SSE)
+        //SSEセット・ストア命令
+        static void load(lm128& r0, lm128& r1, lm128& r2, const Matrix34& m);
+        static void store(Matrix34& m, const lm128& r0, const lm128& r1, const lm128& r2);
+#endif
+
         f32 m_[3][4];
     };
 

@@ -158,10 +158,6 @@
 	</References>
 	<Files>
 		<Filter
-			Name="2d"
-			>
-		</Filter>
-		<Filter
 			Name="anim"
 			>
 			<File
@@ -242,62 +238,10 @@
 			</File>
 		</Filter>
 		<Filter
-			Name="render"
-			>
-			<File
-				RelativePath="..\render\Batch.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\render\Batch.h"
-				>
-			</File>
-			<File
-				RelativePath="..\render\Drawable.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\render\Drawable.h"
-				>
-			</File>
-			<File
-				RelativePath="..\render\List.h"
-				>
-			</File>
-			<File
-				RelativePath="..\render\lrender.h"
-				>
-			</File>
-			<File
-				RelativePath="..\render\PassMain.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\render\PassMain.h"
-				>
-			</File>
-			<File
-				RelativePath="..\render\RenderingSystem.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\render\RenderingSystem.h"
-				>
-			</File>
-			<File
-				RelativePath="..\render\Spatial.h"
-				>
-			</File>
-		</Filter>
-		<Filter
 			Name="scene"
 			>
 			<File
-				RelativePath="..\scene\AnimObject.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\AnimObject.h"
+				RelativePath="..\scene\Camera.cpp"
 				>
 			</File>
 			<File
@@ -309,11 +253,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\scene\Geometry.cpp"
+				RelativePath="..\scene\Frustum.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\scene\Geometry.h"
+				RelativePath="..\scene\Frustum.h"
 				>
 			</File>
 			<File
@@ -325,47 +269,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\scene\Material.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\Material.h"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\Object.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\Object.h"
-				>
-			</File>
-			<File
 				RelativePath="..\scene\Scene.h"
 				>
 			</File>
 			<File
-				RelativePath="..\scene\SectionID.h"
-				>
-			</File>
-			<File
 				RelativePath="..\scene\ShaderBase.h"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\ShaderCreator.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\ShaderCreator.h"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\ShaderManager.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\scene\ShaderManager.h"
 				>
 			</File>
 			<File
@@ -374,42 +282,6 @@
 			</File>
 			<File
 				RelativePath="..\scene\StaticString.h"
-				>
-			</File>
-			<Filter
-				Name="shader"
-				>
-				<File
-					RelativePath="..\scene\shader\DefaultShader.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\scene\shader\DefaultShader.h"
-					>
-				</File>
-			</Filter>
-		</Filter>
-		<Filter
-			Name="debug"
-			>
-			<File
-				RelativePath="..\debug\DebugPrimitive.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\debug\DebugPrimitive.h"
-				>
-			</File>
-		</Filter>
-		<Filter
-			Name="resource"
-			>
-			<File
-				RelativePath="..\resource\ResourceDB.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\resource\ResourceDB.h"
 				>
 			</File>
 		</Filter>
@@ -446,23 +318,11 @@
 			>
 		</File>
 		<File
-			RelativePath="..\SectionID.h"
-			>
-		</File>
-		<File
 			RelativePath="..\Static.cpp"
 			>
 		</File>
 		<File
 			RelativePath="..\Static.h"
-			>
-		</File>
-		<File
-			RelativePath="..\System.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\System.h"
 			>
 		</File>
 	</Files>

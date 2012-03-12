@@ -41,7 +41,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="../../../../;../../../../ext/include;../../libConverter;../../../lib/anim;../../../../ext/include/bullet;../../../lib/dynamics"
+				AdditionalIncludeDirectories="../../../../;../../../../ext/include;../../../lib/anim;../../../../ext/include/bullet;../../../lib/dynamics;&quot;$(ProjectDir)..\src\&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;LIME_GLES2"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -63,9 +63,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lframework_gles2_vc90_d.lib linput_vc90_d.lib libConverter_gles2_vc90_d.lib libEGL.lib libGLESv2.lib LinearMath.lib BulletCollision.lib BulletDynamics.lib"
+				AdditionalDependencies="lframework_gles2_vc90_d.lib linput_vc90_d.lib libEGL.lib libGLESv2.lib LinearMath.lib BulletCollision.lib BulletDynamics.lib"
 				LinkIncremental="2"
-				AdditionalLibraryDirectories="../../../../lib;../../../../ext/win32/lib/;../../libConverter/lib"
+				AdditionalLibraryDirectories="../../../../lib;../../../../ext/win32/lib/"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				TargetMachine="1"
@@ -119,7 +119,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="2"
 				EnableIntrinsicFunctions="true"
-				AdditionalIncludeDirectories="../../../../;../../../../ext/include;../../libConverter;../../../lib/anim;../../../../ext/include/bullet;../../../lib/dynamics"
+				AdditionalIncludeDirectories="../../../../;../../../../ext/include;../../../lib/anim;../../../../ext/include/bullet;../../../lib/dynamics;&quot;$(ProjectDir)..\src\&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_WINDOWS;LIME_GLES2"
 				RuntimeLibrary="2"
 				EnableFunctionLevelLinking="true"
@@ -140,9 +140,9 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="lframework_gles2_vc90.lib linput_vc90.lib libConverter_gles2_vc90.lib libEGL.lib libGLESv2.lib LinearMath.lib BulletCollision.lib BulletDynamics.lib"
+				AdditionalDependencies="lframework_gles2_vc90.lib linput_vc90.lib libEGL.lib libGLESv2.lib LinearMath.lib BulletCollision.lib BulletDynamics.lib"
 				LinkIncremental="1"
-				AdditionalLibraryDirectories="../../../../lib;../../../../ext/win32/lib/;../../libConverter/lib"
+				AdditionalLibraryDirectories="../../../../lib;../../../../ext/win32/lib/"
 				GenerateDebugInformation="true"
 				SubSystem="2"
 				OptimizeReferences="2"
@@ -227,6 +227,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\src\System.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\System.h"
+				>
+			</File>
+			<File
 				RelativePath="..\src\TextRenderer.cpp"
 				>
 			</File>
@@ -283,6 +291,290 @@
 				</File>
 				<File
 					RelativePath="..\..\..\lib\dynamics\RigidBodySkeleton.h"
+					>
+				</File>
+			</Filter>
+			<Filter
+				Name="scene"
+				>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="debug"
+			>
+			<File
+				RelativePath="..\src\debug\DebugPrimitive.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\debug\DebugPrimitive.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="render"
+			>
+			<File
+				RelativePath="..\src\scene\AnimObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\AnimObject.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\Attribute.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\Attribute.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\Batch.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\Batch.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\Drawable.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\Drawable.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\Geometry.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\Geometry.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\IOGeometry.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\IOGeometry.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\IOHeader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\IOHeader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\List.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\lrender.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\Material.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\Material.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\Object.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\Object.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\PassMain.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\PassMain.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\RenderingSystem.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\RenderingSystem.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\SectionID.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\ShaderCreator.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\ShaderCreator.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\ShaderManager.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\scene\ShaderManager.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\render\Spatial.h"
+				>
+			</File>
+			<Filter
+				Name="shader"
+				>
+				<File
+					RelativePath="..\src\scene\shader\DefaultShader.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\scene\shader\DefaultShader.h"
+					>
+				</File>
+			</Filter>
+		</Filter>
+		<Filter
+			Name="resource"
+			>
+			<File
+				RelativePath="..\src\resource\ResourceDB.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\resource\ResourceDB.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="util"
+			>
+			<File
+				RelativePath="..\src\util\DrawerTriangle.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\util\DrawerTriangle.h"
+				>
+			</File>
+		</Filter>
+		<Filter
+			Name="libConverter"
+			>
+			<File
+				RelativePath="..\src\libConverter\converter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\converter.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\Pmd.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\Pmd.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\PmdDef.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\Pmm.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\Pmm.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\PmmDef.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\PmmDef.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\RigidBodyData.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\RigidBodyData.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\SplitBone.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\SplitBone.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\Vmd.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\Vmd.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\XLoader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\XLoader.h"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\XLoaderDef.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\src\libConverter\XLoaderDef.h"
+				>
+			</File>
+			<Filter
+				Name="charcode"
+				>
+				<File
+					RelativePath="..\src\libConverter\charcode\conv_charcode.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\libConverter\charcode\conv_charcode.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\libConverter\charcode\jis_level1_utf16.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\libConverter\charcode\jis_level1_utf16.h"
+					>
+				</File>
+				<File
+					RelativePath="..\src\libConverter\charcode\jis_level2_utf16.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\src\libConverter\charcode\jis_level2_utf16.h"
 					>
 				</File>
 			</Filter>

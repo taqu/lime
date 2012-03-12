@@ -7,7 +7,6 @@
 */
 #include "DialogBase.h"
 #include "FontPacker.h"
-
 namespace font
 {
     class FontDialog : public widget::DialogBase<FontDialog>
@@ -22,10 +21,16 @@ namespace font
         INT_PTR command(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
     private:
+        void readBack();
+
         FontInfo fontInfo_;
-        FontPacker fontPacker_;
 
         widget::ComboBox outline_;
+
+        widget::ComboBox resolution_;
+        widget::ComboBox distanceScale_;
+        widget::ComboBox distanceSpread_;
+        widget::Button checkDistanceField_;
     };
 }
 #endif //INC_DIALOG_H__

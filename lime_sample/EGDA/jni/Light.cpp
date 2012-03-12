@@ -7,11 +7,11 @@
 #include "stdafx.h"
 #include "Light.h"
 
-#include <lframework/System.h>
-#include <lframework/render/RenderingSystem.h>
+#include <System.h>
+#include <render/RenderingSystem.h>
 #include <lframework/scene/Scene.h>
 
-#include <PmmDef.h>
+#include <libConverter/PmmDef.h>
 
 using namespace lmath;
 

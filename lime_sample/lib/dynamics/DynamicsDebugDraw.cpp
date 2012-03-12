@@ -9,11 +9,11 @@
 #include <lgraphics/lgraphics.h>
 #include <lgraphics/api/VertexDeclarationRef.h>
 
-#include <lframework/System.h>
+#include "System.h"
 #include <lframework/scene/ShaderBase.h>
-#include <lframework/scene/shader/DefaultShader.h>
+#include "scene/shader/DefaultShader.h"
 
-#include <lframework/render/RenderingSystem.h>
+#include "render/RenderingSystem.h"
 
 #include <bullet/btBulletCollisionCommon.h>
 #include <bullet/btBulletDynamicsCommon.h>

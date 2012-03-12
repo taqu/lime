@@ -31,6 +31,7 @@ namespace io
         enum DDPF
         {
             DDPF_ALPHAPIXELS = 0x00000001,
+            DDPF_ALPHA = 0x00000002,
             DDPF_FOURCC = 0x00000004,
             DDPF_RGB = 0x00000040,
             DDPF_RGBA = 0x00000041,
@@ -128,7 +129,7 @@ namespace io
                 }
                 break;
 
-            case DDPF_ALPHAPIXELS:
+            case DDPF_ALPHA:
                 {
                     format = Buffer_A8;
                 }
