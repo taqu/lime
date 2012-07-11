@@ -7,12 +7,13 @@
 */
 #include "lmathcore.h"
 #include <lcore/utility.h>
+#include "Vector3.h"
 
 namespace lmath
 {
-    class Vector3;
     class Matrix34;
     class Matrix44;
+    class Quaternion;
 
     //--------------------------------------------
     //---
@@ -25,25 +26,21 @@ namespace lmath
         Vector4()
         {}
 
+        inline Vector4(f32 x, f32 y, f32 z, f32 w);
         inline Vector4(const Vector4& rhs);
         inline Vector4& operator=(const Vector4& rhs);
+        inline Vector4& operator=(const Vector3& rhs);
 
-        Vector4(f32 x, f32 y, f32 z, f32 w)
-            :x_(x), y_(y), z_(z), w_(w)
-        {}
+        inline explicit Vector4(const Vector3& v);
+        inline Vector4(const Vector3& v, f32 w);
 
-        explicit Vector4(const Vector3& v);
-        Vector4(const Vector3& v, f32 w);
+        inline void set(f32 x, f32 y, f32 z, f32 w);
 
-        inline void set(f32 x, f32 y, f32 z, f32 w)
-        {
-            x_ = x; y_ = y; z_ = z; w_ = w;
-        }
-
-        void set(const Vector3& v);
-        void set(const Vector3& v, f32 w);
+        inline void set(const Vector3& v);
+        inline void set(const Vector3& v, f32 w);
 
         inline void zero();
+        inline void identity();
 
         inline f32 operator[](s32 index) const;
         inline f32& operator[](s32 index);
@@ -55,12 +52,16 @@ namespace lmath
         inline Vector4& operator*=(f32 f);
         inline Vector4& operator/=(f32 f);
 
+        inline Vector4& operator*=(const Vector4& v);
+        inline Vector4& operator/=(const Vector4& v);
+
         bool isEqual(const Vector4& v) const;
         bool isEqual(const Vector4& v, f32 epsilon) const;
 
         inline bool operator==(const Vector4& v) const;
         inline bool operator!=(const Vector4& v) const;
 
+        void setLength();
         f32 length() const;
         f32 lengthSqr() const;
         void normalize();
@@ -79,12 +80,22 @@ namespace lmath
         void mul(const Matrix44& m, const Vector4& v);
         void mul(const Vector4& v, const Matrix44& m);
 
+        void rotate(const Quaternion& rotation);
+
         inline void swap(Vector4& rhs);
 
         inline bool isNan() const;
 
         inline void add(const Vector4& v0, const Vector4& v1);
         inline void sub(const Vector4& v0, const Vector4& v1);
+
+        inline void min(const Vector4& v0, const Vector4& v1);
+        inline void max(const Vector4& v0, const Vector4& v1);
+
+        inline void muladd(const Vector4& v0, const Vector4& v1, const Vector4& v2);
+
+        inline void floor();
+        inline void invert();
 
 #if defined(LMATH_USE_SSE)
         inline static lm128 load(const Vector4& v)
@@ -118,6 +129,9 @@ namespace lmath
     //--- Vector4
     //---
     //--------------------------------------------
+    inline Vector4::Vector4(f32 x, f32 y, f32 z, f32 w)
+        :x_(x), y_(y), z_(z), w_(w)
+    {}
 
     inline Vector4::Vector4(const Vector4& rhs)
     {
@@ -126,16 +140,6 @@ namespace lmath
         store(*this, t);
 #else
         set(rhs.x_, rhs.y_, rhs.z_, rhs.w_);
-#endif
-    }
-
-    inline void Vector4::zero()
-    {
-#if defined(LMATH_USE_SSE)
-        lm128 zero = _mm_setzero_ps();
-        store(*this, zero);
-#else
-        x_ = y_ = z_ = w_ = 0.0f;
 #endif
     }
 
@@ -148,6 +152,72 @@ namespace lmath
         set(rhs.x_, rhs.y_, rhs.z_, rhs.w_);
 #endif
         return *this;
+    }
+
+    inline Vector4& Vector4::operator=(const Vector3& rhs)
+    {
+        set(rhs.x_, rhs.y_, rhs.z_, 0.0f);
+        return *this;
+    }
+
+
+    inline Vector4::Vector4(const Vector3& v)
+        :x_(v.x_)
+        ,y_(v.y_)
+        ,z_(v.z_)
+        ,w_(0.0f)
+    {
+    }
+
+    inline Vector4::Vector4(const Vector3& v, f32 w)
+        :x_(v.x_)
+        ,y_(v.y_)
+        ,z_(v.z_)
+        ,w_(w)
+    {
+    }
+
+    inline void Vector4::set(f32 x, f32 y, f32 z, f32 w)
+    {
+        x_ = x; y_ = y; z_ = z; w_ = w;
+    }
+
+    inline void Vector4::set(const Vector3& v)
+    {
+        x_ = v.x_;
+        y_ = v.y_;
+        z_ = v.z_;
+        w_ = 0.0f;
+    }
+
+    inline void Vector4::set(const Vector3& v, f32 w)
+    {
+        x_ = v.x_;
+        y_ = v.y_;
+        z_ = v.z_;
+        w_ = w;
+    }
+
+    inline void Vector4::zero()
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 zero = _mm_setzero_ps();
+        store(*this, zero);
+#else
+        x_ = y_ = z_ = w_ = 0.0f;
+#endif
+    }
+
+    inline void Vector4::identity()
+    {
+#if defined(LMATH_USE_SSE)
+        static const LIME_ALIGN16 f32 Init[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        lm128 r = _mm_load_ps(Init);
+        store(*this, r);
+#else
+        x_ = y_ = z_ = 0.0f;
+        w_ = 1.0f;
+#endif
     }
 
 
@@ -172,7 +242,7 @@ namespace lmath
 #if defined(LMATH_USE_SSE)
         f32 f;
         *((u32*)&f) = 0x80000000U;
-        lm128 mask = _mm_set1_ps(f);
+        lm128 mask = _mm_load1_ps(&f);
         lm128 r0 = load(*this);
         r0 = _mm_xor_ps(r0, mask);
 
@@ -254,6 +324,37 @@ namespace lmath
         return *this;
     }
 
+    inline Vector4& Vector4::operator*=(const Vector4& v)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(*this);
+        lm128 r1 = load(v);
+        r0 = _mm_mul_ps(r0, r1);
+        store(*this, r0);
+#else
+        x_ *= v.x_;
+        y_ *= v.y_;
+        z_ *= v.z_;
+        w_ *= v.w_;
+#endif
+        return *this;
+    }
+
+    inline Vector4& Vector4::operator/=(const Vector4& v)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(*this);
+        lm128 r1 = load(v);
+        r0 = _mm_div_ps(r0, r1);
+        store(*this, r0);
+#else
+        x_ /= v.x_;
+        y_ /= v.y_;
+        z_ /= v.z_;
+        w_ /= v.w_;
+#endif
+        return *this;
+    }
 
     inline bool Vector4::operator==(const Vector4& v) const
     {
@@ -316,6 +417,82 @@ namespace lmath
         y_ = v0.y_ - v1.y_;
         z_ = v0.z_ - v1.z_;
         w_ = v0.w_ + v1.w_;
+#endif
+    }
+
+
+    inline void Vector4::min(const Vector4& v0, const Vector4& v1)
+    {
+//#if defined(LMATH_USE_SSE)
+#if 0
+        lm128 r0 = load(v0);
+        lm128 r1 = load(v1);
+        r0 = _mm_min_ps(r0, r1);
+        store(*this, r0);
+
+#else
+        x_ = lcore::minimum(v0.x_, v1.x_);
+        y_ = lcore::minimum(v0.y_, v1.y_);
+        z_ = lcore::minimum(v0.z_, v1.z_);
+        w_ = lcore::minimum(v0.w_, v1.w_);
+#endif
+    }
+
+    inline void Vector4::max(const Vector4& v0, const Vector4& v1)
+    {
+//#if defined(LMATH_USE_SSE)
+#if 0
+        lm128 r0 = load(v0);
+        lm128 r1 = load(v1);
+        r0 = _mm_max_ps(r0, r1);
+        store(*this, r0);
+
+#else
+        x_ = lcore::maximum(v0.x_, v1.x_);
+        y_ = lcore::maximum(v0.y_, v1.y_);
+        z_ = lcore::maximum(v0.z_, v1.z_);
+        w_ = lcore::maximum(v0.w_, v1.w_);
+#endif
+    }
+
+    inline void Vector4::muladd(const Vector4& v0, const Vector4& v1, const Vector4& v2)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(v0);
+        lm128 r1 = load(v1);
+        lm128 r2 = load(v2);
+        r0 = _mm_mul_ps(r0, r1);
+        r0 = _mm_add_ps(r0, r2);
+        store(*this, r0);
+
+#else
+        x_ = v0.x_ * v1.x_ + v2.x_;
+        y_ = v0.y_ * v1.y_ + v2.y_;
+        z_ = v0.z_ * v1.z_ + v2.z_;
+        w_ = v0.w_ * v1.w_ + v2.w_;
+#endif
+    }
+
+    inline void Vector4::floor()
+    {
+        x_ = lmath::floor(x_);
+        y_ = lmath::floor(y_);
+        z_ = lmath::floor(z_);
+        w_ = lmath::floor(w_);
+    }
+
+    inline void Vector4::invert()
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_set1_ps(1.0f);
+        lm128 r1 = load(*this);
+        r0 = _mm_div_ps(r0, r1);
+        store(*this, r0);
+#else
+        x_ = 1.0f/x_;
+        y_ = 1.0f/y_;
+        z_ = 1.0f/z_;
+        w_ = 1.0f/w_;
 #endif
     }
 }

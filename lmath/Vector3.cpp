@@ -292,8 +292,8 @@ namespace lmath
     void Vector3::rotate(const Quaternion& rotation)
     {
         //Q x V x conjugate(Q)
-        Quaternion conjugate(rotation.w_, -rotation.x_, -rotation.y_, -rotation.z_);
-
+        Quaternion conj;
+        conj.conjugate(rotation);
         Quaternion rot;
 
 #if 0
@@ -301,9 +301,8 @@ namespace lmath
         rot.mul(rot, *this);
 #else
         rot.mul(rotation, *this);
-        rot.mul(rot, conjugate);
+        rot.mul(rot, conj);
 #endif
-
         x_ = rot.x_;
         y_ = rot.y_;
         z_ = rot.z_;

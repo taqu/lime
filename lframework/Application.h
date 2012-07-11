@@ -30,6 +30,9 @@ namespace lframework
 
 
     protected:
+        Application(const Application&);
+        Application& operator=(const Application&);
+
         Application();
         virtual ~Application();
 

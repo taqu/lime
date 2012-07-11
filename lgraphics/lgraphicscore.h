@@ -59,6 +59,31 @@ namespace lgraphics
 
     static const u32 MAX_TEXTURES = 3;
 
+
+    template<class T>
+    class ScopedCOMPtr
+    {
+    public:
+        ScopedCOMPtr()
+            :ptr_(NULL)
+        {}
+
+        ScopedCOMPtr(T* ptr)
+            :ptr_(ptr)
+        {}
+
+        ~ScopedCOMPtr()
+        {
+            if(ptr_){
+                ptr_->Release();
+            }
+        }
+
+        T* get(){ return ptr_;}
+
+        T* ptr_;
+    };
+
 //----------------------------------------------------------
 //---
 //--- プラットフォーム、API依存のdefine

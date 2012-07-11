@@ -32,6 +32,7 @@ namespace lgraphics
         u32 height_;
     };
 
+    typedef IDirect3DSurface9 SurfaceRaw;
 
     //-----------------------------------------------
     //---
@@ -65,11 +66,16 @@ namespace lgraphics
             return *this;
         }
 
+        SurfaceRaw* get()
+        {
+            return surface_;
+        }
+
         bool valid() const{ return (surface_ != NULL); }
 
         void destroy();
 
-        void attach(u32 index) const;
+        //void attach(u32 index) const;
 
         bool getData(SurfaceOffscreenRef& offscreen);
 
@@ -100,6 +106,13 @@ namespace lgraphics
     {
     public:
         static SurfaceRef create(
+            u32 width,
+            u32 height,
+            BufferFormat format,
+            MutiSampleType sampleType = MutiSample_None,
+            u32 multiSampleQuality = 0);
+
+        static SurfaceRef createDepthStencil(
             u32 width,
             u32 height,
             BufferFormat format,

@@ -13,7 +13,11 @@ namespace lcore
     u32 getStaticSeed();
     u32 getDefaultSeed();
 
-    //
+    //---------------------------------------------
+    //---
+    //--- RandomXorshift
+    //---
+    //---------------------------------------------
     class RandomXorshift
     {
     public:
@@ -50,7 +54,11 @@ namespace lcore
         u32 w_;
     };
 
-    //
+    //---------------------------------------------
+    //---
+    //--- RandomWELL
+    //---
+    //---------------------------------------------
     class RandomWELL
     {
     public:

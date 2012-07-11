@@ -170,6 +170,7 @@ namespace lgraphics
         CodeBuffer_Unknown = 0,
         CodeBuffer_D32,
         CodeBuffer_D24S8,
+        CodeBuffer_D16,
         CodeBuffer_Index16,
         CodeBuffer_Index32,
         CodeBuffer_Vertex,
@@ -179,6 +180,8 @@ namespace lgraphics
         CodeBuffer_DXT3,
         CodeBuffer_DXT4,
         CodeBuffer_DXT5,
+
+        CodeBuffer_A16B16G16R16F,
 
         CodeBuffer_R32F,
         CodeBuffer_G32R32F,

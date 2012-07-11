@@ -73,8 +73,8 @@ namespace lscene
         {
             znear_ = znear;
             zfar_ = zfar;
-            height_ = znear*lmath::tan(0.5f*fovy);
-            width_ = aspect * height_;
+            height_ = 2.0f*znear*lmath::tan(0.5f*fovy);
+            width_ = height_*aspect;
             aspect_ = aspect;
             projMatrix_.perspectiveFov(fovy, aspect, znear, zfar);
         }
@@ -112,8 +112,8 @@ namespace lscene
         {
             znear_ = znear;
             zfar_ = zfar;
-            height_ = znear*lmath::tan(0.5f*fovy);
-            width_ = aspect * height_;
+            height_ = 2.0f*znear*lmath::tan(0.5f*fovy);
+            width_ = height_/aspect;
             aspect_ = aspect;
             projMatrix_.perspectiveFovLinearZ(fovy, aspect, znear, zfar);
         }

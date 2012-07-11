@@ -34,6 +34,9 @@ namespace lframework
 
         param.windowHandle_ = window_.getHandle().hWnd_;
 
+#if defined(_WIN32)
+        ImmAssociateContext(param.windowHandle_, NULL); //IME OFF
+#endif
         if(false == lgraphics::Graphics::initialize(param)){
             window_.terminate();
             return false;

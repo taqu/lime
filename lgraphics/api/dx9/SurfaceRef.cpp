@@ -27,11 +27,11 @@ namespace lgraphics
         SAFE_RELEASE(surface_);
     }
 
-    void SurfaceRef::attach(u32 index) const
-    {
-        GraphicsDeviceRef &device = Graphics::getDevice();
-        device.setRenderTarget(index, const_cast<IDirect3DSurface9*>(surface_) );
-    }
+    //void SurfaceRef::attach(u32 index) const
+    //{
+    //    GraphicsDeviceRef &device = Graphics::getDevice();
+    //    device.setRenderTarget(index, const_cast<IDirect3DSurface9*>(surface_) );
+    //}
 
     bool SurfaceRef::getData(SurfaceOffscreenRef& offscreen)
     {
@@ -44,17 +44,28 @@ namespace lgraphics
         return SUCCEEDED( surface_->GetDesc((D3DSURFACE_DESC*)&desc) );
     }
 
+    bool SurfaceRef::lock(LockedRect& lockedRect, Lock lock)
+    {
+        HRESULT hr = surface_->LockRect((D3DLOCKED_RECT*)&lockedRect, NULL, lock);
+        return SUCCEEDED(hr);
+    }
+
+    void SurfaceRef::unlock()
+    {
+        surface_->UnlockRect();
+    }
+
     //-----------------------------------------------
     //---
     //--- Surface
     //---
     //-----------------------------------------------
     SurfaceRef Surface::create(
-            u32 width,
-            u32 height,
-            BufferFormat format,
-            MutiSampleType sampleType,
-            u32 multiSampleQuality)
+        u32 width,
+        u32 height,
+        BufferFormat format,
+        MutiSampleType sampleType,
+        u32 multiSampleQuality)
     {
         GraphicsDeviceRef &device = Graphics::getDevice();
 
@@ -66,9 +77,28 @@ namespace lgraphics
             multiSampleQuality,
             false);
 
-        return (d3dsurface==NULL)? SurfaceRef(d3dsurface) : SurfaceRef();
+        return (d3dsurface!=NULL)? SurfaceRef(d3dsurface) : SurfaceRef();
     }
 
+    SurfaceRef Surface::createDepthStencil(
+        u32 width,
+        u32 height,
+        BufferFormat format,
+        MutiSampleType sampleType,
+        u32 multiSampleQuality)
+    {
+        GraphicsDeviceRef &device = Graphics::getDevice();
+
+        IDirect3DSurface9 *d3dsurface = device.createDepthStencil(
+            width,
+            height,
+            format,
+            sampleType,
+            multiSampleQuality,
+            false);
+
+        return (d3dsurface!=NULL)? SurfaceRef(d3dsurface) : SurfaceRef();
+    }
 
     //-----------------------------------------------
     //---

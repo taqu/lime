@@ -82,7 +82,8 @@ namespace lscene
             toLocal.invert();
 
             // ライト方向をローカルへ変換
-            lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
+            const lmath::Vector4& dir = lightEnv.getDirectionalLight().getDirection();
+            lmath::Vector3 lightDirection(dir.x_, dir.y_, dir.z_);
             lightDirection.mul33(lightDirection, toLocal);
 
             shader_.setVector3(params_[ParamVS_DLightDirection], lightDirection);
@@ -193,7 +194,8 @@ namespace lscene
             toLocal.invert();
 
             // ライト方向をローカルへ変換
-            lmath::Vector3 lightDirection = lightEnv.getDirectionalLight().getDirection();
+            const lmath::Vector4& dir = lightEnv.getDirectionalLight().getDirection();
+            lmath::Vector3 lightDirection(dir.x_, dir.y_, dir.z_);
             lightDirection.mul33(toLocal, lightDirection);
 
             shader_.setVector3(params_[ParamPS_DLightDirection], lightDirection);

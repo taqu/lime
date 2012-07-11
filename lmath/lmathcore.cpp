@@ -4,6 +4,7 @@
 @date 2009/01/18 create
 */
 #include "lmathcore.h"
+#include "Vector3.h"
 
 namespace lmath
 {
@@ -12,19 +13,19 @@ namespace lmath
 #if defined(LMATH_USE_SSE)
     namespace
     {
-        inline __m128 rcp_22bit_core(const __m128& x)
+        inline lm128 rcp_22bit_core(const lm128& x)
         {
-            __m128 x0 = x;
-            __m128 x1 = _mm_rcp_ss(x0);
+            lm128 x0 = x;
+            lm128 x1 = _mm_rcp_ss(x0);
             x0 = _mm_mul_ss(_mm_mul_ss(x0,x1), x1);
             x1 = _mm_add_ss(x1, x1);
             return _mm_sub_ss(x1, x0);
         }
 
-        inline __m128 rcp_22bit_packed_core(const __m128& x)
+        inline lm128 rcp_22bit_packed_core(const lm128& x)
         {
-            __m128 x0 = x;
-            __m128 x1 = _mm_rcp_ps(x0);
+            lm128 x0 = x;
+            lm128 x1 = _mm_rcp_ps(x0);
             x0 = _mm_mul_ps(_mm_mul_ps(x0,x1), x1);
             x1 = _mm_add_ps(x1, x1);
             return _mm_sub_ps(x1, x0);
@@ -38,7 +39,7 @@ namespace lmath
     f32 rcp_22bit(f32 x)
     {
         f32 ret;
-        __m128 tmp = _mm_set_ss(x);
+        lm128 tmp = _mm_load_ss(&x);
         _mm_store_ss(&ret, rcp_22bit_core(tmp));
         return ret;
     }
@@ -50,7 +51,7 @@ namespace lmath
     void rcp_22bit(f32 ix1, f32 ix2, f32& x1, f32& x2)
     {
         LIME_ALIGN16 f32 ret[4];
-        __m128 tmp = _mm_set_ps(ix2, ix1, ix2, ix1);
+        lm128 tmp = set_m128(ix1, ix2, ix1, ix2);
         _mm_store_ps(ret, rcp_22bit_packed_core(tmp));
         x1 = ret[0];
         x2 = ret[1];
@@ -65,7 +66,7 @@ namespace lmath
         f32& x1, f32& x2, f32& x3, f32& x4)
     {
         LIME_ALIGN16 f32 ret[4];
-        __m128 tmp = _mm_set_ps(ix4, ix3, ix2, ix1);
+        lm128 tmp = set_m128(ix1, ix2, ix3, ix4);
         _mm_store_ps(ret, rcp_22bit_packed_core(tmp));
         x1 = ret[0];
         x2 = ret[1];
@@ -77,16 +78,14 @@ namespace lmath
 
     namespace
     {
-        inline __m128 rsqrt_22bit_core(const __m128& x)
+        inline lm128 rsqrt_22bit_core(const lm128& x)
         {
-            static const LIME_ALIGN16 float s0p5[4] = {-0.5f, -0.5f, -0.5f, -0.5f};
-            static const LIME_ALIGN16 float s1p5[4] = {1.5f, 1.5f, 1.5f, 1.5f};
-            const __m128 m_s0p5 = *((__m128*)s0p5);
-            const __m128 m_s1p5 = *((__m128*)s1p5);
+            const lm128 m_s0p5 = _mm_set1_ps(-0.5f);
+            const lm128 m_s1p5 = _mm_set1_ps(1.5f);
 
-            __m128 x0 = x;
-            __m128 x1 = _mm_rsqrt_ss(x0);
-            __m128 x2 = _mm_mul_ss(x0, x1);
+            lm128 x0 = x;
+            lm128 x1 = _mm_rsqrt_ss(x0);
+            lm128 x2 = _mm_mul_ss(x0, x1);
 
             x2 = _mm_mul_ss(x2, x1);
             x2 = _mm_mul_ss(x2, x1);
@@ -97,14 +96,12 @@ namespace lmath
 
         inline __m128 rsqrt_22bit_packed_core(const __m128& x)
         {
-            static const LIME_ALIGN16 float s0p5[4] = {-0.5f, -0.5f, -0.5f, -0.5f};
-            static const LIME_ALIGN16 float s1p5[4] = {1.5f, 1.5f, 1.5f, 1.5f};
-            const __m128 m_s0p5 = *((__m128*)s0p5);
-            const __m128 m_s1p5 = *((__m128*)s1p5);
+            const lm128 m_s0p5 = _mm_set1_ps(-0.5f);
+            const lm128 m_s1p5 = _mm_set1_ps(1.5f);
 
-            __m128 x0 = x;
-            __m128 x1 = _mm_rsqrt_ps(x0);
-            __m128 x2 = _mm_mul_ps(x0, x1);
+            lm128 x0 = x;
+            lm128 x1 = _mm_rsqrt_ps(x0);
+            lm128 x2 = _mm_mul_ps(x0, x1);
 
             x2 = _mm_mul_ps(x2, x1);
             x2 = _mm_mul_ps(x2, x1);
@@ -121,7 +118,7 @@ namespace lmath
     f32 rsqrt_22bit(f32 x)
     {
         f32 ret;
-        __m128 tmp = _mm_set_ss(x);
+        lm128 tmp = _mm_load_ss(&x);
         _mm_store_ss(&ret, rsqrt_22bit_core(tmp));
         return ret;
     }
@@ -133,7 +130,7 @@ namespace lmath
     void rsqrt_22bit(f32 ix1, f32 ix2, f32& x1, f32& x2)
     {
         LIME_ALIGN16 f32 ret[4];
-        __m128 tmp = _mm_set_ps(ix2, ix1, ix2, ix1);
+        lm128 tmp = set_m128(ix1, ix2, ix1, ix2);
         _mm_store_ps(ret, rsqrt_22bit_packed_core(tmp));
         x1 = ret[0];
         x2 = ret[1];
@@ -148,7 +145,7 @@ namespace lmath
         f32& x1, f32& x2, f32& x3, f32& x4)
     {
         LIME_ALIGN16 f32 ret[4];
-        __m128 tmp = _mm_set_ps(ix4, ix3, ix2, ix1);
+        lm128 tmp = set_m128(ix1, ix2, ix3, ix4);
         _mm_store_ps(ret, rsqrt_22bit_packed_core(tmp));
         x1 = ret[0];
         x2 = ret[1];
@@ -334,6 +331,44 @@ namespace lmath
             dsn = (sign)? cos_series_x2(x2) : -cos_series_x2(x2);
             dcs = (sign2)? sin_series_x2(x, x2) : -sin_series_x2(x, x2);
         }
+    }
+
+
+    void randomOnSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1)
+    {
+        LASSERT(0.0f<=x0 && x0<=1.0f);
+        LASSERT(0.0f<=x1 && x1<=1.0f);
+
+        x1 = PI2*x1 - PI;
+        f32 cs = lmath::cosf(x1);
+        f32 sn = lmath::sinf(x1);
+
+        f32 rx0 = lmath::sqrt(1.0f - x0*x0);
+        x0 = 2.0f*x0 - 1.0f;
+
+        vx = rx0 * cs;
+        vy = rx0 * sn;
+        vz = x0;
+    }
+
+    void consineWeightedRandomOnHemiSphere(
+        Vector3& v,
+        const Vector3& n,
+        f32 x0, f32 x1)
+    {
+        Vector3 projected;
+        randomOnSphere(projected.x_, projected.y_, projected.z_, x0, x1);
+
+        f32 t = projected.dot(n);
+        Vector3 tn(n);
+        tn *= t;
+        projected -= tn;
+
+        f32 sn = projected.length();
+        f32 cs = lmath::sqrt(1.0f - sn * sn);
+        v = n;
+        v *= cs;
+        v += projected;
     }
 }
 

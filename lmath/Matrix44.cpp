@@ -15,6 +15,24 @@ namespace lmath
     //--- Matrix44
     //---
     //--------------------------------------------
+    Matrix44::Matrix44(const Matrix44& rhs)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
+        lm128 r3 = _mm_loadu_ps(&rhs.m_[3][0]);
+
+        _mm_storeu_ps(&m_[0][0], r0);
+        _mm_storeu_ps(&m_[1][0], r1);
+        _mm_storeu_ps(&m_[2][0], r2);
+        _mm_storeu_ps(&m_[3][0], r3);
+#else
+        lcore::memcpy(m_, rhs.m_, sizeof(Matrix44));
+#endif
+    }
+
+
     Matrix44::Matrix44(const Matrix34& rhs)
     {
 #if defined(LMATH_USE_SSE)
@@ -50,6 +68,24 @@ namespace lmath
         return *this;
     }
 
+    Matrix44& Matrix44::operator=(const Matrix34& rhs)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
+
+        _mm_storeu_ps(&m_[0][0], r0);
+        _mm_storeu_ps(&m_[1][0], r1);
+        _mm_storeu_ps(&m_[2][0], r2);
+#else
+        lcore::memcpy(m_, rhs.m_, sizeof(Matrix34));
+#endif
+        m_[3][0] = m_[3][1] = m_[3][2] = 0.0f;
+        m_[3][3] = 1.0f;
+        return *this;
+    }
+
 
     Matrix44& Matrix44::operator*=(f32 f)
     {
@@ -57,7 +93,7 @@ namespace lmath
         lm128 r0, r1, r2, r3;
         load(r0, r1, r2, r3, *this);
 
-        lm128 v = _mm_set1_ps(f);
+        lm128 v = _mm_load1_ps(&f);
 
         r0 = _mm_mul_ps(r0, v);
         r1 = _mm_mul_ps(r1, v);
@@ -135,7 +171,7 @@ namespace lmath
 #if defined(LMATH_USE_SSE)
         f32 f;
         *((u32*)&f) = 0x80000000U;
-        lm128 mask = _mm_set1_ps(f);
+        lm128 mask = _mm_load1_ps(&f);
         lm128 r0, r1, r2, r3;
         load(r0, r1, r2, r3, *this);
 
@@ -155,27 +191,6 @@ namespace lmath
 #endif
         return ret;
     }
-
-
-    Matrix44& Matrix44::operator=(const Matrix34& rhs)
-    {
-
-#if defined(LMATH_USE_SSE)
-        lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
-        lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
-        lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
-
-        _mm_storeu_ps(&m_[0][0], r0);
-        _mm_storeu_ps(&m_[1][0], r1);
-        _mm_storeu_ps(&m_[2][0], r2);
-#else
-        lcore::memcpy(m_, rhs.m_, sizeof(Matrix34));
-#endif
-        m_[3][0] = m_[3][1] = m_[3][2] = 0.0f;
-        m_[3][3] = 1.0f;
-        return *this;
-    }
-
 
     void Matrix44::mul(const Matrix44& m0, const Matrix44& m1)
     {
@@ -384,12 +399,27 @@ namespace lmath
 
     void Matrix44::transpose()
     {
-        lmath::swap(m_[0][1], m_[1][0]);
-        lmath::swap(m_[0][2], m_[2][0]);
-        lmath::swap(m_[0][3], m_[3][0]);
-        lmath::swap(m_[1][2], m_[2][1]);
-        lmath::swap(m_[1][3], m_[3][1]);
-        lmath::swap(m_[2][3], m_[3][2]);
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_loadu_ps(&m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&m_[2][0]);
+        lm128 r3 = _mm_loadu_ps(&m_[3][0]);
+
+        _MM_TRANSPOSE4_PS(r0, r1, r2, r3);
+
+        _mm_storeu_ps(&m_[0][0], r0);
+        _mm_storeu_ps(&m_[1][0], r1);
+        _mm_storeu_ps(&m_[2][0], r2);
+        _mm_storeu_ps(&m_[3][0], r3);
+
+#else
+        lcore::swap(m_[0][1], m_[1][0]);
+        lcore::swap(m_[0][2], m_[2][0]);
+        lcore::swap(m_[0][3], m_[3][0]);
+        lcore::swap(m_[1][2], m_[2][1]);
+        lcore::swap(m_[1][3], m_[3][1]);
+        lcore::swap(m_[2][3], m_[3][2]);
+#endif
     }
 
     f32 Matrix44::determinant() const
@@ -565,10 +595,9 @@ namespace lmath
         lm128 det = _mm_mul_ps(r0, m0);
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0x4E), det);
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0xB1), det);
-        tmp = _mm_rcp_ss(det);
         
-        //Newton-Raphsonñ@Ç≈ÅAçsóÒéÆÇÃãtêîÇåvéZ
-        {
+#if 1
+        {//Newton-Raphsonñ@Ç≈ÅAçsóÒéÆÇÃãtêîÇåvéZ
             tmp = _mm_rcp_ss(det);
             det = _mm_mul_ss(det, tmp);
             det = _mm_mul_ss(det, tmp);
@@ -576,6 +605,13 @@ namespace lmath
             det = _mm_sub_ss(tmp, det);
             det = _mm_shuffle_ps(det, det, 0);
         }
+#else
+        {//çsóÒéÆÇÃãtêîÇåvéZ
+            tmp = _mm_set_ss(1.0f);
+            det = _mm_div_ss(tmp, det);
+            det = _mm_shuffle_ps(det, det, 0);
+        }
+#endif
 
         m0 = _mm_mul_ps(det, m0);
         _mm_storel_pi((lm64*)&m_[0][0], m0);
@@ -614,8 +650,8 @@ namespace lmath
 
             // Swap row "rowMax" with row "j"
             for(s32 cc=0; cc<4; ++cc){
-                lmath::swap(tmp.m_[cc][j], tmp.m_[cc][rowMax]);
-                lmath::swap(tmp2.m_[cc][j], tmp2.m_[cc][rowMax]);
+                lcore::swap(tmp.m_[cc][j], tmp.m_[cc][rowMax]);
+                lcore::swap(tmp2.m_[cc][j], tmp2.m_[cc][rowMax]);
             }
 
             // Now everything we do is on row "c".
@@ -822,7 +858,7 @@ namespace lmath
         {
             f32 f;
             *((u32*)&f) = 0x80000000U;
-            lm128 mask = _mm_set1_ps(f);
+            lm128 mask = _mm_load1_ps(&f);
 
             lm128 tmp = _mm_mul_ps(v, eye);
             tmp = _mm_add_ps( _mm_shuffle_ps(tmp, tmp, 0x4E), tmp);
@@ -880,6 +916,7 @@ namespace lmath
     void Matrix44::lookAt(const Vector4& eye, const Vector4& at, const Vector4& up)
     {
 #if defined(LMATH_USE_SSE)
+
         lm128 xaxis, yaxis, zaxis, teye;
         teye = _mm_loadu_ps(&eye.x_);
 
@@ -915,17 +952,11 @@ namespace lmath
         xaxis.normalize();
 
         yaxis.cross3(zaxis, xaxis);
-#if 0
-        m_[0][0] = xaxis.x_; m_[0][1] = yaxis.x_; m_[0][2] = zaxis.x_; m_[0][3] = 0.0f;
-        m_[1][0] = xaxis.y_; m_[1][1] = yaxis.y_; m_[1][2] = zaxis.y_; m_[1][3] = 0.0f;
-        m_[2][0] = xaxis.z_; m_[2][1] = yaxis.z_; m_[2][2] = zaxis.z_; m_[2][3] = 0.0f;
-        m_[3][0] = -eye.dot(xaxis); m_[3][1] = -eye.dot(yaxis); m_[3][2] = -eye.dot(zaxis); m_[3][3] = 1.0f;
-#else
+
         m_[0][0] = xaxis.x_; m_[0][1] = xaxis.y_; m_[0][2] = xaxis.z_; m_[0][3] = -eye.dot(xaxis);
         m_[1][0] = yaxis.x_; m_[1][1] = yaxis.y_; m_[1][2] = yaxis.z_; m_[1][3] = -eye.dot(yaxis);
         m_[2][0] = zaxis.x_; m_[2][1] = zaxis.y_; m_[2][2] = zaxis.z_; m_[2][3] = -eye.dot(zaxis);
         m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
-#endif
 #endif
     }
 
@@ -940,102 +971,73 @@ namespace lmath
 
         yaxis.cross(zaxis, xaxis);
 
-#if 0
-        m_[0][0] = xaxis.x_; m_[0][1] = yaxis.x_; m_[0][2] = zaxis.x_; m_[0][3] = 0.0f;
-        m_[1][0] = xaxis.y_; m_[1][1] = yaxis.y_; m_[1][2] = zaxis.y_; m_[1][3] = 0.0f;
-        m_[2][0] = xaxis.z_; m_[2][1] = yaxis.z_; m_[2][2] = zaxis.z_; m_[2][3] = 0.0f;
-        m_[3][0] = -eye.dot(xaxis); m_[3][1] = -eye.dot(yaxis); m_[3][2] = -eye.dot(zaxis); m_[3][3] = 1.0f;
-#else
         m_[0][0] = xaxis.x_; m_[0][1] = xaxis.y_; m_[0][2] = xaxis.z_; m_[0][3] = -eye.dot(xaxis);
         m_[1][0] = yaxis.x_; m_[1][1] = yaxis.y_; m_[1][2] = yaxis.z_; m_[1][3] = -eye.dot(yaxis);
         m_[2][0] = zaxis.x_; m_[2][1] = zaxis.y_; m_[2][2] = zaxis.z_; m_[2][3] = -eye.dot(zaxis);
         m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
-#endif
     }
 
     void Matrix44::perspective(f32 width, f32 height, f32 znear, f32 zfar)
     {
-#if 0
+        f32 invDepth = 1.0f/(zfar-znear);
         m_[0][0] = 2.0f*znear/width; m_[0][1] = 0.0f;              m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;             m_[1][1] = 2.0f*znear/height; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = zfar/(zfar-znear); m_[2][3] = 1.0f;
-        m_[3][0] = 0.0f;             m_[3][1] = 0.0f;              m_[3][2] = znear*zfar/(znear-zfar); m_[3][3] = 0.0f;
-
-#else
-        m_[0][0] = 2.0f*znear/width; m_[0][1] = 0.0f;              m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
-        m_[1][0] = 0.0f;             m_[1][1] = 2.0f*znear/height; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = zfar/(zfar-znear); m_[2][3] = znear*zfar/(znear-zfar);
+        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = zfar*invDepth; m_[2][3] = -znear*zfar*invDepth;
         m_[3][0] = 0.0f;             m_[3][1] = 0.0f;              m_[3][2] = 1.0f; m_[3][3] = 0.0f;
-#endif
     }
 
     void Matrix44::perspectiveFov(f32 fovy, f32 aspect, f32 znear, f32 zfar)
     {
         f32 yscale = 1.0f / lmath::tan(0.5f * fovy);
         f32 xscale = yscale / aspect;
-#if 0
-        m_[0][0] = xscale; m_[0][1] = 0.0f;   m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
-        m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = zfar/(zfar-znear); m_[2][3] = 1.0f;
-        m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = znear*zfar/(znear-zfar); m_[3][3] = 0.0f;
+        f32 invDepth = 1.0f/(zfar-znear);
 
-#else
         m_[0][0] = xscale; m_[0][1] = 0.0f;   m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = zfar/(zfar-znear); m_[2][3] = znear*zfar/(znear-zfar);
+        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = zfar*invDepth; m_[2][3] = -znear*zfar*invDepth;
         m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = 1.0f; m_[3][3] = 0.0f;
-#endif
     }
 
     void Matrix44::ortho(f32 width, f32 height, f32 znear, f32 zfar)
     {
-#if 0
+        f32 invDepth = 1.0f/(zfar-znear);
         m_[0][0] = 2.0f/width; m_[0][1] = 0.0f;        m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;       m_[1][1] = 2.0f/height; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;       m_[2][1] = 0.0f;        m_[2][2] = 1.0f/(zfar-znear); m_[2][3] = 0.0f;
-        m_[3][0] = 0.0f;       m_[3][1] = 0.0f;        m_[3][2] = znear/(znear-zfar); m_[3][3] = 1.0f;
-
-#else
-        m_[0][0] = 2.0f/width; m_[0][1] = 0.0f;        m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
-        m_[1][0] = 0.0f;       m_[1][1] = 2.0f/height; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;       m_[2][1] = 0.0f;        m_[2][2] = 1.0f/(zfar-znear); m_[2][3] = znear/(znear-zfar);
+        m_[2][0] = 0.0f;       m_[2][1] = 0.0f;        m_[2][2] = invDepth; m_[2][3] = -znear*invDepth;
         m_[3][0] = 0.0f;       m_[3][1] = 0.0f;        m_[3][2] = 0.0f; m_[3][3] = 1.0f;
-#endif
+    }
+
+    void Matrix44::orthoOffsetCenter(f32 left, f32 right, f32 top, f32 bottom, f32 znear, f32 zfar)
+    {
+        f32 invW = 1.0f/(right-left);
+        f32 invH = 1.0f/(top-bottom);
+        f32 invDepth = 1.0f/(zfar-znear);
+
+        m_[0][0] = 2.0f*invW; m_[0][1] = 0.0f;        m_[0][2] = 0.0f;              m_[0][3] = (right+left)*(-invW);
+        m_[1][0] = 0.0f;       m_[1][1] = 2.0f*invH; m_[1][2] = 0.0f;              m_[1][3] = (top+bottom)*(-invH);
+        m_[2][0] = 0.0f;       m_[2][1] = 0.0f;        m_[2][2] = invDepth; m_[2][3] = -znear*invDepth;
+        m_[3][0] = 0.0f;       m_[3][1] = 0.0f;        m_[3][2] = 0.0f; m_[3][3] = 1.0f;
     }
 
     void Matrix44::perspectiveLinearZ(f32 width, f32 height, f32 znear, f32 zfar)
     {
-#if 0
+        f32 invDepth = 1.0f/(zfar-znear);
         m_[0][0] = 2.0f*znear/width; m_[0][1] = 0.0f;              m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;             m_[1][1] = 2.0f*znear/height; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = 1.0f/(zfar-znear); m_[2][3] = 1.0f;
-        m_[3][0] = 0.0f;             m_[3][1] = 0.0f;              m_[3][2] = znear/(znear-zfar); m_[3][3] = 0.0f;
-
-#else
-        m_[0][0] = 2.0f*znear/width; m_[0][1] = 0.0f;              m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
-        m_[1][0] = 0.0f;             m_[1][1] = 2.0f*znear/height; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = 1.0f/(zfar-znear); m_[2][3] = znear/(znear-zfar);
+        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = invDepth; m_[2][3] = -znear*invDepth;
         m_[3][0] = 0.0f;             m_[3][1] = 0.0f;              m_[3][2] = 1.0f; m_[3][3] = 0.0f;
-#endif
     }
 
     void Matrix44::perspectiveFovLinearZ(f32 fovy, f32 aspect, f32 znear, f32 zfar)
     {
         f32 yscale = 1.0f / lmath::tan(0.5f * fovy);
         f32 xscale = yscale / aspect;
+        f32 invDepth = 1.0f/(zfar-znear);
 
-#if 0
         m_[0][0] = xscale; m_[0][1] = 0.0f;   m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = 1.0f/(zfar-znear); m_[2][3] = 1.0f;
-        m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = znear/(znear-zfar); m_[3][3] = 0.0f;
-
-#else
-        m_[0][0] = xscale; m_[0][1] = 0.0f;   m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
-        m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = 1.0f/(zfar-znear); m_[2][3] = znear/(znear-zfar);
+        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = invDepth; m_[2][3] = -znear*invDepth;
         m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = 1.0f; m_[3][3] = 0.0f;
-#endif
     }
 
     bool Matrix44::isNan() const

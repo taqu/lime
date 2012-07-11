@@ -12,6 +12,17 @@ namespace lgraphics
 #define LIME_FORCE_DWORD (0xFFFFFFFFU)
 #define LIME_FORCE_WORD (0xFFFFU)
 
+    enum VertexTexture
+    {
+        VertexTexture_Base = D3DVERTEXTEXTURESAMPLER0,
+    };
+
+    enum ErrorCode
+    {
+        Error_None = D3D_OK,
+        Error_DeviceLost = D3DERR_DEVICELOST,
+    };
+
     enum PresentInterval
     {
         PresentInterval_Default = D3DPRESENT_INTERVAL_DEFAULT,
@@ -163,6 +174,7 @@ namespace lgraphics
         Buffer_Unknown = D3DFMT_UNKNOWN,
         Buffer_D32 = D3DFMT_D32,
         Buffer_D24S8 = D3DFMT_D24S8,
+        Buffer_D16 = D3DFMT_D16,
         Buffer_Index16 = D3DFMT_INDEX16,
         Buffer_Index32 = D3DFMT_INDEX32,
         Buffer_Vertex = D3DFMT_VERTEXDATA,
@@ -173,6 +185,7 @@ namespace lgraphics
         Buffer_DXT4 = D3DFMT_DXT4,
         Buffer_DXT5 = D3DFMT_DXT5,
 
+        Buffer_A16B16G16R16F = D3DFMT_A16B16G16R16F,
         Buffer_R32F = D3DFMT_R32F,
         Buffer_G32R32F = D3DFMT_G32R32F,
         Buffer_A32B32G32R32F = D3DFMT_A32B32G32R32F,
@@ -300,6 +313,18 @@ namespace lgraphics
         Cmp_NotEqual = D3DCMP_NOTEQUAL,
         Cmp_GreaterEqual = D3DCMP_GREATEREQUAL,
         Cmp_Always = D3DCMP_ALWAYS,
+    };
+
+    enum StencilOp
+    {
+        StencilOp_Keep = D3DSTENCILOP_KEEP,
+        StencilOp_Zero = D3DSTENCILOP_ZERO,
+        StencilOp_Replace = D3DSTENCILOP_REPLACE,
+        StencilOp_IncrSat = D3DSTENCILOP_INCRSAT,
+        StencilOp_DecrSat = D3DSTENCILOP_DECRSAT,
+        StencilOp_Invert = D3DSTENCILOP_INVERT,
+        StencilOp_Incr = D3DSTENCILOP_INCR,
+        StencilOp_Decr = D3DSTENCILOP_DECR,
     };
 
     enum VertexBlend

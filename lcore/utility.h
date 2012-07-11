@@ -143,8 +143,11 @@ namespace lcore
     //--- タイム関係
     //---
     //---------------------------------------------------------
-    /// CPUクロック取得
+    /// カウント取得
     u32 getPerformanceCounter();
+
+    /// 秒間カウント数
+    u32 getPerformanceFrequency();
 
     /// マイクロ秒単位で時間取得
     u32 getTimeFromPerformanCounter();
@@ -280,6 +283,20 @@ namespace lcore
         if (val <= low) return low;
         else if (val >= high) return high;
         else return val;
+    }
+
+    inline f32 clamp01(f32 v)
+    {
+        s32* t = (s32*)&v;
+        s32 s = (*t) >> 31;
+        s = ~s;
+        *t &= s;
+
+        v -= 1.0f;
+        s = (*t) >> 31;
+        *t &= s;
+        v += 1.0f;
+        return v;
     }
 }
 #endif //INC_LCORE_UTILITY_H__

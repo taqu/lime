@@ -17,9 +17,17 @@
 #include <crtdbg.h>
 #include <malloc.h>
 #include <new>
+
+#define LIME_NEW new(_NORMAL_BLOCK,__FILE__,__LINE__)
+#define LIME_RAW_NEW new
+
 #else //_DEBUG
 #include <malloc.h>
 #include <new>
+
+#define LIME_NEW new
+#define LIME_RAW_NEW new
+
 #endif
 
 //#if !defined(WIN32_LEAN_AND_MEAN)
@@ -30,6 +38,8 @@
 #else //_WIN32
 #include <malloc.h>
 #include <new>
+#define LIME_NEW new
+#define LIME_RAW_NEW new
 #endif
 
 //-------------------
@@ -47,7 +57,6 @@
 
 // メモリ確保・開放
 //-------------------
-#define LIME_NEW new
 #define LIME_PLACEMENT_NEW(ptr) new(ptr)
 #define LIME_DELETE(p) { delete p; (p)=NULL;}
 #define LIME_DELETE_NONULL delete
@@ -170,6 +179,18 @@ namespace lcore
         r = tmp;
     }
 
+    struct U32F32Union
+    {
+        union
+        {
+            u32 u_;
+            f32 f_;
+        };
+    };
+
+    u16 toBinary16Float(f32 f);
+
+    f32 fromBinary16Float(u16 s);
 
 #define LIME_MAKE_FOURCC(c0, c1, c2, c3)\
     ( (lcore::u32)(c0) | ((lcore::u32)(c1) << 8) | ((lcore::u32)(c2) << 16) | ((lcore::u32)(c3) << 24) )
@@ -195,33 +216,9 @@ namespace lcore
         LeakCheck leakCheck_;
     };
 
-    enum LogLevel
-    {
-        LogLevel_Info,
-        LogLevel_Warn,
-        LogLevel_Error,
-    };
-
-    void LogImpl(LogLevel level, const char* file, s32 line, const char* message);
-
-
-#ifdef _DEBUG
-#define Debug_LogInfo(message) {lcore::LogImpl(lcore::LogLevel_Info, __FILE__, __LINE__, message);}
-#define Debug_LogWarn(message) {lcore::LogImpl(lcore::LogLevel_Warn, __FILE__, __LINE__, message);}
-#define Debug_LogError(message) {lcore::LogImpl(lcore::LogLevel_Error, __FILE__, __LINE__, message);}
-#define LASSERT_MSG(exp, message) {if(!(exp)){lcore::LogImpl(lcore::LogLevel_Error, __FILE__, __LINE__, message); LASSERT(false);}}
-
-#else
-#define Debug_LogInfo(message)
-#define Debug_LogWarn(message)
-#define Debug_LogError(message)
-#define LASSERT_MSG(exp, message)
-#endif
 
 //#define LIME_ENABLE_LOG (1)
     void Log(const Char* format, ...);
-
-
 }
 
 #endif //INC_LCORE_H__

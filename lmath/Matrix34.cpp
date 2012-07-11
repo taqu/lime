@@ -44,7 +44,7 @@ namespace lmath
         lm128 r0, r1, r2;
         load(r0, r1, r2, *this);
 
-        lm128 v = _mm_set1_ps(f);
+        lm128 v = _mm_load1_ps(&f);
 
         r0 = _mm_mul_ps(r0, v);
         r1 = _mm_mul_ps(r1, v);
@@ -122,7 +122,7 @@ namespace lmath
 #if defined(LMATH_USE_SSE)
         f32 f;
         *((u32*)&f) = 0x80000000U;
-        lm128 mask = _mm_set1_ps(f);
+        lm128 mask = _mm_load1_ps(&f);
         lm128 r0, r1, r2;
         load(r0, r1, r2, *this);
 
@@ -225,9 +225,9 @@ namespace lmath
     // 3x3ïîï™çsóÒÇÃì]íu
     void Matrix34::transpose33()
     {
-        lmath::swap(m_[0][1], m_[1][0]);
-        lmath::swap(m_[0][2], m_[2][0]);
-        lmath::swap(m_[1][2], m_[2][1]);
+        lcore::swap(m_[0][1], m_[1][0]);
+        lcore::swap(m_[0][2], m_[2][0]);
+        lcore::swap(m_[1][2], m_[2][1]);
 
     }
 

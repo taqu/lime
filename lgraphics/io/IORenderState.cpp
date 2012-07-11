@@ -34,7 +34,7 @@ namespace io
             u32 id_;
             u32 flag_;
             u32 alphaTestFunc_;
-            s32 alphaTestRef_;
+            //s32 alphaTestRef_;
             u32 cullMode_;
             u32 alphaBlendSrc_;
             u32 alphaBlendDst_;
@@ -67,7 +67,7 @@ namespace io
 
 #else
         state.setAlphaTestFunc( decodeCmpFunc(static_cast<CodeCmpFunc>( info.alphaTestFunc_ )) );
-        state.setAlphaTestRef( info.alphaTestRef_ );
+        //state.setAlphaTestRef( info.alphaTestRef_ );
 
         BlendType blendSrc = decodeBlendType(static_cast<CodeBlendType>( info.alphaBlendSrc_ ));
         BlendType blendDst = decodeBlendType(static_cast<CodeBlendType>( info.alphaBlendDst_ ));
@@ -95,7 +95,7 @@ namespace io
         info.flag_ = bitFlag;
 
         info.alphaTestFunc_ = static_cast<u32>( encodeCmpFunc( state.getAlphaTestFunc() ) );
-        info.alphaTestRef_ = state.getAlphaTestRef();
+        //info.alphaTestRef_ = state.getAlphaTestRef();
 
         info.cullMode_ = static_cast<u32>( encodeCullMode( state.getCullMode() ) );
         info.alphaBlendSrc_ = static_cast<u32>( encodeBlendType( state.getAlphaBlendSrc() ) );

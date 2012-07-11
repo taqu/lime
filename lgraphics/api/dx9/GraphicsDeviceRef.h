@@ -71,7 +71,9 @@ namespace lgraphics
         inline void setClearDepth(f32 depth);
         inline void setClearStencil(u32 stencil);
 
-        inline void present(const RECT* srcRect, const RECT* dstRect, HWND dstWindow);
+        inline s32 present(const RECT* srcRect, const RECT* dstRect, HWND dstWindow);
+
+        bool reset();
 
         void setViewport(s32 x, s32 y, u32 width, u32 height);
 
@@ -109,6 +111,17 @@ namespace lgraphics
 
         inline bool getRenderTargetData(IDirect3DSurface9* src, IDirect3DSurface9* dst);
         inline void setRenderTarget(u32 index, IDirect3DSurface9* target);
+
+        inline IDirect3DSurface9* createDepthStencil(
+            u32 width,
+            u32 height,
+            BufferFormat format,
+            MutiSampleType multiSample,
+            u32 multiSampleQuality,
+            bool discard);
+        inline bool getDepthStencil(IDirect3DSurface9** depth);
+        inline void setDepthStencil(IDirect3DSurface9* depth);
+
         inline bool getFrontBufferData(u32 swapChain, IDirect3DSurface9* surface);
         inline IDirect3DSurface9* getBackBuffer(u32 swapChain, u32 backBuffer);
 
@@ -176,6 +189,14 @@ namespace lgraphics
         inline void setAlphaBlendEnable(u32 enable);
         inline void setAlphaBlend(BlendType src, BlendType dst);
 
+        inline void setStencilEnable(u32 enable);
+        inline void setStencilCmpFunc(CmpFunc func);
+        inline void setStencilCmpValue(u32 ref);
+        inline void setStencilMask(u32 mask);
+        inline void setStencilWriteMask(u32 mask);
+        inline void setStencilFail(StencilOp op);
+        inline void setStencilZFail(StencilOp op);
+        inline void setStencilPass(StencilOp op);
 
         // SamplerState
         //------------------------------------------------------------------
@@ -199,14 +220,23 @@ namespace lgraphics
 
         bool initialize(const InitParam& initParam);
         void terminate();
+        void setDefaultRenderState();
 
         static const u32 FULL_SCREEN_REFRESH_RATE = 60;
         IDirect3D9* d3d_;
         IDirect3DDevice9 *d3dDevice_;
 
-        u32 width_;
-        u32 height_;
+        //初期化パラメータ
+        DriverType deviceType_;
+        u32 backBufferWidth_;
+        u32 backBufferHeight_;
+        u32 displayFormat_;
         u32 refreshRate_;
+        HWND__ *windowHandle_;
+        s32 windowed_;
+
+        PresentInterval interval_;
+        SwapEffect swapEffect_;
 
         u32 _clearColor;
         f32 _clearDepth;
@@ -215,12 +245,12 @@ namespace lgraphics
 
     inline u32 GraphicsDeviceRef::getRenderWidth() const
     {
-        return width_;
+        return backBufferWidth_;
     }
 
     inline u32 GraphicsDeviceRef::getRenderHeight() const
     {
-        return height_;
+        return backBufferHeight_;
     }
 
     inline u32 GraphicsDeviceRef::getRefreshRate() const
@@ -263,9 +293,9 @@ namespace lgraphics
         _clearStencil = stencil;
     }
 
-    inline void GraphicsDeviceRef::present(const RECT* srcRect, const RECT* dstRect, HWND dstWindow)
+    inline s32 GraphicsDeviceRef::present(const RECT* srcRect, const RECT* dstRect, HWND dstWindow)
     {
-        d3dDevice_->Present(srcRect, dstRect, dstWindow, NULL);
+        return d3dDevice_->Present(srcRect, dstRect, dstWindow, NULL);
     }
 
     inline void GraphicsDeviceRef::setTransform(TransformType type, const lmath::Matrix44& matrix)
@@ -340,7 +370,7 @@ namespace lgraphics
             (D3DFORMAT)format,
             (D3DMULTISAMPLE_TYPE)multiSample,
             multiSampleQuality,
-            lockable,
+            (lockable)? TRUE : FALSE,
             &surface,
             NULL);
 
@@ -357,9 +387,42 @@ namespace lgraphics
 
     inline void GraphicsDeviceRef::setRenderTarget(u32 index, IDirect3DSurface9* target)
     {
-        LASSERT(target != NULL);
         d3dDevice_->SetRenderTarget(index, target);
     }
+
+    inline IDirect3DSurface9* GraphicsDeviceRef::createDepthStencil(
+        u32 width,
+        u32 height,
+        BufferFormat format,
+        MutiSampleType multiSample,
+        u32 multiSampleQuality,
+        bool discard)
+    {
+        IDirect3DSurface9 *surface = NULL;
+        HRESULT hr = d3dDevice_->CreateDepthStencilSurface(
+            width,
+            height,
+            (D3DFORMAT)format,
+            (D3DMULTISAMPLE_TYPE)multiSample,
+            multiSampleQuality,
+            (discard)? TRUE : FALSE,
+            &surface,
+            NULL);
+
+        return (FAILED(hr))? NULL : surface;
+    }
+
+    inline bool GraphicsDeviceRef::getDepthStencil(IDirect3DSurface9** depth)
+    {
+        HRESULT hr = d3dDevice_->GetDepthStencilSurface(depth);
+        return SUCCEEDED(hr);
+    }
+
+    inline void GraphicsDeviceRef::setDepthStencil(IDirect3DSurface9* depth)
+    {
+        d3dDevice_->SetDepthStencilSurface(depth);
+    }
+
 
     inline bool GraphicsDeviceRef::getFrontBufferData(u32 swapChain, IDirect3DSurface9* surface)
     {
@@ -386,7 +449,7 @@ namespace lgraphics
             width,
             height,
             (D3DFORMAT)format,
-            (D3DPOOL)Pool_Scratch,
+            (D3DPOOL)Pool_SystemMem,
             &surface,
             NULL);
 
@@ -596,6 +659,47 @@ namespace lgraphics
     {
         d3dDevice_->SetRenderState(D3DRS_SRCBLEND, src);
         d3dDevice_->SetRenderState(D3DRS_DESTBLEND, dst);
+    }
+
+    inline void GraphicsDeviceRef::setStencilEnable(u32 enable)
+    {
+        d3dDevice_->SetRenderState(D3DRS_STENCILENABLE , enable);
+    }
+
+    inline void GraphicsDeviceRef::setStencilCmpFunc(CmpFunc func)
+    {
+        d3dDevice_->SetRenderState(D3DRS_STENCILFUNC , func);
+    }
+
+    inline void GraphicsDeviceRef::setStencilCmpValue(u32 ref)
+    {
+        d3dDevice_->SetRenderState(D3DRS_STENCILREF, ref);
+    }
+
+    inline void GraphicsDeviceRef::setStencilMask(u32 mask)
+    {
+        d3dDevice_->SetRenderState(D3DRS_STENCILMASK, mask);
+    }
+
+    inline void GraphicsDeviceRef::setStencilWriteMask(u32 mask)
+    {
+        d3dDevice_->SetRenderState(D3DRS_STENCILWRITEMASK, mask);
+    }
+
+    inline void GraphicsDeviceRef::setStencilFail(StencilOp op)
+    {
+        d3dDevice_->SetRenderState(D3DRS_STENCILFAIL, op);
+    }
+
+    inline void GraphicsDeviceRef::setStencilZFail(StencilOp op)
+    {
+        d3dDevice_->SetRenderState(D3DRS_STENCILZFAIL, op);
+    }
+
+
+    inline void GraphicsDeviceRef::setStencilPass(StencilOp op)
+    {
+        d3dDevice_->SetRenderState(D3DRS_STENCILPASS, op);
     }
 
 

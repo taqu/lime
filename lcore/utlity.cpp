@@ -66,19 +66,29 @@ namespace lcore
     //--- タイム関係
     //---
     //---------------------------------------------------------
-    // CPUクロック取得
+    // カウント取得
     u32 getPerformanceCounter()
     {
 #ifdef _WIN32
         LARGE_INTEGER count;
-        LARGE_INTEGER freq;
         QueryPerformanceCounter(&count);
-        QueryPerformanceFrequency(&freq);
         return static_cast<u32>( count.QuadPart );
 #else
         clock_t t = 0;
         t = clock();
         return static_cast<u32>(t);
+#endif
+    }
+
+    // 秒間カウント数
+    u32 getPerformanceFrequency()
+    {
+#ifdef _WIN32
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
+        return freq.QuadPart;
+#else
+        return CLOCKS_PER_SEC;
 #endif
     }
 

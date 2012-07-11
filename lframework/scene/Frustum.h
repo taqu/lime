@@ -7,10 +7,12 @@
 
 */
 #include "lscene.h"
-#include <lmath/Vector3.h>
+#include <lmath/geometry/Plane.h>
 
 namespace lmath
 {
+    class Vector3;
+    class Matrix44;
     class Sphere;
 }
 
@@ -28,30 +30,32 @@ namespace lscene
         {}
 
         /**
-        @brief ビュー空間の視錘台計算
+        @brief ビュー空間の視錐台計算
         */
-        void calc(const Camera& camera);
+        void calc(const Camera& camera, f32 zfar);
 
         /**
-        @brief ビュー空間の球が視錘台内にあるか
-        @param sphere ... 
+        @brief ビュー空間の球が視錐台内にあるか
         */
-        bool include(const lmath::Vector3& position, f32 radius);
-    private:
-        f32 znear_;
-        f32 zfar_;
+        bool contains(const lmath::Vector3& position, f32 radius)
+        {
+            contains(position.x_, position.y_, position.z_, radius);
+        }
 
-        f32 leftRightX_;
-        f32 leftRightZ_;
+        /**
+        @brief ビュー空間の球が視錐台内にあるか
+        */
+        bool contains(f32 x, f32 y, f32 z, f32 radius);
 
-        f32 topBottomY_;
-        f32 topBottomZ_;
+        /**
+        @brief 視錐台の８頂点取得
+        */
+        void getPoints(lmath::Vector4* points);
 
-        //視錘台法線
-        //left  (leftRightX, 0, leftRightZ)
-        //right (-leftRightX, 0, leftRightZ)
-        //top   (0, topBottomY, topBottomZ)
-        //bottom (0, -topBottomY, topBottomZ)
+        static f32 calcFitZFar(const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax, const Camera& camera, f32 minz, f32 maxz);
+
+        lmath::Plane planes_[6]; ///左、右、上、下、近、遠
     };
+
 }
 #endif //INC_LSCENE_FRUSTUM_H__

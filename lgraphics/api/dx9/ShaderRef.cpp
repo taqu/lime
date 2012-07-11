@@ -35,7 +35,7 @@ namespace lgraphics
                 message = "E_OUTOFMEMORY";
                 break;
             };
-            Debug_LogError( message );
+            lcore::Log( message );
         };
     }
 
@@ -207,7 +207,7 @@ namespace lgraphics
             SAFE_RELEASE(*shaderBuffer);
             if(errorMsg){
                 const char* message = (const char*)errorMsg->GetBufferPointer();
-                Debug_LogError( message );
+                lcore::Log( message );
                 SAFE_RELEASE(errorMsg);
             }
             return false;
@@ -256,7 +256,7 @@ namespace lgraphics
             SAFE_RELEASE(*shaderBuffer);
             if(errorMsg){
                 const char* message = (const char*)errorMsg->GetBufferPointer();
-                Debug_LogError( message );
+                lcore::Log( message );
                 SAFE_RELEASE(errorMsg);
 
                 {

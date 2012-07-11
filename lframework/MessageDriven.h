@@ -28,6 +28,9 @@ namespace lframework
         void run();
 
     protected:
+        MessageDriven(const MessageDriven&);
+        MessageDriven& operator=(const MessageDriven&);
+
         MessageDriven();
         virtual ~MessageDriven();
 

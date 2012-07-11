@@ -68,8 +68,8 @@ namespace lgraphics
         void setAlphaTestFunc(CmpFunc func);
         CmpFunc getAlphaTestFunc() const;
 
-        void setAlphaTestRef(u32 refValue);
-        u32 getAlphaTestRef() const;
+        //void setAlphaTestRef(u32 refValue);
+        //u32 getAlphaTestRef() const;
 
         void setCullMode(CullMode mode);
         CullMode getCullMode() const;
@@ -95,24 +95,50 @@ namespace lgraphics
 
         ~RenderStateRef();
 
-        RenderStateRef& operator=(const RenderStateRef& rhs)
-        {
-            RenderStateRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        RenderStateRef& operator=(const RenderStateRef& rhs);
 
         void apply();
 
-        void swap(RenderStateRef& rhs)
-        {
-            lcore::swap(stateBlock_, rhs.stateBlock_);
-        }
+        void swap(RenderStateRef& rhs);
     private:
-        class StateBlock;
+        enum Bit
+        {
+            Bit_AlphaTest = (0x00000001U << 0),
+            Bit_MultiSampleAlias = (0x00000001U << 1),
+            Bit_ZEnable = (0x00000001U << 2),
+            Bit_ZWriteEnable = (0x00000001U << 3),
+            Bit_CullingEnable = (0x00000001U << 4),
+            Bit_AlphaBlendEnable = (0x00000001U << 5),
+        };
 
-        RenderStateRef(StateBlock *stateBlock);
-        StateBlock *stateBlock_;
+        inline void set(Bit bit)
+        {
+            flag_ |= bit;
+        }
+
+        inline void set(Bit bit, bool enable)
+        {
+            (enable)? flag_ |= bit : flag_ &= (~bit);
+        }
+
+        inline void reset(Bit bit)
+        {
+            flag_ &= ~bit;
+        }
+
+        inline bool check(Bit bit) const
+        {
+            return (flag_ & bit) != 0;
+        }
+
+
+        u32 flag_; //ON・OFFフラッグ
+        CmpFunc alphaTestFunc_;
+        //u32 alphaTestRef_;
+        u8 cullMode_;
+        u8 alphaBlendSrc_;
+        u8 alphaBlendDst_;
+        u8 dummy_;
     };
 }
 
