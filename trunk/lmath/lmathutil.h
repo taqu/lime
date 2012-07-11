@@ -11,32 +11,13 @@
 namespace lmath
 {
     class Vector3;
+    class Vector4;
 
-    void calcBBox_SSE(Vector3& bmin, Vector3& bmax, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    void calcBBox(Vector3& bmin, Vector3& bmax, const Vector3& v0, const Vector3& v1, const Vector3& v2);
 
-    void calcBBox_NoSIMD(Vector3& bmin, Vector3& bmax, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    void calcMedian(Vector3& median, const Vector3& v0, const Vector3& v1, const Vector3& v2);
 
-    void calcMedian_SSE(Vector3& median, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    void calcAABBPoints(Vector4* AABB, const Vector4& aabbMin, const Vector4& aabbMax);
 
-    void calcMedian_NoSIMD(Vector3& median, const Vector3& v0, const Vector3& v1, const Vector3& v2);
-
-
-    inline void calcBBox(Vector3& bmin, Vector3& bmax, const Vector3& v0, const Vector3& v1, const Vector3& v2)
-    {
-#if defined(LMATH_USE_SSE)
-        calcBBox_SSE(bmin, bmax, v0, v1, v2);
-#else
-        calcBBox_NoSIMD(bmin, bmax, v0, v1, v2);
-#endif
-    }
-
-    inline void calcMedian(Vector3& median, const Vector3& v0, const Vector3& v1, const Vector3& v2)
-    {
-#if defined(LMATH_USE_SSE)
-        calcMedian_SSE(median, v0, v1, v2);
-#else
-        calcMedian_NoSIMD(median, v0, v1, v2);
-#endif
-    }
 }
 #endif //INC_LMATH_LMATHUTIL_H__

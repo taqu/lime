@@ -44,12 +44,15 @@ namespace lmath
     using lcore::f32;
     using lcore::f64;
 
+    class Vector3;
+
 #define PI      static_cast<lmath::f32>(3.14159265358979323846)
 #define PI2     static_cast<lmath::f32>(6.28318530717958647692)
 #define INV_PI  static_cast<lmath::f32>(0.31830988618379067153)
 #define INV_PI2 static_cast<lmath::f32>(0.15915494309189533576)
 #define PI_2    static_cast<lmath::f32>(1.57079632679489661923)
 #define INV_PI_2 static_cast<lmath::f32>(0.63661977236758134308)
+#define LOG2    static_cast<lmath::f32>(0.693147180559945309417)
 
 #if defined(ANDROID)
 #define F32_EPSILON (1.192092896e-07F)
@@ -101,6 +104,17 @@ namespace lmath
     }
 
 #if defined(LMATH_USE_SSE)
+    inline lm128 set_m128(f32 x, f32 y, f32 z, f32 w)
+    {
+        lm128 t0 = _mm_load_ss(&x);
+        lm128 t1 = _mm_load_ss(&z);
+
+        lm128 ret = _mm_unpacklo_ps(t0, t1);
+        t0 = _mm_load_ss(&y);
+        t1 = _mm_load_ss(&w);
+        return _mm_unpacklo_ps(ret, _mm_unpacklo_ps(t0, t1));
+    }
+
     /**
 
     11bit近似値をNewton-Raphson法で22bitに高精度化
@@ -145,7 +159,7 @@ namespace lmath
     inline void sqrt(float ix1, float ix2, float& x1, float& x2)
     {
         LIME_ALIGN16 float ret[4];
-        __m128 tmp = _mm_set_ps(ix2, ix1, ix2, ix1);
+        __m128 tmp = set_m128(ix1, ix2, ix1, ix2);
         _mm_store_ps(ret, _mm_sqrt_ps(tmp));
         x1 = ret[0];
         x2 = ret[1];
@@ -156,7 +170,7 @@ namespace lmath
         float& x1, float& x2, float& x3, float& x4)
     {
         LIME_ALIGN16 float ret[4];
-        __m128 tmp = _mm_set_ps(ix4, ix3, ix2, ix1);
+        __m128 tmp = set_m128(ix1, ix2, ix3, ix4);
         _mm_store_ps(ret, _mm_sqrt_ps(tmp));
         x1 = ret[0];
         x2 = ret[1];
@@ -237,13 +251,6 @@ namespace lmath
         return ::powf(x, y);
     }
 
-    template<class T>
-    inline void swap(T& a, T& b)
-    {
-        lcore::swap<T>(a, b);
-    }
-
-
     inline s32 round2S32(f64 x)
     {
         const f64 doublemagic = 6755399441055744.0;
@@ -290,6 +297,33 @@ namespace lmath
         const f64 doublemagicroundeps = .5-1.4e-11;
         return round2S32(val + doublemagicroundeps);
     }
+
+    void randomOnSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1);
+
+    template<class T>
+    void randomOnSphere(f32& vx, f32& vy, f32& vz, T& random)
+    {
+        f32 x0, x1;
+        f32 d;
+        do{
+            x0 = random.frand();
+            x1 = random.frand();
+            d = x0*x0 + x1*x1;
+        }while(d>1.0f);
+
+        f32 rx = lmath::sqrt(1.0f - d);
+        x0 = 2.0f*x0 - 1.0f;
+        x1 = 2.0f*x1 - 1.0f;
+
+        vx = 2.0f*x0*rx;
+        vy = 2.0f*x1*rx;
+        vz = 1.0f - 2.0f*d;
+    }
+
+    void consineWeightedRandomOnHemiSphere(
+        Vector3& v,
+        const Vector3& n,
+        f32 x0, f32 x1);
 
 
     //inline float Lerp(float t, float v1, float v2) {

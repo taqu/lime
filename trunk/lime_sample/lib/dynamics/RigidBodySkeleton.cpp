@@ -234,18 +234,18 @@ namespace
             switch(rigidBodies[i].shapeType_)
             {
             case pmd::RigidBody::Shape_Sphere:
-                collisionShapes_[i] = LIME_NEW 	btSphereShape(rigidBodies[i].size_.x_);
+                collisionShapes_[i] = LIME_RAW_NEW 	btSphereShape(rigidBodies[i].size_.x_);
                 break;
 
             case pmd::RigidBody::Shape_Box:
                 {
-                    collisionShapes_[i] = LIME_NEW 	btBoxShape( btVector3(rigidBodies[i].size_.x_, rigidBodies[i].size_.y_, rigidBodies[i].size_.z_) );
+                    collisionShapes_[i] = LIME_RAW_NEW 	btBoxShape( btVector3(rigidBodies[i].size_.x_, rigidBodies[i].size_.y_, rigidBodies[i].size_.z_) );
                 }
                 break;
 
             case pmd::RigidBody::Shape_Capsule:
             default:
-                collisionShapes_[i] = LIME_NEW btCapsuleShape(rigidBodies[i].size_.x_, rigidBodies[i].size_.y_);
+                collisionShapes_[i] = LIME_RAW_NEW btCapsuleShape(rigidBodies[i].size_.x_, rigidBodies[i].size_.y_);
                 break;
             }
 
@@ -299,7 +299,7 @@ namespace
             rbInfo.m_friction = rigidBodies[i].friction_;
             rbInfo.m_additionalDamping = true;
 
-            btRigidBody* rigidBody = LIME_NEW btRigidBody(rbInfo);
+            btRigidBody* rigidBody = LIME_RAW_NEW btRigidBody(rbInfo);
 
             rigidBody->setDeactivationTime(0.8f);
             rigidBody->setSleepingThresholds(0.0f, 0.0f);

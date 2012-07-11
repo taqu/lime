@@ -66,7 +66,8 @@ namespace viewer
 
         if(animIndex == lightAnimPack_->getNumPoses() - 1){
             //ç≈å„ÇÃÉtÉåÅ[ÉÄ
-            dlight.setDirection(lightPose.direction_);
+            lmath::Vector4 dir(lightPose.direction_);
+            dlight.setDirection(dir);
             set(dlight.getColor(), lightPose.rgbx_);
 
         }else{
@@ -79,7 +80,10 @@ namespace viewer
             blend0 /= static_cast<f32>(nextPose.frameNo_ - lightPose.frameNo_);
             f32 blend1 = 1.0f - blend0;
 
-            dlight.getDirection().lerp(lightPose.direction_, nextPose.direction_, blend0, blend1);
+            lmath::Vector3 blendDir;
+            blendDir.lerp(lightPose.direction_, nextPose.direction_, blend0, blend1);
+            lmath::Vector4 dir(blendDir);
+            dlight.setDirection(dir);
 
             lerp(dlight.getColor(), lightPose.rgbx_, nextPose.rgbx_, blend0);
         } //if(animIndex ==
@@ -103,7 +107,8 @@ namespace viewer
         lscene::DirectionalLight& dlight = lightEnv.getDirectionalLight();
 
         const pmm::LightPose& pose = lightAnimPack_->getPose(0);
-        dlight.setDirection( pose.direction_ );
+        lmath::Vector4 dir(pose.direction_);
+        dlight.setDirection( dir );
         set(dlight.getColor(), pose.rgbx_);
     }
 }

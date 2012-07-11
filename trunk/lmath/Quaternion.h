@@ -11,6 +11,7 @@
 namespace lmath
 {
     class Vector3;
+    class Vector4;
     class Matrix34;
 
     class Quaternion
@@ -51,7 +52,8 @@ namespace lmath
         inline void setRotateAxis(const lmath::Vector3& axis, f32 radian);
         void setRotateAxis(f32 x, f32 y, f32 z, f32 radian);
 
-        inline Quaternion conjugate() const;
+        inline void conjugate();
+        inline void conjugate(const Quaternion& q);
 
         Quaternion& invert();
 
@@ -75,6 +77,7 @@ namespace lmath
 
         void getRotationAxis(lmath::Vector3& axis) const;
         void getMatrix(lmath::Matrix34& mat) const;
+        void getMatrix(lmath::Matrix44& mat) const;
 
         void exp(f32 exponent);
 
@@ -82,6 +85,9 @@ namespace lmath
 
         void mul(const Vector3& v, const Quaternion& q);
         void mul(const Quaternion& q, const Vector3& v);
+
+        void mul(const Vector4& v, const Quaternion& q);
+        void mul(const Quaternion& q, const Vector4& v);
 
         /**
         @brief 線形補間。q = (1-t)*q1 + t*q2
@@ -98,6 +104,8 @@ namespace lmath
         @param t ... 補間比
         */
         Quaternion& slerp(const Quaternion& q0, const Quaternion& q1, f32 t);
+
+        Quaternion& squad(const Quaternion& q0, const Quaternion& q1, const Quaternion& a, const Quaternion& b, f32 t);
 
         inline bool isNan() const;
 
@@ -118,7 +126,12 @@ namespace lmath
         f32 w_, x_, y_, z_;
     };
 
-
+#if defined(LMATH_USE_SSE)
+    //extern LIME_ALIGN16 u32 QuaternionConjugateMask_[4];
+    extern LIME_ALIGN16 u32 QuaternionMulMask0_[4];
+    extern LIME_ALIGN16 u32 QuaternionMulMask1_[4];
+    extern LIME_ALIGN16 u32 QuaternionMulMask2_[4];
+#endif
 
     inline Quaternion::Quaternion(const Quaternion& rhs)
     {
@@ -147,7 +160,7 @@ namespace lmath
 #if defined(LMATH_USE_SSE)
         f32 f;
         *((u32*)&f) = 0x80000000U;
-        lm128 mask = _mm_set1_ps(f);
+        lm128 mask = _mm_load1_ps(&f);
         lm128 r0 = load(*this);
         r0 = _mm_xor_ps(r0, mask);
 
@@ -197,9 +210,39 @@ namespace lmath
         return ( w_*w_ + x_*x_ + y_*y_ + z_*z_);
     }
 
-    inline Quaternion Quaternion::conjugate() const
+    inline void Quaternion::conjugate()
     {
-        return Quaternion(w_, -x_, -y_, -z_);
+//#if defined(LMATH_USE_SSE)
+#if 0
+        lm128 mask = _mm_loadu_ps((f32*)QuaternionConjugateMask_);
+
+        lm128 r0 = load(*this);
+        r0 = _mm_xor_ps(r0, mask);
+
+        store(*this, r0);
+#else
+        x_ = -x_;
+        y_ = -y_;
+        z_ = -z_;
+#endif
+    }
+
+    inline void Quaternion::conjugate(const Quaternion& q)
+    {
+//#if defined(LMATH_USE_SSE)
+#if 0
+        lm128 mask = _mm_loadu_ps((f32*)QuaternionConjugateMask_);
+
+        lm128 r0 = load(q);
+        r0 = _mm_xor_ps(r0, mask);
+
+        store(*this, r0);
+#else
+        w_ =  q.w_;
+        x_ = -q.x_;
+        y_ = -q.y_;
+        z_ = -q.z_;
+#endif
     }
 
     inline bool Quaternion::isNan() const

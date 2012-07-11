@@ -70,6 +70,19 @@ namespace lmath
     @notice 接する場合も含む
     */
     bool testSphereVsPlane(f32 &t, const Sphere& sphere, const Plane& plane);
+
+    //---------------------------------------------------------------------------------
+    struct Triangle
+    {
+        Vector4 v_[3];
+    };
+
+    /**
+    */
+    void clipTriangle(
+        s32& numTriangles,
+        Triangle* triangles,
+        const Plane& plane);
 }
 
 #endif //INC_LMATH_PRIMITIVETEST_H__

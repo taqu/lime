@@ -14,45 +14,36 @@ namespace lscene
     {
     public:
         DirectionalLight()
-            :position_(0.0f, 0.0f, 0.0f),
-            direction_(0.0f, -1.0f, 0.0f),
+            :direction_(0.0f, 1.0f, 0.0f, 0.0f),
             lightColor_(1.0f, 1.0f, 1.0f, 1.0f)
         {
+            createLightView();
         }
 
         ~DirectionalLight()
         {
         }
 
-        const lmath::Vector3& getPosition() const
+        const lmath::Matrix44& getLightView() const
         {
-            return position_;
+            return lightView_;
         }
 
-        lmath::Vector3& getPosition()
-        {
-            return position_;
-        }
-
-        void setPosition(const lmath::Vector3& position)
-        {
-            position_ = position;
-        }
-
-        const lmath::Vector3& getDirection() const
+        const lmath::Vector4& getDirection() const
         {
             return direction_;
         }
 
-        lmath::Vector3& getDirection()
+        lmath::Vector4& getDirection()
         {
             return direction_;
         }
 
-        void setDirection(const lmath::Vector3& direction)
+        void setDirection(const lmath::Vector4& direction)
         {
             direction_ = direction;
             direction_.normalize();
+            createLightView();
         }
 
         const lmath::Vector4& getColor() const
@@ -72,8 +63,27 @@ namespace lscene
         }
 
     private:
-        lmath::Vector3 position_;
-        lmath::Vector3 direction_;
+        inline void createLightView()
+        {
+            lmath::Vector4 up(0.0f, 1.0f, 0.0f, 0.0f);
+            if( lmath::isEqual( direction_.y_, 1.0f, 0.01f) ){
+                up.set(0.0f, 0.0f, -1.0f, 0.0f);
+            }else if(lmath::isEqual( direction_.y_, -1.0f, 0.01f)){
+                up.set(0.0f, 0.0f, 1.0f, 0.0f);
+            }
+#if 1
+            lmath::Vector4 eye;
+            eye.zero();
+            lightView_.lookAt(eye, -direction_, up);
+#else
+            lmath::Vector4 at;
+            at.zero();
+            lightView_.lookAt(direction_, at, up);
+#endif
+        }
+
+        lmath::Matrix44 lightView_;
+        lmath::Vector4 direction_;
 
         /// 色と第４に輝度
         lmath::Vector4 lightColor_;

@@ -101,26 +101,20 @@ namespace lmath
 
         inline static lm128 load(const Vector3& v)
         {
-#if 0
-            static const u32 Shuffle = 196;
-
             lm128 t = _mm_load_ss(&v.z_);
-            t = _mm_shuffle_ps(t, t, Shuffle);
+            t = _mm_movelh_ps(t, t);
             t = _mm_loadl_pi(t, reinterpret_cast<const __m64*>(&v.x_));
             return t;
-#else
-            return _mm_set_ps(1.0f, v.z_, v.y_, v.x_);
-#endif
         }
 
         inline static lm128 load(f32 x, f32 y, f32 z)
         {
-            return _mm_set_ps(1.0f, z, y, x);
+            return set_m128(x, y, z, 1.0f);
         }
 
         inline static lm128 load(f32 v)
         {
-            return _mm_set1_ps(v);
+            return _mm_load1_ps(&v);
         }
 
         inline static void store(Vector3& v, const lm128& r)
@@ -143,36 +137,6 @@ namespace lmath
     //--- 実装
     //---
     //--------------------------------------------
-#if 0
-    inline void Vector3::cross(const Vector3& v0, const Vector3& v1)
-    {
-#if defined(LMATH_USE_SSE)
-//#if 0
-        static const u32 RotMaskR = 201;
-        static const u32 RotMaskL = 210;
-
-        lm128 xv0 = load(v0.y_, v0.z_, v0.x_);
-        lm128 xv1 = load(v1.z_, v1.x_, v1.y_);
-        lm128 xv2 = _mm_mul_ps(xv0, xv1);
-
-        xv0 = _mm_shuffle_ps(xv0, xv0, RotMaskR);
-        xv1 = _mm_shuffle_ps(xv1, xv1, RotMaskL);
-
-        lm128 xv3 = _mm_mul_ps(xv0, xv1);
-
-        xv3 = _mm_sub_ps(xv2, xv3);
-        store(*this, xv3);
-
-#else
-        f32 x = v0.y_ * v1.z_ - v0.z_ * v1.y_;
-        f32 y = v0.z_ * v1.x_ - v0.x_ * v1.z_;
-        f32 z = v0.x_ * v1.y_ - v0.y_ * v1.x_;
-        x_ = x;
-        y_ = y;
-        z_ = z;
-#endif
-    }
-#endif
 
     inline f32 Vector3::operator[](s32 index) const
     {

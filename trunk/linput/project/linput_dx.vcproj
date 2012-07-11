@@ -49,6 +49,7 @@
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
 				RuntimeLibrary="3"
+				EnableEnhancedInstructionSet="0"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(OutDir)\linput_vc90.pdb"
 				WarningLevel="4"
@@ -68,73 +69,6 @@
 				Name="VCLibrarianTool"
 				AdditionalDependencies="dinput8.lib dxguid.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_vc90_d.lib"
-			/>
-			<Tool
-				Name="VCALinkTool"
-			/>
-			<Tool
-				Name="VCXDCMakeTool"
-			/>
-			<Tool
-				Name="VCBscMakeTool"
-			/>
-			<Tool
-				Name="VCFxCopTool"
-			/>
-			<Tool
-				Name="VCPostBuildEventTool"
-			/>
-		</Configuration>
-		<Configuration
-			Name="Release|Win32"
-			OutputDirectory="$(SolutionDir)\lib"
-			IntermediateDirectory="$(ConfigurationName)"
-			ConfigurationType="4"
-			CharacterSet="2"
-			WholeProgramOptimization="1"
-			>
-			<Tool
-				Name="VCPreBuildEventTool"
-			/>
-			<Tool
-				Name="VCCustomBuildTool"
-			/>
-			<Tool
-				Name="VCXMLDataGeneratorTool"
-			/>
-			<Tool
-				Name="VCWebServiceProxyGeneratorTool"
-			/>
-			<Tool
-				Name="VCMIDLTool"
-			/>
-			<Tool
-				Name="VCCLCompilerTool"
-				Optimization="2"
-				EnableIntrinsicFunctions="false"
-				AdditionalIncludeDirectories="..\..\"
-				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
-				StringPooling="true"
-				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="false"
-				UsePrecompiledHeader="0"
-				WarningLevel="4"
-				DebugInformationFormat="3"
-				DisableSpecificWarnings="4819"
-			/>
-			<Tool
-				Name="VCManagedResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCResourceCompilerTool"
-			/>
-			<Tool
-				Name="VCPreLinkEventTool"
-			/>
-			<Tool
-				Name="VCLibrarianTool"
-				AdditionalDependencies="dinput8.lib dxguid.lib"
-				OutputFile="$(OutDir)\$(ProjectName)_vc90.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -202,6 +136,74 @@
 				Name="VCLibrarianTool"
 				AdditionalDependencies="dinput8.lib dxguid.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_vc90_d.lib"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
+		<Configuration
+			Name="Release|Win32"
+			OutputDirectory="$(SolutionDir)\lib"
+			IntermediateDirectory="$(ConfigurationName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="2"
+				EnableIntrinsicFunctions="false"
+				AdditionalIncludeDirectories="..\..\"
+				PreprocessorDefinitions="WIN32;NDEBUG;_LIB"
+				StringPooling="true"
+				RuntimeLibrary="2"
+				EnableFunctionLevelLinking="false"
+				EnableEnhancedInstructionSet="0"
+				UsePrecompiledHeader="0"
+				WarningLevel="4"
+				DebugInformationFormat="3"
+				DisableSpecificWarnings="4819"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				AdditionalDependencies="dinput8.lib dxguid.lib"
+				OutputFile="$(OutDir)\$(ProjectName)_vc90.lib"
 			/>
 			<Tool
 				Name="VCALinkTool"

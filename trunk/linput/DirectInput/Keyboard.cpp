@@ -94,7 +94,7 @@ namespace linput
 
         HRESULT hr = device_->GetDeviceState(KEYSTATE_NUM, (LPVOID)&(keystate_[currentBuffer_][0]));
         if(FAILED(hr)){
-            //device_->Acquire(); //もう一度アクセス権取得
+            device_->Acquire(); //もう一度アクセス権取得
             return;
         }
     }

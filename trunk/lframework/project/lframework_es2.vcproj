@@ -64,7 +64,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="lcore_vc90_d.lib lmath_vc90_d.lib lgraphics_gles2_vc90_d.lib lfont_vc90_d.lib"
+				AdditionalDependencies="lcore_vc90_d.lib lmath_vc90_d.lib lgraphics_gles2_vc90_d.lib imm32.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_gles2_vc90_d.lib"
 				AdditionalLibraryDirectories="..\..\lib;..\..\ext\win32\lib"
 			/>
@@ -114,8 +114,8 @@
 				AdditionalIncludeDirectories="..\..\;..\..\ext\win32\include\"
 				PreprocessorDefinitions="WIN32;NDEBUG;_LIB;LIME_GLES2"
 				RuntimeLibrary="2"
-				EnableFunctionLevelLinking="true"
-				EnableEnhancedInstructionSet="2"
+				EnableFunctionLevelLinking="false"
+				EnableEnhancedInstructionSet="0"
 				UsePrecompiledHeader="0"
 				ProgramDataBaseFileName="$(OutDir)\$(ProjectName)_gles2_vc90.pdb"
 				WarningLevel="4"
@@ -133,7 +133,7 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="lcore_vc90.lib lmath_vc90.lib lgraphics_gles2_vc90.lib lfont_vc90.lib"
+				AdditionalDependencies="lcore_vc90.lib lmath_vc90.lib lgraphics_gles2_vc90.lib imm32.lib"
 				OutputFile="$(OutDir)\$(ProjectName)_gles2_vc90.lib"
 				AdditionalLibraryDirectories="..\..\lib;..\..\ext\win32\lib"
 			/>
@@ -266,6 +266,10 @@
 			</File>
 			<File
 				RelativePath="..\scene\lscene.h"
+				>
+			</File>
+			<File
+				RelativePath="..\scene\Scene.cpp"
 				>
 			</File>
 			<File

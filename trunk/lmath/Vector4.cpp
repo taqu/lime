@@ -6,42 +6,10 @@
 #include "Vector4.h"
 #include "Matrix34.h"
 #include "Matrix44.h"
+#include "Quaternion.h"
 
 namespace lmath
 {
-
-    Vector4::Vector4(const Vector3& v)
-        :x_(v.x_)
-        ,y_(v.y_)
-        ,z_(v.z_)
-        ,w_(0.0f)
-    {
-    }
-
-    Vector4::Vector4(const Vector3& v, f32 w)
-        :x_(v.x_)
-        ,y_(v.y_)
-        ,z_(v.z_)
-        ,w_(w)
-    {
-    }
-
-    void Vector4::set(const Vector3& v)
-    {
-        x_ = v.x_;
-        y_ = v.y_;
-        z_ = v.z_;
-        w_ = 0.0f;
-    }
-
-    void Vector4::set(const Vector3& v, f32 w)
-    {
-        x_ = v.x_;
-        y_ = v.y_;
-        z_ = v.z_;
-        w_ = w;
-    }
-
     bool Vector4::isEqual(const Vector4& v) const
     {
         return ( lmath::isEqual(x_, v.x_)
@@ -56,6 +24,25 @@ namespace lmath
             && lmath::isEqual(y_, v.y_, epsilon)
             && lmath::isEqual(z_, v.z_, epsilon)
             && lmath::isEqual(w_, v.w_, epsilon));
+    }
+
+    void Vector4::setLength()
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(*this);
+        r0 = _mm_mul_ps(r0, r0);
+        r0 = _mm_add_ps( _mm_shuffle_ps(r0, r0, 0x4E), r0);
+        r0 = _mm_add_ps( _mm_shuffle_ps(r0, r0, 0xB1), r0);
+
+        r0 = _mm_sqrt_ss(r0);
+        r0 = _mm_shuffle_ps(r0, r0, 0x00);
+        store(*this, r0);
+#else
+        x_ = x_ * x_;
+        y_ = y_ * y_;
+        z_ = z_ * z_;
+        w_ = w_ * w_;
+#endif
     }
 
     f32 Vector4::length() const
@@ -211,34 +198,22 @@ namespace lmath
     void Vector4::setLerp(const Vector4& v1, const Vector4& v2, f32 f)
     {
 #if defined(LMATH_USE_SSE)
-        if( f <= 0.0f ){
-            *this = v1;
-        }else if( f >= 1.0f ){
-            *this = v2;
-        }else{
-            lm128 tmp0 = load(v1);
-            lm128 tmp1 = load(v2);
-            lm128 tmp2 = _mm_load1_ps(&f);
+        lm128 tmp0 = load(v1);
+        lm128 tmp1 = load(v2);
+        lm128 tmp2 = _mm_load1_ps(&f);
 
-            tmp1 = _mm_sub_ps(tmp1, tmp0);
-            tmp1 = _mm_mul_ps(tmp1, tmp2);
-            tmp1 = _mm_add_ps(tmp1, tmp0);
+        tmp1 = _mm_sub_ps(tmp1, tmp0);
+        tmp1 = _mm_mul_ps(tmp1, tmp2);
+        tmp1 = _mm_add_ps(tmp1, tmp0);
 
-            store(*this, tmp1);
-        }
+        store(*this, tmp1);
 
 #else
-        if( f <= 0.0f ){
-            *this = v1;
-        }else if( f >= 1.0f ){
-            *this = v2;
-        }else{
-            Vector4 tmp = v2;
-            tmp -= v1;
-            tmp *= f;
-            tmp += v1;
-            *this = tmp;
-        }
+        Vector4 tmp = v2;
+        tmp -= v1;
+        tmp *= f;
+        tmp += v1;
+        *this = tmp;
 #endif
     }
 
@@ -246,15 +221,18 @@ namespace lmath
     void Vector4::mul(const Matrix34& m, const Vector4& v)
     {
 #if defined(LMATH_USE_SSE)
+        lm128 tm0 = _mm_loadu_ps(&m.m_[0][0]);
+        lm128 tm1 = _mm_loadu_ps(&m.m_[1][0]);
+        lm128 tm2 = _mm_loadu_ps(&m.m_[2][0]);
+        lm128 tm3 = _mm_set_ps(1.0f, 0.0f, 0.0f, 0.0f);
+
+        _MM_TRANSPOSE4_PS(tm0, tm1, tm2, tm3);
+
         lm128 tv0 = _mm_load1_ps(&v.x_);
         lm128 tv1 = _mm_load1_ps(&v.y_);
         lm128 tv2 = _mm_load1_ps(&v.z_);
         lm128 tv3 = _mm_load1_ps(&v.w_);
 
-        lm128 tm0 = _mm_set_ps(0.0f, m.m_[2][0], m.m_[1][0], m.m_[0][0]);
-        lm128 tm1 = _mm_set_ps(0.0f, m.m_[2][1], m.m_[1][1], m.m_[0][1]);
-        lm128 tm2 = _mm_set_ps(0.0f, m.m_[2][2], m.m_[1][2], m.m_[0][2]);
-        lm128 tm3 = _mm_set_ps(1.0f, m.m_[2][3], m.m_[1][3], m.m_[0][3]);
 
         tm0 = _mm_mul_ps(tm0, tv0);
         tm1 = _mm_mul_ps(tm1, tv1);
@@ -295,8 +273,8 @@ namespace lmath
         lm128 tm3 = _mm_load_ss(&one);
         tm3 = _mm_shuffle_ps(tm3, tm3, 0x2F);
 #else
-        LIME_ALIGN16 f32 buffer[4] = {0.0f, 0.0f, 0.0f, 1.0f};
-        lm128 tm3 = _mm_load_ps(buffer);
+        f32 buffer[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+        lm128 tm3 = _mm_loadu_ps(buffer);
 #endif
 
         tm0 = _mm_mul_ps(tm0, tv0);
@@ -329,20 +307,26 @@ namespace lmath
     void Vector4::mul(const Matrix44& m, const Vector4& v)
     {
 #if defined(LMATH_USE_SSE)
-        lm128 tv0 = _mm_load1_ps(&v.x_);
-        lm128 tv1 = _mm_load1_ps(&v.y_);
-        lm128 tv2 = _mm_load1_ps(&v.z_);
-        lm128 tv3 = _mm_load1_ps(&v.w_);
+        lm128 tm0 = _mm_loadu_ps(&m.m_[0][0]);
+        lm128 tm1 = _mm_loadu_ps(&m.m_[1][0]);
+        lm128 tm2 = _mm_loadu_ps(&m.m_[2][0]);
+        lm128 tm3 = _mm_loadu_ps(&m.m_[3][0]);
 
-        lm128 tm0 = _mm_set_ps(m.m_[3][0], m.m_[2][0], m.m_[1][0], m.m_[0][0]);
-        lm128 tm1 = _mm_set_ps(m.m_[3][1], m.m_[2][1], m.m_[1][1], m.m_[0][1]);
-        lm128 tm2 = _mm_set_ps(m.m_[3][2], m.m_[2][2], m.m_[1][2], m.m_[0][2]);
-        lm128 tm3 = _mm_set_ps(m.m_[3][3], m.m_[2][3], m.m_[1][3], m.m_[0][3]);
+        _MM_TRANSPOSE4_PS(tm0, tm1, tm2, tm3);
 
-        tm0 = _mm_mul_ps(tm0, tv0);
-        tm1 = _mm_mul_ps(tm1, tv1);
-        tm2 = _mm_mul_ps(tm2, tv2);
-        tm3 = _mm_mul_ps(tm3, tv3);
+
+        lm128 tv;
+        tv = _mm_load1_ps(&v.x_);
+        tm0 = _mm_mul_ps(tm0, tv);
+
+        tv = _mm_load1_ps(&v.y_);
+        tm1 = _mm_mul_ps(tm1, tv);
+
+        tv = _mm_load1_ps(&v.z_);
+        tm2 = _mm_mul_ps(tm2, tv);
+
+        tv = _mm_load1_ps(&v.w_);
+        tm3 = _mm_mul_ps(tm3, tv);
 
         tm0 = _mm_add_ps(tm0, tm1);
         tm0 = _mm_add_ps(tm0, tm2);
@@ -401,4 +385,18 @@ namespace lmath
 #endif
     }
 
+
+    void Vector4::rotate(const Quaternion& rotation)
+    {
+        Quaternion conj;
+        conj.conjugate(rotation);
+        Quaternion rot;
+
+        rot.mul(rotation, *this);
+        rot.mul(rot, conj);
+
+        x_ = rot.x_;
+        y_ = rot.y_;
+        z_ = rot.z_;
+    }
 }

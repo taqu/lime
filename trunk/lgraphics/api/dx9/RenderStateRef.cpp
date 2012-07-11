@@ -157,160 +157,36 @@ namespace lgraphics
     }
 
 
-    //----------------------------------------------------------
-    //---
-    //--- StateBlock
-    //---
-    //----------------------------------------------------------
-    class RenderStateRef::StateBlock
-    {
-    public:
-        enum Bit
-        {
-            Bit_AlphaTest = (0x00000001U << 0),
-            Bit_MultiSampleAlias = (0x00000001U << 1),
-            Bit_ZEnable = (0x00000001U << 2),
-            Bit_ZWriteEnable = (0x00000001U << 3),
-            Bit_CullingEnable = (0x00000001U << 4),
-            Bit_AlphaBlendEnable = (0x00000001U << 5),
-        };
-
-        StateBlock();
-        ~StateBlock();
 
 
-        inline void set(Bit bit);
-        inline void set(Bit bit, bool enable);
-        inline void reset(Bit bit);
-        inline bool check(Bit bit);
-
-        inline CmpFunc getAlphaTestFunc() const;
-        inline void setAlphaTestFuc(CmpFunc func);
-
-
-        inline u32 getAlphaTestRef() const;
-        inline void setAlphaTestRef(u32 ref);
-
-        inline CullMode getCullMode() const;
-        inline void setCullMode(CullMode mode);
-
-        inline BlendType getAlphaBlendSrc() const;
-        inline void setAlphaBlendSrc(BlendType type);
-
-        inline BlendType getAlphaBlendDst() const;
-        inline void setAlphaBlendDst(BlendType type);
-
-        inline void apply();
-
-
-        void addRef()
-        {
-            ++counter_;
-        }
-
-        void release()
-        {
-            if(--counter_ == 0){
-                LIME_DELETE_NONULL this;
-            }
-        }
-
-        u32 counter_;
-        u32 flag_; //ON・OFFフラッグ
-
-        CmpFunc alphaTestFunc_;
-        u32 alphaTestRef_;
-        CullMode cullMode_;
-        BlendType alphaBlendSrc_;
-        BlendType alphaBlendDst_;
-    };
-
-    RenderStateRef::StateBlock::StateBlock()
-        :counter_(0)
-        ,flag_(0)
+    RenderStateRef::RenderStateRef()
+        :flag_(0)
         ,alphaTestFunc_(Cmp_Less)
-        ,alphaTestRef_(128)
+        //,alphaTestRef_(128)
         ,cullMode_(CullMode_CCW)
         ,alphaBlendSrc_(Blend_InvDestAlpha)
         ,alphaBlendDst_(Blend_DestAlpha)
     {
     }
 
-    RenderStateRef::StateBlock::~StateBlock()
+
+    RenderStateRef::RenderStateRef(const RenderStateRef& rhs)
+        :flag_(rhs.flag_)
+        ,alphaTestFunc_(rhs.alphaTestFunc_)
+        //,alphaTestRef_(rhs.alphaTestRef_)
+        ,cullMode_(rhs.cullMode_)
+        ,alphaBlendSrc_(rhs.alphaBlendSrc_)
+        ,alphaBlendDst_(rhs.alphaBlendDst_)
     {
     }
 
-    inline void RenderStateRef::StateBlock::set(Bit bit)
+
+    RenderStateRef::~RenderStateRef()
     {
-        flag_ |= bit;
     }
 
-    inline void RenderStateRef::StateBlock::set(Bit bit, bool enable)
-    {
-        (enable)? flag_ |= bit : flag_ &= (~bit);
-    }
 
-    inline void RenderStateRef::StateBlock::reset(Bit bit)
-    {
-        flag_ &= ~bit;
-    }
-
-    inline bool RenderStateRef::StateBlock::check(Bit bit)
-    {
-        return (flag_ & bit) != 0;
-    }
-
-    inline CmpFunc RenderStateRef::StateBlock::getAlphaTestFunc() const
-    {
-        return alphaTestFunc_;
-    }
-
-    inline void RenderStateRef::StateBlock::setAlphaTestFuc(CmpFunc func)
-    {
-        alphaTestFunc_ = func;
-    }
-
-    inline u32 RenderStateRef::StateBlock::getAlphaTestRef() const
-    {
-        return alphaTestRef_;
-    }
-
-    inline void RenderStateRef::StateBlock::setAlphaTestRef(u32 ref)
-    {
-        alphaTestRef_ = ref;
-    }
-
-    inline CullMode RenderStateRef::StateBlock::getCullMode() const
-    {
-        return cullMode_;
-    }
-
-    inline void RenderStateRef::StateBlock::setCullMode(CullMode mode)
-    {
-        cullMode_ = mode;
-    }
-
-    inline BlendType RenderStateRef::StateBlock::getAlphaBlendSrc() const
-    {
-        return alphaBlendSrc_;
-    }
-
-    inline void RenderStateRef::StateBlock::setAlphaBlendSrc(BlendType type)
-    {
-        alphaBlendSrc_ = type;
-    }
-
-    inline BlendType RenderStateRef::StateBlock::getAlphaBlendDst() const
-    {
-        return alphaBlendDst_;
-    }
-
-    inline void RenderStateRef::StateBlock::setAlphaBlendDst(BlendType type)
-    {
-        alphaBlendDst_ = type;
-    }
-
-    inline void RenderStateRef::StateBlock::apply()
+    void RenderStateRef::apply()
     {
         GraphicsDeviceRef& device = Graphics::getDevice();
 
@@ -322,7 +198,11 @@ namespace lgraphics
 
         //アルファブレンド有効、無効の設定はレンダリングパスで行う
         if(check(Bit_AlphaBlendEnable)){
-            RenderState::setAlphaBlend(alphaBlendSrc_, alphaBlendDst_);
+            device.setRenderState(D3DRS_ALPHABLENDENABLE, TRUE);
+            device.setRenderState(D3DRS_SRCBLEND, alphaBlendSrc_);
+            device.setRenderState(D3DRS_DESTBLEND, alphaBlendDst_);
+        }else{
+            device.setRenderState(D3DRS_ALPHABLENDENABLE, FALSE);
         }
 
         enable = check(Bit_ZWriteEnable)? TRUE : FALSE;
@@ -332,84 +212,48 @@ namespace lgraphics
         device.setRenderState(D3DRS_ALPHATESTENABLE, enable);
     }
 
-
-
-    RenderStateRef::RenderStateRef()
-    {
-        stateBlock_ = LIME_NEW StateBlock;
-        stateBlock_->addRef();
-    }
-
-
-    RenderStateRef::RenderStateRef(const RenderStateRef& rhs)
-        :stateBlock_(rhs.stateBlock_)
-    {
-        if(stateBlock_ != NULL){
-            stateBlock_->addRef();
-        }
-    }
-
-    RenderStateRef::RenderStateRef(StateBlock *stateBlock)
-        :stateBlock_(stateBlock)
-    {
-        if(stateBlock_ != NULL){
-            stateBlock_->addRef();
-        }
-    }
-
-
-    RenderStateRef::~RenderStateRef()
-    {
-        LSAFE_RELEASE(stateBlock_);
-    }
-
-
-    void RenderStateRef::apply()
-    {
-        stateBlock_->apply();
-    }
-
     //-------------------------------------------------------------------
 
     void RenderStateRef::setAlphaTest(bool enable)
     {
-        stateBlock_->set(StateBlock::Bit_AlphaTest, enable);
+        set(Bit_AlphaTest, enable);
     }
 
     bool RenderStateRef::getAlphaTest() const
     {
-        return stateBlock_->check(StateBlock::Bit_AlphaTest);
+        return check(Bit_AlphaTest);
     }
 
     void RenderStateRef::setAlphaTestFunc(CmpFunc func)
     {
-        stateBlock_->setAlphaTestFuc( func );
+        alphaTestFunc_ = func;
     }
 
     CmpFunc RenderStateRef::getAlphaTestFunc() const
     {
-        return stateBlock_->getAlphaTestFunc();
+        return alphaTestFunc_;
     }
 
-    void RenderStateRef::setAlphaTestRef(u32 refValue)
-    {
-        stateBlock_->setAlphaTestRef( refValue );
-    }
+    //void RenderStateRef::setAlphaTestRef(u32 refValue)
+    //{
+    //    alphaTestRef_ = refValue;
+    //}
 
-    u32 RenderStateRef::getAlphaTestRef() const
-    {
-        return stateBlock_->getAlphaTestRef();
-    }
+    //u32 RenderStateRef::getAlphaTestRef() const
+    //{
+    //    return alphaTestRef_;
+    //}
 
 
     void RenderStateRef::setCullMode(CullMode mode)
     {
-        stateBlock_->setCullMode(mode);
+        LASSERT(mode<=255);
+        cullMode_ = (u8)mode;
     }
 
     CullMode RenderStateRef::getCullMode() const
     {
-        return stateBlock_->getCullMode();
+        return (CullMode)cullMode_;
     }
 
     void RenderStateRef::setMultiSampleAlias(bool )
@@ -423,47 +267,72 @@ namespace lgraphics
 
     void RenderStateRef::setZEnable(bool enable)
     {
-        stateBlock_->set(StateBlock::Bit_ZEnable, enable);
+        set(Bit_ZEnable, enable);
     }
 
     bool RenderStateRef::getZEnable() const
     {
-        return stateBlock_->check(StateBlock::Bit_ZEnable);
+        return check(Bit_ZEnable);
     }
 
     void RenderStateRef::setZWriteEnable(bool enable)
     {
-        stateBlock_->set(StateBlock::Bit_ZWriteEnable, enable);
+        set(Bit_ZWriteEnable, enable);
     }
 
     bool RenderStateRef::getZWriteEnable() const
     {
-        return stateBlock_->check(StateBlock::Bit_ZWriteEnable);
+        return check(Bit_ZWriteEnable);
     }
 
     void RenderStateRef::setAlphaBlendEnable(bool enable)
     {
-        stateBlock_->set(StateBlock::Bit_AlphaBlendEnable, enable);
+        set(Bit_AlphaBlendEnable, enable);
     }
 
     bool RenderStateRef::getAlphaBlendEnable() const
     {
-        return stateBlock_->check(StateBlock::Bit_AlphaBlendEnable);
+        return check(Bit_AlphaBlendEnable);
     }
 
     void RenderStateRef::setAlphaBlend(BlendType src, BlendType dst)
     {
-        stateBlock_->setAlphaBlendSrc(src);
-        stateBlock_->setAlphaBlendDst(dst);
+        LASSERT(src<=255);
+        LASSERT(dst<=255);
+
+        alphaBlendSrc_ = (u8)src;
+        alphaBlendDst_ = (u8)dst;
     }
 
     BlendType RenderStateRef::getAlphaBlendSrc() const
     {
-        return stateBlock_->getAlphaBlendSrc();
+        return (BlendType)alphaBlendSrc_;
     }
 
     BlendType RenderStateRef::getAlphaBlendDst() const
     {
-        return stateBlock_->getAlphaBlendDst();
+        return (BlendType)alphaBlendDst_;
+    }
+
+    RenderStateRef& RenderStateRef::operator=(const RenderStateRef& rhs)
+    {
+        flag_ = rhs.flag_;
+        alphaTestFunc_ = rhs.alphaTestFunc_;
+        //alphaTestRef_ = rhs.alphaTestRef_;
+        cullMode_ = rhs.cullMode_;
+        alphaBlendSrc_ = rhs.alphaBlendSrc_;
+        alphaBlendDst_ = rhs.alphaBlendDst_;
+        return *this;
+    }
+
+
+    void RenderStateRef::swap(RenderStateRef& rhs)
+    {
+        lcore::swap(flag_, rhs.flag_);
+        lcore::swap(alphaTestFunc_, rhs.alphaTestFunc_);
+        //lcore::swap(alphaTestRef_, rhs.alphaTestRef_);
+        lcore::swap(cullMode_, rhs.cullMode_);
+        lcore::swap(alphaBlendSrc_, rhs.alphaBlendSrc_);
+        lcore::swap(alphaBlendDst_, rhs.alphaBlendDst_);
     }
 }

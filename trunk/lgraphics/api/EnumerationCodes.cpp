@@ -317,6 +317,7 @@ namespace lgraphics
             CASE_ENTRY(Buffer_Unknown);
             CASE_ENTRY(Buffer_D32);
             CASE_ENTRY(Buffer_D24S8);
+            CASE_ENTRY(Buffer_D16);
             CASE_ENTRY(Buffer_Index16);
             CASE_ENTRY(Buffer_Index32);
             CASE_ENTRY(Buffer_Vertex);
@@ -326,6 +327,8 @@ namespace lgraphics
             CASE_ENTRY(Buffer_DXT3);
             CASE_ENTRY(Buffer_DXT4);
             CASE_ENTRY(Buffer_DXT5);
+
+            CASE_ENTRY(Buffer_A16B16G16R16F);
 
             CASE_ENTRY(Buffer_R32F);
             CASE_ENTRY(Buffer_G32R32F);

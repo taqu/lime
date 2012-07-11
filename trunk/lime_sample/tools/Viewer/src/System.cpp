@@ -5,7 +5,6 @@
 */
 #include "System.h"
 #include <lcore/lcore.h>
-#include <lfont/lfont.h>
 
 #include "render/RenderingSystem.h"
 #include "scene/ShaderManager.h"

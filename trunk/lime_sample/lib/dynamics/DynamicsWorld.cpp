@@ -45,7 +45,7 @@ namespace dynamics
             btVector3 worldAABBMin(minVal, minVal, minVal);
             btVector3 worldAABBMax(maxVal, maxVal, maxVal);
 
-            instance_.broadphase_ = LIME_NEW btAxisSweep3( worldAABBMin, worldAABBMax );
+            instance_.broadphase_ = LIME_RAW_NEW btAxisSweep3( worldAABBMin, worldAABBMax );
         }
 
         instance_.solver_ = LIME_NEW btSequentialImpulseConstraintSolver;
@@ -61,7 +61,7 @@ namespace dynamics
         //°–³ŒÀ•½–Êì¬
         instance_.plane_ = LIME_NEW btStaticPlaneShape(btVector3(0.0f, 1.0f, 0.0f), 0.0f);
         btRigidBody::btRigidBodyConstructionInfo info( 0.0f, LIME_NEW btDefaultMotionState(), instance_.plane_ );
-        instance_.planeRigidBody_ = LIME_NEW btRigidBody(info);
+        instance_.planeRigidBody_ = LIME_RAW_NEW btRigidBody(info);
 
         instance_.dynamicsWorld_->addRigidBody( instance_.planeRigidBody_ );
 

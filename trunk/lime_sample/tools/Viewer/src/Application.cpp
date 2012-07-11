@@ -91,8 +91,7 @@ namespace viewer
             // ライト設定
             lscene::LightEnvironment& lightEnv = scene.getLightEnv();
             lightEnv.getDirectionalLight().setColor(lmath::Vector3(1.0f, 1.0f, 1.0f), 2.0f);
-            lightEnv.getDirectionalLight().setDirection(lmath::Vector3(0.0f, 1.0f, 0.0f));
-            //lightEnv.getDirectionalLight().setDirection(lmath::Vector3(0.0f, -1.0f, 0.0f));
+            lightEnv.getDirectionalLight().setDirection(lmath::Vector4(0.0f, 1.0f, 0.0f, 0.0f));
 
             lgraphics::Graphics::getDevice().setClearColor(0xFF808080U);
 

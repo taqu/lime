@@ -146,6 +146,7 @@ namespace lgraphics
     enum BufferFormat
     {
         Buffer_Unknown = 0,
+        Buffer_D16,
         Buffer_D32,
         Buffer_D24S8,
         Buffer_Index16,
@@ -157,6 +158,8 @@ namespace lgraphics
         Buffer_DXT3,
         Buffer_DXT4,
         Buffer_DXT5,
+
+        Buffer_A16B16G16R16F,
 
         Buffer_R32F,
         Buffer_G32R32F,

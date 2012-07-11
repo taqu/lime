@@ -13,6 +13,7 @@ struct IDirect3DTexture9;
 namespace lgraphics
 {
     class TextureSystemMemRef;
+    class SurfaceRef;
 
     //--------------------------------------------
     //---
@@ -62,7 +63,7 @@ namespace lgraphics
         */
         void blit(u32 level, u32 width, u32 height, u8* data);
 
-        u16 getLevels();
+        u32 getLevels();
         bool getLevelDesc(u32 level, SurfaceDesc& desc);
 
         /**
@@ -98,6 +99,9 @@ namespace lgraphics
         void setName(const char* name, u32 len);
 
         s32 getFormat() const;
+
+        bool getSurface(u32 level, SurfaceRef& surface);
+
     private:
         friend class Texture;
 

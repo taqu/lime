@@ -9,6 +9,7 @@
 #include "GraphicsDeviceRef.h"
 
 #include "TextureRef.h"
+#include "SurfaceRef.h"
 
 namespace lgraphics
 {
@@ -65,10 +66,10 @@ namespace lgraphics
         LASSERT((texture_ == NULL) && (texDesc_ == NULL));
     }
 
-    u16 TextureRef::getLevels()
+    u32 TextureRef::getLevels()
     {
         LASSERT(texture_ != NULL);
-        return static_cast<u16>( texture_->GetLevelCount() );
+        return texture_->GetLevelCount();
     }
 
     bool TextureRef::getLevelDesc(u32 level, SurfaceDesc& desc)
@@ -179,6 +180,21 @@ namespace lgraphics
             return Buffer_Unknown;
         }
         return desc.format_;
+    }
+
+    bool TextureRef::getSurface(u32 level, SurfaceRef& surface)
+    {
+        LASSERT(texture_ != NULL);
+
+        IDirect3DSurface9* surf = NULL;
+        HRESULT hr = texture_->GetSurfaceLevel(level, &surf);
+        if(FAILED(hr)){
+            return false;
+        }
+
+        SurfaceRef tmp(surf);
+        surface.swap(tmp);
+        return true;
     }
 
     //-------------------------------------------------------
