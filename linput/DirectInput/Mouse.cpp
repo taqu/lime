@@ -50,50 +50,34 @@ namespace linput
             if(FAILED(hr)){
                 return false;
             }
+
+            dipdw.dwData = BufferSize; //バッファリングサイズ
+            hr = device_->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph);
+            if(FAILED(hr)){
+                return false;
+            }
         }
 
-        for(int i=0; i<MouseButton_Num; ++i){
-            buttonState_[i] = 0;
-        }
-        clear();
-
-        //アクセス権取得、入力開始
-        HRESULT hr = device_->Acquire();
-        //if(FAILED(hr)){
-        //    return false;
-        //}
+        acquire();
 
         return true;
     }
 
     void Mouse::clear()
     {
-        //for(int i=0; i<MouseButton_Num; ++i){
-        //    buttonState_[i] = 0;
-        //}
-
+        onState_ = 0;
+        clickState_ = 0;
         for(int i=0; i<MouseAxis_Num; ++i){
             axisDuration_[i] = 0;
         }
     }
 
-    bool Mouse::isOn(MouseButton button) const
+    void Mouse::acquire()
     {
-        LASSERT(MouseButton_0<= button && button < MouseButton_Num);
-        return buttonState_[button] & 0x01U;
-    }
+        clear();
 
-    bool Mouse::isClick(MouseButton button) const
-    {
-        LASSERT(MouseButton_0<= button && button < MouseButton_Num);
-
-        return (buttonState_[button] & 0x02U) != 0;
-    }
-
-    s32 Mouse::getDuration(MouseAxis axis) const
-    {
-        LASSERT(0<= axis && axis < MouseAxis_Num);
-        return axisDuration_[axis];
+        //アクセス権取得、入力開始
+        device_->Acquire();
     }
 
     inline void Mouse::getMousePoint()
@@ -106,32 +90,69 @@ namespace linput
     {
         getMousePoint();
 
-        DIMOUSESTATE2 state;
+        DIMOUSESTATE state;
 
-        clear();
+        DWORD items = BufferSize;
+        HRESULT hr = device_->GetDeviceData(
+            sizeof(DIDEVICEOBJECTDATA), 
+            devObjectData_,
+            &items, 
+            0); 
 
-        //HRESULT hr = device_->Acquire();
-        //if(FAILED(hr)){
-        //    return;
-        //}
-
-        HRESULT hr = device_->GetDeviceState(sizeof(DIMOUSESTATE2), &state);
-        if(FAILED(hr)){
-            device_->Acquire(); //もう一度アクセス権取得
-            return;
-        }
-
-        axisDuration_[MouseAxis_X] += state.lX;
-        axisDuration_[MouseAxis_Y] += state.lY;
-        axisDuration_[MouseAxis_Z] += state.lZ;
-
-        for(u32 i=0; i<MouseButton_Num; ++i){
-            bool on = ((state.rgbButtons[i] & 0x80U) != 0);
-            if(on){
-                buttonState_[i] = 0x01U;
-            }else{
-                buttonState_[i] = (buttonState_[i] == 1)? 2 : 0;
+        if(SUCCEEDED(hr)){
+            clickState_ = 0;
+            for(int i=0; i<MouseAxis_Num; ++i){
+                axisDuration_[i] = 0;
             }
+
+            u32 button;
+            bool on;
+            for(u32 i=0; i<items; ++i){
+                switch(devObjectData_[i].dwOfs)
+                {
+                case DIMOFS_X:
+                    axisDuration_[MouseAxis_X] += *(LONG*)&devObjectData_[i].dwData;
+                    break;
+                case DIMOFS_Y:
+                    axisDuration_[MouseAxis_Y] += *(LONG*)&devObjectData_[i].dwData;
+                    break;
+                case DIMOFS_Z:
+                    axisDuration_[MouseAxis_Z] += *(LONG*)&devObjectData_[i].dwData;
+                    break;
+
+                case DIMOFS_BUTTON0:
+                case DIMOFS_BUTTON1:
+                case DIMOFS_BUTTON2:
+                case DIMOFS_BUTTON3:
+                    button = devObjectData_[i].dwOfs - DIMOFS_BUTTON0;
+                    on = ((devObjectData_[i].dwData & 0xF0U) != 0);
+                    if(on){
+                        setOn(button);
+                    }else{
+                        resetOn(button);
+                        setClick(button);
+                    }
+                    break;
+                }
+            }
+
+        }else if(hr == DIERR_NOTACQUIRED || hr == DIERR_INPUTLOST){
+            acquire(); //もう一度アクセス権取得
         }
+    }
+
+    inline void Mouse::setOn(u32 index)
+    {
+        onState_ |= (0x01U<<index);
+    }
+
+    inline void Mouse::resetOn(u32 index)
+    {
+        onState_ &= ~(0x01U<<index);
+    }
+
+    inline void Mouse::setClick(u32 index)
+    {
+        clickState_ |= (0x01U<<index);
     }
 }

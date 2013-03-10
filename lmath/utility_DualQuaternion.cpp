@@ -36,7 +36,7 @@ dqconv.c
 #include "lmathcore.h"
 #include "Vector3.h"
 #include "Quaternion.h"
-#include "utility.h"
+#include "lmathutil.h"
 
 namespace lmath
 {

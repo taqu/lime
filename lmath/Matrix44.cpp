@@ -50,6 +50,27 @@ namespace lmath
         m_[3][3] = 1.0f;
     }
 
+    // 値セット
+    void Matrix44::set(const Vector4& row0, const Vector4& row1, const Vector4& row2, const Vector4& row3)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_loadu_ps(&row0.x_);
+        lm128 r1 = _mm_loadu_ps(&row1.x_);
+        lm128 r2 = _mm_loadu_ps(&row2.x_);
+        lm128 r3 = _mm_loadu_ps(&row3.x_);
+
+        _mm_storeu_ps(&m_[0][0], r0);
+        _mm_storeu_ps(&m_[1][0], r1);
+        _mm_storeu_ps(&m_[2][0], r2);
+        _mm_storeu_ps(&m_[3][0], r3);
+#else
+        lcore::memcpy(&m_[0][0], &r0, sizeof(Vector4));
+        lcore::memcpy(&m_[1][0], &r1, sizeof(Vector4));
+        lcore::memcpy(&m_[2][0], &r2, sizeof(Vector4));
+        lcore::memcpy(&m_[3][0], &r3, sizeof(Vector4));
+#endif
+    }
+
     Matrix44& Matrix44::operator=(const Matrix44& rhs)
     {
 #if defined(LMATH_USE_SSE)
@@ -373,6 +394,22 @@ namespace lmath
 #endif
     }
 
+    void Matrix44::zero()
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 zero = _mm_setzero_ps();
+        _mm_storeu_ps(&(m_[0][0]), zero);
+        _mm_storeu_ps(&(m_[1][0]), zero);
+        _mm_storeu_ps(&(m_[2][0]), zero);
+        _mm_storeu_ps(&(m_[3][0]), zero);
+#else
+        m_[0][0] = 0.0f; m_[0][1] = 0.0f; m_[0][2] = 0.0f; m_[0][3] = 0.0f;
+        m_[1][0] = 0.0f; m_[1][1] = 0.0f; m_[1][2] = 0.0f; m_[1][3] = 0.0f;
+        m_[2][0] = 0.0f; m_[2][1] = 0.0f; m_[2][2] = 0.0f; m_[2][3] = 0.0f;
+        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 0.0f;
+#endif
+    }
+
     void Matrix44::identity()
     {
 #if defined(LMATH_USE_SSE)
@@ -419,6 +456,30 @@ namespace lmath
         lcore::swap(m_[1][2], m_[2][1]);
         lcore::swap(m_[1][3], m_[3][1]);
         lcore::swap(m_[2][3], m_[3][2]);
+#endif
+    }
+
+    void Matrix44::transpose(const Matrix44& src)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_loadu_ps(&src.m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&src.m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&src.m_[2][0]);
+        lm128 r3 = _mm_loadu_ps(&src.m_[3][0]);
+
+        _MM_TRANSPOSE4_PS(r0, r1, r2, r3);
+
+        _mm_storeu_ps(&m_[0][0], r0);
+        _mm_storeu_ps(&m_[1][0], r1);
+        _mm_storeu_ps(&m_[2][0], r2);
+        _mm_storeu_ps(&m_[3][0], r3);
+
+#else
+        for(u32 i=0; i<4; ++i){
+            for(u32 j=0; j<4; ++j){
+                m_[i][j] = src.m_[j][i];
+            }
+        }
 #endif
     }
 
@@ -596,7 +657,7 @@ namespace lmath
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0x4E), det);
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0xB1), det);
         
-#if 1
+#if 0
         {//Newton-Raphson法で、行列式の逆数を計算
             tmp = _mm_rcp_ss(det);
             det = _mm_mul_ss(det, tmp);
@@ -874,6 +935,7 @@ namespace lmath
 
         void rcp(lm128& r)
         {
+#if 0
             //Newton-Raphson法で、行列式の逆数を計算
             lm128 tmp = _mm_rcp_ss(r);
             r = _mm_mul_ss(r, tmp);
@@ -881,6 +943,11 @@ namespace lmath
             tmp = _mm_add_ss(tmp, tmp);
             r = _mm_sub_ss(tmp, r);
             r = _mm_shuffle_ps(r, r, 0);
+#else
+            lm128 tmp = _mm_set_ss(1.0f);
+            r = _mm_div_ss(tmp, r);
+            r = _mm_shuffle_ps(r, r, 0);
+#endif
         }
 
         void normalize(lm128& v)

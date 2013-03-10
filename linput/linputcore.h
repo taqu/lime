@@ -36,7 +36,7 @@ namespace linput
     {
         DevType_Keyboard =0,
         DevType_Mouse,
-        //DevType_TouchPad,
+        DevType_Joystick,
         DevType_Num,
     };
 }

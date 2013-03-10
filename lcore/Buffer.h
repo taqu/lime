@@ -62,9 +62,10 @@ namespace lcore
             lcore::swap(size_, rhs.size_);
             lcore::swap(buffer_, rhs.buffer_);
         }
+
+        void destruct();
     private:
         void construct(u32 size);
-        void destruct();
 
         u32 size_;
         u8 *buffer_;

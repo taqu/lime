@@ -58,15 +58,18 @@ namespace lmath
         static Sphere calcMiniSphere(const Vector3* points, u32 numPoints);
 
         void combine(const Sphere& s0, const Sphere& s1);
+        void add(const Sphere& s1);
 
         f32 signedDistanceSqr(const Vector3& p) const;
+
+        f32 distance(const Sphere& rhs) const;
 
         void swap(Sphere& rhs)
         {
             s_.swap(rhs.s_);
         }
 
-        Vector4 s_; ///半径 中心
+        Vector4 s_; ///中心 半径
     };
 }
 #endif //INC_LMATH_SPHERE_H__

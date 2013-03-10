@@ -8,9 +8,51 @@
 
 #include "Keyboard.h"
 #include "Mouse.h"
+#include "Joystick.h"
 
 namespace linput
 {
+    namespace
+    {
+        struct EnumContext
+        {
+            EnumContext(IDirectInput8* dinput, s32 number)
+                :dinput_(dinput)
+                ,number_(number)
+                ,device_(NULL)
+            {
+            }
+
+            IDirectInput8* dinput_;
+            s32 number_;
+            IDirectInputDevice8* device_;
+            DIDEVCAPS caps_;
+
+        };
+
+        BOOL CALLBACK EnumJoySticks(const DIDEVICEINSTANCE* dev, LPVOID data)
+        {
+            EnumContext* context = (EnumContext*)data;
+
+            //デバイス作成
+            IDirectInputDevice8* device = NULL;
+            HRESULT hr = context->dinput_->CreateDevice(dev->guidInstance, &device, NULL);
+            if(FAILED(hr)){
+                return DIENUM_CONTINUE;
+            }
+
+            //DIDEVCAPS
+            context->caps_.dwSize = sizeof(DIDEVCAPS);
+            hr = device->GetCapabilities(&context->caps_);
+            if(FAILED(hr)){
+                SAFE_RELEASE(device);
+                return DIENUM_CONTINUE;
+            }
+            context->device_ = device;
+            return DIENUM_STOP;
+        }
+    }
+
     Input::InitParam::InitParam()
         :hWnd_(NULL)
     {
@@ -71,6 +113,24 @@ namespace linput
                 instance.devices_[DevType_Mouse] = mouse;
             }
         }
+
+        if(param.initDevices_[DevType_Joystick]){
+
+            EnumContext context(impl.get(), 0);
+
+            HRESULT hr = impl.get()->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoySticks, (LPVOID)&context, DIEDFL_ATTACHEDONLY );
+
+            if(SUCCEEDED(hr) && context.device_ != NULL){
+                Joystick* joystick = LIME_NEW Joystick;
+                if(false == joystick->initialize(param.hWnd_, context.device_)){
+                    LIME_DELETE(joystick);
+                    error = Error_Init;
+                }else{
+                    LIME_DELETE(instance.devices_[DevType_Joystick]);
+                    instance.devices_[DevType_Joystick] = joystick;
+                }
+            }
+        }
         return error;
     }
 
@@ -100,20 +160,11 @@ namespace linput
         }
     }
 
-    void Input::acquire()
+    void Input::clear()
     {
         for(s32 i=0; i<DevType_Num; ++i){
             if(devices_[i]){
-                devices_[i]->acquire();
-            }
-        }
-    }
-
-    void Input::unacquire()
-    {
-        for(s32 i=0; i<DevType_Num; ++i){
-            if(devices_[i]){
-                devices_[i]->unacquire();
+                devices_[i]->poll();
             }
         }
     }

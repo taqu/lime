@@ -231,10 +231,57 @@ namespace lmath
         }
     }
 
+    void Sphere::add(const Sphere& s1)
+    {
+        f32 distance = s_.distance3(s1.s_);
+
+        f32 d = (s_.w_<s1.s_.w_)? s1.s_.w_ - s_.w_ : s_.w_ - s1.s_.w_;
+        if(distance<=d){
+            s_ = (s_.w_<s1.s_.w_)? s1.s_ : s_;
+
+        }else{
+
+            f32 r = s_.w_ + s1.s_.w_;
+            r += distance;
+            r *= 0.5f;
+
+            d = (s_.w_<s1.s_.w_)? s1.s_.w_ : s_.w_;
+            d = r - d;
+
+            s_.setLerp(s_, s1.s_, d/distance);
+            s_.w_ = r + SphereRadiusEpsilon;
+        }
+    }
+
     f32 Sphere::signedDistanceSqr(const Vector3& p) const
     {
         Vector3 d(p.x_-s_.x_, p.y_-s_.y_, p.z_-s_.z_);
 
         return d.dot(d) - s_.w_ * s_.w_;
+    }
+
+    f32 Sphere::distance(const Sphere& rhs) const
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_loadu_ps(&s_.x_);
+        lm128 r1 = _mm_loadu_ps(&rhs.s_.x_);
+
+        r0 = _mm_sub_ps(r0, r1);
+        r0 = _mm_mul_ps(r0, r0);
+
+        r1 = r0;
+        r0 = _mm_add_ps(r0, _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(0, 0, 0, 1)));
+        r0 = _mm_add_ps(r0, _mm_shuffle_ps(r1, r1, _MM_SHUFFLE(0, 0, 0, 2)));
+        r0 = _mm_sqrt_ss(r0);
+
+        f32 ret;
+        _mm_store_ss(&ret, r0);
+        return ret;
+#else
+        lmath::Vector4 r;
+        r.sub(s_, rhs.s_);
+        r.w_ = 0.0f;
+        return r.length();
+#endif
     }
 }

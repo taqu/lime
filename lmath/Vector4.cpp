@@ -79,7 +79,7 @@ namespace lmath
         r0 = _mm_sqrt_ss(r0);
         r0 = _mm_shuffle_ps(r0, r0, 0);
         
-#if 1
+#if 0
         r0 = rcp(r0);
         r1 = _mm_mul_ps(r1, r0);
 #else
@@ -88,6 +88,30 @@ namespace lmath
         store(*this, r1);
 #else
         f32 l = lengthSqr();
+        LASSERT( !(lmath::isEqual(l, 0.0f)) );
+        //l = lmath::rsqrt(l);
+        l = 1.0f/ lmath::sqrt(l);
+        *this *= l;
+#endif
+    }
+
+    void Vector4::normalize(f32 lengthSqr)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_load1_ps(&lengthSqr);
+        lm128 r1 = load(*this);
+        r0 = _mm_sqrt_ss(r0);
+
+#if 0
+        r0 = rcp(r0);
+        r1 = _mm_mul_ps(r1, r0);
+#else
+        r1 = _mm_div_ps(r1, r0);
+#endif
+
+        store(*this, r1);
+#else
+        f32 l = lengthSqr;
         LASSERT( !(lmath::isEqual(l, 0.0f)) );
         //l = lmath::rsqrt(l);
         l = 1.0f/ lmath::sqrt(l);
@@ -254,6 +278,24 @@ namespace lmath
         y_ = y;
         z_ = z;
         w_ = v.w_;
+#endif
+    }
+
+    void Vector4::mul(f32 a, const Vector4& v)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 ta = _mm_load1_ps(&a);
+        lm128 tv = _mm_loadu_ps(&v.x_);
+
+        tv = _mm_mul_ps(ta, tv);
+
+        store(*this, tv);
+
+#else
+        x_ = a * v.x_;
+        y_ = a * v.y_;
+        z_ = a * v.z_;
+        w_ = a * v.w_;
 #endif
     }
 

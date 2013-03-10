@@ -170,9 +170,9 @@ namespace lgraphics
             }
             break;
 
-   //     case WM_CLOSE:
-			//DestroyWindow(hWnd);
-   //         break;
+        //case WM_CLOSE:
+        //    DestroyWindow(hWnd);
+        //    break;
 
         case WM_PAINT:
             {

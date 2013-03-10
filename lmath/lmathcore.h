@@ -53,6 +53,7 @@ namespace lmath
 #define PI_2    static_cast<lmath::f32>(1.57079632679489661923)
 #define INV_PI_2 static_cast<lmath::f32>(0.63661977236758134308)
 #define LOG2    static_cast<lmath::f32>(0.693147180559945309417)
+#define INV_LOG2    static_cast<lmath::f32>(1.0/0.693147180559945309417)
 
 #if defined(ANDROID)
 #define F32_EPSILON (1.192092896e-07F)
@@ -61,6 +62,9 @@ namespace lmath
 #define F32_EPSILON (FLT_EPSILON)
 #define F64_EPSILON (DBL_EPSILON)
 #endif
+
+#define DEG_TO_RAD (static_cast<lmath::f32>(1.57079632679489661923/90.0))
+#define RAD_TO_DEG (static_cast<lmath::f32>(90.0/1.57079632679489661923))
 
     extern const f32 SphereRadiusEpsilon; //=1.0e-5f;
 
@@ -101,6 +105,52 @@ namespace lmath
     inline bool isEqual(f64 x1, f64 x2, f64 epsilon)
     {
         return (lcore::absolute<f64>(x1 - x2) < epsilon);
+    }
+
+
+    inline bool isZero(f32 x1)
+    {
+        return (lcore::absolute<f32>(x1) < F32_EPSILON);
+    }
+
+    inline bool isZero(f32 x1, f32 epsilon)
+    {
+        return (lcore::absolute<f32>(x1) < epsilon);
+    }
+
+    inline bool isZero(f64 x1)
+    {
+        return (lcore::absolute<f64>(x1) < F64_EPSILON);
+    }
+
+    inline bool isZero(f64 x1, f64 epsilon)
+    {
+        return (lcore::absolute<f64>(x1) < epsilon);
+    }
+
+
+    inline bool isZeroPositive(f32 x1)
+    {
+        LASSERT(0.0f<=x1);
+        return (x1 < F32_EPSILON);
+    }
+
+    inline bool isZeroPositive(f32 x1, f32 epsilon)
+    {
+        LASSERT(0.0f<=x1);
+        return (x1 < epsilon);
+    }
+
+    inline bool isZeroPositive(f64 x1)
+    {
+        LASSERT(0.0f<=x1);
+        return (x1 < F64_EPSILON);
+    }
+
+    inline bool isZeroPositive(f64 x1, f64 epsilon)
+    {
+        LASSERT(0.0f<=x1);
+        return (x1 < epsilon);
     }
 
 #if defined(LMATH_USE_SSE)
@@ -298,6 +348,13 @@ namespace lmath
         return round2S32(val + doublemagicroundeps);
     }
 
+
+    inline f32 smoothstep(f32 x, f32 e0, f32 e1)
+    {
+        x = lcore::clamp01((x - e0) / (e1 - e0));
+    	return x * x * (3.0f - 2.0f*x);
+    }
+
     void randomOnSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1);
 
     template<class T>
@@ -326,39 +383,7 @@ namespace lmath
         f32 x0, f32 x1);
 
 
-    //inline float Lerp(float t, float v1, float v2) {
-    //    return (1.f - t) * v1 + t * v2;
-    //}
-    //inline float Clamp(float val, float low, float high) {
-    //    if (val < low) return low;
-    //    else if (val > high) return high;
-    //    else return val;
-    //}
-    //inline int Clamp(int val, int low, int high) {
-    //    if (val < low) return low;
-    //    else if (val > high) return high;
-    //    else return val;
-    //}
-    //inline int Mod(int a, int b) {
-    //    int n = int(a/b);
-    //    a -= n*b;
-    //    if (a < 0)
-    //        a += b;
-    //    return a;
-    //}
-    //inline float Radians(float deg) {
-    //    return ((float)M_PI/180.f) * deg;
-    //}
-    //inline float Degrees(float rad) {
-    //    return (180.f/(float)M_PI) * rad;
-    //}
-    //inline float Log2(float x) {
-    //    static float invLog2 = 1.f / logf(2.f);
-    //    return logf(x) * invLog2;
-    //}
-    //inline int Log2Int(float v) {
-    //    return ((*(int *) &v) >> 23) - 127;
-    //}
+
     //inline bool IsPowerOf2(int v) {
     //    return (v & (v - 1)) == 0;
     //}
@@ -386,10 +411,6 @@ namespace lmath
 //	*t1 = C / q;
 //	if (*t0 > *t1) swap(*t0, *t1);
 //	return true;
-//}
-//inline float SmoothStep(float min, float max, float value) {
-//	float v = Clamp((value - min) / (max - min), 0.f, 1.f);
-//	return v * v * (-2.f * v  + 3.f);
 //}
 //inline float ExponentialAverage(float avg,
 //                              float val, float alpha) {

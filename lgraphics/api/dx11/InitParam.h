@@ -5,47 +5,38 @@
 @author t-sakai
 @date 2010/03/24 create
 */
-#include "lgraphicscore.h"
+#include "../../lgraphicscore.h"
+#include "Enumerations.h"
 
 namespace lgraphics
 {
     struct InitParam
     {
         InitParam()
-            :
-            level_(FutureLevel_11_0),
-            type_(DriverType_Hardware),
-            backBufferWidth_(1),
-            backBufferHeight_(1),
-            isClearColor_(false),
-            isClearDepth_(true),
-            isClearStencil_(true),
-            interval_(PresentInterval_One),
-            windowed_(true),
-            swapEffect_(SwapEffect_Discard),
-            clearColor_(0xFF808080),
-            clearDepth_(1.0f),
-            clearStencil_(0),
-            refreshRate_(60),
-            windowHandle_(NULL)
+            :type_(DriverType_Hardware)
+            ,backBufferWidth_(1)
+            ,backBufferHeight_(1)
+            ,format_(Data_R8G8B8A8_UNorm)
+            ,depthStencilFormat_(Data_D24_UNorm_S8_UInt)
+            ,refreshRate_(60)
+            ,windowHandle_(NULL)
+            ,windowed_(1)
+            ,interval_(PresentInterval_One)
+            ,swapEffect_(DXGISwapEffect_Discard)
         {
         }
 
-        FutureLevel level_;
         DriverType type_;
         u32 backBufferWidth_;
         u32 backBufferHeight_;
-        bool isClearColor_;
-        bool isClearDepth_;
-        bool isClearStencil_;
-        PresentInterval interval_;
-        bool windowed_;
-        SwapEffect swapEffect_;
-        u32 clearColor_;
-        f32 clearDepth_;
-        u32 clearStencil_;
+        u32 format_;
+        u32 depthStencilFormat_;
         u32 refreshRate_;
         HWND__ *windowHandle_;
+        s32 windowed_;
+
+        PresentInterval interval_;
+        DXGISwapEffect swapEffect_;
     };
 }
 

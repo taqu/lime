@@ -41,7 +41,7 @@ namespace lframework
             window_.terminate();
             return false;
         }
-        lgraphics::Graphics::getDevice().setViewport(0, 0, param.backBufferWidth_, param.backBufferHeight_);
+        //lgraphics::Graphics::getDevice().setViewport(0, 0, param.backBufferWidth_, param.backBufferHeight_);
         return true;
     }
 
@@ -55,11 +55,6 @@ namespace lframework
                 break;
             }
             update();
-
-            //アニメーションシステム更新
-            //コリジョンシステム更新
-            //ポストコリジョン更新
-            //描画
         }
 
         terminate();

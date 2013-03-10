@@ -7,11 +7,10 @@
 */
 #include "lmathcore.h"
 #include "Vector3.h"
+#include "Vector4.h"
 
 namespace lmath
 {
-    class Vector3;
-    class Vector4;
     class Matrix34;
 
     class Quaternion
@@ -35,10 +34,9 @@ namespace lmath
         {
         }
 
-        inline void set(f32 w, f32 x, f32 y, f32 z)
-        {
-            w_ = w; x_ = x; y_ = y; z_ = z;
-        }
+        inline void set(f32 w, f32 x, f32 y, f32 z);
+
+        inline void set(const Vector4& v);
 
         inline f32 operator[](s32 index) const;
         inline f32& operator[](s32 index);
@@ -61,6 +59,7 @@ namespace lmath
         inline f32 lengthSqr() const;
 
         void normalize();
+        void normalize(f32 squaredLength);
 
         f32 dot(const Quaternion& q) const;
 
@@ -82,6 +81,9 @@ namespace lmath
         void exp(f32 exponent);
 
         void mul(const Quaternion& q0, const Quaternion& q1);
+
+        void mul(f32 a, const Quaternion& q);
+        void mul(const Quaternion& q, f32 a){ mul(a, q);}
 
         void mul(const Vector3& v, const Quaternion& q);
         void mul(const Quaternion& q, const Vector3& v);
@@ -154,6 +156,16 @@ namespace lmath
         return *this;
     }
 
+
+    inline void Quaternion::set(f32 w, f32 x, f32 y, f32 z)
+    {
+        w_ = w; x_ = x; y_ = y; z_ = z;
+    }
+
+    inline void Quaternion::set(const Vector4& v)
+    {
+        w_ = v.w_; x_ = v.x_; y_ = v.y_; z_ = v.z_;
+    }
 
     inline Quaternion Quaternion::operator-() const
     {

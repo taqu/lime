@@ -44,7 +44,7 @@ namespace linput
     {
         LASSERT(device_ != NULL);
         LASSERT(0<=type && type<DevType_Num);
-        const DIDATAFORMAT* DataFormat[DevType_Num] = {&c_dfDIKeyboard, &c_dfDIMouse2};
+        const DIDATAFORMAT* DataFormat[DevType_Num] = {&c_dfDIKeyboard, &c_dfDIMouse, &c_dfDIJoystick };
         HRESULT hr = device_->SetDataFormat(DataFormat[type]);
         return SUCCEEDED(hr);
     }

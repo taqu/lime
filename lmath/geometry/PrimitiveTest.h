@@ -72,6 +72,9 @@ namespace lmath
     bool testSphereVsPlane(f32 &t, const Sphere& sphere, const Plane& plane);
 
     //---------------------------------------------------------------------------------
+    bool testSphereVsSphere(const Sphere& sphere0, const Sphere& sphere1);
+
+    //---------------------------------------------------------------------------------
     struct Triangle
     {
         Vector4 v_[3];

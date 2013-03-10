@@ -5,11 +5,10 @@
 @author t-sakai
 @date 2010/02/14 create
 */
-#include "../lgraphicsAPIInclude.h"
+#include "../../lgraphicsAPIInclude.h"
 
 namespace lgraphics
 {
-    // Direct3D9と共通
     enum PresentInterval
     {
         PresentInterval_Default = 1,
@@ -17,13 +16,13 @@ namespace lgraphics
         PresentInterval_Two = 2,
         PresentInterval_Three = 3,
         PresentInterval_Four = 4,
-        PresentInterval_Immediate = 1,
+        PresentInterval_Immediate = 0,
     };
 
-    enum SwapEffect
+    enum DXGISwapEffect
     {
-        SwapEffect_Discard = DXGI_SWAP_EFFECT_DISCARD,
-        SwapEffect_Sequencial = DXGI_SWAP_EFFECT_SEQUENTIAL,
+        DXGISwapEffect_Discard = DXGI_SWAP_EFFECT_DISCARD,
+        DXGISwapEffect_Sequencial = DXGI_SWAP_EFFECT_SEQUENTIAL,
     };
 
     enum DriverType
@@ -46,38 +45,140 @@ namespace lgraphics
         FutureLevel_11_0 = D3D_FEATURE_LEVEL_11_0,
     };
 
-#if 0
     //--------------------------------------------------------
-    enum StateType
+    enum ClearFlag
     {
-        StateType_All,
-        StateType_Pixel,
-        StateType_Vertex,
-        StateType_Num
-    };
-
-    //--------------------------------------------------------
-    enum Pool
-    {
-        Pool_Default = D3DPOOL_DEFAULT,
-        Pool_Managed = D3DPOOL_MANAGED,
-        Pool_SystemMem = D3DPOOL_SYSTEMMEM,
-        Pool_Scratch = D3DPOOL_SCRATCH,
-        Pool_UserMem,
+        ClearFlag_Depth = D3D11_CLEAR_DEPTH,
+        ClearFlag_Stencil = D3D11_CLEAR_STENCIL,
     };
 
     //--------------------------------------------------------
     enum Usage
     {
-        Usage_None = 0,
-        Usage_AutoGenMipMap = D3DUSAGE_AUTOGENMIPMAP,
-        Usage_DepthStenceil = D3DUSAGE_DEPTHSTENCIL,
-        Usage_Displacement = D3DUSAGE_DMAP,
-        Usage_DoNotClip = D3DUSAGE_DONOTCLIP,
-        Usage_Dynamic = D3DUSAGE_DYNAMIC,
-        Usage_RenderTarget = D3DUSAGE_RENDERTARGET,
+        Usage_Default = D3D11_USAGE_DEFAULT,
+        Usage_Immutable = D3D11_USAGE_IMMUTABLE,
+        Usage_Dynamic = D3D11_USAGE_DYNAMIC,
+        Usage_Staging = D3D11_USAGE_STAGING,
     };
 
+    //--------------------------------------------------------
+    enum BindFlag
+    {
+        BindFlag_VertexBuffer = D3D11_BIND_VERTEX_BUFFER,
+        BindFlag_IndexBuffer = D3D11_BIND_INDEX_BUFFER,
+        BindFlag_ConstantBuffer = D3D11_BIND_CONSTANT_BUFFER,
+        BindFlag_ShaderResource = D3D11_BIND_SHADER_RESOURCE,
+        BindFlag_StreamOutput = D3D11_BIND_STREAM_OUTPUT,
+        BindFlag_RenderTarget = D3D11_BIND_RENDER_TARGET,
+        BindFlag_DepthStencil = D3D11_BIND_DEPTH_STENCIL,
+        BindFlag_UnorderedAccess = D3D11_BIND_UNORDERED_ACCESS
+    };
+
+    //--------------------------------------------------------
+    enum CPUAccessFlag
+    {
+        CPUAccessFlag_None = 0,
+        CPUAccessFlag_Write = D3D11_CPU_ACCESS_WRITE,
+        CPUAccessFlag_Read = D3D11_CPU_ACCESS_READ,
+    };
+
+    //--------------------------------------------------------
+    enum ResourceMisc
+    {
+        ResourceMisc_None = 0,
+        ResourceMisc_GenerateMips = D3D11_RESOURCE_MISC_GENERATE_MIPS,
+        ResourceMisc_Shared = D3D11_RESOURCE_MISC_SHARED,
+        ResourceMisc_TextureCube = D3D11_RESOURCE_MISC_TEXTURECUBE,
+        ResourceMisc_DrawDirectArgs = D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS,
+        ResourceMisc_AllowRawView = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS,
+        ResourceMisc_Structured = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED,
+        ResourceMisc_Clamp = D3D11_RESOURCE_MISC_RESOURCE_CLAMP,
+        ResourceMisc_SharedKeyedMutex = D3D11_RESOURCE_MISC_SHARED_KEYEDMUTEX,
+        ResourceMisc_GDICompatible = D3D11_RESOURCE_MISC_GDI_COMPATIBLE, 
+    };
+
+    //--------------------------------------------------------
+    enum MapType
+    {
+        MapType_Read = D3D11_MAP_READ,
+        MapType_Write = D3D11_MAP_WRITE,
+        MapType_ReadWrite = D3D11_MAP_READ_WRITE,
+        MapType_WriteDiscard = D3D11_MAP_WRITE_DISCARD,
+        MapType_WriteNoOverwrite = D3D11_MAP_WRITE_NO_OVERWRITE,
+    };
+
+    //--------------------------------------------------------
+    enum ViewRTVDimension
+    {
+        //ViewRTVDimension_Buffer = D3D11_RTV_DIMENSION_BUFFER,
+        ViewRTVDimension_Texture1D = D3D11_RTV_DIMENSION_TEXTURE1D,
+        ViewRTVDimension_Texture1DArray = D3D11_RTV_DIMENSION_TEXTURE1DARRAY,
+        ViewRTVDimension_Texture2D = D3D11_RTV_DIMENSION_TEXTURE2D,
+        ViewRTVDimension_Texture2DArray = D3D11_RTV_DIMENSION_TEXTURE2DARRAY,
+        //ViewRTVDimension_Texture2DMS = D3D11_RTV_DIMENSION_TEXTURE2DMS,
+        //ViewRTVDimension_Texture2DMSArray = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY,
+        ViewRTVDimension_Texture3D = D3D11_RTV_DIMENSION_TEXTURE3D,
+    };
+
+    //--------------------------------------------------------
+    enum ViewDSVDimension
+    {
+        ViewDSVDimension_Texture1D = D3D11_DSV_DIMENSION_TEXTURE1D,
+        ViewDSVDimension_Texture1DArray = D3D11_DSV_DIMENSION_TEXTURE1DARRAY,
+        ViewDSVDimension_Texture2D = D3D11_DSV_DIMENSION_TEXTURE2D,
+        ViewDSVDimension_Texture2DArray = D3D11_DSV_DIMENSION_TEXTURE2DARRAY,
+        //ViewDSVDimension_Texture2DMS = D3D11_DSV_DIMENSION_TEXTURE2DMS,
+        //ViewDSVDimension_Texture2DMSArray = D3D11_DSV_DIMENSION_TEXTURE2DMSARRAY,
+    };
+
+    //--------------------------------------------------------
+    enum Primitive
+    {
+        Primitive_None = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED,
+        Primitive_PointList = D3D11_PRIMITIVE_TOPOLOGY_POINTLIST,
+        Primitive_LineList = D3D11_PRIMITIVE_TOPOLOGY_LINELIST,
+        Primitive_LineStrip = D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP,
+        Primitive_TriangleList = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST,
+        Primitive_TriangleStrip = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP,
+        Primitive_LineListADJ = D3D11_PRIMITIVE_TOPOLOGY_LINELIST_ADJ,
+        Primitive_LineStripADJ = D3D11_PRIMITIVE_TOPOLOGY_LINESTRIP_ADJ,
+        Primitive_TriangleListADJ = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLELIST_ADJ,
+        Primitive_TriangleStripADJ = D3D11_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP_ADJ,
+        Primitive_PatchList1 = D3D11_PRIMITIVE_TOPOLOGY_1_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList2 = D3D11_PRIMITIVE_TOPOLOGY_2_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList3 = D3D11_PRIMITIVE_TOPOLOGY_3_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList4 = D3D11_PRIMITIVE_TOPOLOGY_4_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList5 = D3D11_PRIMITIVE_TOPOLOGY_5_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList6 = D3D11_PRIMITIVE_TOPOLOGY_6_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList7 = D3D11_PRIMITIVE_TOPOLOGY_7_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList8 = D3D11_PRIMITIVE_TOPOLOGY_8_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList9 = D3D11_PRIMITIVE_TOPOLOGY_9_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList10 = D3D11_PRIMITIVE_TOPOLOGY_10_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList11 = D3D11_PRIMITIVE_TOPOLOGY_11_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList12 = D3D11_PRIMITIVE_TOPOLOGY_12_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList13 = D3D11_PRIMITIVE_TOPOLOGY_13_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList14 = D3D11_PRIMITIVE_TOPOLOGY_14_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList15 = D3D11_PRIMITIVE_TOPOLOGY_15_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList16 = D3D11_PRIMITIVE_TOPOLOGY_16_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList17 = D3D11_PRIMITIVE_TOPOLOGY_17_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList18 = D3D11_PRIMITIVE_TOPOLOGY_18_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList19 = D3D11_PRIMITIVE_TOPOLOGY_19_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList20 = D3D11_PRIMITIVE_TOPOLOGY_20_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList21 = D3D11_PRIMITIVE_TOPOLOGY_21_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList22 = D3D11_PRIMITIVE_TOPOLOGY_22_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList23 = D3D11_PRIMITIVE_TOPOLOGY_23_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList24 = D3D11_PRIMITIVE_TOPOLOGY_24_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList25 = D3D11_PRIMITIVE_TOPOLOGY_25_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList26 = D3D11_PRIMITIVE_TOPOLOGY_26_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList27 = D3D11_PRIMITIVE_TOPOLOGY_27_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList28 = D3D11_PRIMITIVE_TOPOLOGY_28_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList29 = D3D11_PRIMITIVE_TOPOLOGY_29_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList30 = D3D11_PRIMITIVE_TOPOLOGY_30_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList31 = D3D11_PRIMITIVE_TOPOLOGY_31_CONTROL_POINT_PATCHLIST,
+        Primitive_PatchList32 = D3D11_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST,
+    };
+
+#if 0
     //--------------------------------------------------------
     enum Lock
     {
@@ -85,61 +186,9 @@ namespace lgraphics
         Lock_Discard = D3DLOCK_DISCARD,
         Lock_NoOverwrite = D3DLOCK_NOOVERWRITE,
     };
-
-    //--------------------------------------------------------
-    enum DeclType
-    {
-        DeclType_Float1 =0,
-        DeclType_Float2,
-        DeclType_Float3,
-        DeclType_Float4,
-        DeclType_Color,
-        DeclType_UB4,
-        DeclType_Short2,
-        DeclType_Short4,
-        DeclType_UB4N,
-        DeclType_Short2N,
-        DeclType_Short4N,
-        DeclType_UShort2N,
-        DeclType_UShort4N,
-        DeclType_UDec3N,
-        DeclType_Dec3N,
-        DeclType_Float16_2,
-        DeclType_Float16_4,
-        DeclType_UnUsed,
-    };
-
-    //--------------------------------------------------------
-    enum DeclUsage
-    {
-        DeclUsage_Position = 0,
-        DeclUsage_BlendWeight,
-        DeclUsage_BlendIndicies,
-        DeclUsage_Normal,
-        DeclUsage_PSize,
-        DeclUsage_Texcoord,
-        DeclUsage_Tangent,
-        DeclUsage_Binormal,
-        DeclUsage_TessFactor,
-        DeclUsage_PositionT,
-        DeclUsage_Color,
-        DeclUsage_Fog,
-        DeclUsage_Depth,
-        DeclUsage_Sample,
-    };
-
-    //--------------------------------------------------------
-    enum PrimitiveType
-    {
-        Primitive_PointList = D3DPT_POINTLIST,
-        Primitive_LineList = D3DPT_LINELIST,
-        Primitive_LineStrip = D3DPT_LINESTRIP,
-        Primitive_TriangleList = D3DPT_TRIANGLELIST,
-        Primitive_TriangleStrip = D3DPT_TRIANGLESTRIP,
-        //Primitive_TriangleFan = D3DPT_TRIANGLEFAN,
-    };
-
 #endif
+
+
     //--------------------------------------------------------
     /// データフォーマット
     enum DataFormat
@@ -156,12 +205,12 @@ namespace lgraphics
         Data_R32G32B32_UInt = DXGI_FORMAT_R32G32B32_UINT,
         Data_R32G32B32_SInt = DXGI_FORMAT_R32G32B32_SINT,
 
-        Data_R16G16B16_TypeLess = DXGI_FORMAT_R16G16B16A16_TYPELESS,
-        Data_R16G16B16_Float = DXGI_FORMAT_R16G16B16A16_FLOAT,
-        Data_R16G16B16_UNorm = DXGI_FORMAT_R16G16B16A16_UNORM,
-        Data_R16G16B16_UInt = DXGI_FORMAT_R16G16B16A16_UINT,
-        Data_R16G16B16_SNorm = DXGI_FORMAT_R16G16B16A16_SNORM,
-        Data_R16G16B16_SInt = DXGI_FORMAT_R16G16B16A16_SINT,
+        Data_R16G16B16A16_TypeLess = DXGI_FORMAT_R16G16B16A16_TYPELESS,
+        Data_R16G16B16A16_Float = DXGI_FORMAT_R16G16B16A16_FLOAT,
+        Data_R16G16B16A16_UNorm = DXGI_FORMAT_R16G16B16A16_UNORM,
+        Data_R16G16B16A16_UInt = DXGI_FORMAT_R16G16B16A16_UINT,
+        Data_R16G16B16A16_SNorm = DXGI_FORMAT_R16G16B16A16_SNORM,
+        Data_R16G16B16A16_SInt = DXGI_FORMAT_R16G16B16A16_SINT,
 
         Data_R32G32_TypeLess = DXGI_FORMAT_R32G32_TYPELESS,
         Data_R32G32_Float = DXGI_FORMAT_R32G32_FLOAT,
@@ -276,37 +325,37 @@ namespace lgraphics
         Data_Force_UInt = DXGI_FORMAT_FORCE_UINT,
     };
 
-    enum ScanlineOrder
+    enum DXGIScanlineOrder
     {
-        ScanlineOrder_Unspecified = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED ,
-        ScanlineOrder_Progressive = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE ,
-        ScanlineOrder_UpperFirst  = DXGI_MODE_SCANLINE_ORDER_UPPER_FIELD_FIRST ,
-        ScanlineOrder_LowerFirst  = DXGI_MODE_SCANLINE_ORDER_LOWER_FIELD_FIRST ,
+        DXGIScanlineOrder_Unspecified = DXGI_MODE_SCANLINE_ORDER_UNSPECIFIED ,
+        DXGIScanlineOrder_Progressive = DXGI_MODE_SCANLINE_ORDER_PROGRESSIVE ,
+        DXGIScanlineOrder_UpperFirst  = DXGI_MODE_SCANLINE_ORDER_UPPER_FIELD_FIRST ,
+        DXGIScanlineOrder_LowerFirst  = DXGI_MODE_SCANLINE_ORDER_LOWER_FIELD_FIRST ,
     };
 
-    enum Scaling
+    enum DXGIScaling
     {
-        Scaling_Unspecified = DXGI_MODE_SCALING_UNSPECIFIED,
-        Scaling_Centered    = DXGI_MODE_SCALING_CENTERED,
-        Scaling_Stretched   = DXGI_MODE_SCALING_STRETCHED,
+        DXGIScaling_Unspecified = DXGI_MODE_SCALING_UNSPECIFIED,
+        DXGIScaling_Centered    = DXGI_MODE_SCALING_CENTERED,
+        DXGIScaling_Stretched   = DXGI_MODE_SCALING_STRETCHED,
     };
 
-    enum Usage
+    enum DXGIUsage
     {
-        Usage_BackBuffer       = DXGI_USAGE_BACK_BUFFER,
-        Usage_DiscardOnPresent = DXGI_USAGE_DISCARD_ON_PRESENT,
-        Usage_ReadOnly         = DXGI_USAGE_READ_ONLY,
-        Usage_RenderTargetOutput = DXGI_USAGE_RENDER_TARGET_OUTPUT,
-        Usage_ShaderInput      = DXGI_USAGE_SHADER_INPUT,
-        Usage_Shared           = DXGI_USAGE_SHARED,
-        Usage_UnorderedAccess  = DXGI_USAGE_UNORDERED_ACCESS,
+        DXGIUsage_BackBuffer       = DXGI_USAGE_BACK_BUFFER,
+        DXGIUsage_DiscardOnPresent = DXGI_USAGE_DISCARD_ON_PRESENT,
+        DXGIUsage_ReadOnly         = DXGI_USAGE_READ_ONLY,
+        DXGIUsage_RenderTargetOutput = DXGI_USAGE_RENDER_TARGET_OUTPUT,
+        DXGIUsage_ShaderInput      = DXGI_USAGE_SHADER_INPUT,
+        DXGIUsage_Shared           = DXGI_USAGE_SHARED,
+        DXGIUsage_UnorderedAccess  = DXGI_USAGE_UNORDERED_ACCESS,
     };
 
-    enum SwapChainFlag
+    enum DXGISwapChainFlag
     {
-        SwapChainFlag_Nonprerotated = DXGI_SWAP_CHAIN_FLAG_NONPREROTATED,
-        SwapChainFlag_AllowModeSwitch = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH,
-        SwapChainFlag_GDICompatible = DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE,
+        DXGISwapChainFlag_Nonprerotated = DXGI_SWAP_CHAIN_FLAG_NONPREROTATED,
+        DXGISwapChainFlag_AllowModeSwitch = DXGI_SWAP_CHAIN_FLAG_ALLOW_MODE_SWITCH,
+        DXGISwapChainFlag_GDICompatible = DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE,
     };
 
 
@@ -351,64 +400,88 @@ namespace lgraphics
         TexType_Reflection,
         TexType_User,
     };
+#endif
 
     //--------------------------------------------------------
     enum TextureAddress
     {
-        TexAddress_Wrap = D3DTADDRESS_WRAP,
-        TexAddress_Mirror = D3DTADDRESS_MIRROR,
-        TexAddress_Clamp = D3DTADDRESS_CLAMP,
-        TexAddress_Border = D3DTADDRESS_BORDER,
-        TexAddress_Mirroronce = D3DTADDRESS_MIRRORONCE,
-        TexAddress_None,
+        TexAddress_Wrap = D3D11_TEXTURE_ADDRESS_WRAP,
+        TexAddress_Mirror = D3D11_TEXTURE_ADDRESS_MIRROR,
+        TexAddress_Clamp = D3D11_TEXTURE_ADDRESS_CLAMP,
+        TexAddress_Border = D3D11_TEXTURE_ADDRESS_BORDER,
+        TexAddress_Mirroronce = D3D11_TEXTURE_ADDRESS_MIRROR_ONCE, 
     };
 
     //--------------------------------------------------------
     enum TextureFilterType
     {
-        TexFilter_None = D3DTEXF_NONE,
-        TexFilter_Point = D3DTEXF_POINT,
-        TexFilter_Linear = D3DTEXF_LINEAR,
-        TexFilter_Anisotropic = D3DTEXF_ANISOTROPIC,
-        TexFilter_PyramidalQuad = D3DTEXF_PYRAMIDALQUAD,
-        TexFilter_GaussianQuad = D3DTEXF_GAUSSIANQUAD,
-        TexFilter_ConvolutionMono = D3DTEXF_CONVOLUTIONMONO,
-        TexFilter_Num,
-    };
-
-    //--------------------------------------------------------
-    enum CullMode
-    {
-        CullMode_None = D3DCULL_NONE,
-        CullMode_CW = D3DCULL_CW,
-        CullMode_CCW = D3DCULL_CCW,
-    };
-
-    //--------------------------------------------------------
-    enum BlendType
-    {
-        Blend_Zero = D3DBLEND_ZERO,
-        Blend_One = D3DBLEND_ONE,
-        Blend_SrcAlpha = D3DBLEND_SRCALPHA,
-        Blend_InvSrcAlpha = D3DBLEND_INVSRCALPHA,
-        Blend_DestAlpha = D3DBLEND_DESTALPHA,
-        Blend_InvDestAlpha = D3DBLEND_INVDESTALPHA,
+        TexFilter_MinMagMipPoint = D3D11_FILTER_MIN_MAG_MIP_POINT,
+        TexFilter_MinMagPointMipLinear = D3D11_FILTER_MIN_MAG_POINT_MIP_LINEAR,
+        TexFilter_MinPointMagLinearMipPoint = D3D11_FILTER_MIN_POINT_MAG_LINEAR_MIP_POINT,
+        TexFilter_MinPointMagMipLinear = D3D11_FILTER_MIN_POINT_MAG_MIP_LINEAR,
+        TexFilter_MinLinearMagMipPoint = D3D11_FILTER_MIN_LINEAR_MAG_MIP_POINT,
+        TexFilter_MinLinearMagPointMipLinear = D3D11_FILTER_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+        TexFilter_MinMagLinearMipPoint = D3D11_FILTER_MIN_MAG_LINEAR_MIP_POINT,
+        TexFilter_MinMagMipLinear = D3D11_FILTER_MIN_MAG_MIP_LINEAR,
+        TexFilter_Anisotropic = D3D11_FILTER_ANISOTROPIC,
+        TexFilter_CompMinMagMipPoint = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_POINT,
+        TexFilter_CompMinMagPointMipLinear = D3D11_FILTER_COMPARISON_MIN_MAG_POINT_MIP_LINEAR,
+        TexFilter_CompMinPointMagLinearMipPoint = D3D11_FILTER_COMPARISON_MIN_POINT_MAG_LINEAR_MIP_POINT,
+        TexFilter_CompMinPointMagMipLinear = D3D11_FILTER_COMPARISON_MIN_POINT_MAG_MIP_LINEAR,
+        TexFilter_CompMinLinearMagMipPoint = D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_MIP_POINT,
+        TexFilter_CompMinLinearMagPointMipLinear = D3D11_FILTER_COMPARISON_MIN_LINEAR_MAG_POINT_MIP_LINEAR,
+        TexFilter_CompMinMagLinearMipPoint = D3D11_FILTER_COMPARISON_MIN_MAG_LINEAR_MIP_POINT,
+        TexFilter_CompMinMagMipLinear = D3D11_FILTER_COMPARISON_MIN_MAG_MIP_LINEAR,
+        TexFilter_CompAnisotropic = D3D11_FILTER_COMPARISON_ANISOTROPIC,
     };
 
     //--------------------------------------------------------
     enum CmpFunc
     {
-        Cmp_Never = D3DCMP_NEVER,
-        Cmp_Less = D3DCMP_LESS,
-        Cmp_Equal = D3DCMP_EQUAL,
-        Cmp_LessEqual = D3DCMP_LESSEQUAL,
-        Cmp_Greater = D3DCMP_GREATER,
-        Cmp_NotEqual = D3DCMP_NOTEQUAL,
-        Cmp_GreaterEqual = D3DCMP_GREATEREQUAL,
-        Cmp_Always = D3DCMP_ALWAYS,
+        Cmp_Never = D3D11_COMPARISON_NEVER,
+        Cmp_Less = D3D11_COMPARISON_LESS,
+        Cmp_Equal = D3D11_COMPARISON_EQUAL,
+        Cmp_LessEqual = D3D11_COMPARISON_LESS_EQUAL,
+        Cmp_Greater = D3D11_COMPARISON_GREATER,
+        Cmp_NotEqual = D3D11_COMPARISON_NOT_EQUAL,
+        Cmp_GreaterEqual = D3D11_COMPARISON_GREATER_EQUAL,
+        Cmp_Always = D3D11_COMPARISON_ALWAYS,
     };
 
-#endif
+    //--------------------------------------------------------
+    enum BlendType
+    {
+        Blend_Zero = D3D11_BLEND_ZERO,
+        Blend_One = D3D11_BLEND_ONE,
+        Blend_SrcAlpha = D3D11_BLEND_SRC_ALPHA,
+        Blend_InvSrcAlpha = D3D11_BLEND_INV_SRC_ALPHA,
+        Blend_DestAlpha = D3D11_BLEND_DEST_ALPHA,
+        Blend_InvDestAlpha = D3D11_BLEND_INV_DEST_ALPHA ,
+    };
+
+    //--------------------------------------------------------
+    enum BlendOp
+    {
+        BlendOp_Add = D3D11_BLEND_OP_ADD,
+        BlendOp_Subtract = D3D11_BLEND_OP_SUBTRACT,
+        BlendOp_RevSubtract = D3D11_BLEND_OP_REV_SUBTRACT,
+        BlendOp_Min = D3D11_BLEND_OP_MIN,
+        BlendOp_Max = D3D11_BLEND_OP_MAX,
+    };
+
+    enum ColorWriteMask
+    {
+        ColorWrite_R = D3D11_COLOR_WRITE_ENABLE_RED,
+        ColorWrite_G = D3D11_COLOR_WRITE_ENABLE_GREEN,
+        ColorWrite_B = D3D11_COLOR_WRITE_ENABLE_BLUE,
+        ColorWrite_A = D3D11_COLOR_WRITE_ENABLE_ALPHA,
+        ColorWrite_All = D3D11_COLOR_WRITE_ENABLE_ALL,
+    };
+
+    /**
+    @brief bits per pixel取得
+    */
+    u32 getBitsPerPixel(DataFormat format);
 }
 
 

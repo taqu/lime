@@ -422,8 +422,8 @@ namespace lmath
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0x4E), det);
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0xB1), det);
 
-        //Newton-Raphson法で、行列式の逆数を計算
-        {
+#if 0
+        {//Newton-Raphson法で、行列式の逆数を計算
             t1 = _mm_rcp_ss(det);
             det = _mm_mul_ss(det, t1);
             det = _mm_mul_ss(det, t1);
@@ -431,6 +431,13 @@ namespace lmath
             det = _mm_sub_ss(t1, det);
             det = _mm_shuffle_ps(det, det, 0);
         }
+#else
+        {//行列式の逆数を計算
+            t1 = _mm_set_ss(1.0f);
+            det = _mm_div_ss(t1, det);
+            det = _mm_shuffle_ps(det, det, 0);
+        }
+#endif
 
         //0列目
         t0 = _mm_mul_ps(t0, det);

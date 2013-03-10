@@ -6,9 +6,9 @@
 @date 2009/11/16 create
 */
 #include "lmathcore.h"
+#include "lmathutil.h"
 #include "Vector3.h"
 #include "Quaternion.h"
-#include "utility.h"
 
 namespace lmath
 {

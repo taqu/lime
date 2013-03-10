@@ -159,6 +159,31 @@ namespace lscene
         points[7].set( halfWidth,  -halfHeight, far, 1.0f); //右下
     }
 
+    //---------------------------------------------------
+    // 視錐台の８頂点取得
+    void Frustum::getPoints(lmath::Vector4* points, f32 znear)
+    {
+        f32 slopeX = planes_[0].v_.z_ / planes_[0].v_.x_;
+        f32 slopeY = planes_[2].v_.z_ / planes_[2].v_.y_;
+
+        f32 halfWidth = znear * slopeX;
+        f32 halfHeight = znear * slopeY;
+
+        points[0].set( halfWidth,   halfHeight, znear, 1.0f); //右上
+        points[1].set(-halfWidth,   halfHeight, znear, 1.0f); //左上
+        points[2].set(-halfWidth,  -halfHeight, znear, 1.0f); //左下
+        points[3].set( halfWidth,  -halfHeight, znear, 1.0f); //右下
+
+
+        f32 far = -planes_[5].v_.w_;
+        halfWidth = far * slopeX;
+        halfHeight = far * slopeY;
+
+        points[4].set( halfWidth,   halfHeight, far, 1.0f); //右上
+        points[5].set(-halfWidth,   halfHeight, far, 1.0f); //左上
+        points[6].set(-halfWidth,  -halfHeight, far, 1.0f); //左下
+        points[7].set( halfWidth,  -halfHeight, far, 1.0f); //右下
+    }
 
     f32 Frustum::calcFitZFar(const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax, const Camera& camera, f32 minz, f32 maxz)
     {
@@ -172,7 +197,7 @@ namespace lscene
             2,3,6,  3,6,7 
         };
 
-        const lmath::Matrix44& proj = camera.getProjMatrix();
+        //const lmath::Matrix44& proj = camera.getProjMatrix();
 
         Frustum frustum;
         frustum.calc(camera, camera.getZFar());

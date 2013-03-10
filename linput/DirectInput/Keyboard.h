@@ -7,29 +7,44 @@
 */
 #include "../linputEnum.h"
 #include "../DeviceBase.h"
+#include <lcore/BitSet.h>
 
 namespace linput
 {
     class Keyboard: public DeviceBase
     {
     public:
+        static const u32 BufferSize = 8;
+        static const u32 StateSizeInBytes = 256/8;
+        typedef lcore::BitSet<StateSizeInBytes> StateSet;
+
         Keyboard();
         ~Keyboard();
 
         bool initialize(HWND__* hWnd, IDirectInputDevice8* device);
         void poll();
+        void clear();
 
-        bool isOn(KeyCode key) const;
-        bool isClick(KeyCode key) const;
+        inline bool isOn(KeyCode key) const;
+        inline bool isClick(KeyCode key) const;
     private:
         inline bool isOldOn(KeyCode key) const;
+        void acquire();
 
-        u32 oldBuffer_;
-        u32 currentBuffer_;
-        static const u32 BUFFER_NUM = 2;
-        static const s32 KEYSTATE_NUM = 256;
-        char keystate_[BUFFER_NUM][KEYSTATE_NUM];
+        StateSet onState_;
+        StateSet clickState_;
+        DIDEVICEOBJECTDATA devObjectData_[BufferSize];
     };
+
+    inline bool Keyboard::isOn(KeyCode key) const
+    {
+        return onState_.check(key);
+    }
+
+    inline bool Keyboard::isClick(KeyCode key) const
+    {
+        return clickState_.check(key);
+    }
 }
 
 #endif //INC_LINPUT_DINPUT_KEYBOARD_H__

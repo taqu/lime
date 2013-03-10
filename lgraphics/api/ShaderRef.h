@@ -10,6 +10,9 @@
 #if defined(LIME_DX9)
 #include "dx9/ShaderRef.h"
 
+#elif defined(LIME_DX11)
+#include "dx11/ShaderRef.h"
+
 #elif defined(LIME_GLES2)
 #include "gles2/ShaderRef.h"
 

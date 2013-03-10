@@ -7,6 +7,7 @@
 */
 #include "lmathcore.h"
 #include "Vector3.h"
+#include "Vector4.h"
 
 namespace lmath
 {
@@ -19,7 +20,7 @@ namespace lmath
     //---
     //--------------------------------------------
     /**
-    右手座標系、列ベクトル、ベクトルに対して左から掛けて変換する。
+    左手座標系、列ベクトル、ベクトルに対して左から掛けて変換する。
     */
     class Matrix44
     {
@@ -30,6 +31,17 @@ namespace lmath
         Matrix44(const Matrix44& mat);
 
         explicit Matrix44(const Matrix34& mat);
+
+        Matrix44(f32 m00, f32 m01, f32 m02, f32 m03,
+            f32 m10, f32 m11, f32 m12, f32 m13,
+            f32 m20, f32 m21, f32 m22, f32 m23,
+            f32 m30, f32 m31, f32 m32, f32 m33)
+        {
+            m_[0][0] = m00; m_[0][1] = m01; m_[0][2] = m02; m_[0][3] = m03;
+            m_[1][0] = m10; m_[1][1] = m11; m_[1][2] = m12; m_[1][3] = m13;
+            m_[2][0] = m20; m_[2][1] = m21; m_[2][2] = m22; m_[2][3] = m23;
+            m_[3][0] = m30; m_[3][1] = m31; m_[3][2] = m32; m_[3][3] = m33;
+        }
 
         ~Matrix44()
         {}
@@ -46,6 +58,9 @@ namespace lmath
             m_[3][0] = m30; m_[3][1] = m31; m_[3][2] = m32; m_[3][3] = m33;
         }
 
+
+        /// 値セット
+        void set(const Vector4& row0, const Vector4& row1, const Vector4& row2, const Vector4& row3);
 
         inline f32 operator()(s32 r, s32 c) const;
         inline f32& operator()(s32 r, s32 c);
@@ -74,8 +89,10 @@ namespace lmath
         void mul(const Matrix34& m0, const Matrix44& m1);
         void mul(const Matrix44& m0, const Matrix34& m1);
 
+        void zero();
         void identity();
         void transpose();
+        void transpose(const Matrix44& src);
         f32 determinant() const;
         void invert();
 
@@ -118,6 +135,9 @@ namespace lmath
         inline void setScale(f32 s);
         inline void scale(f32 s);
 
+        inline void setScale(f32 x, f32 y, f32 z);
+        inline void scale(f32 x, f32 y, f32 z);
+
         void lookAt(const Vector4& eye, const Vector4& at, const Vector4& up);
         void lookAt(const Vector3& eye, const Vector3& at, const Vector3& up);
 
@@ -147,9 +167,22 @@ namespace lmath
         */
         void perspectiveFovLinearZ(f32 fovy, f32 aspect, f32 znear, f32 zfar);
 
+        void getTranslate(f32& x, f32& y, f32& z) const
+        {
+            x = m_[0][3];
+            y = m_[1][3];
+            z = m_[2][3];
+        }
+
         void getTranslate(Vector3& trans) const
         {
-            trans.set(m_[0][3], m_[1][3], m_[2][3]);
+            getTranslate(trans.x_, trans.y_, trans.z_);
+        }
+
+        void getTranslate(Vector4& trans) const
+        {
+            getTranslate(trans.x_, trans.y_, trans.z_);
+            trans.w_ = 0.0f;
         }
 
         bool isNan() const;
@@ -217,6 +250,20 @@ namespace lmath
         m_[0][0] *= s;
         m_[1][1] *= s;
         m_[2][2] *= s;
+    }
+
+    inline void Matrix44::setScale(f32 x, f32 y, f32 z)
+    {
+        m_[0][0] = x;
+        m_[1][1] = y;
+        m_[2][2] = z;
+    }
+
+    inline void Matrix44::scale(f32 x, f32 y, f32 z)
+    {
+        m_[0][0] *= x;
+        m_[1][1] *= y;
+        m_[2][2] *= z;
     }
 }
 

@@ -36,18 +36,22 @@ namespace lmath
             x_ = x; y_ = y; z_ = z;
         }
 
+        inline void zero();
+        inline void one();
+
         inline f32 operator[](s32 index) const;
         inline f32& operator[](s32 index);
         inline Vector3 operator-() const;
 
-        //inline Vector3 operator*(f32 f) const;
-        //inline Vector3 operator/(f32 f) const;
 
         inline Vector3& operator+=(const Vector3& v);
         inline Vector3& operator-=(const Vector3& v);
 
         inline Vector3& operator*=(f32 f);
         Vector3& operator/=(f32 f);
+
+        Vector3& operator*=(const Vector3& v);
+        Vector3& operator/=(const Vector3& v);
 
         inline bool isEqual(const Vector3& v) const;
         inline bool isEqual(const Vector3& v, f32 epsilon) const;
@@ -137,6 +141,15 @@ namespace lmath
     //--- 実装
     //---
     //--------------------------------------------
+    inline void Vector3::zero()
+    {
+        x_ = y_ = z_ = 0.0f;
+    }
+
+    inline void Vector3::one()
+    {
+        x_ = y_ = z_ = 1.0f;
+    }
 
     inline f32 Vector3::operator[](s32 index) const
     {

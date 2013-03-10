@@ -5,7 +5,6 @@
 @author t-sakai
 @date 2010/02/07 create
 */
-#include <list>
 #include "../lmathcore.h"
 #include "../Vector3.h"
 #include "Ray.h"
@@ -359,10 +358,10 @@ namespace bvh
 
         for(u32 i=0; i<numEntries; ++i){
             const Vector3 &tmedian = entries[i].getMedian();
-            median += tmedian[axis] * invSize;
+            median += tmedian[axis];// * invSize;
         }
 
-        return median;
+        return median * invSize;
     }
 
 
@@ -380,7 +379,7 @@ namespace bvh
     public:
         typedef BVHNode node_type;
         typedef TAlgorithm BVHAlgo;
-        typedef lcore::vector_arena<BVHNode> NodeVector;
+        typedef lcore::simple_vector_arena<BVHNode> NodeVector;
         typedef THitRecord hit_record_type;
 
         BVH()

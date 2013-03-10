@@ -15,6 +15,7 @@ namespace linput
     class DeviceBase;
     class Keyboard;
     class Mouse;
+    class Joystick;
 
     /**
     Inputマネージャ
@@ -44,12 +45,13 @@ namespace linput
         static Input& getInstance();
 
         void update();
+        void clear();
 
         const Keyboard* getKeyboard() const{ return reinterpret_cast<const Keyboard*>( devices_[DevType_Keyboard] );}
         const Mouse* getMouse() const{ return reinterpret_cast<const Mouse*>( devices_[DevType_Mouse] );}
+        const Joystick* getJoystick() const{ return reinterpret_cast<const Joystick*>( devices_[DevType_Joystick] );}
 
-        void acquire();
-        void unacquire();
+
     private:
         Input();
         ~Input();
