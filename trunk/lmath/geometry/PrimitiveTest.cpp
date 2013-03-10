@@ -108,6 +108,15 @@ namespace lmath
     }
 
     //---------------------------------------------------------------------------------
+    bool testSphereVsSphere(const Sphere& sphere0, const Sphere& sphere1)
+    {
+        f32 distance = sphere0.distance(sphere1);
+        f32 radius = sphere0.s_.w_ + sphere1.s_.w_ + F32_EPSILON;
+
+        return (distance <= radius);
+    }
+
+    //---------------------------------------------------------------------------------
     void clipTriangle(
         s32& numTriangles,
         Triangle* triangles,

@@ -305,10 +305,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\DirectInput\DeviceBase.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\DirectInput\InitParam.h"
 				>
 			</File>
@@ -318,6 +314,14 @@
 			</File>
 			<File
 				RelativePath="..\DirectInput\InputImpl.h"
+				>
+			</File>
+			<File
+				RelativePath="..\DirectInput\Joystick.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\DirectInput\Joystick.h"
 				>
 			</File>
 			<File
@@ -347,6 +351,10 @@
 		</File>
 		<File
 			RelativePath="..\DeviceBase.h"
+			>
+		</File>
+		<File
+			RelativePath="..\Joystick.h"
 			>
 		</File>
 		<File

@@ -341,6 +341,34 @@
 				>
 			</File>
 		</Filter>
+		<Filter
+			Name="async"
+			>
+			<File
+				RelativePath="..\async\Socket.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\async\Socket.h"
+				>
+			</File>
+			<File
+				RelativePath="..\async\SyncObject.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\async\SyncObject.h"
+				>
+			</File>
+			<File
+				RelativePath="..\async\Thread.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\async\Thread.h"
+				>
+			</File>
+		</Filter>
 		<File
 			RelativePath="..\AllocatorMalloc.h"
 			>
@@ -423,6 +451,10 @@
 		</File>
 		<File
 			RelativePath="..\liostream.h"
+			>
+		</File>
+		<File
+			RelativePath="..\MemoryArena.h"
 			>
 		</File>
 		<File

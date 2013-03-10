@@ -15,10 +15,8 @@ namespace linput
     public:
         virtual ~DeviceBase(){}
 
-        virtual void poll() = 0;
-
-        bool acquire();
-        void unacquire();
+        virtual void poll() =0;
+        virtual void clear() =0;
     protected:
         Device device_;
     };

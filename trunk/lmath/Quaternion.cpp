@@ -148,6 +148,25 @@ namespace lmath
 #endif
     }
 
+    void Quaternion::normalize(f32 squaredLength)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(*this);
+        lm128 r1 = _mm_load1_ps(&squaredLength);
+        r1 = _mm_sqrt_ss(r1);
+        r1 = _mm_shuffle_ps(r1, r1, 0);
+        r0 = _mm_div_ps(r0, r1);
+
+        store(*this, r0);
+#else
+        f32 magOver = 1.0f / lmath::sqrt(squaredLength);
+        w_ *= magOver;
+        x_ *= magOver;
+        y_ *= magOver;
+        z_ *= magOver;
+#endif
+    }
+
     f32 Quaternion::dot(const Quaternion& q) const
     {
         f32 ret = w_*q.w_ + x_*q.x_ + y_*q.y_ + z_*q.z_;
@@ -529,6 +548,22 @@ namespace lmath
         x_ = x;
         y_ = y;
         z_ = z;
+#endif
+    }
+
+    void Quaternion::mul(f32 a, const Quaternion& q)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_load1_ps(&a);
+        lm128 r1 = load(q);
+        r0 = _mm_mul_ps(r0, r1);
+        store(*this, r0);
+
+#else
+        w_ = q.w_ * a;
+        x_ = q.x_ * a;
+        y_ = q.y_ * a;
+        z_ = q.z_ * a;
 #endif
     }
 

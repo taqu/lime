@@ -52,6 +52,11 @@ namespace lscene
         */
         void getPoints(lmath::Vector4* points);
 
+        /**
+        @brief 視錐台の８頂点取得
+        */
+        void getPoints(lmath::Vector4* points, f32 znear);
+
         static f32 calcFitZFar(const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax, const Camera& camera, f32 minz, f32 maxz);
 
         lmath::Plane planes_[6]; ///左、右、上、下、近、遠

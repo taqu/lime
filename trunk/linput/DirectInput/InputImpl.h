@@ -19,6 +19,7 @@ namespace linput
         InputImpl();
         ~InputImpl();
 
+        inline IDirectInput8* get();
         inline bool valid() const;
         bool initialize(HWND__* hWnd);
         void terminate();
@@ -31,6 +32,11 @@ namespace linput
 
         IDirectInput8* dinput_;
     };
+
+    inline IDirectInput8* InputImpl::get()
+    {
+        return dinput_;
+    }
 
     inline bool InputImpl::valid() const
     {

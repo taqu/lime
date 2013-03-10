@@ -197,6 +197,24 @@ namespace linput
         MouseAxis_Z,
         MouseAxis_Num,
     };
+
+    enum JoystickButton
+    {
+        JoystickButton_0 = 0,
+        JoystickButton_1,
+        JoystickButton_2,
+        JoystickButton_3,
+        JoystickButton_4,
+        JoystickButton_5,
+        JoystickButton_Num,
+    };
+
+    enum JoystickAxis
+    {
+        JoystickAxis_X = 0,
+        JoystickAxis_Y,
+        JoystickAxis_Num,
+    };
 }
 
 #endif //INC_LINPUTENUM_H__

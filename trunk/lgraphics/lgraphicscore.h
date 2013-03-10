@@ -84,6 +84,34 @@ namespace lgraphics
         T* ptr_;
     };
 
+    class Allocator
+    {
+    public:
+        virtual ~Allocator()
+        {}
+
+        virtual void* allocate(u32 size) =0;
+        virtual void deallocate(void* mem) =0;
+    };
+
+    inline u32 getColorRGBA32(u8 r, u8 g, u8 b, u8 a)
+    {
+        u32 ur = r;
+        u32 ug = g;
+        u32 ub = b;
+        u32 ua = a;
+        return (ur<<0) | (ug<<8) | (ub<<16) | (ua<<24);
+    }
+
+    inline u32 getColorARGB32(u8 r, u8 g, u8 b, u8 a)
+    {
+        u32 ur = r;
+        u32 ug = g;
+        u32 ub = b;
+        u32 ua = a;
+        return (ua<<0) | (ur<<8) | (ug<<16) | (ub<<24);
+    }
+
 //----------------------------------------------------------
 //---
 //--- プラットフォーム、API依存のdefine
@@ -109,6 +137,7 @@ static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (80);
 #endif
 
 static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (80);
+static const u32 MaxRenderTargets = 8;
 
 #elif defined(LIME_GLES1)
 //----------------------------------------------------------

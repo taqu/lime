@@ -13,8 +13,7 @@
 namespace lscene
 {
     Scene::Scene()
-        :shadowMapBias_(0.008f)
-        ,shadowMapZFar_(1.0f)
+        :shadowMapZFar_(1.0f)
     {
         setShadowMapSize(512);
 
@@ -142,10 +141,11 @@ namespace lscene
             znear,
             zfar);
 
+#if !defined(LIME_DX11)
         f32 scale = static_cast<f32>(getShadowMapSize()-2)*invScale;
         lightViewProjection_.m_[0][0] *= scale;
         lightViewProjection_.m_[1][1] *= scale;
-
+#endif
         lightViewProjection_.mul(lightViewProjection_, lightView);
     }
 

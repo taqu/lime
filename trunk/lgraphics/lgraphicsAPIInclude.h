@@ -54,7 +54,7 @@ namespace lgraphics
 {
 #if defined(LIME_GL)
     typedef s32 HANDLE;
-#else
+#elif defined(LIME_DX9)
     typedef D3DXHANDLE HANDLE;
 #endif
 }

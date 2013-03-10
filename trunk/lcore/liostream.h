@@ -138,6 +138,14 @@ namespace lcore
         {
             lcore::swap(file_, rhs.file_);
         }
+
+        u32 getSize(s32 afterOffset)
+        {
+            seekg(0, lcore::ios::end);
+            u32 size = tellg();
+            seekg(afterOffset, lcore::ios::beg);
+            return size;
+        }
     protected:
         fstream_base();
         fstream_base(const Char* filepath, int mode);

@@ -653,14 +653,6 @@
 			>
 		</File>
 		<File
-			RelativePath="..\utility.cpp"
-			>
-		</File>
-		<File
-			RelativePath="..\utility.h"
-			>
-		</File>
-		<File
 			RelativePath="..\utility_DualQuaternion.cpp"
 			>
 		</File>

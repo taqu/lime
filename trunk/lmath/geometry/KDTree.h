@@ -358,7 +358,7 @@ namespace lmath
         public:
             typedef BKDNode node_type;
             typedef TAlgorithm BKDAlgo;
-            typedef lcore::vector_arena<BKDNode> NodeVector;
+            typedef lcore::simple_vector_arena<BKDNode> NodeVector;
             typedef THitRecord hit_record_type;
 
             static const f64 EPSILON;

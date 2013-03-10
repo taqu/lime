@@ -145,7 +145,7 @@ namespace lcore
         c = state_[(index_+9)&15];
         c ^= c>>11;
         a = state_[index_] = b^c;
-        d = a^((a<<5)&0xDA442D20UL);
+        d = a^((a<<5)&0xDA442D24UL);
         index_ = (index_ + 15) & 15;
         a = state_[index_];
         state_[index_] = a^b^d^(a<<2)^(b<<18)^(c<<28);

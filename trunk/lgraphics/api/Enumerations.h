@@ -9,6 +9,8 @@
 */
 #if defined(LIME_DX9)
 #include "dx9/Enumerations.h"
+#elif defined(LIME_DX11)
+#include "dx11/Enumerations.h"
 #elif defined(LIME_GLES1)
 #include "gles1/Enumerations.h"
 #elif defined(LIME_GLES2)

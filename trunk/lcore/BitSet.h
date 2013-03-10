@@ -18,7 +18,77 @@ namespace lcore
     class BitSet
     {
     public:
+        typedef BitSet<4> this_type;
+
+        BitSet()
+        {
+            clear();
+        }
+
+        ~BitSet()
+        {
+        }
+
+        void clear()
+        {
+            for(u32 i=0; i<SizeInByte; ++i){
+                bits_[i] = 0;
+            }
+        }
+
+        /**
+        @brief フラグチェック
+        @param flag
+        */
+        inline bool check(u32 index) const
+        {
+            u8 bit = index & 0x07U;
+            index = index >> 8;
+            return ((bits_[index] & (0x01U<<bit)) != 0);
+        }
+
+        /**
+        @brief フラグ立てる
+        */
+        inline void set(u32 index)
+        {
+            u8 bit = index & 0x07U;
+            index = index >> 8;
+            bits_[index] |= (0x01U<<bit);
+        }
+
+        /**
+        @brief フラグ
+        */
+        inline void set(u32 index, bool flag)
+        {
+            if(flag){
+                set(index);
+            }else{
+                reset(index);
+            }
+        }
+
+        /**
+        @brief フラグ降ろす
+        */
+        inline void reset(u32 index)
+        {
+            u8 bit = index & 0x07U;
+            index = index >> 8;
+            bits_[index] &= ~(0x01U<<bit);
+        }
+
+        inline void set(const this_type& rhs)
+        {
+            for(u32 i=0; i<SizeInByte; ++i){
+                bits_[i] = rhs.bits_[i];
+            }
+        }
+
+        inline u8 getByte(u32 index) const{ return bits_[index];}
     private:
+        u8 bits_[SizeInByte];
     };
 
     //----------------------------------------------------
@@ -28,7 +98,12 @@ namespace lcore
     template<u32 SizeInByte>
     inline bool compare(const BitSet<SizeInByte>& b0, const BitSet<SizeInByte>& b1)
     {
-        return false;
+        for(u32 i=0; i<SizeInByte; ++i){
+            if(b0.getByte(i) != b1.getByte(i)){
+                return false;
+            }
+        }
+        return true;
     }
 
 
@@ -61,25 +136,25 @@ namespace lcore
         @brief フラグチェック
         @param flag
         */
-        inline bool check(u32 flag) const
+        inline bool check(u32 index) const
         {
-            return ((bits_ & flag) != 0);
+            return ((bits_ & (0x01U<<index)) != 0);
         }
 
         /**
         @brief フラグ立てる
         */
-        inline void set(u32 flag)
+        inline void set(u32 index)
         {
-            bits_ |= flag;
+            bits_ |= (0x01U<<index);
         }
 
         /**
         @brief フラグ降ろす
         */
-        inline void reset(u32 flag)
+        inline void reset(u32 index)
         {
-            bits_ &= ~flag;
+            bits_ &= ~(0x01U<<index);
         }
 
         inline void set(const this_type& rhs)

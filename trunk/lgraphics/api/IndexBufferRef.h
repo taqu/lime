@@ -11,6 +11,9 @@
 #if defined(LIME_DX9)
 #include "dx9/IndexBufferRef.h"
 
+#elif defined(LIME_DX11)
+#include "dx11/IndexBufferRef.h"
+
 #elif defined(LIME_GLES1)
 #include "gles1/IndexBufferRef.h"
 

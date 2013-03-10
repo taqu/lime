@@ -58,6 +58,26 @@ namespace lmath
         return *this;
     }
 
+    Vector3& Vector3::operator*=(const Vector3& v)
+    {
+        x_ *= v.x_;
+        y_ *= v.y_;
+        z_ *= v.z_;
+        return *this;
+    }
+
+    Vector3& Vector3::operator/=(const Vector3& v)
+    {
+        LASSERT(!lmath::isEqual(v.x_, 0.0f));
+        LASSERT(!lmath::isEqual(v.y_, 0.0f));
+        LASSERT(!lmath::isEqual(v.z_, 0.0f));
+
+        x_ /= v.x_;
+        y_ /= v.y_;
+        z_ /= v.z_;
+        return *this;
+    }
+
     void Vector3::normalize()
     {
         f32 l = lengthSqr();

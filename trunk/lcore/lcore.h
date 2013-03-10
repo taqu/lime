@@ -179,6 +179,49 @@ namespace lcore
         r = tmp;
     }
 
+    template<class T>
+    inline T lerp(const T& v0, const T& v1, const T& ratio)
+    {
+        return (1.0f-ratio)*v0 + ratio*v1;
+    }
+
+    template<class T>
+    inline const T& maximum(const T& left, const T& right)
+    {
+        return (left<right)? right : left;
+    }
+
+    template<class T>
+    inline const T& minimum(const T& left, const T& right)
+    {
+        return (right<left)? right : left;
+    }
+
+    template<class T>
+    inline T clamp(T val, T low, T high)
+    {
+        if (val <= low) return low;
+        else if (val >= high) return high;
+        else return val;
+    }
+
+    inline f32 clamp01(f32 v)
+    {
+        s32* t = (s32*)&v;
+        s32 s = (*t) >> 31;
+        s = ~s;
+        *t &= s;
+
+        v -= 1.0f;
+        s = (*t) >> 31;
+        *t &= s;
+        v += 1.0f;
+        return v;
+    }
+
+
+    bool isLittleEndian();
+
     struct U32F32Union
     {
         union

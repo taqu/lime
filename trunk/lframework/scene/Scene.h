@@ -7,10 +7,6 @@
 */
 
 #include <lmath/lmath.h>
-#include <lgraphics/api/SamplerState.h>
-#include <lgraphics/api/RenderStateRef.h>
-#include <lgraphics/api/TextureRef.h>
-#include <lgraphics/api/SurfaceRef.h>
 
 #include "LightEnvironment.h"
 #include "Camera.h"
@@ -46,6 +42,11 @@ namespace lscene
         const lmath::Matrix44& getViewProjMatrix() const
         {
             return camera_.getViewProjMatrix();
+        }
+
+        const Camera& getCamera() const
+        {
+            return camera_;
         }
 
         Camera& getCamera()
@@ -97,15 +98,6 @@ namespace lscene
             shadowTextureOffset_ = 0.5f + (0.5f / shadowMapSize_);
         }
 
-        f32 getShadowMapBias() const
-        {
-            return shadowMapBias_;
-        }
-
-        void setShadowMapBias(f32 bias)
-        {
-            shadowMapBias_ = bias;
-        }
 
         f32 getShadowMapZFar() const
         {
@@ -117,28 +109,6 @@ namespace lscene
             shadowMapZFar_ = zfar;
         }
 
-        //const lgraphics::SamplerState& getSamplerState() const
-        //{
-        //    return depthSamplerState_;
-        //}
-
-        //lgraphics::RenderStateRef& getDepthRenderState()
-        //{
-        //    return depthState_;
-        //}
-
-        //const lgraphics::TextureRef& getDepthTexture() const
-        //{
-        //    return depthTexture_;
-        //}
-
-        //lgraphics::SurfaceRef& getDepthSurface()
-        //{
-        //    return depthSurface_;
-        //}
-
-        //void resetDepthTexture();
-
         void calcLightViewProjection();
         void mulShadowTextureOffset(lmath::Matrix44& mat) const;
     private:
@@ -149,15 +119,8 @@ namespace lscene
 
         lmath::Vector4 sceneAABBMin_;
         lmath::Vector4 sceneAABBMax_;
-        
-        //lgraphics::TextureRef depthTexture_;
-        //lgraphics::SurfaceRef depthSurface_;
-
-        //lgraphics::SamplerState depthSamplerState_;
-        //lgraphics::RenderStateRef depthState_;
 
         u32 shadowMapSize_;
-        f32 shadowMapBias_;
         f32 shadowMapZFar_;
         f32 shadowTextureOffset_;
     };
