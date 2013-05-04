@@ -21,6 +21,40 @@
 
 namespace lcore
 {
+    namespace
+    {
+        u32 getRandomBasedOnDisckUsage()
+        {
+            u32 t = getTime();
+            lcore::ClockType counter = getPerformanceCounter();
+
+            u32 other = 0;
+
+            LARGE_INTEGER freeBytesAvalable;
+            LARGE_INTEGER totalBytes;
+            LARGE_INTEGER totalFreeBytes;
+
+            u32 discBytes = 0;
+            BOOL ret = FALSE;
+            ret = GetDiskFreeSpaceEx(
+                NULL,
+                (PULARGE_INTEGER)&freeBytesAvalable,
+                (PULARGE_INTEGER)&totalBytes,
+                (PULARGE_INTEGER)&totalFreeBytes);
+
+            if(ret){
+                discBytes = totalFreeBytes.LowPart;
+            }
+
+            MEMORYSTATUS memstat;
+
+            GlobalMemoryStatus(&memstat);
+            u32 memoryBytes = memstat.dwAvailPhys;
+            other = ( (discBytes<<16) | (memoryBytes & 0xFFFFU));
+            return ((t<<16) | static_cast<u32>(counter&0xFFFFU)) ^ other;
+        }
+    }
+
     u32 getStaticSeed()
     {
         return 13249876;
@@ -28,36 +62,25 @@ namespace lcore
 
     u32 getDefaultSeed()
     {
-        u32 t = getTime();
-        u32 counter = getPerformanceCounter();
-
-        u32 other = 0;
+        u32 seed;
 
 #ifdef _WIN32
-        LARGE_INTEGER freeBytesAvalable;
-        LARGE_INTEGER totalBytes;
-        LARGE_INTEGER totalFreeBytes;
 
-        u32 discBytes = 0;
-        BOOL ret = FALSE;
-        ret = GetDiskFreeSpaceEx(
-            NULL,
-            (PULARGE_INTEGER)&freeBytesAvalable,
-            (PULARGE_INTEGER)&totalBytes,
-            (PULARGE_INTEGER)&totalFreeBytes);
+//#if 0x0501<=WINVER //XPˆÈã
+//        if(TRUE != RtlGenRandom(&seed, sizeof(u32))){
+//            seed = getRandomBasedOnDisckUsage();
+//        }
+//
+//#else
+        seed = getRandomBasedOnDisckUsage();
+//#endif //WINVER
 
-        if(ret){
-            discBytes = totalFreeBytes.LowPart;
-        }
+#else //_WIN32
 
-        MEMORYSTATUS memstat;
-
-        GlobalMemoryStatus(&memstat);
-        u32 memoryBytes = memstat.dwAvailPhys;
-        other = ( (discBytes<<16) | (memoryBytes));
+        u32 t = getTime();
+        lcore::ClockType counter = getPerformanceCounter();
+        seed = ((t<<16) | static_cast<u32>(counter&0xFFFFU));
 #endif
-
-        u32 seed = ((t<<16) | (counter&0xFFFFU)) ^ other;
         return seed;
     }
 
@@ -77,9 +100,9 @@ namespace lcore
     void RandomXorshift::srand(u32 seed)
     {
         x_ = seed & 0xFFFFFFFFU;
-        y_ = rand(x_);
-        z_ = rand(y_);
-        w_ = rand(z_);
+        y_ = rand(x_, 1);
+        z_ = rand(y_, 2);
+        w_ = rand(z_, 3);
     }
 
     u32 RandomXorshift::rand()
@@ -111,9 +134,9 @@ namespace lcore
         return rand()*(1.0/4294967295.0); 
     }
 
-    u32 RandomXorshift::rand(u32 v)
+    u32 RandomXorshift::rand(u32 v, u32 i)
     {
-        return (v*1664525 + 1013904223);
+        return (1812433253 * (v^(v >> 30)) + i);
     }
 
 

@@ -6,6 +6,7 @@
 @date 2011/02/05 create
 */
 #include "lcore.h"
+#include <limits>
 
 namespace lcore
 {
@@ -143,18 +144,23 @@ namespace lcore
     //--- タイム関係
     //---
     //---------------------------------------------------------
+#if defined(ANDROID) || defined(__linux__)
+    typedef clock_t ClockType;
+#else
+    typedef u64 ClockType;
+#endif
+
     /// カウント取得
-    u32 getPerformanceCounter();
+    ClockType getPerformanceCounter();
 
     /// 秒間カウント数
-    u32 getPerformanceFrequency();
+    ClockType getPerformanceFrequency();
 
-    /// マイクロ秒単位で時間取得
-    u32 getTimeFromPerformanCounter();
+    /// 秒単位の時間差分計算
+    f32 calcTime(ClockType prevTime, ClockType currentTime);
 
     /// ミリ秒単位の時間を取得
     u32 getTime();
-
 
     //---------------------------------------------------------
     //---
@@ -230,19 +236,17 @@ namespace lcore
     public:
         static T epsilon() LIME_THROW0
         {
-            return (T(0));
+            return std::numeric_limits<T>::epsilon();
         }
-    };
 
-    // 特殊化
-    template<>
-    class numeric_limits<f32>
-    {
-    public:
-
-        static f32 epsilon() LIME_THROW0
+        static T minimum() LIME_THROW0
         {
-            return (FLT_EPSILON);
+            return (std::numeric_limits<T>::min)();
+        }
+
+        static T maximum() LIME_THROW0
+        {
+            return (std::numeric_limits<T>::max)();
         }
     };
 }

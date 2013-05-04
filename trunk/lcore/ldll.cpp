@@ -18,7 +18,6 @@
 #include <dlfcn.h>
 #endif
 
-#include "lcore.h"
 #include "ldll.h"
 
 namespace lcore
@@ -29,6 +28,7 @@ namespace lcore
     }
 
     DLL::DLL(const char* path)
+        :module_(NULL)
     {
         open(path);
     }

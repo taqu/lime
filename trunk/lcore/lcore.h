@@ -182,7 +182,8 @@ namespace lcore
     template<class T>
     inline T lerp(const T& v0, const T& v1, const T& ratio)
     {
-        return (1.0f-ratio)*v0 + ratio*v1;
+        return v0 + ratio*(v1 - v0);
+        //return (1.0f-ratio)*v0 + ratio*v1;
     }
 
     template<class T>

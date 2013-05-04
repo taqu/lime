@@ -67,21 +67,21 @@ namespace lcore
     //---
     //---------------------------------------------------------
     // カウント取得
-    u32 getPerformanceCounter()
+    ClockType getPerformanceCounter()
     {
 #ifdef _WIN32
         LARGE_INTEGER count;
         QueryPerformanceCounter(&count);
-        return static_cast<u32>( count.QuadPart );
+        return count.QuadPart;
 #else
         clock_t t = 0;
         t = clock();
-        return static_cast<u32>(t);
+        return t;
 #endif
     }
 
     // 秒間カウント数
-    u32 getPerformanceFrequency()
+    ClockType getPerformanceFrequency()
     {
 #ifdef _WIN32
         LARGE_INTEGER freq;
@@ -92,23 +92,12 @@ namespace lcore
 #endif
     }
 
-    // マイクロ秒単位で時間取得
-    u32 getTimeFromPerformanCounter()
+    // 秒単位の時間差分計算
+    f32 calcTime(ClockType prevTime, ClockType currentTime)
     {
-#ifdef _WIN32
-        LARGE_INTEGER count;
-        LARGE_INTEGER freq;
-        QueryPerformanceCounter(&count);
-        QueryPerformanceFrequency(&freq);
-        return static_cast<u32>( (count.QuadPart*(1000*1000))/freq.QuadPart );
-#else
-        clock_t t = 0;
-        t = clock();
-        return static_cast<u32>( (t * (1000*1000))/CLOCKS_PER_SEC );
-        //rusage t;
-        //getrusage(RUSAGE_SELF, &t);
-        //return static_cast<u32>(t.ru_utime.tv_usec);
-#endif
+        ClockType d = (currentTime>=prevTime)? currentTime - prevTime : lcore::numeric_limits<ClockType>::maximum() - prevTime + currentTime;
+        f64 delta = static_cast<f64>(d)/getPerformanceFrequency();
+        return static_cast<f32>(delta);
     }
 
     // ミリ秒単位の時間を取得

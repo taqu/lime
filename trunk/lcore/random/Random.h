@@ -46,7 +46,7 @@ namespace lcore
         f64 drand();
 
     private:
-        u32 rand(u32 v);
+        u32 rand(u32 v, u32 i);
 
         u32 x_;
         u32 y_;

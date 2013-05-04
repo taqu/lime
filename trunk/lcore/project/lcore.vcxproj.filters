@@ -1,0 +1,94 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="intrusive">
+      <UniqueIdentifier>{549ffc22-1270-4462-8810-b926da3e3177}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="smart_ptr">
+      <UniqueIdentifier>{6b5fd3c0-09d5-425a-a73a-527671c94145}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="random">
+      <UniqueIdentifier>{fb37fc43-dfb8-48e6-a3c5-60ecc5ca8081}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="async">
+      <UniqueIdentifier>{1327b7e5-781e-45f3-8e3d-13321009aa6e}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\intrusive\AVLTree.h">
+      <Filter>intrusive</Filter>
+    </ClInclude>
+    <ClInclude Include="..\intrusive\List.h">
+      <Filter>intrusive</Filter>
+    </ClInclude>
+    <ClInclude Include="..\smart_ptr\intrusive_ptr.h">
+      <Filter>smart_ptr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\smart_ptr\ScopedPtr.h">
+      <Filter>smart_ptr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\smart_ptr\shared_ptr.h">
+      <Filter>smart_ptr</Filter>
+    </ClInclude>
+    <ClInclude Include="..\random\Random.h">
+      <Filter>random</Filter>
+    </ClInclude>
+    <ClInclude Include="..\async\Socket.h">
+      <Filter>async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\async\SyncObject.h">
+      <Filter>async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\async\Thread.h">
+      <Filter>async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AllocatorMalloc.h" />
+    <ClInclude Include="..\AllocatorNew.h" />
+    <ClInclude Include="..\BitSet.h" />
+    <ClInclude Include="..\Buffer.h" />
+    <ClInclude Include="..\CLibrary.h" />
+    <ClInclude Include="..\Container.h" />
+    <ClInclude Include="..\CPU.h" />
+    <ClInclude Include="..\FixedArray.h" />
+    <ClInclude Include="..\Hash.h" />
+    <ClInclude Include="..\HashMap.h" />
+    <ClInclude Include="..\HashSet.h" />
+    <ClInclude Include="..\LangSpec.h" />
+    <ClInclude Include="..\lcore.h" />
+    <ClInclude Include="..\ldll.h" />
+    <ClInclude Include="..\liostream.h" />
+    <ClInclude Include="..\MemoryArena.h" />
+    <ClInclude Include="..\NonCopyable.h" />
+    <ClInclude Include="..\Nothing.h" />
+    <ClInclude Include="..\Pair.h" />
+    <ClInclude Include="..\Search.h" />
+    <ClInclude Include="..\Singleton.h" />
+    <ClInclude Include="..\Sort.h" />
+    <ClInclude Include="..\Stack.h" />
+    <ClInclude Include="..\String.h" />
+    <ClInclude Include="..\Tree.h" />
+    <ClInclude Include="..\utility.h" />
+    <ClInclude Include="..\Vector.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\random\Random.cpp">
+      <Filter>random</Filter>
+    </ClCompile>
+    <ClCompile Include="..\async\Socket.cpp">
+      <Filter>async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\async\SyncObject.cpp">
+      <Filter>async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\async\Thread.cpp">
+      <Filter>async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Buffer.cpp" />
+    <ClCompile Include="..\CPU.cpp" />
+    <ClCompile Include="..\HashMap.cpp" />
+    <ClCompile Include="..\lcore.cpp" />
+    <ClCompile Include="..\ldll.cpp" />
+    <ClCompile Include="..\liostream.cpp" />
+    <ClCompile Include="..\utlity.cpp" />
+  </ItemGroup>
+</Project>
