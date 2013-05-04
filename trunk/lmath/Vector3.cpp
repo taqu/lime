@@ -4,12 +4,25 @@
 @date 2009/01/17 create
 */
 #include "Vector3.h"
+#include "Vector4.h"
 #include "Matrix34.h"
 #include "Matrix44.h"
 #include "Quaternion.h"
 
 namespace lmath
 {
+    Vector3::Vector3(const lmath::Vector4& v)
+        :x_(v.x_)
+        ,y_(v.y_)
+        ,z_(v.z_)
+    {
+    }
+
+    void Vector3::set(const lmath::Vector4& v)
+    {
+        x_ = v.x_; y_ = v.y_; z_ = v.z_;
+    }
+
     void Vector3::cross(const Vector3& v0, const Vector3& v1)
     {
 //#if defined(LMATH_USE_SSE)

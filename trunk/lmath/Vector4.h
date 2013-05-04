@@ -523,8 +523,7 @@ namespace lmath
 
     inline void Vector4::min(const Vector4& v0, const Vector4& v1)
     {
-//#if defined(LMATH_USE_SSE)
-#if 0
+#if defined(LMATH_USE_SSE)
         lm128 r0 = load(v0);
         lm128 r1 = load(v1);
         r0 = _mm_min_ps(r0, r1);
@@ -540,8 +539,7 @@ namespace lmath
 
     inline void Vector4::max(const Vector4& v0, const Vector4& v1)
     {
-//#if defined(LMATH_USE_SSE)
-#if 0
+#if defined(LMATH_USE_SSE)
         lm128 r0 = load(v0);
         lm128 r1 = load(v1);
         r0 = _mm_max_ps(r0, r1);

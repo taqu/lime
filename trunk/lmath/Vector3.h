@@ -10,6 +10,7 @@
 
 namespace lmath
 {
+    class Vector4;
     class Matrix34;
     class Matrix44;
     class Quaternion;
@@ -31,10 +32,14 @@ namespace lmath
             ,z_(z)
         {}
 
+        explicit Vector3(const lmath::Vector4& v);
+
         inline void set(f32 x, f32 y, f32 z)
         {
             x_ = x; y_ = y; z_ = z;
         }
+
+        void set(const lmath::Vector4& v);
 
         inline void zero();
         inline void one();

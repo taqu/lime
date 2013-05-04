@@ -96,6 +96,15 @@ namespace lmath
         f32 determinant() const;
         void invert();
 
+        /// 3x3部分行列の転置
+        void transpose33();
+
+        /// 3x3部分行列の行列式
+        f32 determinant33() const;
+
+        /// 3x3部分行列の逆行列
+        void invert33();
+
         /// 平行移動セット
         inline void setTranslate(const Vector3& v);
 
@@ -141,6 +150,9 @@ namespace lmath
         void lookAt(const Vector4& eye, const Vector4& at, const Vector4& up);
         void lookAt(const Vector3& eye, const Vector3& at, const Vector3& up);
 
+        void viewPointAlign(const Matrix44& view, const Vector4& position);
+        void axisAlign(const Vector4& axis, const Matrix44& view, const Vector4& position);
+
         /**
         @brief 透視投影
         */
@@ -184,6 +196,8 @@ namespace lmath
             getTranslate(trans.x_, trans.y_, trans.z_);
             trans.w_ = 0.0f;
         }
+
+        void getRow(Vector4& dst, s32 row) const;
 
         bool isNan() const;
 

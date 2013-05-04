@@ -370,5 +370,8 @@ namespace lmath
         v *= cs;
         v += projected;
     }
+
+
+    f32 gain(f32 a, f32 b)    {        if(a<0.001f){            return 0.0f;        }        if(0.999f<a){            return 1.0f;        }        static const f32 InvLogHalf = static_cast<f32>(1.0/-0.30102999566);        f32 p = lmath::log(1.0f-b)*InvLogHalf;        if (a < 0.5f){            return lmath::pow(2.0f * a, p) * 0.5f;        }else{            return 1.0f - lmath::pow(2.0f - 2.0f*a, p) * 0.5f;        }    }
 }
 

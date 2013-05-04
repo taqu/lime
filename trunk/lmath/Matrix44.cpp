@@ -742,6 +742,136 @@ namespace lmath
 #endif
     }
 
+    // 3x3部分行列の転置
+    void Matrix44::transpose33()
+    {
+        lcore::swap(m_[0][1], m_[1][0]);
+        lcore::swap(m_[0][2], m_[2][0]);
+        lcore::swap(m_[1][2], m_[2][1]);
+
+    }
+
+    f32 Matrix44::determinant33() const
+    {
+        return m_[0][0] * (m_[1][1]*m_[2][2] - m_[1][2]*m_[2][1])
+             + m_[0][1] * (m_[1][2]*m_[2][0] - m_[1][0]*m_[2][2])
+             + m_[0][2] * (m_[1][0]*m_[2][1] - m_[1][1]*m_[2][0]);
+    }
+
+    // 3x3部分行列の逆行列
+    void Matrix44::invert33()
+    {
+#if defined(LMATH_USE_SSE)
+        LIME_ALIGN16 f32 buffer[4];
+
+        lm128 c0 = _mm_loadu_ps(&m_[0][0]);
+        lm128 c1 = _mm_loadu_ps(&m_[1][0]);
+        lm128 c2 = _mm_loadu_ps(&m_[2][0]);
+
+        lm128 t0 = _mm_shuffle_ps(c1, c1, 0xC9);//11 12 10 13
+        lm128 t1 = _mm_shuffle_ps(c2, c2, 0xD2);//22 20 21 23
+
+        lm128 t2 = _mm_shuffle_ps(c1, c1, 0xD2);//12 10 11 13
+        lm128 t3 = _mm_shuffle_ps(c2, c2, 0xC9);//21 22 20 23
+
+        t0 = _mm_mul_ps(t0, t1);
+        t2 = _mm_mul_ps(t2, t3);
+        t0 = _mm_sub_ps(t0, t2); //余因子行列　0列目
+
+        //行列式の逆数計算
+        //-------------------------------------------------------
+        lm128 det = _mm_mul_ps(c0, t0);
+        //_mm_store_ps(buffer, det);
+        //buffer[0] = buffer[0] + buffer[1] + buffer[2]; //水平演算
+        //det = _mm_load_ss(buffer);
+
+        //水平演算
+        det = _mm_add_ps( _mm_shuffle_ps(det, det, 0x4E), det);
+        det = _mm_add_ps( _mm_shuffle_ps(det, det, 0xB1), det);
+
+        //Newton-Raphson法で、行列式の逆数を計算
+        {
+            t1 = _mm_rcp_ss(det);
+            det = _mm_mul_ss(det, t1);
+            det = _mm_mul_ss(det, t1);
+            t1 = _mm_add_ss(t1, t1);
+            det = _mm_sub_ss(t1, det);
+            det = _mm_shuffle_ps(det, det, 0);
+        }
+
+        //0列目
+        t0 = _mm_mul_ps(t0, det);
+        _mm_store_ps(buffer, t0);
+
+        m_[0][0] = buffer[0];
+        m_[1][0] = buffer[1];
+        m_[2][0] = buffer[2];
+
+
+        t0 = _mm_shuffle_ps(c0, c0, 0xD2);//02 00 01 03
+        t1 = _mm_shuffle_ps(c2, c2, 0xC9);//21 22 20 23
+
+        t2 = _mm_shuffle_ps(c0, c0, 0xC9);//01 02 00 03
+        t3 = _mm_shuffle_ps(c2, c2, 0xD2);//22 20 21 23
+
+        t0 = _mm_mul_ps(t0, t1);
+        t2 = _mm_mul_ps(t2, t3);
+        t0 = _mm_sub_ps(t0, t2); //余因子行列　1列目
+
+        //1列目
+        t0 = _mm_mul_ps(t0, det);
+        _mm_store_ps(buffer, t0);
+
+        m_[0][1] = buffer[0];
+        m_[1][1] = buffer[1];
+        m_[2][1] = buffer[2];
+
+
+        t0 = _mm_shuffle_ps(c0, c0, 0xC9);//01 02 00 03
+        t1 = _mm_shuffle_ps(c1, c1, 0xD2);//12 10 11 13
+
+        t2 = _mm_shuffle_ps(c0, c0, 0xD2);//02 00 01 03
+        t3 = _mm_shuffle_ps(c1, c1, 0xC9);//11 12 10 13
+
+        t0 = _mm_mul_ps(t0, t1);
+        t2 = _mm_mul_ps(t2, t3);
+        t0 = _mm_sub_ps(t0, t2); //余因子行列　2列目
+
+        //2列目
+        t0 = _mm_mul_ps(t0, det);
+        _mm_store_ps(buffer, t0);
+
+        m_[0][2] = buffer[0];
+        m_[1][2] = buffer[1];
+        m_[2][2] = buffer[2];
+#else
+        f32 det = determinant33();
+
+        LASSERT(isEqual(det, 0.0f) == false);
+
+        f32 invDet = 1.0f / det;
+
+        Matrix34 ret;
+        ret.m_[0][0] = (m_[1][1]*m_[2][2] - m_[1][2]*m_[2][1]) * invDet;
+        ret.m_[0][1] = (m_[0][2]*m_[2][1] - m_[0][1]*m_[2][2]) * invDet;
+        ret.m_[0][2] = (m_[0][1]*m_[1][2] - m_[0][2]*m_[1][1]) * invDet;
+
+        ret.m_[1][0] = (m_[1][2]*m_[2][0] - m_[1][0]*m_[2][2]) * invDet;
+        ret.m_[1][1] = (m_[0][0]*m_[2][2] - m_[0][2]*m_[2][0]) * invDet;
+        ret.m_[1][2] = (m_[0][2]*m_[1][0] - m_[0][0]*m_[1][2]) * invDet;
+
+        ret.m_[2][0] = (m_[1][0]*m_[2][1] - m_[1][1]*m_[2][0]) * invDet;
+        ret.m_[2][1] = (m_[0][1]*m_[2][0] - m_[0][0]*m_[2][1]) * invDet;
+        ret.m_[2][2] = (m_[0][0]*m_[1][1] - m_[0][1]*m_[1][0]) * invDet;
+
+        ret.m_[0][3] = m_[0][3];
+        ret.m_[1][3] = m_[1][3];
+        ret.m_[2][3] = m_[2][3];
+
+        *this = ret;
+#endif
+    }
+
     void Matrix44::translate(const Vector3& v)
     {
         m_[0][3] += v.x_;
@@ -1044,6 +1174,43 @@ namespace lmath
         m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
     }
 
+    void Matrix44::viewPointAlign(const Matrix44& view, const Vector4& position)
+    {
+        Vector4 axis(position.x_-view(0,3), position.y_-view(1,3), position.z_-view(2,3), 0.0f);
+        f32 l = axis.lengthSqr();
+        if(lmath::isZeroPositive(l)){
+            axis.set(view(2,0), view(2,1), view(2,2), 0.0f);
+            axis.normalize();
+        }else{
+            axis /= lmath::sqrt(l);
+        }
+        axisAlign(axis, view, position);
+    }
+
+    void Matrix44::axisAlign(const Vector4& axis, const Matrix44& view, const Vector4& position)
+    {
+        Vector4 zaxis = axis;
+        zaxis.normalize();
+
+        Vector4 yaxis(view(1,0), view(1,1), view(1,2), 0.0f);
+        f32 d = yaxis.dot(zaxis);
+        if(0.999f<d){
+            yaxis.set(-view(2,0), -view(2,1), -view(2,2), 0.0f);
+        }
+
+        Vector4 xaxis;
+        xaxis.cross3(yaxis, zaxis);
+        xaxis.normalize();
+
+        yaxis.cross3(zaxis, xaxis);
+
+        m_[0][0] = xaxis.x_; m_[0][1] = yaxis.x_; m_[0][2] = zaxis.x_; m_[0][3] = position.x_;
+        m_[1][0] = xaxis.y_; m_[1][1] = yaxis.y_; m_[1][2] = zaxis.y_; m_[1][3] = position.y_;
+        m_[2][0] = xaxis.z_; m_[2][1] = yaxis.z_; m_[2][2] = zaxis.z_; m_[2][3] = position.z_;
+        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
+
+    }
+
     void Matrix44::perspective(f32 width, f32 height, f32 znear, f32 zfar)
     {
         f32 invDepth = 1.0f/(zfar-znear);
@@ -1105,6 +1272,18 @@ namespace lmath
         m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
         m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = invDepth; m_[2][3] = -znear*invDepth;
         m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = 1.0f; m_[3][3] = 0.0f;
+    }
+
+    void Matrix44::getRow(Vector4& dst, s32 row) const
+    {
+        LASSERT(0<=row && row<4);
+
+#if defined(LMATH_USE_SSE)
+        lmath::lm128 r = _mm_loadu_ps(&m_[row][0]);
+        Vector4::store(dst, r);
+#else
+        dst.set(m_[row][0], m_[row][1], m_[row][2], m_[row][3]);
+#endif
     }
 
     bool Matrix44::isNan() const

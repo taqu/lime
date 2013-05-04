@@ -18,11 +18,14 @@ namespace lmath
     //---
     //---------------------------------------------------------------------------------
     // 線分と平面の交差判定
-    bool testRayPlane(f32& t, const Ray& ray, const Plane& plane)
+    bool testRayPlane_NoSIMD(f32& t, const Ray& ray, const Plane& plane)
     {
         // 0割り、0/0が起きた場合は、条件分岐で交差していないと判定される(IEEE754準拠
-        f32 t0 = plane.d_ - plane.normal_.dot(ray.origin_);
-        t0 /= plane.normal_.dot(ray.direction_);
+        lmath::Vector3 n;
+        plane.getNormal(n);
+
+        f32 t0 = plane.getD() - n.dot(ray.origin_);
+        t0 /= n.dot(ray.direction_);
 
         // INFとの比較は正常に行われる。NaNと数値の判定は常に偽(IEEE754準拠
         if(t0>=0.0 && t0<=ray.t_){
@@ -32,11 +35,14 @@ namespace lmath
         return false;
     }
 
-    bool testRayPlane(f64& t, const Ray& ray, const Plane& plane)
+    bool testRayPlane_NoSIMD(f64& t, const Ray& ray, const Plane& plane)
     {
         // 0割り、0/0が起きた場合は、条件分岐で交差していないと判定される(IEEE754準拠
-        f64 t0 = plane.d_ - plane.normal_.dot(ray.origin_);
-        t0 /= plane.normal_.dot(ray.direction_);
+        lmath::Vector3 n;
+        plane.getNormal(n);
+
+        f64 t0 = plane.getD() - n.dot(ray.origin_);
+        t0 /= n.dot(ray.direction_);
 
         // INFとの比較は正常に行われる。NaNと数値の判定は常に偽(IEEE754準拠
         if(t0>=0.0 && t0<=ray.t_){
@@ -49,13 +55,15 @@ namespace lmath
 
     //-----------------------------------------------------------
     // 線分と球の交差判定
-    bool testRaySphere(f32& t, const Ray& ray, const Sphere& sphere)
+    bool testRaySphere_NoSIMD(f32& t, const Ray& ray, const Sphere& sphere)
     {
-        Vector3 m = ray.origin_;
-        m -= sphere.position_;
+        Vector3 m;
+        sphere.getPosition(m);
+        m.sub(ray.origin_, m);
+
 
         f32 b = m.dot(ray.direction_);
-        f32 c = m.dot(m) - sphere.radius_ * sphere.radius_;
+        f32 c = m.dot(m) - sphere.getRadius() * sphere.getRadius();
 
         // 線分の起点が球の外で、向きが球の方向と逆
         if(c>0.0f && b > 0.0f){
@@ -74,13 +82,14 @@ namespace lmath
         return true;
     }
 
-    bool testRaySphere(f64& t, const Ray& ray, const Sphere& sphere)
+    bool testRaySphere_NoSIMD(f64& t, const Ray& ray, const Sphere& sphere)
     {
-        Vector3 m = ray.origin_;
-        m -= sphere.position_;
+        Vector3 m;
+        sphere.getPosition(m);
+        m.sub(ray.origin_, m);
 
         f64 b = m.dot(ray.direction_);
-        f64 c = m.dot(m) - sphere.radius_ * sphere.radius_;
+        f64 c = m.dot(m) - sphere.getRadius() * sphere.getRadius();
 
         // 線分の起点が球の外で、向きが球の方向と逆
         if(c>0.0 && b > 0.0){
@@ -101,7 +110,7 @@ namespace lmath
 
     //-----------------------------------------------------------
     // 線分と三角形の交差判定
-    bool testRayTriangle(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    bool testRayTriangle_NoSIMD(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
         Vector3 d0 = v1;
         d0 -= v0;
@@ -157,7 +166,7 @@ namespace lmath
         return true;
     }
 
-    bool testRayTriangle(f64& t, f64& u, f64& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    bool testRayTriangle_NoSIMD(f64& t, f64& u, f64& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
         Vector3 d0 = v1;
         d0 -= v0;
@@ -214,7 +223,7 @@ namespace lmath
     }
 
 
-    bool testRayRectangle(f32& t, const Ray& ray, const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3)
+    bool testRayRectangle_NoSIMD(f32& t, const Ray& ray, const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3)
     {
         Vector3 d0 = p0;
         d0 -= ray.origin_;
@@ -241,13 +250,13 @@ namespace lmath
 
     //-----------------------------------------------------------
     // 線分とAABBの交差判定
-    bool testRayAABB(f32& tmin, f32& tmax, const Ray& ray, const Vector3& bmin, const Vector3& bmax)
+    bool testRayAABB_NoSIMD(f32& tmin, f32& tmax, const Ray& ray, const Vector3& bmin, const Vector3& bmax)
     {
         tmin = -FLT_MAX;
         tmax = FLT_MAX;
         
         for(s32 i=0; i<3; ++i){
-            if(lmath::absolute(ray.direction_[i])<F32_EPSILON){
+            if(lcore::absolute(ray.direction_[i])<F32_EPSILON){
                 //光線とスラブが平行で、原点がスラブの中にない
                 if(ray.origin_[i]<bmin[i] || bmax[i]<ray.origin_[i]){
                     return false;
@@ -277,13 +286,13 @@ namespace lmath
         return true;
     }
 
-    bool testRayAABB(f64& tmin, f64& tmax, const Ray& ray, const Vector3& bmin, const Vector3& bmax)
+    bool testRayAABB_NoSIMD(f64& tmin, f64& tmax, const Ray& ray, const Vector3& bmin, const Vector3& bmax)
     {
         tmin = -FLT_MAX;//-std::numeric_limits<f64>::max();
         tmax = FLT_MAX;//std::numeric_limits<f64>::max();
         
         for(s32 i=0; i<3; ++i){
-            if(lmath::absolute(ray.direction_[i])<F64_EPSILON){
+            if(lcore::absolute(ray.direction_[i])<F64_EPSILON){
                 //光線とスラブが平行で、原点がスラブの中にない
                 if(ray.origin_[i]<bmin[i] || bmax[i]<ray.origin_[i]){
                     return false;
@@ -314,7 +323,7 @@ namespace lmath
     }
 
     //-----------------------------------------------------------
-    bool testRayAABB(const Ray& ray, const Vector3& bmin, const Vector3& bmax)
+    bool testRayAABB_NoSIMD(const Ray& ray, const Vector3& bmin, const Vector3& bmax)
     {
         //AABB半分
         Vector3 e = bmax;
@@ -332,29 +341,29 @@ namespace lmath
         m -= bmax;
 
         //
-        f32 adx = absolute(d._x);
-        if(absolute(m._x) > e._x + adx) return false;
+        f32 adx = lcore::absolute(d.x_);
+        if(lcore::absolute(m.x_) > e.x_ + adx) return false;
 
-        f32 ady = absolute(d._y);
-        if(absolute(m._y) > e._y + ady) return false;
+        f32 ady = lcore::absolute(d.y_);
+        if(lcore::absolute(m.y_) > e.y_ + ady) return false;
 
-        f32 adz = absolute(d._z);
-        if(absolute(m._z) > e._z + adz) return false;
+        f32 adz = lcore::absolute(d.z_);
+        if(lcore::absolute(m.z_) > e.z_ + adz) return false;
 
         adx += F32_EPSILON;
         ady += F32_EPSILON;
         adz += F32_EPSILON;
 
-        if(absolute(m._y * d._z - m._z * d._y) > (e._y * adz + e._z * ady)) return false;
-        if(absolute(m._z * d._x - m._x * d._z) > (e._x * adz + e._z * adx)) return false;
-        if(absolute(m._x * d._y - m._y * d._x) > (e._x * ady + e._y * adx)) return false;
+        if(lcore::absolute(m.y_ * d.z_ - m.z_ * d.y_) > (e.y_ * adz + e.z_ * ady)) return false;
+        if(lcore::absolute(m.z_ * d.x_ - m.x_ * d.z_) > (e.x_ * adz + e.z_ * adx)) return false;
+        if(lcore::absolute(m.x_ * d.y_ - m.y_ * d.x_) > (e.x_ * ady + e.y_ * adx)) return false;
 
         return true;
     }
 
     //-----------------------------------------------------------
     // 線分とスラブの交差判定
-    bool testRaySlab(f32& tmin, f32& tmax, const Ray& ray, f32 slabMin, f32 slabMax, s32 axis)
+    bool testRaySlab_NoSIMD(f32& tmin, f32& tmax, const Ray& ray, f32 slabMin, f32 slabMax, s32 axis)
     {
         if(isEqual(ray.direction_[axis], 0.0f)){
             //線分とスラブが平行。線分原点がスラブ内になければ失敗
@@ -367,7 +376,7 @@ namespace lmath
             tmax = (slabMax - ray.origin_[axis]) * d;
 
             if(tmin > tmax){
-                lmath::swap(tmin, tmax);
+                lcore::swap(tmin, tmax);
             }
 
             if(tmin < 0.0f){
