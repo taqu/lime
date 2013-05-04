@@ -11,6 +11,62 @@ namespace lcore
 {
 namespace intrusive
 {
+    template<class T> class List;
+
+    template<class T>
+    class ListNodeBase
+    {
+    public:
+        typedef ListNodeBase<T> this_type;
+        typedef this_type* this_poitner_type;
+        typedef T value_type;
+        typedef T* pointer_type;
+        typedef const T* const_pointer_type;
+
+        pointer_type getPrev() { return static_cast<pointer_type>(prev_);}
+        const_pointer_type getPrev() const{ return static_cast<pointer_type>(prev_);}
+        pointer_type getNext() { return static_cast<pointer_type>(next_);}
+        const_pointer_type getNext() const{ return static_cast<pointer_type>(next_);}
+
+    protected:
+        friend class List<T>;
+
+        ListNodeBase()
+            :prev_(NULL)
+            ,next_(NULL)
+        {
+        }
+
+        ~ListNodeBase()
+        {}
+
+    private:
+        void reset()
+        {
+            prev_ = this;
+            next_ = this;
+        }
+
+        void unlink()
+        {
+            next_->prev_ = prev_;
+            prev_->next_ = next_;
+            prev_ = NULL;
+            next_ = NULL;
+        }
+
+        void link(this_type* node)
+        {
+            prev_ = node->prev_;
+            next_ = node;
+            node->prev_ = this;
+            prev_->next_ = this;
+        }
+
+        this_poitner_type prev_;
+        this_poitner_type next_;
+    };
+
     /**
     @brief リンクポインタ埋め込み型リスト
 
@@ -22,35 +78,31 @@ namespace intrusive
     {
     public:
         typedef List<T> this_type;
+        typedef ListNodeBase<T> node_type;
 
         inline List();
         inline ~List();
 
+        inline u32 size() const;
         inline T* begin();
         inline T* rbegin();
         inline T* end();
-        inline T* next(T* current);
-        inline T* prev(T* current);
 
-        void push_front(T* element);
-        void push_back(T* element);
-        void erase(T* element);
+        void push_front(T* node);
+        void push_back(T* node);
+        void erase(T* node);
 
         void swap(this_type& rhs);
     private:
-        void initialize(T* element);
-
         u32 size_;
-        T* top_;
-        T* tail_;
+        node_type top_;
     };
 
     template<class T>
     inline List<T>::List()
         :size_(0)
-        ,top_(NULL)
-        ,tail_(NULL)
     {
+        top_.reset();
     }
 
     template<class T>
@@ -59,87 +111,52 @@ namespace intrusive
     }
 
     template<class T>
+    inline u32 List<T>::size() const
+    {
+        return size_;
+    }
+
+    template<class T>
     inline T* List<T>::begin()
     {
-        return top_;
+        return top_.getNext();
     }
 
     template<class T>
     inline T* List<T>::rbegin()
     {
-        return tail_;
+        return top_.getPrev();
     }
 
     template<class T>
     inline T* List<T>::end()
     {
-        return NULL;
+        return static_cast<T*>(&top_);
     }
 
     template<class T>
-    inline T* List<T>::next(T* current)
+    void List<T>::erase(T* node)
     {
-        LASSERT(current != NULL);
-        return current->getNext();
-    }
-
-
-    template<class T>
-    inline T* List<T>::prev(T* current)
-    {
-        LASSERT(current != NULL);
-        return current->getPrev();
-    }
-
-    template<class T>
-    void List<T>::erase(T* element)
-    {
-        LASSERT(element != NULL);
+        LASSERT(NULL != node);
         LASSERT(size_>0);
 
-        T* prev = element->getPrev();
-        T* next = element->getNext();
-
-        if(prev){
-            prev->setNext(next);
-        }
-        if(next){
-            next->setPrev(prev);
-        }
+        node->unlink();
         --size_;
-        if(size_ == 0){
-            top_ = NULL;
-            tail_ = NULL;
-        }
     }
 
     template<class T>
-    void List<T>::push_front(T* element)
+    void List<T>::push_front(T* node)
     {
-        LASSERT(element != NULL);
-        if(0 == size_){ //Tのサイズが大きいと番兵が高くつく
-            initialize(element);
-            return;
-        }
-        element->setNext(top_);
-        element->setPrev(NULL);
-        top_->setPrev(element);
-        top_ = element;
+        LASSERT(NULL != node);
+        node->link(top_.getNext());
         ++size_;
     }
 
     template<class T>
-    void List<T>::push_back(T* element)
+    void List<T>::push_back(T* node)
     {
-        LASSERT(element != NULL);
-        if(0 == size_){ //Tのサイズが大きいと番兵が高くつく
-            initialize(element);
-            return;
-        }
-        element->setNext(NULL);
-        element->setPrev(tail_);
-        tail_->setNext(element);
-        tail_ = element;
+        LASSERT(NULL != node);
+        node->link(static_cast<T*>(&top_));
         ++size_;
     }
 
@@ -148,18 +165,6 @@ namespace intrusive
     {
         lcore::swap(size_, rhs.size_);
         lcore::swap(top_, rhs.top_);
-        lcore::swap(tail_, rhs.tail_);
-    }
-
-    template<class T>
-    void List<T>::initialize(T* element)
-    {
-        top_ = element;
-        tail_ = element;
-
-        element->setNext(NULL);
-        element->setPrev(NULL);
-        ++size_;
     }
 }
 }

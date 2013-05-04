@@ -125,11 +125,9 @@ namespace lcore
     void Stack<T>::initialize(u32 size)
     {
         LASSERT(size > 0);
+        LASSERT(NULL == buffers_);
 
         size_ = size;
-        if(buffers_ != NULL){
-            size_ = size;
-        }
 
         count_ = 0;
         numBuffers_ = 1;
