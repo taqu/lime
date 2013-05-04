@@ -348,12 +348,36 @@ namespace lmath
         return round2S32(val + doublemagicroundeps);
     }
 
+    inline f32 step(f32 x, f32 a)
+    {
+        return (a<=x)? 1.0f : 0.0f;
+    }
+
+    inline f32 boxstep(f32 x, f32 e0, f32 e1)
+    {
+        LASSERT(!lmath::isEqual(e0, e1));
+        return lcore::clamp01((x-e0)/(e1-e0));
+    }
 
     inline f32 smoothstep(f32 x, f32 e0, f32 e1)
     {
         x = lcore::clamp01((x - e0) / (e1 - e0));
     	return x * x * (3.0f - 2.0f*x);
     }
+
+    inline f32 gamma(f32 x, f32 g)
+    {
+        LASSERT(!lmath::isZero(g));
+        return lmath::pow(x, 1.0f/g);
+    }
+
+    inline f32 bias(f32 a, f32 b)
+    {
+        static const f32 InvLogHalf = static_cast<f32>(1.0/-0.30102999566);
+        return lmath::pow(a, lmath::log(b)*InvLogHalf);
+    }
+
+    f32 gain(f32 a, f32 b);
 
     void randomOnSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1);
 

@@ -44,6 +44,16 @@ namespace lmath
             return v_.dot(p);
         }
 
+        void getNormal(lmath::Vector3& normal) const
+        {
+            normal.set(v_.x_, v_.y_, v_.z_);
+        }
+
+        f32 getD() const
+        {
+            return v_.w_;
+        }
+
         void normalize();
 
 

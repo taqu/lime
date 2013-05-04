@@ -39,6 +39,16 @@ namespace lmath
             s_.zero();
         }
 
+        void getPosition(lmath::Vector3& position) const
+        {
+            position.set(s_.x_, s_.y_, s_.z_);
+        }
+
+        f32 getRadius() const
+        {
+            return s_.w_;
+        }
+
         /**
         @brief 点に外接する球を計算
         */
