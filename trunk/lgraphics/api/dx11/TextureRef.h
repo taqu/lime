@@ -272,6 +272,10 @@ namespace lgraphics
         {
             sampler_ = SamplerState::create(filter, adress, adress, adress);
         }
+
+        inline void attachVS(u32 viewIndex, u32 samplerIndex);
+        inline void attachGS(u32 viewIndex, u32 samplerIndex);
+        inline void attachPS(u32 viewIndex, u32 samplerIndex);
     protected:
         typedef TextureRefBase<T> this_type;
         typedef T element_type;
@@ -413,6 +417,29 @@ namespace lgraphics
         return (SUCCEEDED(hr))? DepthStencilViewRef(view) : DepthStencilViewRef();
     }
 
+    template<class T>
+    inline void TextureRefBase<T>::attachVS(u32 viewIndex, u32 samplerIndex)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.setVSResources(viewIndex, 1, &view_);
+        device.setVSSamplers(samplerIndex, 1, sampler_.get());
+    }
+
+    template<class T>
+    inline void TextureRefBase<T>::attachGS(u32 viewIndex, u32 samplerIndex)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.setGSResources(viewIndex, 1, &view_);
+        device.setGSSamplers(samplerIndex, 1, sampler_.get());
+    }
+
+    template<class T>
+    inline void TextureRefBase<T>::attachPS(u32 viewIndex, u32 samplerIndex)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.setPSResources(viewIndex, 1, &view_);
+        device.setPSSamplers(samplerIndex, 1, sampler_.get());
+    }
 
     //--------------------------------------------------------
     //---

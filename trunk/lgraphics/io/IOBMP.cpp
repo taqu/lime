@@ -181,7 +181,7 @@ namespace io
         }
 
         width = header.width_;
-        height = header.height_;
+        height = lcore::absolute(header.height_);
 
         //TODO:RGBテクスチャ対応
         switch(header.bitCount_)

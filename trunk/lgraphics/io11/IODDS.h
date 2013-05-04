@@ -52,7 +52,7 @@ namespace io
         };
 
 
-        static bool read(const s8* data, u32 size, Texture2DRef& texture, Allocator& allocator);
+        static bool read(const s8* data, u32 size, Texture2DRef& texture);
 
     };
 }

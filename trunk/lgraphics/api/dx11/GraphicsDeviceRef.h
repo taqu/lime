@@ -17,6 +17,16 @@ namespace lgraphics
 
     struct Box
     {
+        Box(){}
+        Box(u32 left, u32 top, u32 front, u32 right, u32 bottom, u32 back)
+            :left_(left)
+            ,top_(top)
+            ,front_(front)
+            ,right_(right)
+            ,bottom_(bottom)
+            ,back_(back)
+        {}
+
         u32 left_;
         u32 top_;
         u32 front_;
@@ -66,6 +76,10 @@ namespace lgraphics
         static const Char* VSModel;
         static const Char* PSModel;
 
+        static const u32 MinRefreshRate = 15;
+        static const u32 MaxRefreshRate = 120;
+
+        u32 getRefreshRate() const{ return refreshRate_;}
         u32 getFeatureLevel() const{ return featureLevel_;}
         ID3D11Device* getD3DDevice(){ return device_;}
         ID3D11DeviceContext* getContext(){ return context_;}
@@ -158,6 +172,7 @@ namespace lgraphics
         f32 clearDepth_;
         u8 clearStencil_;
         u32 syncInterval_;
+        u32 refreshRate_;
         u32 featureLevel_;
 
         ID3D11RasterizerState* rasterizerStates_[Rasterizer_Num];

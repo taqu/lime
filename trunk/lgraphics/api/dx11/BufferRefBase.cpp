@@ -43,6 +43,11 @@ namespace lgraphics
         lgraphics::Graphics::getDevice().getContext()->Unmap(buffer_, subresource);
     }
 
+    void BufferRefBase::updateSubresource(u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch)
+    {
+        lgraphics::Graphics::getDevice().updateSubresource(buffer_, index, box, data, rowPitch, depthPitch);
+    }
+
     //------------------------------------------------------------
     //---
     //--- BufferBase

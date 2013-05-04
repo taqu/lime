@@ -48,7 +48,7 @@ namespace lgraphics
             lcore::swap(layout_, rhs.layout_);
         }
 
-        ID3D11InputLayout* get(){ return layout_;}
+        void attach();
     private:
         friend class InputLayout;
 

@@ -25,6 +25,11 @@ namespace lgraphics
         SAFE_RELEASE(layout_);
     }
 
+    void InputLayoutRef::attach()
+    {
+        lgraphics::Graphics::getDevice().setInputLayout(layout_);
+    }
+
     InputLayoutRef InputLayout::create(
         D3D11_INPUT_ELEMENT_DESC* elements,
         u32 numElements,

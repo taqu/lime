@@ -1,0 +1,169 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="api">
+      <UniqueIdentifier>{af4825df-4b5f-4429-9a1e-0c2cceb2a2b6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="api\dx11">
+      <UniqueIdentifier>{d7578f02-1059-4f88-b026-f134c0840ce5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="io11">
+      <UniqueIdentifier>{af5acdde-b9f0-4530-ab60-8b4b58b3f4d9}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\api\BlendStateRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\BlobRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\ConstantBufferRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\Enumerations.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\GeometryBuffer.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\GraphicsDeviceRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\IndexBufferRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\InitParam.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\InputLayoutRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\RenderStateRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\SamplerStateRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\ShaderRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\SurfaceRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\TextureRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\VertexBufferRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\BlendStateRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\BlobRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\BufferRefBase.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\ConstantBufferRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\Enumerations.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\GraphicsDeviceRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\IndexBufferRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\InitParam.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\InputLayoutRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\SamplerStateRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\ShaderRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\TextureRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\VertexBufferRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\io11\IODDS.h">
+      <Filter>io11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\io11\IOTGA.h">
+      <Filter>io11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\io11\MemoryStream.h">
+      <Filter>io11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\lgraphics.h" />
+    <ClInclude Include="..\lgraphicsAPIInclude.h" />
+    <ClInclude Include="..\lgraphicscore.h" />
+    <ClInclude Include="..\Window.h" />
+    <ClInclude Include="..\WindowAPIInclude.h" />
+    <ClInclude Include="..\io11\IOBMP.h">
+      <Filter>io11</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\api\dx11\BlendStateRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\BlobRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\BufferRefBase.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\ConstantBufferRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\Enumerations.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\GraphicsDeviceRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\IndexBufferRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\InputLayoutRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\SamplerStateRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\ShaderRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\TextureRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\VertexBufferRef.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\io11\IODDS.cpp">
+      <Filter>io11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\io11\IOTGA.cpp">
+      <Filter>io11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\io11\MemoryStream.cpp">
+      <Filter>io11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\lgraphics.cpp" />
+    <ClCompile Include="..\Window.cpp" />
+    <ClCompile Include="..\io11\IOBMP.cpp">
+      <Filter>io11</Filter>
+    </ClCompile>
+  </ItemGroup>
+</Project>
