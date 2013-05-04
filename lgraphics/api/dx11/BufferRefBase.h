@@ -12,12 +12,15 @@ struct ID3D11Buffer;
 
 namespace lgraphics
 {
+    struct Box;
+
     struct MappedSubresource
     {
         void* data_;
         u32 rowPitch_;
         u32 depthPitch_;
     };
+
 
     //------------------------------------------------------------
     //---
@@ -31,6 +34,7 @@ namespace lgraphics
 
         bool map(u32 subresource, MapType type, MappedSubresource& mapped);
         void unmap(u32 subresource);
+        void updateSubresource(u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch);
 
         bool valid() const{ return buffer_ != NULL;}
     protected:

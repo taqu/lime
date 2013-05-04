@@ -218,8 +218,11 @@ namespace io
 
     }
 
-    bool IODDS::read(const s8* data, u32 size, Texture2DRef& texture, Allocator& allocator)
+    bool IODDS::read(const s8* data, u32 size, Texture2DRef& texture)
     {
+        static const u32 MaxNumSubResourceData = 64;
+        SubResourceData initData[MaxNumSubResourceData];
+
         MemoryStream memStream(data, size);
 
         u32 magic = 0;
@@ -261,7 +264,9 @@ namespace io
         u32 mipmapLevel = (header.mipmap_ > 0)? header.mipmap_ : 1;
 
         u32 numSubResources = arraySize * mipmapLevel;
-        SubResourceData* initData = (SubResourceData*)allocator.allocate(sizeof(SubResourceData) * numSubResources);
+        if(MaxNumSubResourceData<numSubResources){
+            return false;
+        }
 
         u32 bytes = 0;
         u32 pitch = 0;
@@ -305,7 +310,6 @@ namespace io
             initData,
             &viewDesc);
 
-        allocator.deallocate(initData);
         return true;
     }
 

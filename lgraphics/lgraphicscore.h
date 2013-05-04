@@ -84,16 +84,6 @@ namespace lgraphics
         T* ptr_;
     };
 
-    class Allocator
-    {
-    public:
-        virtual ~Allocator()
-        {}
-
-        virtual void* allocate(u32 size) =0;
-        virtual void deallocate(void* mem) =0;
-    };
-
     inline u32 getColorRGBA32(u8 r, u8 g, u8 b, u8 a)
     {
         u32 ur = r;

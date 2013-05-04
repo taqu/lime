@@ -197,6 +197,7 @@ namespace lgraphics
         setViewport(0, 0, initParam.backBufferWidth_, initParam.backBufferHeight_);
 
         syncInterval_ = initParam.interval_;
+        refreshRate_ = lcore::clamp(initParam.refreshRate_, MinRefreshRate, MaxRefreshRate);
         clearColor_[0] = clearColor_[1] = clearColor_[2] = clearColor_[3] = 1.0f;
 
         {//ラスタライザステート
