@@ -1,0 +1,56 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="DirectInput">
+      <UniqueIdentifier>{5246c393-0820-465f-b183-4a5b57ce85ff}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\DirectInput\Device.cpp">
+      <Filter>DirectInput</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DirectInput\InputImpl.cpp">
+      <Filter>DirectInput</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DirectInput\Joystick.cpp">
+      <Filter>DirectInput</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DirectInput\Keyboard.cpp">
+      <Filter>DirectInput</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DirectInput\linput.cpp">
+      <Filter>DirectInput</Filter>
+    </ClCompile>
+    <ClCompile Include="..\DirectInput\Mouse.cpp">
+      <Filter>DirectInput</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\DirectInput\Device.h">
+      <Filter>DirectInput</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DirectInput\InitParam.h">
+      <Filter>DirectInput</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DirectInput\InputImpl.h">
+      <Filter>DirectInput</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DirectInput\Joystick.h">
+      <Filter>DirectInput</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DirectInput\Keyboard.h">
+      <Filter>DirectInput</Filter>
+    </ClInclude>
+    <ClInclude Include="..\DirectInput\Mouse.h">
+      <Filter>DirectInput</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Device.h" />
+    <ClInclude Include="..\DeviceBase.h" />
+    <ClInclude Include="..\Joystick.h" />
+    <ClInclude Include="..\Keyboard.h" />
+    <ClInclude Include="..\linput.h" />
+    <ClInclude Include="..\linputcore.h" />
+    <ClInclude Include="..\linputEnum.h" />
+    <ClInclude Include="..\Mouse.h" />
+  </ItemGroup>
+</Project>
