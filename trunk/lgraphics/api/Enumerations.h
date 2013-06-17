@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_ENUMERATIONS_H__
+﻿#ifndef INC_LGRAPHICS_ENUMERATIONS_H__
 #define INC_LGRAPHICS_ENUMERATIONS_H__
 /**
 @file Enumerations.h

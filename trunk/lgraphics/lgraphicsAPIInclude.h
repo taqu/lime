@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICSAPIINCLUDE_H__
+﻿#ifndef INC_LGRAPHICSAPIINCLUDE_H__
 #define INC_LGRAPHICSAPIINCLUDE_H__
 /**
 @file lgraphicsAPIInclude.h

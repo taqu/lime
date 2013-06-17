@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_IOTGA_H__
+ï»¿#ifndef INC_LGRAPHICS_IOTGA_H__
 #define INC_LGRAPHICS_IOTGA_H__
 /**
 @file IOTGA.h
@@ -59,7 +59,7 @@ namespace io
         static const u32 TGA_HEADER_SIZE = 18;
 
         /**
-        @brief buffer‚Éƒ[ƒhBbuffer‚ªNULL‚Ìê‡AwidthAheightAformat‚ğİ’è‚µ‚Ä•Ô‚é
+        @brief bufferã«ãƒ­ãƒ¼ãƒ‰ã€‚bufferãŒNULLã®å ´åˆã€widthã€heightã€formatã‚’è¨­å®šã—ã¦è¿”ã‚‹
         */
         static bool read(lcore::istream& is, u8* buffer, u32& width, u32& height, DataFormat& format, bool transpose = false);
     };

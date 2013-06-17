@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Window.cpp
 @author t-sakai
 @date 2009/04/26
@@ -135,6 +135,25 @@ namespace lgraphics
 
         return true;
     }
+
+#if defined(_WIN32)
+    bool Window::peekMessage(HWND hDlg)
+    {
+        while(PeekMessage(&msg_, NULL, 0, 0, PM_REMOVE)){
+            if(msg_.message==WM_QUIT)
+                return false;
+
+            if(NULL != hDlg && IsDialogMessage(hDlg, &msg_)){
+                continue;
+            }
+
+            TranslateMessage(&msg_);
+            DispatchMessage(&msg_);
+        }
+
+        return true;
+    }
+#endif
 
     bool Window::getMessage()
     {

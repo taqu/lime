@@ -1,4 +1,4 @@
-#ifndef INC_LFRAMEWORK_SCENE_H__
+﻿#ifndef INC_LFRAMEWORK_SCENE_H__
 #define INC_LFRAMEWORK_SCENE_H__
 /**
 @file Scene.h
@@ -95,7 +95,6 @@ namespace lscene
         {
             LASSERT(size>2);
             shadowMapSize_ = size;
-            shadowTextureOffset_ = 0.5f + (0.5f / shadowMapSize_);
         }
 
 
@@ -110,7 +109,7 @@ namespace lscene
         }
 
         void calcLightViewProjection();
-        void mulShadowTextureOffset(lmath::Matrix44& mat) const;
+        void getShadowMapProjection(lmath::Matrix44& mat) const;
     private:
         Camera camera_;
         LightEnvironment lightEnv_;
@@ -122,7 +121,6 @@ namespace lscene
 
         u32 shadowMapSize_;
         f32 shadowMapZFar_;
-        f32 shadowTextureOffset_;
     };
 }
 

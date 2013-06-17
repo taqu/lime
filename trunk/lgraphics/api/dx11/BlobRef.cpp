@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file BlobRef.cpp
 @author t-sakai
 @date 2012/07/21 create

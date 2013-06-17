@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_DX11_INITPARAM_H__
+﻿#ifndef INC_LGRAPHICS_DX11_INITPARAM_H__
 #define INC_LGRAPHICS_DX11_INITPARAM_H__
 /**
 @file InitParam.h
@@ -16,7 +16,7 @@ namespace lgraphics
             :type_(DriverType_Hardware)
             ,backBufferWidth_(1)
             ,backBufferHeight_(1)
-            ,format_(Data_R8G8B8A8_UNorm)
+            ,format_(Data_R8G8B8A8_UNorm_SRGB)
             ,depthStencilFormat_(Data_D24_UNorm_S8_UInt)
             ,refreshRate_(60)
             ,windowHandle_(NULL)

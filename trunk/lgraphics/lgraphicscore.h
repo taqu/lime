@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICSCORE_H__
+﻿#ifndef INC_LGRAPHICSCORE_H__
 #define INC_LGRAPHICSCORE_H__
 /**
 @file lgraphicscore.h

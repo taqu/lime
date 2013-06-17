@@ -1,4 +1,4 @@
-#ifndef INC_LINPUT_DINPUT_INPUTIMPL_H__
+﻿#ifndef INC_LINPUT_DINPUT_INPUTIMPL_H__
 #define INC_LINPUT_DINPUT_INPUTIMPL_H__
 /**
 @file InputImpl.h

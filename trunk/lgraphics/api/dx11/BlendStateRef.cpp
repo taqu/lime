@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file BlendStateRef.cpp
 @author t-sakai
 @date 2012/07/24 create

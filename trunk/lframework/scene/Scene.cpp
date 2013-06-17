@@ -1,4 +1,4 @@
-#ifndef INC_LFRAMEWORK_SCENE_CPP__
+ï»¿#ifndef INC_LFRAMEWORK_SCENE_CPP__
 #define INC_LFRAMEWORK_SCENE_CPP__
 /**
 @file Scene.cpp
@@ -41,7 +41,7 @@ namespace lscene
 
     //void Scene::resetDepthTexture()
     //{
-    //    //ƒfƒvƒXƒoƒbƒtƒ@ì¬
+    //    //ãƒ‡ãƒ—ã‚¹ãƒãƒƒãƒ•ã‚¡ä½œæˆ
     //    depthSurface_.destroy();
     //    depthTexture_.destroy();
 
@@ -66,6 +66,9 @@ namespace lscene
         lmath::Matrix44 invView(view);
         invView.invert();
 
+        f32 znear;
+        f32 zfar;
+
         //f32 intervalBegin = 0.0f;
         //f32 intervalEnd = 1.0f;
         lmath::Vector4 frustumPoints[8];
@@ -81,9 +84,9 @@ namespace lscene
 
         lmath::Vector4 worldPoint;
         for(s32 i=0; i<8; ++i){
-            //ƒ[ƒ‹ƒhÀ•W‚Ö•ÏŠ·
+            //ãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã¸å¤‰æ›
             frustumPoints[i].mul(invView, frustumPoints[i]);
-            //ƒ‰ƒCƒg‚ÌÀ•W‚Ö•ÏŠ·
+            //ãƒ©ã‚¤ãƒˆã®åº§æ¨™ã¸å¤‰æ›
             worldPoint.mul(lightView, frustumPoints[i]);
             lightCameraOrhoMin.min(lightCameraOrhoMin, worldPoint);
             lightCameraOrhoMax.max(lightCameraOrhoMax, worldPoint);
@@ -108,30 +111,30 @@ namespace lscene
         f32 units = cascadeBound * invScale;
         worldUnitsPerTexel.set(units, units, 0.1f, 0.1f);
 
-        //if(moveLightTexelSize_){
-            lightCameraOrhoMin /= worldUnitsPerTexel;
-            lightCameraOrhoMin.floor();
-            lightCameraOrhoMin *= worldUnitsPerTexel;
+        lightCameraOrhoMin /= worldUnitsPerTexel;
+        lightCameraOrhoMin.floor();
+        lightCameraOrhoMin *= worldUnitsPerTexel;
 
-            lightCameraOrhoMax /= worldUnitsPerTexel;
-            lightCameraOrhoMax.floor();
-            lightCameraOrhoMax *= worldUnitsPerTexel;
+        lightCameraOrhoMax /= worldUnitsPerTexel;
+        lightCameraOrhoMax.floor();
+        lightCameraOrhoMax *= worldUnitsPerTexel;
+
+        //lmath::Vector4 lightSceneAABBMin(FLT_MAX, FLT_MAX, FLT_MAX, 1.0f);
+        //lmath::Vector4 lightSceneAABBMax(-FLT_MAX, -FLT_MAX, -FLT_MAX, 1.0f);
+
+        //lmath::Vector4 sceneAABBPointsLightSpace[8];
+        //lmath::calcAABBPoints(sceneAABBPointsLightSpace, sceneAABBMin_, sceneAABBMax_);
+        //for(s32 i=0; i<8; ++i){
+        //    sceneAABBPointsLightSpace[i].mul(lightView, sceneAABBPointsLightSpace[i]);
+        //    lightSceneAABBMin.min(sceneAABBPointsLightSpace[i], lightSceneAABBMin);
+        //    lightSceneAABBMax.max(sceneAABBPointsLightSpace[i], lightSceneAABBMax);
         //}
 
-        lmath::Vector4 lightSceneAABBMin(FLT_MAX, FLT_MAX, FLT_MAX, 1.0f);
-        lmath::Vector4 lightSceneAABBMax(-FLT_MAX, -FLT_MAX, -FLT_MAX, 1.0f);
+        //znear = lightSceneAABBMin.z_;
+        //zfar = lightSceneAABBMax.z_;
 
-
-        lmath::Vector4 sceneAABBPointsLightSpace[8];
-        lmath::calcAABBPoints(sceneAABBPointsLightSpace, sceneAABBMin_, sceneAABBMax_);
-        for(s32 i=0; i<8; ++i){
-            sceneAABBPointsLightSpace[i].mul(lightView, sceneAABBPointsLightSpace[i]);
-            lightSceneAABBMin.min(sceneAABBPointsLightSpace[i], lightSceneAABBMin);
-            lightSceneAABBMax.max(sceneAABBPointsLightSpace[i], lightSceneAABBMax);
-        }
-
-        f32 znear = lightSceneAABBMin.z_;
-        f32 zfar = lightSceneAABBMax.z_;
+        znear = lightCameraOrhoMin.z_;
+        zfar = lightCameraOrhoMax.z_;
 
         lightViewProjection_.orthoOffsetCenter(
             lightCameraOrhoMin.x_,
@@ -149,27 +152,16 @@ namespace lscene
         lightViewProjection_.mul(lightViewProjection_, lightView);
     }
 
-    void Scene::mulShadowTextureOffset(lmath::Matrix44& mat) const
+    void Scene::getShadowMapProjection(lmath::Matrix44& mat) const
     {
-#if 0
-        mat.m_[0][0] *= 0.5f;
-        mat.m_[0][3] *= 0.5f;
-
-        mat.m_[1][1] *= -0.5f;
-        mat.m_[1][3] *= 0.5f;
-
-        mat.m_[0][3] += shadowTextureOffset_;
-        mat.m_[1][3] += shadowTextureOffset_;
-#else
         lmath::Matrix44 tmp;
         tmp.set(
-            0.5f, 0.0f, 0.0f, shadowTextureOffset_,
-            0.0f, -0.5f, 0.0f, shadowTextureOffset_,
+            0.5f, 0.0f, 0.0f, 0.5f,
+            0.0f, -0.5f, 0.0f, 0.5f,
             0.0f, 0.0f, 1.0f, 0.0f,
             0.0f, 0.0f, 0.0f, 1.0f);
 
-        mat.mul(tmp, mat);
-#endif
+        mat.mul(tmp, lightViewProjection_);
     }
 }
 #endif //INC_LFRAMEWORK_SCENE_CPP__

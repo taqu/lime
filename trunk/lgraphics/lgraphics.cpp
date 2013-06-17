@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file lgraphics.cpp
 @author t-sakai
 @date 2009/01/19 create

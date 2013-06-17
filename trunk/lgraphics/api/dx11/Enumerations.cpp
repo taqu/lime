@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Enumerations.cpp
 @author t-sakai
 @date 2013/02/27 create

@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_SURFACEREF_H__
+﻿#ifndef INC_LGRAPHICS_SURFACEREF_H__
 #define INC_LGRAPHICS_SURFACEREF_H__
 /**
 @file SurfaceRef.h

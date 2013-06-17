@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file SamplerStateRef.cpp
 @author t-sakai
 @date 2012/07/23 create

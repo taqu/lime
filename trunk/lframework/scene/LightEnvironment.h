@@ -1,4 +1,4 @@
-#ifndef INC_LSCENE_LIGHTENVIRONMENT_H__
+﻿#ifndef INC_LSCENE_LIGHTENVIRONMENT_H__
 #define INC_LSCENE_LIGHTENVIRONMENT_H__
 /**
 @file LightEnvironment.h

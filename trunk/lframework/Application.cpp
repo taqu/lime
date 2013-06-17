@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Application.cpp
 @author t-sakai
 @date 2010/02/14 create
@@ -10,6 +10,7 @@
 namespace lframework
 {
     Application::Application()
+        :hDlg_(NULL)
     {
     }
 
@@ -63,4 +64,23 @@ namespace lframework
         window_.terminate();
     }
 
+#if defined(_WIN32)
+    // 処理ループ実行
+    void Application::runWithDialog()
+    {
+        initialize();
+
+        for(;;){
+            if(false == window_.peekMessage(hDlg_)){
+                break;
+            }
+            update();
+        }
+
+        terminate();
+
+        lgraphics::Graphics::terminate();
+        window_.terminate();
+    }
+#endif
 }

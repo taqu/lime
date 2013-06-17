@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_GEOMETRYBUFFER_H__
+﻿#ifndef INC_LGRAPHICS_GEOMETRYBUFFER_H__
 #define INC_LGRAPHICS_GEOMETRYBUFFER_H__
 /**
 @file GeometryBuffer.h

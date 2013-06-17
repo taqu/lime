@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Static.cpp
 @author t-sakai
 @date 2010/05/25 create

@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file Joystick.cpp
 @author t-sakai
 @date 2012/09/30 create
@@ -12,7 +12,7 @@ namespace linput
         BOOL CALLBACK EnumAxes(LPCDIDEVICEOBJECTINSTANCE instance, LPVOID context)
         {
             IDirectInputDevice8* device = (IDirectInputDevice8*)context;
-            //—V‚Ñ
+            //éŠã³
             DIPROPDWORD dipdw; 
             dipdw.diph.dwSize = sizeof(DIPROPDWORD); 
             dipdw.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
@@ -21,11 +21,11 @@ namespace linput
             dipdw.dwData = 600;
             device->SetProperty(DIPROP_DEADZONE , &dipdw.diph);
 
-            //Å‘å
+            //æœ€å¤§
             dipdw.dwData = 9500;
             device->SetProperty(DIPROP_SATURATION , &dipdw.diph);
 
-            //²‚Ì”ÍˆÍİ’è
+            //è»¸ã®ç¯„å›²è¨­å®š
             DIPROPRANGE diprange;
             diprange.diph.dwSize = sizeof(DIPROPRANGE); 
             diprange.diph.dwHeaderSize = sizeof(DIPROPHEADER); 
@@ -63,7 +63,7 @@ namespace linput
             return false;
         }
 
-        //²ƒvƒƒpƒeƒBİ’è
+        //è»¸ãƒ—ãƒ­ãƒ‘ãƒ†ã‚£è¨­å®š
         device_->EnumObjects(EnumAxes, (LPVOID)device, DIDFT_AXIS);
 
         DIPROPDWORD dipdw; 
@@ -72,13 +72,13 @@ namespace linput
         dipdw.diph.dwObj = 0; 
         dipdw.diph.dwHow = DIPH_DEVICE; 
 
-        dipdw.dwData = DIPROPAXISMODE_ABS; // â‘Î’lƒ‚[ƒh
+        dipdw.dwData = DIPROPAXISMODE_ABS; // çµ¶å¯¾å€¤ãƒ¢ãƒ¼ãƒ‰
         HRESULT hr = device_->SetProperty(DIPROP_AXISMODE, &dipdw.diph);
         if(FAILED(hr)){
             return false;
         }
 
-        dipdw.dwData = BufferSize; //ƒoƒbƒtƒ@ƒŠƒ“ƒOƒTƒCƒY
+        dipdw.dwData = BufferSize; //ãƒãƒƒãƒ•ã‚¡ãƒªãƒ³ã‚°ã‚µã‚¤ã‚º
         hr = device_->SetProperty(DIPROP_BUFFERSIZE, &dipdw.diph);
         if(FAILED(hr)){
             return false;
@@ -93,7 +93,7 @@ namespace linput
     {
         clear();
 
-        //ƒAƒNƒZƒXŒ æ“¾A“ü—ÍŠJn
+        //ã‚¢ã‚¯ã‚»ã‚¹æ¨©å–å¾—ã€å…¥åŠ›é–‹å§‹
         device_->Acquire();
     }
 
@@ -163,7 +163,7 @@ namespace linput
             }
 
         }else if(hr == DIERR_NOTACQUIRED || hr == DIERR_INPUTLOST){
-            acquire(); //‚à‚¤ˆê“xƒAƒNƒZƒXŒ æ“¾
+            acquire(); //ã‚‚ã†ä¸€åº¦ã‚¢ã‚¯ã‚»ã‚¹æ¨©å–å¾—
         }
     }
 

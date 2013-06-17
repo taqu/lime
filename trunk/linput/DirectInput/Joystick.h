@@ -1,4 +1,4 @@
-#ifndef INC_LINPUT_DINPUT_JOYSTICK_H__
+﻿#ifndef INC_LINPUT_DINPUT_JOYSTICK_H__
 #define INC_LINPUT_DINPUT_JOYSTICK_H__
 /**
 @file Joystick.h

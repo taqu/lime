@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file IOBMP.cpp
 @author t-sakai
 @date 2010/05/13 create
@@ -87,42 +87,81 @@ namespace io
         }
 
 
-        void write32(lcore::ostream& dst, const u8* buffer, u32 width, u32 height)
+        void write32(lcore::ostream& dst, const u8* buffer, u32 width, u32 height, bool leftTop)
         {
+            u32 pitch = width * 4;
             u8 tmp[4];
+            if(leftTop){
+                buffer += pitch * (height-1);
+                for(u32 i=0; i<height; ++i){
+                    const u8* b = buffer;
+                    for(u32 j=0; j<width; ++j){
+                        tmp[0] = b[2];
+                        tmp[1] = b[1];
+                        tmp[2] = b[0];
+                        tmp[3] = b[3];
+                        lcore::io::write(dst, tmp, 4);
+                        b += 4;
+                    }
+                    buffer -= pitch;
+                }
 
-            for(u32 i=0; i<height; ++i){
-                for(u32 j=0; j<width; ++j){
-                    tmp[0] = buffer[2];
-                    tmp[1] = buffer[1];
-                    tmp[2] = buffer[0];
-                    tmp[3] = buffer[3];
-                    lcore::io::write(dst, tmp, 4);
-                    buffer += 4;
+            }else{
+                for(u32 i=0; i<height; ++i){
+                    for(u32 j=0; j<width; ++j){
+                        tmp[0] = buffer[2];
+                        tmp[1] = buffer[1];
+                        tmp[2] = buffer[0];
+                        tmp[3] = buffer[3];
+                        lcore::io::write(dst, tmp, 4);
+                        buffer += 4;
+                    }
                 }
             }
         }
 
 
-        void write24(lcore::ostream& dst, const u8* buffer, u32 width, u32 height)
+        void write24(lcore::ostream& dst, const u8* buffer, u32 width, u32 height, bool leftTop)
         {
             u32 pitch = 3*width;
             u32 dstPitch = (pitch + 0x03U) & (~0x03U);
             u32 diff = dstPitch - pitch;
 
             u8 tmp[3];
-            for(u32 i=0; i<height; ++i){
-                for(u32 j=0; j<width; ++j){
-                    tmp[0] = buffer[2];
-                    tmp[1] = buffer[1];
-                    tmp[2] = buffer[0];
-                    lcore::io::write(dst, tmp, 3);
-                    buffer += 3;
+
+            if(leftTop){
+                buffer += pitch * (height-1);
+
+                for(u32 i=0; i<height; ++i){
+                    const u8* b = buffer;
+                    for(u32 j=0; j<width; ++j){
+                        tmp[0] = b[2];
+                        tmp[1] = b[1];
+                        tmp[2] = b[0];
+                        lcore::io::write(dst, tmp, 3);
+                        b += 3;
+                    }
+                    tmp[0] = 0;
+                    tmp[1] = 0;
+                    tmp[2] = 0;
+                    lcore::io::write(dst, tmp, diff);
+                    buffer -= pitch;
                 }
-                tmp[0] = 0;
-                tmp[1] = 0;
-                tmp[2] = 0;
-                lcore::io::write(dst, tmp, diff);
+
+            }else{
+                for(u32 i=0; i<height; ++i){
+                    for(u32 j=0; j<width; ++j){
+                        tmp[0] = buffer[2];
+                        tmp[1] = buffer[1];
+                        tmp[2] = buffer[0];
+                        lcore::io::write(dst, tmp, 3);
+                        buffer += 3;
+                    }
+                    tmp[0] = 0;
+                    tmp[1] = 0;
+                    tmp[2] = 0;
+                    lcore::io::write(dst, tmp, diff);
+                }
             }
         }
     }
@@ -203,11 +242,12 @@ namespace io
 
         header.reserve1_ = 0;
         header.reserve2_ = 0;
+        header.size_ = fileSize;
         header.offset_ = fileSize;
         header.infoSize_ = INFO_SIZE;
         header.width_ = width;
-        header.height_ = -static_cast<s32>(height);
-        header.planes_ = 0;
+        header.height_ = height;
+        header.planes_ = 1;
         header.cirImportant_ = Compression_RGB;
         header.sizeImage_ = 0;
         header.xPixPerMeter_ = 0;
@@ -242,11 +282,11 @@ namespace io
         switch(format)
         {
         case WriteFormat_RGB:
-            write24(os, buffer, width, height);
+            write24(os, buffer, width, height, true);
             break;
 
         case WriteFormat_RGBA:
-            write32(os, buffer, width, height);
+            write32(os, buffer, width, height, true);
             break;
 
         default:

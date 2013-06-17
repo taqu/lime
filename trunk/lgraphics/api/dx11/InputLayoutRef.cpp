@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file InputLayoutRef.cpp
 @author t-sakai
 @date 2012/07/15 create

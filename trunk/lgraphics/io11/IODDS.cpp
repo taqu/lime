@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file IODDS.cpp
 @author t-sakai
 @date 2012/07/26 create
@@ -97,13 +97,13 @@ namespace io
                         && (ddpf.GBitMask_ == 0xff00U)
                         && (ddpf.BBitMask_ == 0xff0000U))
                     {
-                        format = Data_R8G8B8A8_UNorm;
+                        format = Data_R8G8B8A8_UNorm_SRGB;
 
                     }else if((ddpf.RBitMask_ == 0xff0000U)
                         && (ddpf.GBitMask_ == 0xff00U)
                         && (ddpf.BBitMask_ == 0xffU))
                     {
-                        format = Data_B8G8R8A8_UNorm;
+                        format = Data_B8G8R8A8_UNorm_SRGB;
                     }
                 }
                 break;
@@ -120,7 +120,7 @@ namespace io
                         && (ddpf.BBitMask_ == 0xffU))
                     {
                         if(ddpf.RGBBitCount_ == 32){
-                            format = Data_B8G8R8X8_UNorm;
+                            format = Data_B8G8R8X8_UNorm_SRGB;
                         }
 
                     }
@@ -150,13 +150,13 @@ namespace io
                     switch(ddpf.fourCC_)
                     {
                     case DXFORCC_DXT1:
-                        format = Data_BC1_UNorm;
+                        format = Data_BC1_UNorm_SRGB;
                         break;
                     case DXFORCC_DXT3:
-                        format = Data_BC2_UNorm;
+                        format = Data_BC2_UNorm_SRGB;
                         break;
                     case DXFORCC_DXT5:
-                        format = Data_BC3_UNorm;
+                        format = Data_BC3_UNorm_SRGB;
                         break;
                     };
                 }
@@ -304,8 +304,8 @@ namespace io
             BindFlag_ShaderResource,
             CPUAccessFlag_None,
             ResourceMisc_None,
-            TexFilter_MinMagMipLinear,
-            TexAddress_Wrap,
+            TexFilter_MinMagLinearMipPoint,
+            TexAddress_Clamp,
             0.0f,
             initData,
             &viewDesc);

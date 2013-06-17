@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file TextureRef.cpp
 @author t-sakai
 @date 2012/07/25 create

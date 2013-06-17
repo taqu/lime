@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_IOBMP_H__
+﻿#ifndef INC_LGRAPHICS_IOBMP_H__
 #define INC_LGRAPHICS_IOBMP_H__
 /**
 @file IOBMP.h

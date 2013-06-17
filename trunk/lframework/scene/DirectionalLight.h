@@ -1,4 +1,4 @@
-#ifndef INC_LSCENE_DIRECTIONALLIGHT_H__
+﻿#ifndef INC_LSCENE_DIRECTIONALLIGHT_H__
 #define INC_LSCENE_DIRECTIONALLIGHT_H__
 /**
 @file DirectionalLight.h
@@ -15,6 +15,7 @@ namespace lscene
     public:
         DirectionalLight()
             :direction_(0.0f, 1.0f, 0.0f, 0.0f),
+            //position_(0.0f, 128.0f, 0.0f, 0.0f),
             lightColor_(1.0f, 1.0f, 1.0f, 1.0f)
         {
             createLightView();
@@ -46,22 +47,21 @@ namespace lscene
             createLightView();
         }
 
+        //void setPosition(const lmath::Vector4& position)
+        //{
+        //    position_ = position;
+        //    createLightView();
+        //}
+
         const lmath::Vector4& getColor() const
         {
             return lightColor_;
         }
 
-        lmath::Vector4& getColor()
+        void setColor(const lmath::Vector4& color)
         {
-            return lightColor_;
+            lightColor_ = color;
         }
-
-        void setColor(const lmath::Vector3& color, f32 intensity)
-        {
-            //先に明るさをかけておく
-            lightColor_.set(color.x_*intensity, color.y_*intensity, color.z_*intensity, intensity);
-        }
-
     private:
         inline void createLightView()
         {
@@ -71,19 +71,19 @@ namespace lscene
             }else if(lmath::isEqual( direction_.y_, -1.0f, 0.01f)){
                 up.set(0.0f, 0.0f, 1.0f, 0.0f);
             }
-#if 1
+
+            //lmath::Vector4 at;
+            //at.sub(position_, direction_);
+            //lightView_.lookAt(position_, at, up);
+
             lmath::Vector4 eye;
             eye.zero();
             lightView_.lookAt(eye, -direction_, up);
-#else
-            lmath::Vector4 at;
-            at.zero();
-            lightView_.lookAt(direction_, at, up);
-#endif
         }
 
         lmath::Matrix44 lightView_;
         lmath::Vector4 direction_;
+        //lmath::Vector4 position_;
 
         /// 色と第４に輝度
         lmath::Vector4 lightColor_;

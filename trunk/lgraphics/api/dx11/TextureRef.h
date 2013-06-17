@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_DX11_TEXTUREREF_H__
+﻿#ifndef INC_LGRAPHICS_DX11_TEXTUREREF_H__
 #define INC_LGRAPHICS_DX11_TEXTUREREF_H__
 /**
 @file TextureRef.h
@@ -258,6 +258,9 @@ namespace lgraphics
     class TextureRefBase
     {
     public:
+        typedef TextureRefBase<T> this_type;
+        typedef T element_type;
+
         bool hasSampler() const{ return sampler_.valid();}
         bool hasResourceView() const{ return (NULL != view_);}
         bool valid() const{ return (NULL != texture_);}
@@ -276,9 +279,11 @@ namespace lgraphics
         inline void attachVS(u32 viewIndex, u32 samplerIndex);
         inline void attachGS(u32 viewIndex, u32 samplerIndex);
         inline void attachPS(u32 viewIndex, u32 samplerIndex);
+
+        inline void copy(this_type& src);
+        inline bool map(void*& data, u32& rowPitch, u32& depthPitch, s32 type);
+        inline void unmap();
     protected:
-        typedef TextureRefBase<T> this_type;
-        typedef T element_type;
 
         TextureRefBase()
             :view_(NULL)
@@ -328,6 +333,7 @@ namespace lgraphics
         ID3D11ShaderResourceView* view_;
         element_type* texture_;
     };
+
 
     template<class T>
     RenderTargetViewRef TextureRefBase<T>::createRTView(const RTVDesc& desc)
@@ -439,6 +445,27 @@ namespace lgraphics
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         device.setPSResources(viewIndex, 1, &view_);
         device.setPSSamplers(samplerIndex, 1, sampler_.get());
+    }
+
+    template<class T>
+    inline void TextureRefBase<T>::copy(this_type& src)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.copyResource(texture_, src.texture_);
+    }
+
+    template<class T>
+    inline bool TextureRefBase<T>::map(void*& data, u32& rowPitch, u32& depthPitch, s32 type)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        return device.map(data, rowPitch, depthPitch, texture_, type);
+    }
+
+    template<class T>
+    inline void TextureRefBase<T>::unmap()
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.unmap(texture_);
     }
 
     //--------------------------------------------------------

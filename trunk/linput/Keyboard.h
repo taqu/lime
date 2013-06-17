@@ -1,4 +1,4 @@
-#ifndef INC_LINPUT_KEYBOARD_H__
+﻿#ifndef INC_LINPUT_KEYBOARD_H__
 #define INC_LINPUT_KEYBOARD_H__
 /**
 @file Keyboard.h

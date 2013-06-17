@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_INITPARAM_H__
+﻿#ifndef INC_LGRAPHICS_INITPARAM_H__
 #define INC_LGRAPHICS_INITPARAM_H__
 /**
 @file InitParam.h

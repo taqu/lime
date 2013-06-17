@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_SHADERREF_H__
+﻿#ifndef INC_LGRAPHICS_SHADERREF_H__
 #define INC_LGRAPHICS_SHADERREF_H__
 /**
 @file ShaderRef.h

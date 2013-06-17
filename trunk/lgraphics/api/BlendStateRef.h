@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_BLENDSTATEREF_H__
+﻿#ifndef INC_LGRAPHICS_BLENDSTATEREF_H__
 #define INC_LGRAPHICS_BLENDSTATEREF_H__
 /**
 @file BlendStateRef.h
