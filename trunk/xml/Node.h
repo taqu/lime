@@ -7,11 +7,38 @@
 @data 2009/05/19 lcoreライブラリ用に変更
 */
 #include "Core.h"
-#include <lcore/Pair.h>
 #include <lcore/FixedArray.h>
 
 namespace xml
 {
+    template<class FirstType, class SecondType>
+    struct Pair
+    {
+        typedef FirstType first_type;
+        typedef SecondType second_type;
+
+        Pair()
+            :_first(first_type()),
+            _second(second_type())
+        {
+        }
+
+        Pair(const first_type& first, const second_type& second)
+            :_first(first), _second(second)
+        {
+        }
+
+        Pair(const Pair<first_type, second_type>& pair)
+            :_first(pair._first),
+            _second(pair._second)
+        {
+
+        }
+
+        first_type _first;
+        second_type _second;
+    };
+
     // Nodeクラスのプライベートにアクセスするためのクラス
     class NodeAccess;
 
@@ -20,7 +47,7 @@ namespace xml
     {
     public:
         typedef std::string string_type;
-        typedef lcore::Pair<string_type, string_type> string_pair;
+        typedef Pair<string_type, string_type> string_pair;
         typedef lcore::FixedArray<string_pair*> AttrList;
         typedef lcore::FixedArray<Node*> NodeList;
 
