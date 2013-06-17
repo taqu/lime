@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file NodePtrStack.cpp
 @author t-sakai
 @date 2009/02/02 create

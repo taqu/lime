@@ -1,4 +1,4 @@
-#ifndef __XML_CORE_H__
+﻿#ifndef __XML_CORE_H__
 #define __XML_CORE_H__
 /**
 @file Core.h

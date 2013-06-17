@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Node.cpp
 @author t-sakai
 @date 2009/01/29 create

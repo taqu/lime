@@ -1,4 +1,4 @@
-#ifndef __XML_NODE_H__
+﻿#ifndef __XML_NODE_H__
 #define __XML_NODE_H__
 /**
 @file Node.h

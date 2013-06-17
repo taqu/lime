@@ -1,4 +1,4 @@
-#ifndef __XML_NODEPTRSTACK_H__
+﻿#ifndef __XML_NODEPTRSTACK_H__
 #define __XML_NODEPTRSTACK_H__
 /**
 @file NodePtrStack.h
