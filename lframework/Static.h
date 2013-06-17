@@ -1,4 +1,4 @@
-#ifndef INC_LFRAMEWORK_STATIC_H__
+﻿#ifndef INC_LFRAMEWORK_STATIC_H__
 #define INC_LFRAMEWORK_STATIC_H__
 /**
 @file Static.h

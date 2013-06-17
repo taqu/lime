@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file InputImpl.cpp
 @author t-sakai
 @date 2010/07/22 create

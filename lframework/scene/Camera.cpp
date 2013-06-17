@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file Camera.cpp
 @author t-sakai
 @date 2011/11/03 create
@@ -25,7 +25,7 @@ namespace lscene
         projMatrix_ = proj;
 
         if(proj.m_[3][3] < F32_EPSILON){
-            //“§Ž‹“Š‰e
+            //é€è¦–æŠ•å½±
             znear_ = -proj.m_[2][3]/proj.m_[2][2];
             
             f32 zratio = -proj.m_[2][3]/proj.m_[2][2];
@@ -39,7 +39,7 @@ namespace lscene
             height_ = 2.0f*znear_/proj.m_[1][1];
 
         }else{
-            //•½s“Š‰e
+            //å¹³è¡ŒæŠ•å½±
             znear_ = -proj.m_[2][3]/proj.m_[2][2];
             zfar_ = 1.0f/proj.m_[2][3] + znear_;
             width_ = 2.0f/proj.m_[0][0];

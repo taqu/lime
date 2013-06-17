@@ -170,6 +170,8 @@
     <ClInclude Include="..\api\BlendStateRef.h" />
     <ClInclude Include="..\api\BlobRef.h" />
     <ClInclude Include="..\api\ConstantBufferRef.h" />
+    <ClInclude Include="..\api\Display.h" />
+    <ClInclude Include="..\api\dx11\Display.h" />
     <ClInclude Include="..\api\Enumerations.h" />
     <ClInclude Include="..\api\GeometryBuffer.h" />
     <ClInclude Include="..\api\GraphicsDeviceRef.h" />
@@ -210,6 +212,7 @@
     <ClCompile Include="..\api\dx11\BlobRef.cpp" />
     <ClCompile Include="..\api\dx11\BufferRefBase.cpp" />
     <ClCompile Include="..\api\dx11\ConstantBufferRef.cpp" />
+    <ClCompile Include="..\api\dx11\Display.cpp" />
     <ClCompile Include="..\api\dx11\Enumerations.cpp" />
     <ClCompile Include="..\api\dx11\GraphicsDeviceRef.cpp" />
     <ClCompile Include="..\api\dx11\IndexBufferRef.cpp" />

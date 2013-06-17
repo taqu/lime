@@ -1,4 +1,4 @@
-#ifndef INC_LFRAMEWORK_FLAGS_H__
+﻿#ifndef INC_LFRAMEWORK_FLAGS_H__
 #define INC_LFRAMEWORK_FLAGS_H__
 /**
 @file Flags.h

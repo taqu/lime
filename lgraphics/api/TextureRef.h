@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_TEXTUREREF_H__
+﻿#ifndef INC_LGRAPHICS_TEXTUREREF_H__
 #define INC_LGRAPHICS_TEXTUREREF_H__
 /**
 @file Texture.h

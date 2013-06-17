@@ -1,4 +1,4 @@
-#ifndef INC_WINDOW_H__
+﻿#ifndef INC_WINDOW_H__
 #define INC_WINDOW_H__
 /**
 @file Window.h
@@ -44,6 +44,9 @@ namespace lgraphics
         void terminate();
 
         bool peekMessage();
+#if defined(_WIN32)
+        bool peekMessage(HWND hDlg);
+#endif
 
         bool getMessage();
 

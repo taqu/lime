@@ -1,4 +1,4 @@
-#ifndef INC_LINPUT_H__
+﻿#ifndef INC_LINPUT_H__
 #define INC_LINPUT_H__
 /**
 @file linput.h

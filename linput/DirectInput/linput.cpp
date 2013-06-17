@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file linput.cpp
 @author t-sakai
 @date 2009/05/13
@@ -34,7 +34,7 @@ namespace linput
         {
             EnumContext* context = (EnumContext*)data;
 
-            //ƒfƒoƒCƒXì¬
+            //ãƒ‡ãƒã‚¤ã‚¹ä½œæˆ
             IDirectInputDevice8* device = NULL;
             HRESULT hr = context->dinput_->CreateDevice(dev->guidInstance, &device, NULL);
             if(FAILED(hr)){

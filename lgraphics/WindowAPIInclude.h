@@ -1,4 +1,4 @@
-#ifndef INC_WINDOWAPIINCLUDE_H__
+﻿#ifndef INC_WINDOWAPIINCLUDE_H__
 #define INC_WINDOWAPIINCLUDE_H__
 /**
 @file WindowAPIInclude.h

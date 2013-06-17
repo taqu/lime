@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file Frustum.cpp
 @author t-sakai
 @date 2011/11/03 create
@@ -17,7 +17,7 @@ using namespace lmath;
 namespace lscene
 {
     //---------------------------------------------------
-    // ƒrƒ…[‹óŠÔ‚Ì‹‘äŒvZ
+    // ãƒ“ãƒ¥ãƒ¼ç©ºé–“ã®è¦–éŒå°è¨ˆç®—
     void Frustum::calc(const Camera& camera, f32 zfar)
     {
         const lmath::Matrix44& proj = camera.getProjMatrix();
@@ -118,7 +118,7 @@ namespace lscene
 
 
     //---------------------------------------------------
-    // ƒrƒ…[‹óŠÔ‚Ì‹…‚ª‹‘ä“à‚É‚ ‚é‚©
+    // ãƒ“ãƒ¥ãƒ¼ç©ºé–“ã®çƒãŒè¦–éŒå°å†…ã«ã‚ã‚‹ã‹
     bool Frustum::contains(f32 x, f32 y, f32 z, f32 radius)
     {
         lmath::Vector4 p(x, y, z, 1.0f);
@@ -134,7 +134,7 @@ namespace lscene
     }
 
     //---------------------------------------------------
-    // ‹‘ä‚Ì‚W’¸“_æ“¾
+    // è¦–éŒå°ã®ï¼˜é ‚ç‚¹å–å¾—
     void Frustum::getPoints(lmath::Vector4* points)
     {
         f32 slopeX = planes_[0].v_.z_ / planes_[0].v_.x_;
@@ -143,24 +143,24 @@ namespace lscene
         f32 halfWidth = planes_[4].v_.w_ * slopeX;
         f32 halfHeight = planes_[4].v_.w_ * slopeY;
 
-        points[0].set( halfWidth,   halfHeight, planes_[4].v_.w_, 1.0f); //‰Eã
-        points[1].set(-halfWidth,   halfHeight, planes_[4].v_.w_, 1.0f); //¶ã
-        points[2].set(-halfWidth,  -halfHeight, planes_[4].v_.w_, 1.0f); //¶‰º
-        points[3].set( halfWidth,  -halfHeight, planes_[4].v_.w_, 1.0f); //‰E‰º
+        points[0].set( halfWidth,   halfHeight, planes_[4].v_.w_, 1.0f); //å³ä¸Š
+        points[1].set(-halfWidth,   halfHeight, planes_[4].v_.w_, 1.0f); //å·¦ä¸Š
+        points[2].set(-halfWidth,  -halfHeight, planes_[4].v_.w_, 1.0f); //å·¦ä¸‹
+        points[3].set( halfWidth,  -halfHeight, planes_[4].v_.w_, 1.0f); //å³ä¸‹
 
 
         f32 far = -planes_[5].v_.w_;
         halfWidth = far * slopeX;
         halfHeight = far * slopeY;
 
-        points[4].set( halfWidth,   halfHeight, far, 1.0f); //‰Eã
-        points[5].set(-halfWidth,   halfHeight, far, 1.0f); //¶ã
-        points[6].set(-halfWidth,  -halfHeight, far, 1.0f); //¶‰º
-        points[7].set( halfWidth,  -halfHeight, far, 1.0f); //‰E‰º
+        points[4].set( halfWidth,   halfHeight, far, 1.0f); //å³ä¸Š
+        points[5].set(-halfWidth,   halfHeight, far, 1.0f); //å·¦ä¸Š
+        points[6].set(-halfWidth,  -halfHeight, far, 1.0f); //å·¦ä¸‹
+        points[7].set( halfWidth,  -halfHeight, far, 1.0f); //å³ä¸‹
     }
 
     //---------------------------------------------------
-    // ‹‘ä‚Ì‚W’¸“_æ“¾
+    // è¦–éŒå°ã®ï¼˜é ‚ç‚¹å–å¾—
     void Frustum::getPoints(lmath::Vector4* points, f32 znear)
     {
         f32 slopeX = planes_[0].v_.z_ / planes_[0].v_.x_;
@@ -169,20 +169,20 @@ namespace lscene
         f32 halfWidth = znear * slopeX;
         f32 halfHeight = znear * slopeY;
 
-        points[0].set( halfWidth,   halfHeight, znear, 1.0f); //‰Eã
-        points[1].set(-halfWidth,   halfHeight, znear, 1.0f); //¶ã
-        points[2].set(-halfWidth,  -halfHeight, znear, 1.0f); //¶‰º
-        points[3].set( halfWidth,  -halfHeight, znear, 1.0f); //‰E‰º
+        points[0].set( halfWidth,   halfHeight, znear, 1.0f); //å³ä¸Š
+        points[1].set(-halfWidth,   halfHeight, znear, 1.0f); //å·¦ä¸Š
+        points[2].set(-halfWidth,  -halfHeight, znear, 1.0f); //å·¦ä¸‹
+        points[3].set( halfWidth,  -halfHeight, znear, 1.0f); //å³ä¸‹
 
 
         f32 far = -planes_[5].v_.w_;
         halfWidth = far * slopeX;
         halfHeight = far * slopeY;
 
-        points[4].set( halfWidth,   halfHeight, far, 1.0f); //‰Eã
-        points[5].set(-halfWidth,   halfHeight, far, 1.0f); //¶ã
-        points[6].set(-halfWidth,  -halfHeight, far, 1.0f); //¶‰º
-        points[7].set( halfWidth,  -halfHeight, far, 1.0f); //‰E‰º
+        points[4].set( halfWidth,   halfHeight, far, 1.0f); //å³ä¸Š
+        points[5].set(-halfWidth,   halfHeight, far, 1.0f); //å·¦ä¸Š
+        points[6].set(-halfWidth,  -halfHeight, far, 1.0f); //å·¦ä¸‹
+        points[7].set( halfWidth,  -halfHeight, far, 1.0f); //å³ä¸‹
     }
 
     f32 Frustum::calcFitZFar(const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax, const Camera& camera, f32 minz, f32 maxz)
@@ -212,7 +212,7 @@ namespace lscene
             points[i].mul(camera.getViewMatrix(), points[i]);
         }
 
-        //‹‘ä‚ÌŠe‘¤–Ê‚É‚Â‚¢‚Ä
+        //è¦–éŒå°ã®å„å´é¢ã«ã¤ã„ã¦
         lmath::Triangle triangles[16];
         s32 numTriangles = 0;
         for(s32 i=0; i<12; ++i){

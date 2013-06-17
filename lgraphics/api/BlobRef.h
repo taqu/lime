@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_BLOBREF_H__
+﻿#ifndef INC_LGRAPHICS_BLOBREF_H__
 #define INC_LGRAPHICS_BLOBREF_H__
 /**
 @file BlobRef.h

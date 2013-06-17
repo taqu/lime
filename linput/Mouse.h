@@ -1,4 +1,4 @@
-#ifndef INC_LINPUT_MOUSE_H__
+﻿#ifndef INC_LINPUT_MOUSE_H__
 #define INC_LINPUT_MOUSE_H__
 /**
 @file Mouse.h

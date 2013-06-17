@@ -1,4 +1,4 @@
-#ifndef INC_LSCENE_FRUSTUM_H__
+ï»¿#ifndef INC_LSCENE_FRUSTUM_H__
 #define INC_LSCENE_FRUSTUM_H__
 /**
 @file Frustum.h
@@ -30,12 +30,12 @@ namespace lscene
         {}
 
         /**
-        @brief ƒrƒ…[‹óŠÔ‚Ì‹‘äŒvZ
+        @brief ãƒ“ãƒ¥ãƒ¼ç©ºé–“ã®è¦–éŒå°è¨ˆç®—
         */
         void calc(const Camera& camera, f32 zfar);
 
         /**
-        @brief ƒrƒ…[‹óŠÔ‚Ì‹…‚ª‹‘ä“à‚É‚ ‚é‚©
+        @brief ãƒ“ãƒ¥ãƒ¼ç©ºé–“ã®çƒãŒè¦–éŒå°å†…ã«ã‚ã‚‹ã‹
         */
         bool contains(const lmath::Vector3& position, f32 radius)
         {
@@ -43,23 +43,23 @@ namespace lscene
         }
 
         /**
-        @brief ƒrƒ…[‹óŠÔ‚Ì‹…‚ª‹‘ä“à‚É‚ ‚é‚©
+        @brief ãƒ“ãƒ¥ãƒ¼ç©ºé–“ã®çƒãŒè¦–éŒå°å†…ã«ã‚ã‚‹ã‹
         */
         bool contains(f32 x, f32 y, f32 z, f32 radius);
 
         /**
-        @brief ‹‘ä‚Ì‚W’¸“_æ“¾
+        @brief è¦–éŒå°ã®ï¼˜é ‚ç‚¹å–å¾—
         */
         void getPoints(lmath::Vector4* points);
 
         /**
-        @brief ‹‘ä‚Ì‚W’¸“_æ“¾
+        @brief è¦–éŒå°ã®ï¼˜é ‚ç‚¹å–å¾—
         */
         void getPoints(lmath::Vector4* points, f32 znear);
 
         static f32 calcFitZFar(const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax, const Camera& camera, f32 minz, f32 maxz);
 
-        lmath::Plane planes_[6]; ///¶A‰EAãA‰ºA‹ßA‰“
+        lmath::Plane planes_[6]; ///å·¦ã€å³ã€ä¸Šã€ä¸‹ã€è¿‘ã€é 
     };
 
 }

@@ -1,4 +1,4 @@
-#ifndef INC_LINPUTENUM_H__
+﻿#ifndef INC_LINPUTENUM_H__
 #define INC_LINPUTENUM_H__
 /**
 @file linputEnum.h

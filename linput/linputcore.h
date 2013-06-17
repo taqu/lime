@@ -1,4 +1,4 @@
-#ifndef INC_LINPUTCORE_H__
+﻿#ifndef INC_LINPUTCORE_H__
 #define INC_LINPUTCORE_H__
 /**
 @file linputcore.h

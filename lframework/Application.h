@@ -1,4 +1,4 @@
-#ifndef INC_LFRAMEWORK_APPLICATION_H__
+﻿#ifndef INC_LFRAMEWORK_APPLICATION_H__
 #define INC_LFRAMEWORK_APPLICATION_H__
 /**
 @file Application.h
@@ -28,6 +28,11 @@ namespace lframework
         /// 処理ループ実行
         void run();
 
+#if defined(_WIN32)
+        /// 処理ループ、モードレスダイアログの処理
+        void runWithDialog();
+        void setDialog(HWND hDlg){ hDlg_ = hDlg;}
+#endif
 
     protected:
         Application(const Application&);
@@ -44,6 +49,10 @@ namespace lframework
 
         /// ウィンドウクラス。おそらく重くないのでポインタじゃない
         lgraphics::Window window_;
+
+#if defined(_WIN32)
+        HWND hDlg_; //モードレスダイアログ
+#endif
     };
 }
 #endif //INC_LFRAMEWORK_APPLICATION_H__

@@ -1,4 +1,4 @@
-#ifndef INC_LSCENE_CAMERA_H__
+ï»¿#ifndef INC_LSCENE_CAMERA_H__
 #define INC_LSCENE_CAMERA_H__
 /**
 @file Camera.h
@@ -54,7 +54,7 @@ namespace lscene
         }
 
         /**
-        @brief “§‹“Š‰e
+        @brief é€è¦–æŠ•å½±
         */
         void perspective(f32 width, f32 height, f32 znear, f32 zfar)
         {
@@ -67,7 +67,7 @@ namespace lscene
         }
 
         /**
-        @brief “§‹“Š‰e
+        @brief é€è¦–æŠ•å½±
         */
         void perspectiveFov(f32 fovy, f32 aspect, f32 znear, f32 zfar)
         {
@@ -80,7 +80,7 @@ namespace lscene
         }
 
         /**
-        @brief •½s“Š‰e
+        @brief å¹³è¡ŒæŠ•å½±
         */
         void ortho(f32 width, f32 height, f32 znear, f32 zfar)
         {
@@ -93,7 +93,7 @@ namespace lscene
         }
 
         /**
-        @brief “§‹“Š‰eBƒŠƒjƒA‚y”Å
+        @brief é€è¦–æŠ•å½±ã€‚ãƒªãƒ‹ã‚¢ï¼ºç‰ˆ
         */
         void perspectiveLinearZ(f32 width, f32 height, f32 znear, f32 zfar)
         {
@@ -106,7 +106,7 @@ namespace lscene
         }
 
         /**
-        @brief “§‹“Š‰eBƒŠƒjƒA‚y”Å
+        @brief é€è¦–æŠ•å½±ã€‚ãƒªãƒ‹ã‚¢ï¼ºç‰ˆ
         */
         void perspectiveFovLinearZ(f32 fovy, f32 aspect, f32 znear, f32 zfar)
         {

@@ -1,4 +1,4 @@
-#ifndef INC_LINPUT_DEVICEBASE_H__
+﻿#ifndef INC_LINPUT_DEVICEBASE_H__
 #define INC_LINPUT_DEVICEBASE_H__
 /**
 @file DeviceBase.h

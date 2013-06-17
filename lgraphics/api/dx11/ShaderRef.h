@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_DX11_SHADERREF_H__
+ï»¿#ifndef INC_LGRAPHICS_DX11_SHADERREF_H__
 #define INC_LGRAPHICS_DX11_SHADERREF_H__
 /**
 @file ShaderRef.h
@@ -184,77 +184,77 @@ namespace lgraphics
     class Shader
     {
     public:
-        static const s32 MaxDefines = 63; /// define‚ÌÅ‘å”
+        static const s32 MaxDefines = 63; /// defineã®æœ€å¤§æ•°
 
         /**
-        @brief ƒtƒ@ƒCƒ‹‚©‚çƒsƒNƒZƒ‹ƒVƒF[ƒ_ì¬
+        @brief ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
         @param filename ... 
-        @param numDefines ... defineƒ}ƒNƒ‚Ì”
-        @param defines ... defineƒ}ƒNƒ–¼
+        @param numDefines ... defineãƒã‚¯ãƒ­ã®æ•°
+        @param defines ... defineãƒã‚¯ãƒ­å
         */
         static PixelShaderRef createPixelShaderFromFile(const Char* filename, s32 numDefines, const char** defines, BlobRef* blob);
 
         /**
-        @brief ƒƒ‚ƒŠ‚©‚çƒsƒNƒZƒ‹ƒVƒF[ƒ_ì¬
+        @brief ãƒ¡ãƒ¢ãƒªã‹ã‚‰ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
         @param memory ... 
         @param size ... 
-        @param numDefines ... defineƒ}ƒNƒ‚Ì”
-        @param defines ... defineƒ}ƒNƒ–¼
+        @param numDefines ... defineãƒã‚¯ãƒ­ã®æ•°
+        @param defines ... defineãƒã‚¯ãƒ­å
         */
         static PixelShaderRef createPixelShaderFromMemory(const Char* memory, u32 size, s32 numDefines, const char** defines, BlobRef* blob);
 
         /**
-        @brief ƒtƒ@ƒCƒ‹‚©‚ç’¸“_ƒVƒF[ƒ_ì¬
+        @brief ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
         @param filename ... 
-        @param numDefines ... defineƒ}ƒNƒ‚Ì”
-        @param defines ... defineƒ}ƒNƒ–¼
+        @param numDefines ... defineãƒã‚¯ãƒ­ã®æ•°
+        @param defines ... defineãƒã‚¯ãƒ­å
         */
         static VertexShaderRef createVertexShaderFromFile(const Char* filename, s32 numDefines, const char** defines, BlobRef* blob);
 
         /**
-        @brief ƒƒ‚ƒŠ‚©‚ç’¸“_ƒVƒF[ƒ_ì¬
+        @brief ãƒ¡ãƒ¢ãƒªã‹ã‚‰é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
         @param memory ... 
         @param size ... 
-        @param numDefines ... defineƒ}ƒNƒ‚Ì”
-        @param defines ... defineƒ}ƒNƒ–¼
+        @param numDefines ... defineãƒã‚¯ãƒ­ã®æ•°
+        @param defines ... defineãƒã‚¯ãƒ­å
         */
         static VertexShaderRef createVertexShaderFromMemory(const Char* memory, u32 size, s32 numDefines, const char** defines, BlobRef* blob);
 
         /**
-        @brief ƒtƒ@ƒCƒ‹‚©‚çƒWƒIƒƒgƒŠƒVƒF[ƒ_ì¬
+        @brief ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ã‚¸ã‚ªãƒ¡ãƒˆãƒªã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
         @param filename ... 
-        @param numDefines ... defineƒ}ƒNƒ‚Ì”
-        @param defines ... defineƒ}ƒNƒ–¼
+        @param numDefines ... defineãƒã‚¯ãƒ­ã®æ•°
+        @param defines ... defineãƒã‚¯ãƒ­å
         */
         static GeometryShaderRef createGeometryShaderFromFile(const Char* filename, s32 numDefines, const char** defines, BlobRef* blob);
 
         /**
-        @brief ƒƒ‚ƒŠ‚©‚çƒWƒIƒƒgƒŠƒVƒF[ƒ_ì¬
+        @brief ãƒ¡ãƒ¢ãƒªã‹ã‚‰ã‚¸ã‚ªãƒ¡ãƒˆãƒªã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
         @param memory ... 
         @param size ... 
-        @param numDefines ... defineƒ}ƒNƒ‚Ì”
-        @param defines ... defineƒ}ƒNƒ–¼
+        @param numDefines ... defineãƒã‚¯ãƒ­ã®æ•°
+        @param defines ... defineãƒã‚¯ãƒ­å
         */
         static GeometryShaderRef createGeometryShaderFromMemory(const Char* memory, u32 size, s32 numDefines, const char** defines, BlobRef* blob);
 
 
 
         /**
-        @brief ƒƒ‚ƒŠ‚©‚çƒsƒNƒZƒ‹ƒVƒF[ƒ_ì¬
+        @brief ãƒ¡ãƒ¢ãƒªã‹ã‚‰ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
         @param memory ... 
         @param size ... 
         */
         static PixelShaderRef createPixelShaderFromBinary(const u8* memory, u32 size);
 
         /**
-        @brief ƒƒ‚ƒŠ‚©‚ç’¸“_ƒVƒF[ƒ_ì¬
+        @brief ãƒ¡ãƒ¢ãƒªã‹ã‚‰é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
         @param memory ... 
         @param size ... 
         */
         static VertexShaderRef createVertexShaderFromBinary(const u8* memory, u32 size);
 
         /**
-        @brief ƒƒ‚ƒŠ‚©‚çƒWƒIƒƒgƒŠƒVƒF[ƒ_ì¬
+        @brief ãƒ¡ãƒ¢ãƒªã‹ã‚‰ã‚¸ã‚ªãƒ¡ãƒˆãƒªã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
         @param memory ... 
         @param size ... 
         */

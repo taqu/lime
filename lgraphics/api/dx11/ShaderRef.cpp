@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file ShaderRef.cpp
 @author t-sakai
 @date 2012/07/14 create
@@ -36,7 +36,7 @@ namespace
         LASSERT(blob != NULL);
         LASSERT(numDefines<=Shader::MaxDefines);
 
-        //ƒ}ƒNƒ”z—ñì¬
+        //ãƒã‚¯ãƒ­é…åˆ—ä½œæˆ
         D3D10_SHADER_MACRO macro[Shader::MaxDefines+1];
         for(s32 i=0; i<numDefines; ++i){
             macro[i].Name = defines[i];
@@ -85,7 +85,7 @@ namespace
     //--- Shader
     //---
     //------------------------------------------------------------
-    // ƒtƒ@ƒCƒ‹‚©‚çƒsƒNƒZƒ‹ƒVƒF[ƒ_ì¬
+    // ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
     PixelShaderRef Shader::createPixelShaderFromFile(const Char* filename, s32 numDefines, const char** defines, BlobRef* blob)
     {
         LASSERT(filename != NULL);
@@ -104,7 +104,7 @@ namespace
     }
 
     //------------------------------------------------------------
-    // ƒƒ‚ƒŠ‚©‚çƒsƒNƒZƒ‹ƒVƒF[ƒ_ì¬
+    // ãƒ¡ãƒ¢ãƒªã‹ã‚‰ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
     PixelShaderRef Shader::createPixelShaderFromMemory(const Char* memory, u32 size, s32 numDefines, const char** defines, BlobRef* blob)
     {
         LASSERT(memory != NULL);
@@ -140,7 +140,7 @@ namespace
 
 
     //------------------------------------------------------------
-    // ƒtƒ@ƒCƒ‹‚©‚ç’¸“_ƒVƒF[ƒ_ì¬
+    // ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
     VertexShaderRef Shader::createVertexShaderFromFile(const Char* filename, s32 numDefines, const char** defines, BlobRef* blob)
     {
         LASSERT(filename != NULL);
@@ -160,7 +160,7 @@ namespace
 
 
     //------------------------------------------------------------
-    // ƒƒ‚ƒŠ‚©‚ç’¸“_ƒVƒF[ƒ_ì¬
+    // ãƒ¡ãƒ¢ãƒªã‹ã‚‰é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
     VertexShaderRef Shader::createVertexShaderFromMemory(const Char* memory, u32 size, s32 numDefines, const char** defines, BlobRef* blob)
     {
         LASSERT(memory != NULL);
@@ -197,7 +197,7 @@ namespace
 
 
     //------------------------------------------------------------
-    // ƒtƒ@ƒCƒ‹‚©‚çƒWƒIƒƒgƒŠƒVƒF[ƒ_ì¬
+    // ãƒ•ã‚¡ã‚¤ãƒ«ã‹ã‚‰ã‚¸ã‚ªãƒ¡ãƒˆãƒªã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
     GeometryShaderRef Shader::createGeometryShaderFromFile(const Char* filename, s32 numDefines, const char** defines, BlobRef* blob)
     {
         LASSERT(filename != NULL);
@@ -217,7 +217,7 @@ namespace
 
 
     //------------------------------------------------------------
-    // ƒƒ‚ƒŠ‚©‚çƒWƒIƒƒgƒŠƒVƒF[ƒ_ì¬
+    // ãƒ¡ãƒ¢ãƒªã‹ã‚‰ã‚¸ã‚ªãƒ¡ãƒˆãƒªã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
     GeometryShaderRef Shader::createGeometryShaderFromMemory(const Char* memory, u32 size, s32 numDefines, const char** defines, BlobRef* blob)
     {
         LASSERT(memory != NULL);
@@ -255,7 +255,7 @@ namespace
 
 
     //------------------------------------------------------------
-    // ƒƒ‚ƒŠ‚©‚çƒsƒNƒZƒ‹ƒVƒF[ƒ_ì¬
+    // ãƒ¡ãƒ¢ãƒªã‹ã‚‰ãƒ”ã‚¯ã‚»ãƒ«ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
     PixelShaderRef Shader::createPixelShaderFromBinary(const u8* memory, u32 size)
     {
         LASSERT(memory != NULL);
@@ -278,7 +278,7 @@ namespace
     }
 
     //------------------------------------------------------------
-    // ƒƒ‚ƒŠ‚©‚ç’¸“_ƒVƒF[ƒ_ì¬
+    // ãƒ¡ãƒ¢ãƒªã‹ã‚‰é ‚ç‚¹ã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
     VertexShaderRef Shader::createVertexShaderFromBinary(const u8* memory, u32 size)
     {
         LASSERT(memory != NULL);
@@ -301,7 +301,7 @@ namespace
     }
 
     //------------------------------------------------------------
-    // ƒƒ‚ƒŠ‚©‚çƒWƒIƒƒgƒŠƒVƒF[ƒ_ì¬
+    // ãƒ¡ãƒ¢ãƒªã‹ã‚‰ã‚¸ã‚ªãƒ¡ãƒˆãƒªã‚·ã‚§ãƒ¼ãƒ€ä½œæˆ
     GeometryShaderRef Shader::createGeometryShaderFromBinary(const u8* memory, u32 size)
     {
         LASSERT(memory != NULL);
@@ -426,7 +426,7 @@ namespace
 
         u8* buffer = LIME_NEW u8[sizeof(u32) + compressedSize];
 
-        //ƒGƒ“ƒfƒBƒAƒ“ˆá‚¢‚Í–³‹
+        //ã‚¨ãƒ³ãƒ‡ã‚£ã‚¢ãƒ³é•ã„ã¯ç„¡è¦–
         u32* header = reinterpret_cast<u32*>(buffer);
         header[0] = compressedSize;
 
@@ -463,7 +463,7 @@ namespace
     {
         LASSERT(compressed_ != NULL);
 
-        //ƒGƒ“ƒfƒBƒAƒ“ˆá‚¢‚Í–³‹
+        //ã‚¨ãƒ³ãƒ‡ã‚£ã‚¢ãƒ³é•ã„ã¯ç„¡è¦–
         const u32* header = reinterpret_cast<const u32*>(compressed_);
         return *header;
     }

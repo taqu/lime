@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Device.cpp
 @author t-sakai
 @date 2009/05/13

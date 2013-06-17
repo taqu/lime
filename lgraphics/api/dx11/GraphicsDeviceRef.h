@@ -1,4 +1,4 @@
-#ifndef INC_LGRAPHICS_DX11_GRAPHICSDEVICEREF_H__
+﻿#ifndef INC_LGRAPHICS_DX11_GRAPHICSDEVICEREF_H__
 #define INC_LGRAPHICS_DX11_GRAPHICSDEVICEREF_H__
 /**
 @file GraphicsDevice.h
@@ -72,6 +72,15 @@ namespace lgraphics
             BlendState_Num,
         };
 
+        enum MapType
+        {
+            MapType_Read = D3D11_MAP_READ,
+            MapType_Write = D3D11_MAP_WRITE,
+            MapType_ReadWrite = D3D11_MAP_READ_WRITE,
+            MapType_WriteDiscard = D3D11_MAP_WRITE_DISCARD,
+            MapType_WriteNoOverwrite = D3D11_MAP_WRITE_NO_OVERWRITE,
+        };
+
         static const Char* GSModel;
         static const Char* VSModel;
         static const Char* PSModel;
@@ -84,11 +93,19 @@ namespace lgraphics
         ID3D11Device* getD3DDevice(){ return device_;}
         ID3D11DeviceContext* getContext(){ return context_;}
 
+
+        void onSize(u32 width, u32 height);
+
         void getRenderTargetDesc(u32& width, u32& height);
+
+        bool isFullScreen();
+        void changeScreenMode();
 
         inline void present();
 
         inline void setClearColor(const f32* color);
+        inline const f32* getClearColor() const;
+
         inline void setClearDepthStencil(u32 flag, f32 depth, u8 stencil);
 
         inline void clearRenderTargetView();
@@ -153,6 +170,10 @@ namespace lgraphics
         inline void clearGSResources(u32 numResources);
         inline void clearPSResources(u32 numResources);
         inline void clearRenderTargets(u32 numResources);
+
+        inline void copyResource(ID3D11Resource* dst, ID3D11Resource* src);
+        inline bool map(void*& data, u32& rowPitch, u32& depthPitch, ID3D11Resource* resource, s32 type);
+        inline void unmap(ID3D11Resource* resource);
     private:
         static const u32 MaxShaderResources = 32;
         static ID3D11ShaderResourceView* const NULLResources[MaxShaderResources];
@@ -166,6 +187,7 @@ namespace lgraphics
 
         bool initialize(const InitParam& initParam);
         void terminate();
+        bool createBackBuffer(u32 width, u32 height, u32 depthStencilFormat);
 
         f32 clearColor_[4];
         u32 clearDepthStencilFlag_;
@@ -184,6 +206,7 @@ namespace lgraphics
         ID3D11Device *device_; /// デバイス実態
         ID3D11DeviceContext *context_; /// デバイスコンテキスト
         IDXGISwapChain *swapChain_; /// スワップチェイン
+        ID3D11Texture2D* backBuffer_;
         ID3D11RenderTargetView* renderTargetView_;
         ID3D11Texture2D* depthStencil_;
         ID3D11DepthStencilView* depthStencilView_;
@@ -200,6 +223,11 @@ namespace lgraphics
         clearColor_[1] = color[1];
         clearColor_[2] = color[2];
         clearColor_[3] = color[3];
+    }
+
+    inline const f32* GraphicsDeviceRef::getClearColor() const
+    {
+        return clearColor_;
     }
 
     inline void GraphicsDeviceRef::setClearDepthStencil(u32 flag, f32 depth, u8 stencil)
@@ -399,6 +427,26 @@ namespace lgraphics
     {
         LASSERT(numTargets<MaxRenderTargets);
         context_->OMSetRenderTargets(numTargets, NullTargets, NULL);
+    }
+
+    inline void GraphicsDeviceRef::copyResource(ID3D11Resource* dst, ID3D11Resource* src)
+    {
+        context_->CopyResource(dst, src);
+    }
+
+    inline bool GraphicsDeviceRef::map(void*& data, u32& rowPitch, u32& depthPitch, ID3D11Resource* resource, s32 type)
+    {
+        D3D11_MAPPED_SUBRESOURCE mappedResource;
+        HRESULT hr = context_->Map(resource, 0, (D3D11_MAP)type, 0, &mappedResource);
+        data = mappedResource.pData;
+        rowPitch = mappedResource.RowPitch;
+        depthPitch = mappedResource.DepthPitch;
+        return SUCCEEDED(hr);
+    }
+
+    inline void GraphicsDeviceRef::unmap(ID3D11Resource* resource)
+    {
+        context_->Unmap(resource, 0);
     }
 }
 #endif //INC_LGRAPHICS_DX11_GRAPHICSDEVICEREF_H__
