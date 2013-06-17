@@ -1,10 +1,11 @@
-/**
+﻿/**
 @file lmathcore.cpp
 @author t-sakai
 @date 2009/01/18 create
 */
 #include "lmathcore.h"
 #include "Vector3.h"
+#include "Vector4.h"
 
 namespace lmath
 {
@@ -333,26 +334,54 @@ namespace lmath
         }
     }
 
+    f32 cubicPulse(f32 center, f32 width, f32 x)
+    {
+        x = lcore::absolute(x - center);
+        if(x>width){
+            return 0.0f;
+        }
+        x /= width;
+        return 1.0f - x*x*(3.0f-2.0f*x);
+    }
 
     void randomOnSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1)
     {
         LASSERT(0.0f<=x0 && x0<=1.0f);
         LASSERT(0.0f<=x1 && x1<=1.0f);
 
-        x1 = PI2*x1 - PI;
-        f32 cs = lmath::cosf(x1);
-        f32 sn = lmath::sinf(x1);
+        f32 z = 2.0f*x0 - 1.0f;
+        f32 t = PI2 *x1;
+        f32 r = lmath::sqrt(1.0f - z*z);
 
-        f32 rx0 = lmath::sqrt(1.0f - x0*x0);
-        x0 = 2.0f*x0 - 1.0f;
-
-        vx = rx0 * cs;
-        vy = rx0 * sn;
-        vz = x0;
+        f32 sn, cs;
+        lmath::sincos(sn, cs, t);
+        vx = r * cs;
+        vy = r * sn;
+        vz = z;
     }
 
-    void consineWeightedRandomOnHemiSphere(
-        Vector3& v,
+    // 単位半球面上ランダム
+    void randomOnHemiSphere(
+        f32& vx, f32& vy, f32& vz,
+        f32 x0, f32 x1)
+    {
+        LASSERT(0.0f<=x0 && x0<=1.0f);
+        LASSERT(0.0f<=x1 && x1<=1.0f);
+
+        f32 z = x0;
+        f32 t = PI2 *x1;
+        f32 r = lmath::sqrt(1.0f - z*z);
+
+        f32 sn, cs;
+        lmath::sincos(sn, cs, t);
+        vx = r * cs;
+        vy = r * sn;
+        vz = z;
+    }
+
+    // 単位半球面上ランダム
+    void randomOnHemiSphere(
+        f32& vx, f32& vy, f32& vz,
         const Vector3& n,
         f32 x0, f32 x1)
     {
@@ -360,18 +389,111 @@ namespace lmath
         randomOnSphere(projected.x_, projected.y_, projected.z_, x0, x1);
 
         f32 t = projected.dot(n);
-        Vector3 tn(n);
-        tn *= t;
-        projected -= tn;
+        if(t<0.0f){
+            projected = -projected;
+        }
+        vx = projected.x_;
+        vy = projected.y_;
+        vz = projected.z_;
+    }
 
-        f32 sn = projected.length();
-        f32 cs = lmath::sqrt(1.0f - sn * sn);
-        v = n;
-        v *= cs;
-        v += projected;
+    // cosineに偏重した単位半球面上ランダム
+    void consineWeightedRandomOnHemiSphere(
+        f32& vx, f32& vy, f32& vz,
+        f32 x0, f32 x1)
+    {
+        f32 r = lmath::sqrt(x0);
+        f32 t = PI2 * x1;
+
+        f32 sn, cs;
+        lmath::sincos(sn, cs, t);
+
+        vx = r * cs;
+        vy = r * sn;
+        vz = lmath::sqrt(lcore::maximum(0.0f, 1.0f - x0));
+    }
+
+    // cosineに偏重した単位半球面上ランダム
+    void consineWeightedRandomOnHemiSphere(
+        f32& vx, f32& vy, f32& vz,
+        const Vector3& n,
+        f32 x0, f32 x1)
+    {
+        f32 theta = lmath::acos(sqrt(1.0f - x0));
+        f32 phi = PI2 * x1;
+
+        f32 sineTheta = lmath::sinf(theta);
+        f32 xs = sineTheta*lmath::cosf(phi);
+        f32 ys = lmath::cosf(theta);
+        f32 zs = sineTheta*lmath::sinf(phi);
+
+
+        lmath::Vector3 h(n);
+        if(lcore::absolute(h.x_)<=lcore::absolute(h.y_) && lcore::absolute(h.x_)<=lcore::absolute(h.z_)){
+            h.x_ = 1.0f;
+        }else if(lcore::absolute(h.y_)<=lcore::absolute(h.x_) && lcore::absolute(h.y_)<=lcore::absolute(h.z_)){
+            h.y_ = 1.0f;
+        }else{
+            h.z_ = 1.0f;
+        }
+
+        lmath::Vector3 x;
+        x.cross(h, n);
+        x.normalize();
+
+        lmath::Vector3 z;
+        z.cross(x, n);
+        z.normalize();
+
+        vx = xs*x.x_ + ys*n.x_ + zs*z.x_;
+        vy = xs*x.y_ + ys*n.y_ + zs*z.y_;
+        vz = xs*x.z_ + ys*n.z_ + zs*z.z_;
+
+        f32 il = 1.0f/lmath::sqrt(vx*vx + vy*vy + vz*vz);
+        LASSERT(!lmath::isZeroPositive(il));
+
+        vx *= il;
+        vy *= il;
+        vz *= il;
     }
 
 
-    f32 gain(f32 a, f32 b)    {        if(a<0.001f){            return 0.0f;        }        if(0.999f<a){            return 1.0f;        }        static const f32 InvLogHalf = static_cast<f32>(1.0/-0.30102999566);        f32 p = lmath::log(1.0f-b)*InvLogHalf;        if (a < 0.5f){            return lmath::pow(2.0f * a, p) * 0.5f;        }else{            return 1.0f - lmath::pow(2.0f - 2.0f*a, p) * 0.5f;        }    }
+    f32 gain(f32 a, f32 b)
+    {
+        if(a<0.001f){
+            return 0.0f;
+        }
+        if(0.999f<a){
+            return 1.0f;
+        }
+
+        static const f32 InvLogHalf = static_cast<f32>(1.0/-0.30102999566);
+        f32 p = lmath::log(1.0f-b)*InvLogHalf;
+
+        if (a < 0.5f){
+            return lmath::pow(2.0f * a, p) * 0.5f;
+        }else{
+            return 1.0f - lmath::pow(2.0f - 2.0f*a, p) * 0.5f;
+        }
+    }
+
+
+    void reflect(Vector3& dst, const Vector3& src, const Vector3& normal)
+    {
+        lmath::Vector3 tmp = src;
+
+        dst = normal;
+        dst *= 2.0f*normal.dot(src);
+        dst -= tmp;
+    }
+
+    void reflect(Vector4& dst, const Vector4& src, const Vector4& normal)
+    {
+        lmath::Vector4 tmp = src;
+
+        dst = normal;
+        dst *= 2.0f*normal.dot(src);
+        dst -= tmp;
+    }
 }
 

@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_SPHERE_H__
+﻿#ifndef INC_LMATH_SPHERE_H__
 #define INC_LMATH_SPHERE_H__
 /**
 @file Sphere.h
@@ -47,6 +47,13 @@ namespace lmath
         f32 getRadius() const
         {
             return s_.w_;
+        }
+
+        void setPosition(f32 x, f32 y, f32 z)
+        {
+            s_.x_ = x;
+            s_.y_ = y;
+            s_.z_ = z;
         }
 
         /**

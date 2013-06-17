@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_QUATERNION_H__
+﻿#ifndef INC_LMATH_QUATERNION_H__
 #define INC_LMATH_QUATERNION_H__
 /**
 @file Quaternion.h

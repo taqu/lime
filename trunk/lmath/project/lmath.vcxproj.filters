@@ -24,7 +24,6 @@
     <ClInclude Include="..\geometry\Sphere.h">
       <Filter>geometry</Filter>
     </ClInclude>
-    <ClInclude Include="..\Color.h" />
     <ClInclude Include="..\DualQuaternion.h" />
     <ClInclude Include="..\lmath.h" />
     <ClInclude Include="..\lmathcore.h" />
@@ -60,6 +59,9 @@
     <ClCompile Include="..\Vector3.cpp" />
     <ClCompile Include="..\Vector4.cpp" />
     <ClCompile Include="..\geometry\RayTest.cpp">
+      <Filter>geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\geometry\Ray.cpp">
       <Filter>geometry</Filter>
     </ClCompile>
   </ItemGroup>

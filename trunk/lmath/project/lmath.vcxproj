@@ -166,7 +166,6 @@
     <ClInclude Include="..\geometry\Ray.h" />
     <ClInclude Include="..\geometry\RayTest.h" />
     <ClInclude Include="..\geometry\Sphere.h" />
-    <ClInclude Include="..\Color.h" />
     <ClInclude Include="..\DualQuaternion.h" />
     <ClInclude Include="..\lmath.h" />
     <ClInclude Include="..\lmathcore.h" />
@@ -181,6 +180,7 @@
   <ItemGroup>
     <ClCompile Include="..\geometry\Plane.cpp" />
     <ClCompile Include="..\geometry\PrimitiveTest.cpp" />
+    <ClCompile Include="..\geometry\Ray.cpp" />
     <ClCompile Include="..\geometry\RayTest.cpp" />
     <ClCompile Include="..\geometry\Sphere.cpp" />
     <ClCompile Include="..\DualQuaternion.cpp" />

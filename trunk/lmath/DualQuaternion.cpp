@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file DualQuaternion.cpp
 @author t-sakai
 @date 2009/11/16

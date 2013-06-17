@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_MATRIX34_H__
+ï»¿#ifndef INC_LMATH_MATRIX34_H__
 #define INC_LMATH_MATRIX34_H__
 /**
 @file Matrix34.h
@@ -18,7 +18,7 @@ namespace lmath
     //---
     //--------------------------------------------
     /**
-    ¶èÀ•WŒnA—ñƒxƒNƒgƒ‹AƒxƒNƒgƒ‹‚É‘Î‚µ‚Ä¶‚©‚çŠ|‚¯‚Ä•ÏŠ·‚·‚éB
+    å·¦æ‰‹åº§æ¨™ç³»ã€åˆ—ãƒ™ã‚¯ãƒˆãƒ«ã€ãƒ™ã‚¯ãƒˆãƒ«ã«å¯¾ã—ã¦å·¦ã‹ã‚‰æ›ã‘ã¦å¤‰æ›ã™ã‚‹ã€‚
     */
     class Matrix34
     {
@@ -40,7 +40,7 @@ namespace lmath
         ~Matrix34()
         {}
 
-        /// ’lƒZƒbƒg
+        /// å€¤ã‚»ãƒƒãƒˆ
         void set(f32 m00, f32 m01, f32 m02, f32 m03,
             f32 m10, f32 m11, f32 m12, f32 m13,
             f32 m20, f32 m21, f32 m22, f32 m23)
@@ -50,10 +50,10 @@ namespace lmath
             m_[2][0] = m20; m_[2][1] = m21; m_[2][2] = m22; m_[2][3] = m23;
         }
 
-        /// —v‘fƒAƒNƒZƒX
+        /// è¦ç´ ã‚¢ã‚¯ã‚»ã‚¹
         inline f32 operator()(s32 r, s32 c) const;
 
-        /// —v‘fƒAƒNƒZƒX
+        /// è¦ç´ ã‚¢ã‚¯ã‚»ã‚¹
         inline f32& operator()(s32 r, s32 c);
 
         Matrix34& operator*=(f32 f);
@@ -66,52 +66,52 @@ namespace lmath
 
         void identity();
 
-        /// 3x3•”•ªs—ñ‚Ì“]’u
+        /// 3x3éƒ¨åˆ†è¡Œåˆ—ã®è»¢ç½®
         void transpose33();
 
-        /// 3x3•”•ªs—ñ‚Ìs—ñ®
+        /// 3x3éƒ¨åˆ†è¡Œåˆ—ã®è¡Œåˆ—å¼
         f32 determinant33() const;
 
-        /// 3x3•”•ªs—ñ‚Ì‹ts—ñ
+        /// 3x3éƒ¨åˆ†è¡Œåˆ—ã®é€†è¡Œåˆ—
         void invert33();
 
-        /// ‹ts—ñ
+        /// é€†è¡Œåˆ—
         void invert();
 
-        /// •½sˆÚ“®ƒZƒbƒg
+        /// å¹³è¡Œç§»å‹•ã‚»ãƒƒãƒˆ
         inline void setTranslate(const Vector3& v);
 
-        /// •½sˆÚ“®ƒZƒbƒg
+        /// å¹³è¡Œç§»å‹•ã‚»ãƒƒãƒˆ
         inline void setTranslate(f32 x, f32 y, f32 z);
 
-        /// Œã‚©‚ç•½sˆÚ“®
+        /// å¾Œã‹ã‚‰å¹³è¡Œç§»å‹•
         void translate(const Vector3& v);
 
-        /// Œã‚©‚ç•½sˆÚ“®
+        /// å¾Œã‹ã‚‰å¹³è¡Œç§»å‹•
         void translate(f32 x, f32 y, f32 z);
 
-        /// ‘O‚©‚ç•½sˆÚ“®
+        /// å‰ã‹ã‚‰å¹³è¡Œç§»å‹•
         inline void preTranslate(const Vector3& v);
 
-        /// ‘O‚©‚ç•½sˆÚ“®
+        /// å‰ã‹ã‚‰å¹³è¡Œç§»å‹•
         void preTranslate(f32 x, f32 y, f32 z);
 
-        /// Œã‚©‚ç‰ñ“]
+        /// å¾Œã‹ã‚‰å›è»¢
         void rotateX(f32 radian);
 
-        /// Œã‚©‚ç‰ñ“]
+        /// å¾Œã‹ã‚‰å›è»¢
         void rotateY(f32 radian);
 
-        /// Œã‚©‚ç‰ñ“]
+        /// å¾Œã‹ã‚‰å›è»¢
         void rotateZ(f32 radian);
 
-        /// ²‰ñ“]
+        /// è»¸å›è»¢
         void setRotateAxis(const Vector3& axis, f32 radian)
         {
             setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
         }
 
-        /// ²‰ñ“]
+        /// è»¸å›è»¢
         void setRotateAxis(f32 x, f32 y, f32 z, f32 radian);
 
         inline void setScale(f32 s);
@@ -124,7 +124,7 @@ namespace lmath
         bool isNan() const;
 
 #if defined(LMATH_USE_SSE)
-        //SSEƒZƒbƒgEƒXƒgƒA–½—ß
+        //SSEã‚»ãƒƒãƒˆãƒ»ã‚¹ãƒˆã‚¢å‘½ä»¤
         static void load(lm128& r0, lm128& r1, lm128& r2, const Matrix34& m);
         static void store(Matrix34& m, const lm128& r0, const lm128& r1, const lm128& r2);
 #endif
@@ -148,7 +148,7 @@ namespace lmath
         return m_[r][c];
     }
 
-    // •½sˆÚ“®ƒZƒbƒg
+    // å¹³è¡Œç§»å‹•ã‚»ãƒƒãƒˆ
     inline void Matrix34::setTranslate(const Vector3& v)
     {
         m_[0][3] = v.x_;
@@ -157,7 +157,7 @@ namespace lmath
 
     }
 
-    // •½sˆÚ“®ƒZƒbƒg
+    // å¹³è¡Œç§»å‹•ã‚»ãƒƒãƒˆ
     inline void Matrix34::setTranslate(f32 x, f32 y, f32 z)
     {
         m_[0][3] = x;
@@ -165,7 +165,7 @@ namespace lmath
         m_[2][3] = z;
     }
 
-    // ‘O‚©‚ç•½sˆÚ“®
+    // å‰ã‹ã‚‰å¹³è¡Œç§»å‹•
     inline void Matrix34::preTranslate(const Vector3& v)
     {
         preTranslate(v.x_, v.y_, v.z_);

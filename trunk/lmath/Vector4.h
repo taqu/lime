@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_VECTOR4_H__
+ï»¿#ifndef INC_LMATH_VECTOR4_H__
 #define INC_LMATH_VECTOR4_H__
 /**
 @file Vector4.h
@@ -118,6 +118,8 @@ namespace lmath
         inline void floor();
         inline void invert();
 
+        inline void sqrt();
+
         inline void getParallelComponent(Vector4& dst, const Vector4& basis) const
         {
             const f32 cs = dot(basis);
@@ -146,7 +148,7 @@ namespace lmath
 
         //inline lm128 rcp(lm128& r)
         //{
-        //    //Newton-Raphson–@‚ÅAs—ñ®‚Ì‹t”‚ğŒvZ
+        //    //Newton-Raphsonæ³•ã§ã€è¡Œåˆ—å¼ã®é€†æ•°ã‚’è¨ˆç®—
         //    lm128 tmp = _mm_rcp_ss(r);
         //    r = _mm_mul_ss(r, tmp);
         //    r = _mm_mul_ss(r, tmp);
@@ -419,6 +421,7 @@ namespace lmath
         f32 w = w_;
         w_ = 1.0f;
         mul(m, *this);
+        *this /= w_;
         w_ = w;
     }
 
@@ -609,6 +612,21 @@ namespace lmath
         y_ = 1.0f/y_;
         z_ = 1.0f/z_;
         w_ = 1.0f/w_;
+#endif
+    }
+
+    inline void Vector4::sqrt()
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(*this);
+        r0 = _mm_sqrt_ps(r0);
+        store(*this, r0);
+
+#else
+        x_ = lmath::sqrt(x_);
+        y_ = lmath::sqrt(y_);
+        z_ = lmath::sqrt(z_);
+        w_ = lmath::sqrt(w_);
 #endif
     }
 }

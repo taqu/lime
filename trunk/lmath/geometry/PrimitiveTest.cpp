@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file PrimitiveTest.cpp
 @author t-sakai
 @date 2009/12/20
@@ -13,9 +13,6 @@ namespace lmath
     // 点から平面上の最近傍点を計算
     void closestPointPointVsPlane(lmath::Vector3& result, const lmath::Vector3& point, const Plane& plane)
     {
-        //平面は正規化されている
-        LASSERT(isEqual(plane.v_.lengthSqr(), 1.0f));
-
         f32 t = plane.dot(point);
         result.set(plane.v_.x_, plane.v_.y_, plane.v_.z_);
         result *= -t;
@@ -26,9 +23,6 @@ namespace lmath
     // 点から平面への距離を計算
     f32 distancePointVsPlane(const lmath::Vector3& point, const Plane& plane)
     {
-        //平面は正規化されている
-        LASSERT(lmath::isEqual(plane.v_.lengthSqr(), 1.0f));
-
         f32 t = plane.dot(point);
         return t;
     }
@@ -111,6 +105,15 @@ namespace lmath
     bool testSphereVsSphere(const Sphere& sphere0, const Sphere& sphere1)
     {
         f32 distance = sphere0.distance(sphere1);
+        f32 radius = sphere0.s_.w_ + sphere1.s_.w_ + F32_EPSILON;
+
+        return (distance <= radius);
+    }
+
+    //---------------------------------------------------------------------------------
+    bool testSphereVsSphere(f32& distance, const Sphere& sphere0, const Sphere& sphere1)
+    {
+        distance = sphere0.distance(sphere1);
         f32 radius = sphere0.s_.w_ + sphere1.s_.w_ + F32_EPSILON;
 
         return (distance <= radius);

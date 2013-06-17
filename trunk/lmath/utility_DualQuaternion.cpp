@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file utility_DualQuaternion.cpp
 @author t-sakai
 @date 2009/11/10 create

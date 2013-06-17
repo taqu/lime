@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_VECTOR2_H__
+﻿#ifndef INC_LMATH_VECTOR2_H__
 #define INC_LMATH_VECTOR2_H__
 /**
 @file Vector2.h
@@ -34,7 +34,8 @@ namespace lmath
             y_ = y;
         }
 
-        inline explicit Vector2(const f32 *xy);
+        inline void zero();
+        inline void one();
 
         inline f32 operator[](s32 index) const;
         inline f32& operator[](s32 index);
@@ -77,6 +78,16 @@ namespace lmath
     //--- 実装
     //---
     //--------------------------------------------
+    inline void Vector2::zero()
+    {
+        x_ = y_ = 0.0f;
+    }
+
+    inline void Vector2::one()
+    {
+        x_ = y_ = 1.0f;
+    }
+
     inline f32 Vector2::operator[](s32 index) const
     {
         LASSERT(0<=index

@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_MATRIX44_H__
+﻿#ifndef INC_LMATH_MATRIX44_H__
 #define INC_LMATH_MATRIX44_H__
 /**
 @file Matrix44.h

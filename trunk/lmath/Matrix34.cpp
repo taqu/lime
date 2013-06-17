@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file Matrix34.cpp
 @author t-sakai
 @date 2011/06/30
@@ -146,7 +146,7 @@ namespace lmath
     {
 #if defined(LMATH_USE_SSE)
         f32 one = 1.0f;
-        static const u32 rotmask = 147; //ãˆÊŒ…•ûŒü‚Ö‰ñ“]
+        static const u32 rotmask = 147; //ä¸Šä½æ¡æ–¹å‘ã¸å›è»¢
         lm128 t = _mm_load_ss(&one);
         _mm_storeu_ps(&(m_[0][0]), t);
 
@@ -222,7 +222,7 @@ namespace lmath
         return *this;
     }
 
-    // 3x3•”•ªs—ñ‚Ì“]’u
+    // 3x3éƒ¨åˆ†è¡Œåˆ—ã®è»¢ç½®
     void Matrix34::transpose33()
     {
         lcore::swap(m_[0][1], m_[1][0]);
@@ -231,7 +231,7 @@ namespace lmath
 
     }
 
-    // 3x3•”•ªs—ñ‚Ìs—ñ®
+    // 3x3éƒ¨åˆ†è¡Œåˆ—ã®è¡Œåˆ—å¼
     f32 Matrix34::determinant33() const
     {
 //#if defined(LMATH_USE_SSE)
@@ -242,8 +242,8 @@ namespace lmath
         lm128 r1 = _mm_loadu_ps(&(m_[1][0]));
         lm128 r2 = _mm_loadu_ps(&(m_[2][0]));
 
-        static const u32 Shuffle0 = 201; // 1 2 0‚É•À‚Ñ‘Ö‚¦
-        static const u32 Shuffle1 = 210; // 2 0 1‚É•À‚Ñ‘Ö‚¦
+        static const u32 Shuffle0 = 201; // 1 2 0ã«ä¸¦ã³æ›¿ãˆ
+        static const u32 Shuffle1 = 210; // 2 0 1ã«ä¸¦ã³æ›¿ãˆ
 
         lm128 t00 = _mm_shuffle_ps(r1, r1, Shuffle0);
         lm128 t01 = _mm_shuffle_ps(r1, r1, Shuffle1);
@@ -274,7 +274,7 @@ namespace lmath
 #endif
     }
 
-    // 3x3•”•ªs—ñ‚Ì‹ts—ñ
+    // 3x3éƒ¨åˆ†è¡Œåˆ—ã®é€†è¡Œåˆ—
     void Matrix34::invert33()
     {
 #if defined(LMATH_USE_SSE)
@@ -292,20 +292,20 @@ namespace lmath
 
         t0 = _mm_mul_ps(t0, t1);
         t2 = _mm_mul_ps(t2, t3);
-        t0 = _mm_sub_ps(t0, t2); //—]ˆöqs—ñ@0—ñ–Ú
+        t0 = _mm_sub_ps(t0, t2); //ä½™å› å­è¡Œåˆ—ã€€0åˆ—ç›®
 
-        //s—ñ®‚Ì‹t”ŒvZ
+        //è¡Œåˆ—å¼ã®é€†æ•°è¨ˆç®—
         //-------------------------------------------------------
         lm128 det = _mm_mul_ps(c0, t0);
         //_mm_store_ps(buffer, det);
-        //buffer[0] = buffer[0] + buffer[1] + buffer[2]; //…•½‰‰Z
+        //buffer[0] = buffer[0] + buffer[1] + buffer[2]; //æ°´å¹³æ¼”ç®—
         //det = _mm_load_ss(buffer);
 
-        //…•½‰‰Z
+        //æ°´å¹³æ¼”ç®—
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0x4E), det);
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0xB1), det);
 
-        //Newton-Raphson–@‚ÅAs—ñ®‚Ì‹t”‚ğŒvZ
+        //Newton-Raphsonæ³•ã§ã€è¡Œåˆ—å¼ã®é€†æ•°ã‚’è¨ˆç®—
         {
             t1 = _mm_rcp_ss(det);
             det = _mm_mul_ss(det, t1);
@@ -315,7 +315,7 @@ namespace lmath
             det = _mm_shuffle_ps(det, det, 0);
         }
 
-        //0—ñ–Ú
+        //0åˆ—ç›®
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer, t0);
 
@@ -332,9 +332,9 @@ namespace lmath
 
         t0 = _mm_mul_ps(t0, t1);
         t2 = _mm_mul_ps(t2, t3);
-        t0 = _mm_sub_ps(t0, t2); //—]ˆöqs—ñ@1—ñ–Ú
+        t0 = _mm_sub_ps(t0, t2); //ä½™å› å­è¡Œåˆ—ã€€1åˆ—ç›®
 
-        //1—ñ–Ú
+        //1åˆ—ç›®
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer, t0);
 
@@ -351,9 +351,9 @@ namespace lmath
 
         t0 = _mm_mul_ps(t0, t1);
         t2 = _mm_mul_ps(t2, t3);
-        t0 = _mm_sub_ps(t0, t2); //—]ˆöqs—ñ@2—ñ–Ú
+        t0 = _mm_sub_ps(t0, t2); //ä½™å› å­è¡Œåˆ—ã€€2åˆ—ç›®
 
-        //2—ñ–Ú
+        //2åˆ—ç›®
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer, t0);
 
@@ -388,7 +388,7 @@ namespace lmath
 #endif
     }
 
-    // ‹ts—ñ
+    // é€†è¡Œåˆ—
     void Matrix34::invert()
     {
 
@@ -409,21 +409,21 @@ namespace lmath
 
         t0 = _mm_mul_ps(t0, t1);
         t2 = _mm_mul_ps(t2, t3);
-        t0 = _mm_sub_ps(t0, t2); //—]ˆöqs—ñ@0—ñ–Ú
+        t0 = _mm_sub_ps(t0, t2); //ä½™å› å­è¡Œåˆ—ã€€0åˆ—ç›®
 
-        //s—ñ®‚Ì‹t”ŒvZ
+        //è¡Œåˆ—å¼ã®é€†æ•°è¨ˆç®—
         //-------------------------------------------------------
         lm128 det = _mm_mul_ps(c0, t0);
         //_mm_store_ps(buffer0, det);
-        //buffer0[0] = buffer0[0] + buffer0[1] + buffer0[2]; //…•½‰‰Z
+        //buffer0[0] = buffer0[0] + buffer0[1] + buffer0[2]; //æ°´å¹³æ¼”ç®—
         //det = _mm_load_ss(buffer0);
 
-        //…•½‰‰Z
+        //æ°´å¹³æ¼”ç®—
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0x4E), det);
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0xB1), det);
 
 #if 0
-        {//Newton-Raphson–@‚ÅAs—ñ®‚Ì‹t”‚ğŒvZ
+        {//Newton-Raphsonæ³•ã§ã€è¡Œåˆ—å¼ã®é€†æ•°ã‚’è¨ˆç®—
             t1 = _mm_rcp_ss(det);
             det = _mm_mul_ss(det, t1);
             det = _mm_mul_ss(det, t1);
@@ -432,14 +432,14 @@ namespace lmath
             det = _mm_shuffle_ps(det, det, 0);
         }
 #else
-        {//s—ñ®‚Ì‹t”‚ğŒvZ
+        {//è¡Œåˆ—å¼ã®é€†æ•°ã‚’è¨ˆç®—
             t1 = _mm_set_ss(1.0f);
             det = _mm_div_ss(t1, det);
             det = _mm_shuffle_ps(det, det, 0);
         }
 #endif
 
-        //0—ñ–Ú
+        //0åˆ—ç›®
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer0, t0);
 
@@ -455,9 +455,9 @@ namespace lmath
 
         t0 = _mm_mul_ps(t0, t1);
         t2 = _mm_mul_ps(t2, t3);
-        t0 = _mm_sub_ps(t0, t2); //—]ˆöqs—ñ@1—ñ–Ú
+        t0 = _mm_sub_ps(t0, t2); //ä½™å› å­è¡Œåˆ—ã€€1åˆ—ç›®
 
-        //1—ñ–Ú
+        //1åˆ—ç›®
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer1, t0);
 
@@ -473,9 +473,9 @@ namespace lmath
 
         t0 = _mm_mul_ps(t0, t1);
         t2 = _mm_mul_ps(t2, t3);
-        t0 = _mm_sub_ps(t0, t2); //—]ˆöqs—ñ@2—ñ–Ú
+        t0 = _mm_sub_ps(t0, t2); //ä½™å› å­è¡Œåˆ—ã€€2åˆ—ç›®
 
-        //2—ñ–Ú
+        //2åˆ—ç›®
         t2 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer2, t2);
 
@@ -776,7 +776,7 @@ namespace lmath
 
 
 #if defined(LMATH_USE_SSE)
-    //SSEƒZƒbƒgEƒXƒgƒA–½—ß
+    //SSEã‚»ãƒƒãƒˆãƒ»ã‚¹ãƒˆã‚¢å‘½ä»¤
 
     void Matrix34::load(lm128& r0, lm128& r1, lm128& r2, const Matrix34& m)
     {

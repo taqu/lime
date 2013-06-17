@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_PLANE_H__
+﻿#ifndef INC_LMATH_PLANE_H__
 #define INC_LMATH_PLANE_H__
 /**
 @file Plane.h

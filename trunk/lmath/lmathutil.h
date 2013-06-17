@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_LMATHUTIL_H__
+ï»¿#ifndef INC_LMATH_LMATHUTIL_H__
 #define INC_LMATH_LMATHUTIL_H__
 /**
 @file lmathutil.h
@@ -22,109 +22,118 @@ namespace lmath
     void calcAABBPoints(Vector4* AABB, const Vector4& aabbMin, const Vector4& aabbMax);
 
     /**
-    @brief Ferguson-Coons‹Èü
-    @param dst ... o—ÍB
+    @brief Ferguson-Coonsæ›²ç·š
+    @param dst ... å‡ºåŠ›ã€‚
     @param t ... 0-1
-    @param p0 ... “_0
-    @param v0 ... “_0‚Å‚Ì‘¬“x
-    @param p1 ... “_1
-    @param v1 ... “_1‚Å‚Ì‘¬“x
+    @param p0 ... ç‚¹0
+    @param v0 ... ç‚¹0ã§ã®é€Ÿåº¦
+    @param p1 ... ç‚¹1
+    @param v1 ... ç‚¹1ã§ã®é€Ÿåº¦
     */
     void fergusonCoonsCurve(Vector4& dst, f32 t, const Vector4& p0, const Vector4& v0, const Vector4& p1, const Vector4& v1);
 
     /**
-    @brief Bezier‹Èü
-    @param dst ... o—ÍB
+    @brief Bezieræ›²ç·š
+    @param dst ... å‡ºåŠ›ã€‚
     @param t ... 0-1
-    @param p0 ... “_0
-    @param p1 ... “_1
-    @param p2 ... “_2
-    @param p3 ... “_3
+    @param p0 ... ç‚¹0
+    @param p1 ... ç‚¹1
+    @param p2 ... ç‚¹2
+    @param p3 ... ç‚¹3
     */
     void cubicBezierCurve(Vector4& dst, f32 t, const Vector4& p0, const Vector4& p1, const Vector4& p2, const Vector4& p3);
 
     /**
-    @brief Catmull-Rom‹Èü
-    @param dst ... o—ÍB
+    @brief Catmull-Romæ›²ç·š
+    @param dst ... å‡ºåŠ›ã€‚
     @param t ... 0-1
-    @param p0 ... “_0
-    @param p1 ... “_1
-    @param p2 ... “_2
-    @param p3 ... “_3
+    @param p0 ... ç‚¹0
+    @param p1 ... ç‚¹1
+    @param p2 ... ç‚¹2
+    @param p3 ... ç‚¹3
     */
     void catmullRomCurve(Vector4& dst, f32 t, const Vector4& p0, const Vector4& p1, const Vector4& p2, const Vector4& p3);
     void catmullRomCurveStartPoint(Vector4& dst, f32 t, const Vector4& p1, const Vector4& p2, const Vector4& p3);
     void catmullRomCurveEndPoint(Vector4& dst, f32 t, const Vector4& p0, const Vector4& p1, const Vector4& p2);
 
-
+    /**
+    @brief Catmull-Romæ›²ç·š
+    @param dst ... å‡ºåŠ›ã€‚
+    @param t ... 0-1
+    @param p0 ... ç‚¹0
+    @param p1 ... ç‚¹1
+    @param p2 ... ç‚¹2
+    @param p3 ... ç‚¹3
+    */
+    void catmullRomCurve(f32& dst, f32 t, f32 p0, f32 p1, f32 p2, f32 p3);
 
     //--------------------------------------------------------
-    //--- lŒ³”
+    //--- å››å…ƒæ•°
     //--------------------------------------------------------
     /**
-    @brief ’PˆÊlŒ³”‚ÆˆÚ“®ƒxƒNƒgƒ‹‚ğ’PˆÊƒfƒ…ƒAƒ‹ƒNƒEƒH[ƒ^ƒjƒIƒ“‚É•ÏŠ·
+    @brief å˜ä½å››å…ƒæ•°ã¨ç§»å‹•ãƒ™ã‚¯ãƒˆãƒ«ã‚’å˜ä½ãƒ‡ãƒ¥ã‚¢ãƒ«ã‚¯ã‚¦ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã«å¤‰æ›
 
-    ˆÚ“®‚µ‚Ä‚©‚çA‰ñ“]
+    ç§»å‹•ã—ã¦ã‹ã‚‰ã€å›è»¢
     */
     void TransQuat2UnitDualQuat(const Quaternion& quat, const Vector3& trans, Quaternion dq[2]);
 
     /**
-    @brief ’PˆÊlŒ³”‚ÆˆÚ“®ƒxƒNƒgƒ‹‚ğ’PˆÊƒfƒ…ƒAƒ‹ƒNƒEƒH[ƒ^ƒjƒIƒ“‚É•ÏŠ·
+    @brief å˜ä½å››å…ƒæ•°ã¨ç§»å‹•ãƒ™ã‚¯ãƒˆãƒ«ã‚’å˜ä½ãƒ‡ãƒ¥ã‚¢ãƒ«ã‚¯ã‚¦ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã«å¤‰æ›
 
-    ‰ñ“]‚µ‚Ä‚©‚çAˆÚ“®
+    å›è»¢ã—ã¦ã‹ã‚‰ã€ç§»å‹•
     */
     void QuatTrans2UnitDualQuat(const Quaternion& quat, const Vector3& trans, Quaternion dq[2]);
 
 
     /**
-    @brief ’PˆÊƒfƒ…ƒAƒ‹ƒNƒEƒH[ƒ^ƒjƒIƒ“‚ğ’PˆÊlŒ³”‚ÆˆÚ“®ƒxƒNƒgƒ‹‚É•ÏŠ·
+    @brief å˜ä½ãƒ‡ãƒ¥ã‚¢ãƒ«ã‚¯ã‚¦ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã‚’å˜ä½å››å…ƒæ•°ã¨ç§»å‹•ãƒ™ã‚¯ãƒˆãƒ«ã«å¤‰æ›
     */
     void UnitDualQuat2QuatTrans(const f32 dq[2][4], Quaternion& quat, Vector3& trans);
 
 
     /**
-    @brief ƒfƒ…ƒAƒ‹ƒNƒEƒH[ƒ^ƒjƒIƒ“‚ğ’PˆÊlŒ³”‚ÆˆÚ“®ƒxƒNƒgƒ‹‚É•ÏŠ·
+    @brief ãƒ‡ãƒ¥ã‚¢ãƒ«ã‚¯ã‚¦ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã‚’å˜ä½å››å…ƒæ•°ã¨ç§»å‹•ãƒ™ã‚¯ãƒˆãƒ«ã«å¤‰æ›
 
-    ƒfƒ…ƒAƒ‹ƒNƒEƒH[ƒ^ƒjƒIƒ“‚Í”ñƒ[ƒ‚Ì”ñƒfƒ…ƒAƒ‹ƒp[ƒgilŒ³”j‚Ìê‡
+    ãƒ‡ãƒ¥ã‚¢ãƒ«ã‚¯ã‚¦ã‚©ãƒ¼ã‚¿ãƒ‹ã‚ªãƒ³ã¯éã‚¼ãƒ­ã®éãƒ‡ãƒ¥ã‚¢ãƒ«ãƒ‘ãƒ¼ãƒˆï¼ˆå››å…ƒæ•°ï¼‰ã®å ´åˆ
     */
     void DualQuaternion2QuatTrans(const f32 dq[2][4], Quaternion& quat, Vector3& trans);
 
     /**
-    @brief Šµ«À•W‚©‚çƒIƒuƒWƒFƒNƒgÀ•W‚Ö‚ÌƒIƒCƒ‰[Šp‚ğæ“¾
+    @brief æ…£æ€§åº§æ¨™ã‹ã‚‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã¸ã®ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‚’å–å¾—
 
-    Šµ«À•W‚ÍAŒ´“_‚ªƒIƒuƒWƒFƒNƒgÀ•W‚Æ“™‚µ‚­A²‚ªƒ[ƒ‹ƒhÀ•W‚Æ•½s‚ÈÀ•WŒn
+    æ…£æ€§åº§æ¨™ã¯ã€åŸç‚¹ãŒã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã¨ç­‰ã—ãã€è»¸ãŒãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã¨å¹³è¡Œãªåº§æ¨™ç³»
     */
     void getEulerInertialToObject(f32& head, f32& pitch, f32& bank, const lmath::Matrix34& m);
 
     /**
-    @brief Šµ«À•W‚©‚çƒIƒuƒWƒFƒNƒgÀ•W‚Ö‚ÌƒIƒCƒ‰[Šp‚ğæ“¾
+    @brief æ…£æ€§åº§æ¨™ã‹ã‚‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã¸ã®ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‚’å–å¾—
 
-    Šµ«À•W‚ÍAŒ´“_‚ªƒIƒuƒWƒFƒNƒgÀ•W‚Æ“™‚µ‚­A²‚ªƒ[ƒ‹ƒhÀ•W‚Æ•½s‚ÈÀ•WŒn
+    æ…£æ€§åº§æ¨™ã¯ã€åŸç‚¹ãŒã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã¨ç­‰ã—ãã€è»¸ãŒãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã¨å¹³è¡Œãªåº§æ¨™ç³»
     */
     void getEulerInertialToObject(f32& head, f32& pitch, f32& bank, const lmath::Quaternion& q);
 
 
     /**
-    @brief ƒIƒuƒWƒFƒNƒgÀ•W‚©‚çŠµ«À•W‚Ö‚ÌƒIƒCƒ‰[Šp‚ğæ“¾
+    @brief ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã‹ã‚‰æ…£æ€§åº§æ¨™ã¸ã®ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‚’å–å¾—
 
-    Šµ«À•W‚ÍAŒ´“_‚ªƒIƒuƒWƒFƒNƒgÀ•W‚Æ“™‚µ‚­A²‚ªƒ[ƒ‹ƒhÀ•W‚Æ•½s‚ÈÀ•WŒn
+    æ…£æ€§åº§æ¨™ã¯ã€åŸç‚¹ãŒã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã¨ç­‰ã—ãã€è»¸ãŒãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã¨å¹³è¡Œãªåº§æ¨™ç³»
     */
     void getEulerObjectToInertial(f32& head, f32& pitch, f32& bank, const lmath::Matrix34& m);
 
     /**
-    @brief ƒIƒuƒWƒFƒNƒgÀ•W‚©‚çŠµ«À•W‚Ö‚ÌƒIƒCƒ‰[Šp‚ğæ“¾
+    @brief ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã‹ã‚‰æ…£æ€§åº§æ¨™ã¸ã®ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‚’å–å¾—
 
-    Šµ«À•W‚ÍAŒ´“_‚ªƒIƒuƒWƒFƒNƒgÀ•W‚Æ“™‚µ‚­A²‚ªƒ[ƒ‹ƒhÀ•W‚Æ•½s‚ÈÀ•WŒn
+    æ…£æ€§åº§æ¨™ã¯ã€åŸç‚¹ãŒã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã¨ç­‰ã—ãã€è»¸ãŒãƒ¯ãƒ¼ãƒ«ãƒ‰åº§æ¨™ã¨å¹³è¡Œãªåº§æ¨™ç³»
     */
     void getEulerObjectToInertial(f32& head, f32& pitch, f32& bank, const lmath::Quaternion& q);
 
     /**
-    @brief ƒIƒCƒ‰[Šp‚©‚çlŒ³”‚ğæ“¾
+    @brief ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‹ã‚‰å››å…ƒæ•°ã‚’å–å¾—
     */
     void getQuaternionObjectToInertial(Quaternion& q, f32 head, f32 pitch, f32 bank);
 
     /**
-    @brief ƒIƒCƒ‰[Šp‚©‚çlŒ³”‚ğæ“¾
+    @brief ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‹ã‚‰å››å…ƒæ•°ã‚’å–å¾—
     */
     void getQuaternionInertialToObject(Quaternion& q, f32 head, f32 pitch, f32 bank);
 }
