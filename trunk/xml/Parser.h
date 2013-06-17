@@ -1,4 +1,4 @@
-#ifndef __XML_PARSER_H__
+﻿#ifndef __XML_PARSER_H__
 #define __XML_PARSER_H__
 /**
 @file Parser.h

@@ -18,8 +18,9 @@ namespace load
             Flag_RecieveShadow = 0x01U << 1,
         };
 
-        lmath::Vector4 diffuse_; //rgba
+        lmath::Vector4 diffuse_; //rgb fresnel
         lmath::Vector4 specular_; //rgb shininess
+        lmath::Vector4 transparent_; //rgba
 
         u32 flags_;
 

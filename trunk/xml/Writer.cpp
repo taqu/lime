@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Writer.cpp
 @author t-sakai
 @date 2011/08/18

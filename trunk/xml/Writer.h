@@ -1,4 +1,4 @@
-#ifndef INC_XML_WRITER_H__
+﻿#ifndef INC_XML_WRITER_H__
 #define INC_XML_WRITER_H__
 /**
 @file Writer.h

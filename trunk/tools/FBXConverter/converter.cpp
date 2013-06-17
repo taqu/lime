@@ -612,18 +612,26 @@ namespace
         if( src->GetClassId().Is(FbxSurfacePhong::ClassId) ){
             FbxSurfacePhong* phong = (FbxSurfacePhong*)src;
 
-            
+            f32 reflectionFactor = phong->ReflectionFactor.Get();
+
             material.diffuse_.set(
                 static_cast<f32>(phong->Diffuse.Get()[0]),
                 static_cast<f32>(phong->Diffuse.Get()[1]),
                 static_cast<f32>(phong->Diffuse.Get()[2]),
-                static_cast<f32>(1.0 - phong->TransparencyFactor.Get()));
+                static_cast<f32>(phong->SpecularFactor.Get()));
 
             material.specular_.set(
                 static_cast<f32>(phong->Specular.Get()[0]),
                 static_cast<f32>(phong->Specular.Get()[1]),
                 static_cast<f32>(phong->Specular.Get()[2]),
                 static_cast<f32>(phong->Shininess.Get()));
+
+            material.transparent_.set(
+                static_cast<f32>(phong->TransparentColor.Get()[0]),
+                static_cast<f32>(phong->TransparentColor.Get()[1]),
+                static_cast<f32>(phong->TransparentColor.Get()[2]),
+                static_cast<f32>(1.0 - phong->TransparencyFactor.Get()));
+
 
         }else if( src->GetClassId().Is(FbxSurfaceLambert::ClassId) ){
             FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)src;
@@ -632,12 +640,20 @@ namespace
                 static_cast<f32>(lambert->Diffuse.Get()[0]),
                 static_cast<f32>(lambert->Diffuse.Get()[1]),
                 static_cast<f32>(lambert->Diffuse.Get()[2]),
-                static_cast<f32>(lambert->TransparencyFactor.Get()));
+                1.0f);
+
+            material.transparent_.set(
+                static_cast<f32>(lambert->TransparentColor.Get()[0]),
+                static_cast<f32>(lambert->TransparentColor.Get()[1]),
+                static_cast<f32>(lambert->TransparentColor.Get()[2]),
+                static_cast<f32>(1.0 - lambert->TransparencyFactor.Get()));
 
             material.specular_.set(0.0f, 0.0f, 0.0f, 0.0f);
+
         }else{
             material.diffuse_.set(0.0f, 0.0f, 0.0f, 1.0f);
             material.specular_.set(0.0f, 0.0f, 0.0f, 0.0f);
+            material.transparent_.set(0.0f, 0.0f, 0.0f, 1.0f);
         }
 
         FbxProperty prop;
