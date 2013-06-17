@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file Sphere.cpp
 @author t-sakai
 @date 2011/11/04 create
@@ -28,7 +28,7 @@ namespace lmath
         /**
         @param
         @param
-        @param numSos ... 0-4‚ÌƒTƒ|[ƒg“_B‹…‚Ì‹«ŠE‚ğŒˆ‚ß‚é4‚Â‚Ì“_
+        @param numSos ... 0-4ã®ã‚µãƒãƒ¼ãƒˆç‚¹ã€‚çƒã®å¢ƒç•Œã‚’æ±ºã‚ã‚‹4ã¤ã®ç‚¹
         */
         void MiniSphere::recurse(u32 index, u32 numPoints, u32 numSos)
         {
@@ -64,7 +64,7 @@ namespace lmath
             }
         }
 
-        // 3x3•”•ªs—ñ‚Ìs—ñ®
+        // 3x3éƒ¨åˆ†è¡Œåˆ—ã®è¡Œåˆ—å¼
         f32 determinant33(const Vector3& r0, const Vector3& r1, const Vector3& r2)
         {
             return r0.x_ * (r1.y_ * r2.z_ - r1.z_ * r2.y_)
@@ -73,7 +73,7 @@ namespace lmath
         }
     }
 
-    // “_‚ÉŠOÚ‚·‚é‹…‚ğŒvZ
+    // ç‚¹ã«å¤–æ¥ã™ã‚‹çƒã‚’è¨ˆç®—
     Sphere Sphere::circumscribed(const Vector3& p0, const Vector3& p1)
     {
         Vector3 d;
@@ -88,7 +88,7 @@ namespace lmath
         return Sphere(center, radius);
     }
 
-    // “_‚ÉŠOÚ‚·‚é‹…‚ğŒvZ
+    // ç‚¹ã«å¤–æ¥ã™ã‚‹çƒã‚’è¨ˆç®—
     Sphere Sphere::circumscribed(const Vector3& p0, const Vector3& p1, const Vector3& p2)
     {
         Vector3 d0; d0.sub(p2, p1);
@@ -126,7 +126,7 @@ namespace lmath
         f32 f1 = n1 * n1;
         f32 f2 = n2 * n2;
 
-        Vector3 barycentric;//dSÀ•W
+        Vector3 barycentric;//é‡å¿ƒåº§æ¨™
         barycentric.x_ = f0 * (-f0 + f1 + f2);
         barycentric.y_ = f1 * (f0 - f1 + f2);
         barycentric.z_ = f2 * (f0 + f1 - f2);
@@ -147,7 +147,7 @@ namespace lmath
         return Sphere(center, r);
     }
 
-    // “_‚ÉŠOÚ‚·‚é‹…‚ğŒvZ
+    // ç‚¹ã«å¤–æ¥ã™ã‚‹çƒã‚’è¨ˆç®—
     Sphere Sphere::circumscribed(const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3)
     {
         Vector3 a; a.sub(p1, p0);

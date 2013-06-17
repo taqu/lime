@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Vector3.cpp
 @author t-sakai
 @date 2009/01/17 create

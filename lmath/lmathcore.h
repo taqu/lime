@@ -1,4 +1,4 @@
-#ifndef INC_LMATHCORE_H__
+﻿#ifndef INC_LMATHCORE_H__
 #define INC_LMATHCORE_H__
 /**
 @file lmathcore.h
@@ -45,6 +45,7 @@ namespace lmath
     using lcore::f64;
 
     class Vector3;
+    class Vector4;
 
 #define PI      static_cast<lmath::f32>(3.14159265358979323846)
 #define PI2     static_cast<lmath::f32>(6.28318530717958647692)
@@ -54,6 +55,15 @@ namespace lmath
 #define INV_PI_2 static_cast<lmath::f32>(0.63661977236758134308)
 #define LOG2    static_cast<lmath::f32>(0.693147180559945309417)
 #define INV_LOG2    static_cast<lmath::f32>(1.0/0.693147180559945309417)
+
+#define PI_64      static_cast<lmath::f64>(3.14159265358979323846)
+#define PI2_64     static_cast<lmath::f64>(6.28318530717958647692)
+#define INV_PI_64  static_cast<lmath::f64>(0.31830988618379067153)
+#define INV_PI2_64 static_cast<lmath::f64>(0.15915494309189533576)
+#define PI_2_64    static_cast<lmath::f64>(1.57079632679489661923)
+#define INV_PI_2_64 static_cast<lmath::f64>(0.63661977236758134308)
+#define LOG2_64    static_cast<lmath::f64>(0.693147180559945309417)
+#define INV_LOG2_64    static_cast<lmath::f64>(1.0/0.693147180559945309417)
 
 #if defined(ANDROID)
 #define F32_EPSILON (1.192092896e-07F)
@@ -87,70 +97,76 @@ namespace lmath
         return (v0>v1)? (v0-v1) : (v1-v0);
     }
 
+    inline bool isPositive(f32 v)
+    {
+        static const u32 mask = ~(((u32)-1)>>1);
+        return (*((u32*)&v) & mask) == 0;
+    }
+
     inline bool isEqual(f32 x1, f32 x2)
     {
-        return (lcore::absolute<f32>(x1 - x2) < F32_EPSILON);
+        return (lcore::absolute<f32>(x1 - x2) <= F32_EPSILON);
     }
 
     inline bool isEqual(f32 x1, f32 x2, f32 epsilon)
     {
-        return (lcore::absolute<f32>(x1 - x2) < epsilon);
+        return (lcore::absolute<f32>(x1 - x2) <= epsilon);
     }
 
     inline bool isEqual(f64 x1, f64 x2)
     {
-        return (lcore::absolute<f64>(x1 - x2) < F64_EPSILON);
+        return (lcore::absolute<f64>(x1 - x2) <= F64_EPSILON);
     }
 
     inline bool isEqual(f64 x1, f64 x2, f64 epsilon)
     {
-        return (lcore::absolute<f64>(x1 - x2) < epsilon);
+        return (lcore::absolute<f64>(x1 - x2) <= epsilon);
     }
 
 
     inline bool isZero(f32 x1)
     {
-        return (lcore::absolute<f32>(x1) < F32_EPSILON);
+        return (lcore::absolute<f32>(x1) <= F32_EPSILON);
     }
 
     inline bool isZero(f32 x1, f32 epsilon)
     {
-        return (lcore::absolute<f32>(x1) < epsilon);
+        return (lcore::absolute<f32>(x1) <= epsilon);
     }
 
     inline bool isZero(f64 x1)
     {
-        return (lcore::absolute<f64>(x1) < F64_EPSILON);
+        return (lcore::absolute<f64>(x1) <= F64_EPSILON);
     }
 
     inline bool isZero(f64 x1, f64 epsilon)
     {
-        return (lcore::absolute<f64>(x1) < epsilon);
+        return (lcore::absolute<f64>(x1) <= epsilon);
     }
 
 
     inline bool isZeroPositive(f32 x1)
     {
         LASSERT(0.0f<=x1);
-        return (x1 < F32_EPSILON);
+        return (x1 <= F32_EPSILON);
     }
 
     inline bool isZeroPositive(f32 x1, f32 epsilon)
     {
         LASSERT(0.0f<=x1);
-        return (x1 < epsilon);
+        return (x1 <= epsilon);
     }
 
     inline bool isZeroPositive(f64 x1)
     {
         LASSERT(0.0f<=x1);
-        return (x1 < F64_EPSILON);
+        return (x1 <= F64_EPSILON);
     }
 
     inline bool isZeroPositive(f64 x1, f64 epsilon)
     {
         LASSERT(0.0f<=x1);
-        return (x1 < epsilon);
+        return (x1 <= epsilon);
     }
 
 #if defined(LMATH_USE_SSE)
@@ -252,6 +268,11 @@ namespace lmath
 #endif
     }
 
+    inline f64 sqrt(f64 x)
+    {
+        return ::sqrt(x);
+    }
+
     f32 sinf_fast(f32 x);
     f32 cosf_fast(f32 x);
     void sincos(f32& dsn, f32& dcs, f32 x);
@@ -261,9 +282,19 @@ namespace lmath
         return ::sinf(x);
     }
 
+    inline f64 sin(f64 x)
+    {
+        return ::sin(x);
+    }
+
     inline f32 cosf(f32 x)
     {
         return ::cosf(x);
+    }
+
+    inline f64 cos(f64 x)
+    {
+        return ::cos(x);
     }
 
     inline f32 acos(f32 x)
@@ -271,9 +302,19 @@ namespace lmath
         return ::acosf(x);
     }
 
+    inline f64 acos(f64 x)
+    {
+        return ::acos(x);
+    }
+
     inline f32 asin(f32 x)
     {
         return ::asinf(x);
+    }
+
+    inline f64 asin(f64 x)
+    {
+        return ::asin(x);
     }
 
     inline f32 atan(f32 x)
@@ -281,9 +322,19 @@ namespace lmath
         return ::atanf(x);
     }
 
+    inline f64 atan(f64 x)
+    {
+        return ::atan(x);
+    }
+
     inline f32 atan2(f32 x, f32 y)
     {
         return ::atan2f(x, y);
+    }
+
+    inline f64 atan2(f64 x, f64 y)
+    {
+        return ::atan2(x, y);
     }
 
     inline f32 exp(f32 x)
@@ -291,14 +342,29 @@ namespace lmath
         return ::expf(x);
     }
 
+    inline f64 exp(f64 x)
+    {
+        return ::exp(x);
+    }
+
     inline f32 log(f32 x)
     {
         return ::logf(x);
+    }
+
+    inline f64 log(f64 x)
+    {
+        return ::log(x);
     }
     
     inline f32 pow(f32 x, f32 y)
     {
         return ::powf(x, y);
+    }
+
+    inline f64 pow(f64 x, f64 y)
+    {
+        return ::pow(x, y);
     }
 
     inline s32 round2S32(f64 x)
@@ -365,6 +431,13 @@ namespace lmath
     	return x * x * (3.0f - 2.0f*x);
     }
 
+    inline f32 expstep(f32 x, f32 a, f32 n)
+    {
+        return lmath::exp(-a*lmath::pow(x, n));
+    }
+
+    f32 cubicPulse(f32 center, f32 width, f32 x);
+
     inline f32 gamma(f32 x, f32 g)
     {
         LASSERT(!lmath::isZero(g));
@@ -379,6 +452,14 @@ namespace lmath
 
     f32 gain(f32 a, f32 b);
 
+    /**
+    @brief 単位球面上ランダム
+    @param vx ... 
+    @param vy ... 
+    @param vz ... 
+    @param x0 ... 乱数0
+    @param x1 ... 乱数1
+    */
     void randomOnSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1);
 
     template<class T>
@@ -401,45 +482,62 @@ namespace lmath
         vz = 1.0f - 2.0f*d;
     }
 
-    void consineWeightedRandomOnHemiSphere(
-        Vector3& v,
+    /**
+    @brief 単位半球面上ランダム
+    @param vx ... 
+    @param vy ... 
+    @param vz ... 
+    @param x0 ... 乱数0
+    @param x1 ... 乱数1
+    */
+    void randomOnHemiSphere(
+        f32& vx, f32& vy, f32& vz,
+        f32 x0, f32 x1);
+
+    /**
+    @brief 単位半球面上ランダム
+    @param vx ... 
+    @param vy ... 
+    @param vz ... 
+    @param n ... 
+    @param x0 ... 乱数0
+    @param x1 ... 乱数1
+    */
+    void randomOnHemiSphere(
+        f32& vx, f32& vy, f32& vz,
         const Vector3& n,
         f32 x0, f32 x1);
 
 
+    /**
+    @brief cosineに偏重した単位半球面上ランダム
+    @param vx ... 
+    @param vy ... 
+    @param vz ... 
+    @param x0 ... 乱数0
+    @param x1 ... 乱数1
+    */
+    void consineWeightedRandomOnHemiSphere(
+        f32& vx, f32& vy, f32& vz,
+        f32 x0, f32 x1);
 
-    //inline bool IsPowerOf2(int v) {
-    //    return (v & (v - 1)) == 0;
-    //}
-    //inline u_int RoundUpPow2(u_int v) {
-    //    v--;
-    //    v |= v >> 1;
-    //    v |= v >> 2;
-    //    v |= v >> 4;
-    //    v |= v >> 8;
-    //    v |= v >> 16;
-    //    return v+1;
-    //}
+    /**
+    @brief cosineに偏重した単位半球面上ランダム
+    @param vx ... 
+    @param vy ... 
+    @param vz ... 
+    @param n ... 
+    @param x0 ... 乱数0
+    @param x1 ... 乱数1
+    */
+    void consineWeightedRandomOnHemiSphere(
+        f32& vx, f32& vy, f32& vz,
+        const Vector3& n,
+        f32 x0, f32 x1);
 
-//    inline bool Quadratic(float A, float B, float C, float *t0,
-//		float *t1) {
-//	// Find quadratic discriminant
-//	float discrim = B * B - 4.f * A * C;
-//	if (discrim < 0.) return false;
-//	float rootDiscrim = sqrtf(discrim);
-//	// Compute quadratic _t_ values
-//	float q;
-//	if (B < 0) q = -.5f * (B - rootDiscrim);
-//	else       q = -.5f * (B + rootDiscrim);
-//	*t0 = q / A;
-//	*t1 = C / q;
-//	if (*t0 > *t1) swap(*t0, *t1);
-//	return true;
-//}
-//inline float ExponentialAverage(float avg,
-//                              float val, float alpha) {
-//	return (1.f - alpha) * val + alpha * avg;
-//}
+
+    void reflect(Vector3& dst, const Vector3& src, const Vector3& normal);
+    void reflect(Vector4& dst, const Vector4& src, const Vector4& normal);
 }
 
 #endif //INC_LMATHCORE_H__

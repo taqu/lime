@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_VECTOR3_H__
+﻿#ifndef INC_LMATH_VECTOR3_H__
 #define INC_LMATH_VECTOR3_H__
 /**
 @file Vector3.h
@@ -104,6 +104,19 @@ namespace lmath
 
         inline void add(const Vector3& v0, const Vector3& v1);
         inline void sub(const Vector3& v0, const Vector3& v1);
+
+        inline void min(const Vector3& v0, const Vector3& v1);
+        inline void max(const Vector3& v0, const Vector3& v1);
+
+        /**
+        @brief v0*v1 + v2
+        */
+        inline void muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2);
+
+        /**
+        @brief a*v1 + v2
+        */
+        inline void muladd(f32 a, const Vector3& v0, const Vector3& v1);
 
 #if defined(LMATH_USE_SSE)
         //SSEセット・ストア命令
@@ -280,6 +293,36 @@ namespace lmath
         z_ = v0.z_ - v1.z_;
     }
 
+
+    inline void Vector3::min(const Vector3& v0, const Vector3& v1)
+    {
+        x_ = lcore::minimum(v0.x_, v1.x_);
+        y_ = lcore::minimum(v0.y_, v1.y_);
+        z_ = lcore::minimum(v0.z_, v1.z_);
+    }
+
+    inline void Vector3::max(const Vector3& v0, const Vector3& v1)
+    {
+        x_ = lcore::maximum(v0.x_, v1.x_);
+        y_ = lcore::maximum(v0.y_, v1.y_);
+        z_ = lcore::maximum(v0.z_, v1.z_);
+    }
+
+    // v0*v1 + v2
+    inline void Vector3::muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    {
+        x_ = v0.x_ * v1.x_ + v2.x_;
+        y_ = v0.y_ * v1.y_ + v2.y_;
+        z_ = v0.z_ * v1.z_ + v2.z_;
+    }
+
+    // a*v1 + v2
+    inline void Vector3::muladd(f32 a, const Vector3& v0, const Vector3& v1)
+    {
+        x_ = a * v0.x_ + v1.x_;
+        y_ = a * v0.y_ + v1.y_;
+        z_ = a * v0.z_ + v1.z_;
+    }
 }
 
 #endif //INC_LMATH_VECTOR3_H__

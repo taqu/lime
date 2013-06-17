@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_DUALQUATERNION_H__
+﻿#ifndef INC_LMATH_DUALQUATERNION_H__
 #define INC_LMATH_DUALQUATERNION_H__
 /**
 @file DualQuaternion.h

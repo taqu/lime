@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_H__
+﻿#ifndef INC_LMATH_H__
 #define INC_LMATH_H__
 /*!
 \filelmath.h

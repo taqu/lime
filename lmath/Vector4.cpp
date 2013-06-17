@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Vector4.cpp
 @author t-sakai
 @date 2009/01/17 create
@@ -100,7 +100,7 @@ namespace lmath
 #if defined(LMATH_USE_SSE)
         lm128 r0 = _mm_load1_ps(&lengthSqr);
         lm128 r1 = load(*this);
-        r0 = _mm_sqrt_ss(r0);
+        r0 = _mm_sqrt_ps(r0);
 
 #if 0
         r0 = rcp(r0);

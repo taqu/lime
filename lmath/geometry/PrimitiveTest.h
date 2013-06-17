@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_PRIMITIVETEST_H__
+﻿#ifndef INC_LMATH_PRIMITIVETEST_H__
 #define INC_LMATH_PRIMITIVETEST_H__
 /**
 @file PrimitiveTest.h
@@ -73,6 +73,9 @@ namespace lmath
 
     //---------------------------------------------------------------------------------
     bool testSphereVsSphere(const Sphere& sphere0, const Sphere& sphere1);
+
+    //---------------------------------------------------------------------------------
+    bool testSphereVsSphere(f32& distance, const Sphere& sphere0, const Sphere& sphere1);
 
     //---------------------------------------------------------------------------------
     struct Triangle

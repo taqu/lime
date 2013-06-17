@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file lmathutil.cpp
 @author t-sakai
 @date 2010/09/09 create
@@ -40,6 +40,20 @@ namespace
         param.set(p0, p1, p2, p3);
         
         dst.mul(tmp, param);
+    }
+
+    inline void calcCubic(f32& dst, f32 t, const Matrix44& curveCoeff, f32 p0, f32 p1, f32 p2, f32 p3)
+    {
+        Vector4 vt;
+        vt.w_ = 1.0f;
+        vt.z_ = t;
+        vt.y_ = t*t;
+        vt.x_ = vt.y_ * t;
+
+        Vector4 tmp;
+        tmp.mul(vt, curveCoeff);
+
+        dst = p0 * tmp.x_ + p1 * tmp.y_ + p2 * tmp.z_ + p3 * tmp.w_;
     }
 }
 #endif
@@ -118,7 +132,7 @@ namespace
     }
 
 
-    // Ferguson-Coons‹Èü
+    // Ferguson-Coonsæ›²ç·š
     void fergusonCoonsCurve(Vector4& dst, f32 t, const Vector4& p0, const Vector4& v0, const Vector4& p1, const Vector4& v1)
     {
         lmath::Matrix44 curveCoeff(
@@ -130,7 +144,7 @@ namespace
         calcCubic(dst, t, curveCoeff, p0, p1, v0, v1);
     }
 
-    // Bezier‹Èü
+    // Bezieræ›²ç·š
     void cubicBezierCurve(Vector4& dst, f32 t, const Vector4& p0, const Vector4& p1, const Vector4& p2, const Vector4& p3)
     {
         lmath::Matrix44 curveCoeff(
@@ -143,7 +157,7 @@ namespace
     }
 
 
-    // Catmull-Rom‹Èü
+    // Catmull-Romæ›²ç·š
     void catmullRomCurve(Vector4& dst, f32 t, const Vector4& p0, const Vector4& p1, const Vector4& p2, const Vector4& p3)
     {
         lmath::Matrix44 curveCoeff(
@@ -181,12 +195,23 @@ namespace
         calcCubic(dst, t, curveCoeff, p0, p1, p2, vzero);
     }
 
+    // Catmull-Romæ›²ç·š
+    void catmullRomCurve(f32& dst, f32 t, f32 p0, f32 p1, f32 p2, f32 p3)
+    {
+        lmath::Matrix44 curveCoeff(
+            -1.0f/2.0f,  3.0f/2.0f, -3.0f/2.0f,  1.0f/2.0f,
+             2.0f/2.0f, -5.0f/2.0f,  4.0f/2.0f, -1.0f/2.0f,
+            -1.0f/2.0f,  0.0f,       1.0f/2.0f,  0.0f,
+             0.0f,       2.0f/2.0f,  0.0f,       0.0f);
+
+        calcCubic(dst, t, curveCoeff, p0, p1, p2, p3);
+    }
 
 
     //--------------------------------------------------------
-    //--- lŒ³”
+    //--- å››å…ƒæ•°
     //--------------------------------------------------------
-    // Šµ«À•W‚©‚çƒIƒuƒWƒFƒNƒgÀ•W‚Ö‚ÌƒIƒCƒ‰[Šp‚ğæ“¾
+    // æ…£æ€§åº§æ¨™ã‹ã‚‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã¸ã®ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‚’å–å¾—
     void getEulerInertialToObject(f32& head, f32& pitch, f32& bank, const lmath::Matrix34& m)
     {
         f32 sinPitch = -m.m_[2][1];
@@ -198,9 +223,9 @@ namespace
             pitch = asin(sinPitch);
         }
 
-        // sin(pitch)‚ª‚P‚È‚çƒoƒ“ƒN‚ÆƒwƒfƒBƒ“ƒO‚ªƒWƒ“ƒoƒ‹ƒƒbƒN
+        // sin(pitch)ãŒï¼‘ãªã‚‰ãƒãƒ³ã‚¯ã¨ãƒ˜ãƒ‡ã‚£ãƒ³ã‚°ãŒã‚¸ãƒ³ãƒãƒ«ãƒ­ãƒƒã‚¯
         if(lcore::absolute(sinPitch) > F32_ANGLE_LIMIT1){
-            // ƒoƒ“ƒN‚ğ0‚Æ‚µ‚ÄAƒwƒfƒBƒ“ƒO‚ğŒvZ
+            // ãƒãƒ³ã‚¯ã‚’0ã¨ã—ã¦ã€ãƒ˜ãƒ‡ã‚£ãƒ³ã‚°ã‚’è¨ˆç®—
             bank = 0.0f;
             head = atan2(-m.m_[0][2], m.m_[0][0]);
         }else{
@@ -210,16 +235,16 @@ namespace
         }
     }
 
-    // Šµ«À•W‚©‚çƒIƒuƒWƒFƒNƒgÀ•W‚Ö‚ÌƒIƒCƒ‰[Šp‚ğæ“¾
+    // æ…£æ€§åº§æ¨™ã‹ã‚‰ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã¸ã®ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‚’å–å¾—
     void getEulerInertialToObject(f32& head, f32& pitch, f32& bank, const lmath::Quaternion& q)
     {
         f32 sinPitch = -2.0f * (q.y_*q.z_ + q.w_*q.x_);
 
-        // sin(pitch)‚ª‚P‚È‚çƒoƒ“ƒN‚ÆƒwƒfƒBƒ“ƒO‚ªƒWƒ“ƒoƒ‹ƒƒbƒN
+        // sin(pitch)ãŒï¼‘ãªã‚‰ãƒãƒ³ã‚¯ã¨ãƒ˜ãƒ‡ã‚£ãƒ³ã‚°ãŒã‚¸ãƒ³ãƒãƒ«ãƒ­ãƒƒã‚¯
         if(lcore::absolute(sinPitch) > F32_ANGLE_LIMIT1){
             pitch = PI_2 * sinPitch;
 
-            // ƒoƒ“ƒN‚ğ0‚Æ‚µ‚ÄAƒwƒfƒBƒ“ƒO‚ğŒvZ
+            // ãƒãƒ³ã‚¯ã‚’0ã¨ã—ã¦ã€ãƒ˜ãƒ‡ã‚£ãƒ³ã‚°ã‚’è¨ˆç®—
             bank = 0.0f;
             head = atan2(-q.x_*q.z_ - q.w_*q.y_, 0.5f-q.y_*q.y_-q.z_*q.z_);
         }else{
@@ -230,7 +255,7 @@ namespace
     }
 
 
-    // ƒIƒuƒWƒFƒNƒgÀ•W‚©‚çŠµ«À•W‚Ö‚ÌƒIƒCƒ‰[Šp‚ğæ“¾
+    // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã‹ã‚‰æ…£æ€§åº§æ¨™ã¸ã®ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‚’å–å¾—
     void getEulerObjectToInertial(f32& head, f32& pitch, f32& bank, const lmath::Matrix34& m)
     {
         f32 sinPitch = -m.m_[1][2];
@@ -242,9 +267,9 @@ namespace
             pitch = asin(sinPitch);
         }
 
-        // sin(pitch)‚ª‚P‚È‚çƒoƒ“ƒN‚ÆƒwƒfƒBƒ“ƒO‚ªƒWƒ“ƒoƒ‹ƒƒbƒN
+        // sin(pitch)ãŒï¼‘ãªã‚‰ãƒãƒ³ã‚¯ã¨ãƒ˜ãƒ‡ã‚£ãƒ³ã‚°ãŒã‚¸ãƒ³ãƒãƒ«ãƒ­ãƒƒã‚¯
         if(lcore::absolute(sinPitch) > F32_ANGLE_LIMIT1){
-            // ƒoƒ“ƒN‚ğ0‚Æ‚µ‚ÄAƒwƒfƒBƒ“ƒO‚ğŒvZ
+            // ãƒãƒ³ã‚¯ã‚’0ã¨ã—ã¦ã€ãƒ˜ãƒ‡ã‚£ãƒ³ã‚°ã‚’è¨ˆç®—
             bank = 0.0f;
             head = atan2(-m.m_[2][0], m.m_[0][0]);
         }else{
@@ -254,16 +279,16 @@ namespace
         }
     }
 
-    // ƒIƒuƒWƒFƒNƒgÀ•W‚©‚çŠµ«À•W‚Ö‚ÌƒIƒCƒ‰[Šp‚ğæ“¾
+    // ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆåº§æ¨™ã‹ã‚‰æ…£æ€§åº§æ¨™ã¸ã®ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‚’å–å¾—
     void getEulerObjectToInertial(f32& head, f32& pitch, f32& bank, const lmath::Quaternion& q)
     {
         f32 sinPitch = -2.0f * (q.y_*q.z_ - q.w_*q.x_);
 
-        // sin(pitch)‚ª‚P‚È‚çƒoƒ“ƒN‚ÆƒwƒfƒBƒ“ƒO‚ªƒWƒ“ƒoƒ‹ƒƒbƒN
+        // sin(pitch)ãŒï¼‘ãªã‚‰ãƒãƒ³ã‚¯ã¨ãƒ˜ãƒ‡ã‚£ãƒ³ã‚°ãŒã‚¸ãƒ³ãƒãƒ«ãƒ­ãƒƒã‚¯
         if(lcore::absolute(sinPitch) > F32_ANGLE_LIMIT1){
             pitch = PI_2 * sinPitch;
 
-            // ƒoƒ“ƒN‚ğ0‚Æ‚µ‚ÄAƒwƒfƒBƒ“ƒO‚ğŒvZ
+            // ãƒãƒ³ã‚¯ã‚’0ã¨ã—ã¦ã€ãƒ˜ãƒ‡ã‚£ãƒ³ã‚°ã‚’è¨ˆç®—
             bank = 0.0f;
             head = atan2(-q.x_*q.z_ + q.w_*q.y_, 0.5f-q.y_*q.y_-q.z_*q.z_);
         }else{
@@ -274,10 +299,10 @@ namespace
     }
 
 
-    // ƒIƒCƒ‰[Šp‚©‚çlŒ³”‚ğæ“¾
+    // ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‹ã‚‰å››å…ƒæ•°ã‚’å–å¾—
     void getQuaternionObjectToInertial(Quaternion& q, f32 head, f32 pitch, f32 bank)
     {
-        //Šp“x”¼•ª‚É‚·‚é
+        //è§’åº¦åŠåˆ†ã«ã™ã‚‹
         head *= 0.5f;
         pitch *= 0.5f;
         bank *= 0.5f;
@@ -297,10 +322,10 @@ namespace
         q.z_ = csh*csp*snb - snh*snp*csb;
     }
 
-    // ƒIƒCƒ‰[Šp‚©‚çlŒ³”‚ğæ“¾
+    // ã‚ªã‚¤ãƒ©ãƒ¼è§’ã‹ã‚‰å››å…ƒæ•°ã‚’å–å¾—
     void getQuaternionInertialToObject(Quaternion& q, f32 head, f32 pitch, f32 bank)
     {
-        //Šp“x”¼•ª‚É‚·‚é
+        //è§’åº¦åŠåˆ†ã«ã™ã‚‹
         head *= 0.5f;
         pitch *= 0.5f;
         bank *= 0.5f;

@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file Matrix44.cpp
 @author t-sakai
 @date 2009/01/18 create
@@ -50,7 +50,7 @@ namespace lmath
         m_[3][3] = 1.0f;
     }
 
-    // ’lƒZƒbƒg
+    // å€¤ã‚»ãƒƒãƒˆ
     void Matrix44::set(const Vector4& row0, const Vector4& row1, const Vector4& row2, const Vector4& row3)
     {
 #if defined(LMATH_USE_SSE)
@@ -414,7 +414,7 @@ namespace lmath
     {
 #if defined(LMATH_USE_SSE)
         f32 one = 1.0f;
-        static const u32 rotmask = 147; //ãˆÊŒ…•ûŒü‚Ö‰ñ“]
+        static const u32 rotmask = 147; //ä¸Šä½æ¡æ–¹å‘ã¸å›è»¢
         lm128 t = _mm_load_ss(&one);
         _mm_storeu_ps(&(m_[0][0]), t);
 
@@ -658,7 +658,7 @@ namespace lmath
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0xB1), det);
         
 #if 0
-        {//Newton-Raphson–@‚ÅAs—ñ®‚Ì‹t”‚ğŒvZ
+        {//Newton-Raphsonæ³•ã§ã€è¡Œåˆ—å¼ã®é€†æ•°ã‚’è¨ˆç®—
             tmp = _mm_rcp_ss(det);
             det = _mm_mul_ss(det, tmp);
             det = _mm_mul_ss(det, tmp);
@@ -667,7 +667,7 @@ namespace lmath
             det = _mm_shuffle_ps(det, det, 0);
         }
 #else
-        {//s—ñ®‚Ì‹t”‚ğŒvZ
+        {//è¡Œåˆ—å¼ã®é€†æ•°ã‚’è¨ˆç®—
             tmp = _mm_set_ss(1.0f);
             det = _mm_div_ss(tmp, det);
             det = _mm_shuffle_ps(det, det, 0);
@@ -742,7 +742,7 @@ namespace lmath
 #endif
     }
 
-    // 3x3•”•ªs—ñ‚Ì“]’u
+    // 3x3éƒ¨åˆ†è¡Œåˆ—ã®è»¢ç½®
     void Matrix44::transpose33()
     {
         lcore::swap(m_[0][1], m_[1][0]);
@@ -758,7 +758,7 @@ namespace lmath
              + m_[0][2] * (m_[1][0]*m_[2][1] - m_[1][1]*m_[2][0]);
     }
 
-    // 3x3•”•ªs—ñ‚Ì‹ts—ñ
+    // 3x3éƒ¨åˆ†è¡Œåˆ—ã®é€†è¡Œåˆ—
     void Matrix44::invert33()
     {
 #if defined(LMATH_USE_SSE)
@@ -776,20 +776,20 @@ namespace lmath
 
         t0 = _mm_mul_ps(t0, t1);
         t2 = _mm_mul_ps(t2, t3);
-        t0 = _mm_sub_ps(t0, t2); //—]ˆöqs—ñ@0—ñ–Ú
+        t0 = _mm_sub_ps(t0, t2); //ä½™å› å­è¡Œåˆ—ã€€0åˆ—ç›®
 
-        //s—ñ®‚Ì‹t”ŒvZ
+        //è¡Œåˆ—å¼ã®é€†æ•°è¨ˆç®—
         //-------------------------------------------------------
         lm128 det = _mm_mul_ps(c0, t0);
         //_mm_store_ps(buffer, det);
-        //buffer[0] = buffer[0] + buffer[1] + buffer[2]; //…•½‰‰Z
+        //buffer[0] = buffer[0] + buffer[1] + buffer[2]; //æ°´å¹³æ¼”ç®—
         //det = _mm_load_ss(buffer);
 
-        //…•½‰‰Z
+        //æ°´å¹³æ¼”ç®—
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0x4E), det);
         det = _mm_add_ps( _mm_shuffle_ps(det, det, 0xB1), det);
 
-        //Newton-Raphson–@‚ÅAs—ñ®‚Ì‹t”‚ğŒvZ
+        //Newton-Raphsonæ³•ã§ã€è¡Œåˆ—å¼ã®é€†æ•°ã‚’è¨ˆç®—
         {
             t1 = _mm_rcp_ss(det);
             det = _mm_mul_ss(det, t1);
@@ -799,7 +799,7 @@ namespace lmath
             det = _mm_shuffle_ps(det, det, 0);
         }
 
-        //0—ñ–Ú
+        //0åˆ—ç›®
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer, t0);
 
@@ -816,9 +816,9 @@ namespace lmath
 
         t0 = _mm_mul_ps(t0, t1);
         t2 = _mm_mul_ps(t2, t3);
-        t0 = _mm_sub_ps(t0, t2); //—]ˆöqs—ñ@1—ñ–Ú
+        t0 = _mm_sub_ps(t0, t2); //ä½™å› å­è¡Œåˆ—ã€€1åˆ—ç›®
 
-        //1—ñ–Ú
+        //1åˆ—ç›®
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer, t0);
 
@@ -835,9 +835,9 @@ namespace lmath
 
         t0 = _mm_mul_ps(t0, t1);
         t2 = _mm_mul_ps(t2, t3);
-        t0 = _mm_sub_ps(t0, t2); //—]ˆöqs—ñ@2—ñ–Ú
+        t0 = _mm_sub_ps(t0, t2); //ä½™å› å­è¡Œåˆ—ã€€2åˆ—ç›®
 
-        //2—ñ–Ú
+        //2åˆ—ç›®
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer, t0);
 
@@ -1066,7 +1066,7 @@ namespace lmath
         void rcp(lm128& r)
         {
 #if 0
-            //Newton-Raphson–@‚ÅAs—ñ®‚Ì‹t”‚ğŒvZ
+            //Newton-Raphsonæ³•ã§ã€è¡Œåˆ—å¼ã®é€†æ•°ã‚’è¨ˆç®—
             lm128 tmp = _mm_rcp_ss(r);
             r = _mm_mul_ss(r, tmp);
             r = _mm_mul_ss(r, tmp);
@@ -1300,7 +1300,7 @@ namespace lmath
 
 
 #if defined(LMATH_USE_SSE)
-    //SSEƒZƒbƒgEƒXƒgƒA–½—ß
+    //SSEã‚»ãƒƒãƒˆãƒ»ã‚¹ãƒˆã‚¢å‘½ä»¤
     inline void Matrix44::load(lm128& r0, lm128& r1, lm128& r2, lm128& r3, const Matrix44& m)
     {
         r0 = _mm_loadu_ps(&m.m_[0][0]);

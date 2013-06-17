@@ -1,4 +1,4 @@
-#ifndef INC_LMATH_BVH_H__
+﻿#ifndef INC_LMATH_BVH_H__
 #define INC_LMATH_BVH_H__
 /**
 @file BVH.h
