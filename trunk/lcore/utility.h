@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_UTILITY_H__
+﻿#ifndef INC_LCORE_UTILITY_H__
 #define INC_LCORE_UTILITY_H__
 /**
 @file utility.h
@@ -144,11 +144,6 @@ namespace lcore
     //--- タイム関係
     //---
     //---------------------------------------------------------
-#if defined(ANDROID) || defined(__linux__)
-    typedef clock_t ClockType;
-#else
-    typedef u64 ClockType;
-#endif
 
     /// カウント取得
     ClockType getPerformanceCounter();
@@ -224,30 +219,5 @@ namespace lcore
         }
         return first;
     }
-
-    //---------------------------------------------------------
-    //---
-    //--- numeric_limits
-    //---
-    //---------------------------------------------------------
-    template<typename T>
-    class numeric_limits
-    {
-    public:
-        static T epsilon() LIME_THROW0
-        {
-            return std::numeric_limits<T>::epsilon();
-        }
-
-        static T minimum() LIME_THROW0
-        {
-            return (std::numeric_limits<T>::min)();
-        }
-
-        static T maximum() LIME_THROW0
-        {
-            return (std::numeric_limits<T>::max)();
-        }
-    };
 }
 #endif //INC_LCORE_UTILITY_H__

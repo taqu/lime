@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_H__
+﻿#ifndef INC_LCORE_H__
 #define INC_LCORE_H__
 /**
 @file lcore.h
@@ -18,7 +18,8 @@
 #include <malloc.h>
 #include <new>
 
-#define LIME_NEW new(_NORMAL_BLOCK,__FILE__,__LINE__)
+//#define LIME_NEW new(_NORMAL_BLOCK,__FILE__,__LINE__)
+#define LIME_NEW new
 #define LIME_RAW_NEW new
 
 #else //_DEBUG
@@ -57,25 +58,52 @@
 
 // メモリ確保・開放
 //-------------------
+void* lcore_malloc(std::size_t size);
+void* lcore_malloc(std::size_t size, std::size_t alignment);
+
+void lcore_free(void* ptr);
+void lcore_free(void* ptr, std::size_t alignment);
+
+inline void* operator new(std::size_t size)
+{
+    return lcore_malloc(size);
+}
+
+inline void operator delete(void* ptr)
+{
+    lcore_free(ptr);
+}
+
+inline void* operator new[](std::size_t size)
+{
+    return lcore_malloc(size);
+}
+
+inline void operator delete[](void* ptr)
+{
+    lcore_free(ptr);
+}
+
+
 #define LIME_PLACEMENT_NEW(ptr) new(ptr)
 #define LIME_DELETE(p) { delete p; (p)=NULL;}
 #define LIME_DELETE_NONULL delete
-#define LIME_OPERATOR_NEW ::operator new
-#define LIME_OPERATOR_DELETE ::operator delete
+//#define LIME_OPERATOR_NEW ::operator new
+//#define LIME_OPERATOR_DELETE ::operator delete
 
 #define LIME_DELETE_ARRAY(p) {delete[] (p); (p) = NULL;}
 
-#define LIME_MALLOC(size) (malloc(size))
-#define LIME_FREE(mem) {free(mem); mem = NULL;}
+#define LIME_MALLOC(size) (lcore_malloc(size))
+#define LIME_FREE(mem) {lcore_free(mem); mem = NULL;}
 
 /// 16バイトアライメント変数指定
 #define LIME_ALIGN16 _declspec(align(16))
 
 /// アライメント指定malloc
-#define LIME_ALIGNED_MALLOC(size, align) (_aligned_malloc(size, align))
+#define LIME_ALIGNED_MALLOC(size, align) (lcore_malloc(size, align))
 
 /// アライメント指定free
-#define LIME_ALIGNED_FREE(mem) (_aligned_free(mem))
+#define LIME_ALIGNED_FREE(mem, align) (lcore_free(mem, align))
 
 // 例外
 //-------------------
@@ -168,13 +196,50 @@ namespace lcore
     typedef void* LHMODULE;
 #endif
 
+#if defined(ANDROID) || defined(__linux__)
+    typedef clock_t ClockType;
+#else
+    typedef u64 ClockType;
+#endif
+
+
+    //---------------------------------------------------------
+    //---
+    //--- numeric_limits
+    //---
+    //---------------------------------------------------------
+    template<typename T>
+    class numeric_limits
+    {
+    public:
+        static T epsilon() LIME_THROW0
+        {
+            return std::numeric_limits<T>::epsilon();
+        }
+
+        static T minimum() LIME_THROW0
+        {
+            return (std::numeric_limits<T>::min)();
+        }
+
+        static T maximum() LIME_THROW0
+        {
+            return (std::numeric_limits<T>::max)();
+        }
+
+        static T inifinity() LIME_THROW0
+        {
+            return std::numeric_limits<T>::infinity();
+        }
+    };
+
     //---------------------------------------------------------
     //--- Utility
     //---------------------------------------------------------
     template<class T>
     inline void swap(T& l, T& r)
     {
-        T tmp = l;
+        T tmp(l);
         l = r;
         r = tmp;
     }
@@ -189,6 +254,7 @@ namespace lcore
     template<class T>
     inline const T& maximum(const T& left, const T& right)
     {
+        
         return (left<right)? right : left;
     }
 
@@ -236,6 +302,57 @@ namespace lcore
 
     f32 fromBinary16Float(u16 s);
 
+    inline u32 getARGB(u8 a, u8 r, u8 g, u8 b)
+    {
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    inline u32 getRGBA(u8 a, u8 r, u8 g, u8 b)
+    {
+        return (r << 24) | (g << 16) | (b << 8) | a;
+    }
+
+
+    inline u8 getAFromARGB(u32 argb)
+    {
+        return static_cast<u8>((argb>>24) & 0xFFU);
+    }
+
+    inline u8 getRFromARGB(u32 argb)
+    {
+        return static_cast<u8>((argb>>16) & 0xFFU);
+    }
+
+    inline u8 getGFromARGB(u32 argb)
+    {
+        return static_cast<u8>((argb>>8) & 0xFFU);
+    }
+
+    inline u8 getBFromARGB(u32 argb)
+    {
+        return static_cast<u8>((argb) & 0xFFU);
+    }
+
+    inline u8 getRFromRGBA(u32 rgba)
+    {
+        return static_cast<u8>((rgba>>24) & 0xFFU);
+    }
+
+    inline u8 getGFromRGBA(u32 rgba)
+    {
+        return static_cast<u8>((rgba>>16) & 0xFFU);
+    }
+
+    inline u8 getBFromRGBA(u32 rgba)
+    {
+        return static_cast<u8>((rgba>>8) & 0xFFU);
+    }
+
+    inline u8 getAFromRGBA(u32 rgba)
+    {
+        return static_cast<u8>((rgba) & 0xFFU);
+    }
+
 #define LIME_MAKE_FOURCC(c0, c1, c2, c3)\
     ( (lcore::u32)(c0) | ((lcore::u32)(c1) << 8) | ((lcore::u32)(c2) << 16) | ((lcore::u32)(c3) << 24) )
 
@@ -263,6 +380,26 @@ namespace lcore
 
 //#define LIME_ENABLE_LOG (1)
     void Log(const Char* format, ...);
+
+    class MemorySpace
+    {
+    public:
+        enum Locked
+        {
+            Locked_Disable = 0,
+            Locked_Enable,
+        };
+        MemorySpace();
+        ~MemorySpace();
+
+        bool create(u32 capacity, Locked locked=Locked_Disable);
+        void destroy();
+
+        void* allocate(u32 size);
+        void deallocate(void* mem);
+    private:
+        void* mspace_;
+    };
 }
 
 #endif //INC_LCORE_H__

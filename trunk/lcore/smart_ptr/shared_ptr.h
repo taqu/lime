@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_SHARED_PTR_H__
+﻿#ifndef INC_LCORE_SHARED_PTR_H__
 #define INC_LCORE_SHARED_PTR_H__
 /**
 @file shared_ptr.h

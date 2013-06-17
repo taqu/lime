@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file liostream.cpp
 @author t-sakai
 @date 2010/07/26 create

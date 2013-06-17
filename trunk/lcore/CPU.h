@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_CPU_H__
+﻿#ifndef INC_LCORE_CPU_H__
 #define INC_LCORE_CPU_H__
 /**
 @file CPU.h
@@ -18,7 +18,7 @@ namespace lcore
         CPUID_FUNC_CPUINFO   = 0x00000001U,
     };
 
-    /// CPUID_FUNC_CPUINFO��EAX�Ɏw�肵���ꍇ�́AEDX�ɕԂ��Ă���t���O
+    /// CPUID_FUNC_CPUINFOをEAXに指定した場合の、EDXに返ってくるフラグ
     enum CPUINFO_FLAG
     {
         CPUINFO_FPU = LCORE_CPUID_BIT_FLAG(0),
@@ -56,7 +56,7 @@ namespace lcore
     };
 
 
-    /// CPUID_FUNC_CPUINFO��EAX�Ɏw�肵���ꍇ�́AECX�ɕԂ��Ă���t���O
+    /// CPUID_FUNC_CPUINFOをEAXに指定した場合の、ECXに返ってくるフラグ
     enum CPUINFO2_FLAG
     {
         CPUINFO2_SSE3 = LCORE_CPUID_BIT_FLAG(0),
@@ -107,8 +107,8 @@ namespace lcore
     bool isWin2000();
 
     /**
-    @brief �_���v���Z�b�T���擾
-    @return �_���v���Z�b�T��
+    @brief 論理プロセッサ数取得
+    @return 論理プロセッサ数
     */
     u32 getLogicalCPUCount();
 #endif

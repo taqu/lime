@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_LDLL_H__
+﻿#ifndef INC_LCORE_LDLL_H__
 #define INC_LCORE_LDLL_H__
 /**
 @file ldll.h

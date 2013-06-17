@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_SEARCH_H__
+ï»¿#ifndef INC_LCORE_SEARCH_H__
 #define INC_LCORE_SEARCH_H__
 /**
 @file Search.h
@@ -10,11 +10,11 @@
 namespace lcore
 {
     /**
-    @brief ‚ ‚éƒƒ“ƒo‚ª‚ ‚é’lˆÈ‰º‚Ì—v‘f‚ÌƒCƒ“ƒfƒbƒNƒX‚ğŒŸõ‚·‚é
-    @param T ... ŒŸõ‘ÎÛŒ^
-    @param U ... ƒCƒ“ƒfƒbƒNƒX‚ÌŒ^
-    @param V ... ŒŸõ‘ÎÛ‚Ì’l‚ÌŒ^
-    @param FuncGetValue ... T‚©‚çV‚ğ“¾‚éŠÖ”
+    @brief ã‚ã‚‹ãƒ¡ãƒ³ãƒãŒã‚ã‚‹å€¤ä»¥ä¸‹ã®è¦ç´ ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã‚’æ¤œç´¢ã™ã‚‹
+    @param T ... æ¤œç´¢å¯¾è±¡å‹
+    @param U ... ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã®å‹
+    @param V ... æ¤œç´¢å¯¾è±¡ã®å€¤ã®å‹
+    @param FuncGetValue ... Tã‹ã‚‰Vã‚’å¾—ã‚‹é–¢æ•°
 
     @param num
     @param elements

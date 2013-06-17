@@ -1,4 +1,4 @@
-#ifndef INC_VECTOR_H__
+﻿#ifndef INC_VECTOR_H__
 #define INC_VECTOR_H__
 /**
 @file Vector.h
@@ -301,7 +301,7 @@ namespace lcore
             return items_[index];
         }
 
-        const T*& operator[](u32 index) const
+        const T* operator[](u32 index) const
         {
             LASSERT(0<=index && index<size_);
             return items_[index];

@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_SYNCOBJECT_H__
+ï»¿#ifndef INC_LCORE_SYNCOBJECT_H__
 #define INC_LCORE_SYNCOBJECT_H__
 /**
 @file SyncObject.h
@@ -6,6 +6,10 @@
 @date 2011/08/06 create
 */
 #include "../lcore.h"
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
 #include <windows.h>
 
 namespace lcore
@@ -16,7 +20,7 @@ namespace lcore
     //---
     //-------------------------------------------------------
     /**
-    @brief ƒNƒŠƒeƒBƒJƒ‹ƒZƒNƒVƒ‡ƒ“
+    @brief ã‚¯ãƒªãƒ†ã‚£ã‚«ãƒ«ã‚»ã‚¯ã‚·ãƒ§ãƒ³
     */
     class CriticalSection
     {
@@ -51,7 +55,7 @@ namespace lcore
 
 
     /**
-    @brief ƒƒbƒNƒIƒuƒWƒFƒNƒg
+    @brief ãƒ­ãƒƒã‚¯ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
     */
     template<class T>
     class ScopedLock
@@ -83,7 +87,7 @@ namespace lcore
     //---
     //-------------------------------------------------------
     /**
-    @brief ğŒ•Ï”
+    @brief æ¡ä»¶å¤‰æ•°
     */
     class ConditionVariable
     {
@@ -100,17 +104,17 @@ namespace lcore
         void notifyAll();
         void wait();
 
-        CriticalSection& external_;// ŠO•”ğŒ•Ï”‚ÌƒƒbƒN
-        CriticalSection internal_; // “à•”•Ï”‚ÌƒƒbƒN
+        CriticalSection& external_;// å¤–éƒ¨æ¡ä»¶å¤‰æ•°ã®ãƒ­ãƒƒã‚¯
+        CriticalSection internal_; // å†…éƒ¨å¤‰æ•°ã®ãƒ­ãƒƒã‚¯
 
-        u32 numWaitings_; //‘Ò‚Á‚Ä‚¢‚éƒXƒŒƒbƒh”
-        u32 numToWakes_; //‹N‚±‚·ƒXƒŒƒbƒh”
-        HANDLE signalNotify_; //‹N‚±‚·ƒVƒOƒiƒ‹
-        HANDLE signalWaked_; //‹N‚«‚½ƒVƒOƒiƒ‹
+        u32 numWaitings_; //å¾…ã£ã¦ã„ã‚‹ã‚¹ãƒ¬ãƒƒãƒ‰æ•°
+        u32 numToWakes_; //èµ·ã“ã™ã‚¹ãƒ¬ãƒƒãƒ‰æ•°
+        HANDLE signalNotify_; //èµ·ã“ã™ã‚·ã‚°ãƒŠãƒ«
+        HANDLE signalWaked_; //èµ·ããŸã‚·ã‚°ãƒŠãƒ«
     };
 
     /**
-    @brief ğŒ•Ï”—pƒƒbƒNƒIƒuƒWƒFƒNƒg
+    @brief æ¡ä»¶å¤‰æ•°ç”¨ãƒ­ãƒƒã‚¯ã‚ªãƒ–ã‚¸ã‚§ã‚¯ãƒˆ
     */
     class CondLock
     {

@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_CLIBRARY_H__
+﻿#ifndef INC_LCORE_CLIBRARY_H__
 #define INC_LCORE_CLIBRARY_H__
 /**
 @file CLibrary.h

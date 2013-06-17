@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Buffer.cpp
 @author t-sakai
 @date 2011/02/08 create

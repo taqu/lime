@@ -1,4 +1,4 @@
-#ifndef INC_RANDOM_H__
+ï»¿#ifndef INC_RANDOM_H__
 #define INC_RANDOM_H__
 /**
 @file Random.h
@@ -25,23 +25,23 @@ namespace lcore
         ~RandomXorshift();
 
         /**
-        @brief ‹[——”¶¬Ší‰Šú‰»
+        @brief æ“¬ä¼¼ä¹±æ•°ç”Ÿæˆå™¨åˆæœŸåŒ–
         @param seed
         */
         void srand(u32 seed);
 
         /**
-        @brief 0 - 0xFFFFFFFFU‚Ì—”¶¬
+        @brief 0 - 0xFFFFFFFFUã®ä¹±æ•°ç”Ÿæˆ
         */
         u32 rand();
 
         /**
-        @brief 0 - 1‚Ì—”¶¬
+        @brief 0 - 1ã®ä¹±æ•°ç”Ÿæˆ
         */
         f32 frand();
 
         /**
-        @brief 0 - 1‚Ì—”¶¬
+        @brief 0 - 1ã®ä¹±æ•°ç”Ÿæˆ
         */
         f64 drand();
 
@@ -66,23 +66,23 @@ namespace lcore
         ~RandomWELL();
 
         /**
-        @brief ‹[——”¶¬Ší‰Šú‰»
+        @brief æ“¬ä¼¼ä¹±æ•°ç”Ÿæˆå™¨åˆæœŸåŒ–
         @param seed
         */
         void srand(u32 seed);
 
         /**
-        @brief 0 - 0xFFFFFFFFU‚Ì—”¶¬
+        @brief 0 - 0xFFFFFFFFUã®ä¹±æ•°ç”Ÿæˆ
         */
         u32 rand();
 
         /**
-        @brief 0 - 1‚Ì—”¶¬
+        @brief 0 - 1ã®ä¹±æ•°ç”Ÿæˆ
         */
         f32 frand();
 
         /**
-        @brief 0 - 1‚Ì—”¶¬
+        @brief 0 - 1ã®ä¹±æ•°ç”Ÿæˆ
         */
         f64 drand();
 

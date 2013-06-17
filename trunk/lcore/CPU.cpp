@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file CPU.cpp
 @author t-sakai
 @date 2012/01/08 create
@@ -91,16 +91,17 @@ namespace lcore
     }
 
     /**
-    @brief ˜_—ƒvƒƒZƒbƒT”æ“¾
-    @return ˜_—ƒvƒƒZƒbƒT”
+    @brief è«–ç†ãƒ—ãƒ­ã‚»ãƒƒã‚µæ•°å–å¾—
+    @return è«–ç†ãƒ—ãƒ­ã‚»ãƒƒã‚µæ•°
     */
     u32 getLogicalCPUCount()
     {
-        //OSƒo[ƒWƒ‡ƒ“ƒ`ƒFƒbƒN
+        //OSãƒãƒ¼ã‚¸ãƒ§ãƒ³ãƒã‚§ãƒƒã‚¯
         if(false == isWin2000()){
             return 1;
         }
 
+#if 0
         HANDLE process = GetCurrentProcess();
         DWORD_PTR pmask, smask;
 
@@ -119,6 +120,12 @@ namespace lcore
         }
 
         return cpuCount;
+
+#else
+        SYSTEM_INFO systemInfo;
+        GetSystemInfo(&systemInfo);
+        return systemInfo.dwNumberOfProcessors;
+#endif
     }
 #endif
 }

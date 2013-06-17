@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_INTRUSIVE_LIST_H__
+ï»¿#ifndef INC_LCORE_INTRUSIVE_LIST_H__
 #define INC_LCORE_INTRUSIVE_LIST_H__
 /**
 @file List.h
@@ -13,15 +13,15 @@ namespace intrusive
 {
     template<class T> class List;
 
-    template<class T>
+    template<class Derived>
     class ListNodeBase
     {
     public:
-        typedef ListNodeBase<T> this_type;
+        typedef ListNodeBase<Derived> this_type;
         typedef this_type* this_poitner_type;
-        typedef T value_type;
-        typedef T* pointer_type;
-        typedef const T* const_pointer_type;
+        typedef Derived value_type;
+        typedef Derived* pointer_type;
+        typedef const Derived* const_pointer_type;
 
         pointer_type getPrev() { return static_cast<pointer_type>(prev_);}
         const_pointer_type getPrev() const{ return static_cast<pointer_type>(prev_);}
@@ -29,11 +29,11 @@ namespace intrusive
         const_pointer_type getNext() const{ return static_cast<pointer_type>(next_);}
 
     protected:
-        friend class List<T>;
+        friend class List<Derived>;
 
         ListNodeBase()
-            :prev_(NULL)
-            ,next_(NULL)
+            :prev_(this)
+            ,next_(this)
         {
         }
 
@@ -67,30 +67,114 @@ namespace intrusive
         this_poitner_type next_;
     };
 
-    /**
-    @brief ƒŠƒ“ƒNƒ|ƒCƒ“ƒ^–„‚ß‚İŒ^ƒŠƒXƒg
+    template<class T>
+    class ListNodeContainer : public ListNodeBase< ListNodeContainer<T> >
+    {
+    public:
+        typedef T value_type;
+        typedef T* pointer_type;
+        typedef ListNodeContainer<T> this_type;
+        typedef ListNodeBase<this_type> base_type;
+        typedef T& reference_type;
 
-    ”Ä—p‚æ‚èŠÈŒ‰‚ğ—DæBŠO•”‚©‚ç“n‚³‚ê‚éƒ|ƒCƒ“ƒ^‚ªƒŠƒXƒg‚É‚ ‚é‚©‚Ç‚¤‚©Aƒ`ƒFƒbƒN‚µ‚È‚¢B
-    g‚¢•û‚ğŒë‚é‚ÆˆÀ‘S‚Å‚È‚¢B
+        ListNodeContainer()
+        {}
+
+        ListNodeContainer(const T& value)
+            :value_(value)
+        {}
+
+        const reference_type operator*() const
+        {
+            return value_;
+        }
+
+        reference_type operator*()
+        {
+            return value_;
+        }
+
+        const pointer_type operator->() const
+        {
+            return &value_;
+        }
+
+        pointer_type operator->()
+        {
+            return &value_;
+        }
+    private:
+        T value_;
+    };
+
+    template<class T>
+    class ListNodeContainer<T*> : public ListNodeBase< ListNodeContainer<T*> >
+    {
+    public:
+        typedef T* value_type;
+        typedef T** pointer_type;
+        typedef ListNodeContainer<value_type> this_type;
+        typedef ListNodeBase<this_type> base_type;
+        typedef T& reference_type;
+
+        ListNodeContainer()
+            :value_(NULL)
+        {}
+
+        ListNodeContainer(T* value)
+            :value_(value)
+        {}
+
+        const reference_type operator*() const
+        {
+            return *value_;
+        }
+
+        reference_type operator*()
+        {
+            return *value_;
+        }
+
+        const pointer_type operator->() const
+        {
+            return value_;
+        }
+
+        pointer_type operator->()
+        {
+            return value_;
+        }
+    private:
+        T* value_;
+    };
+
+    /**
+    @brief ãƒªãƒ³ã‚¯ãƒã‚¤ãƒ³ã‚¿åŸ‹ã‚è¾¼ã¿å‹ãƒªã‚¹ãƒˆ
+
+    æ±ç”¨ã‚ˆã‚Šç°¡æ½”ã‚’å„ªå…ˆã€‚å¤–éƒ¨ã‹ã‚‰æ¸¡ã•ã‚Œã‚‹ãƒã‚¤ãƒ³ã‚¿ãŒãƒªã‚¹ãƒˆã«ã‚ã‚‹ã‹ã©ã†ã‹ã€ãƒã‚§ãƒƒã‚¯ã—ãªã„ã€‚
+    ä½¿ã„æ–¹ã‚’èª¤ã‚‹ã¨å®‰å…¨ã§ãªã„ã€‚
     */
     template<class T>
     class List
     {
     public:
+        typedef T value_type;
+        typedef T* pointer_type;
+
         typedef List<T> this_type;
-        typedef ListNodeBase<T> node_type;
+        typedef typename T::base_type node_type;
 
         inline List();
         inline ~List();
 
         inline u32 size() const;
-        inline T* begin();
-        inline T* rbegin();
-        inline T* end();
+        inline pointer_type begin();
+        inline pointer_type rbegin();
+        inline pointer_type end();
 
-        void push_front(T* node);
-        void push_back(T* node);
-        void erase(T* node);
+        void push_front(pointer_type node);
+        void push_back(pointer_type node);
+        void remove(pointer_type node);
 
         void swap(this_type& rhs);
     private:
@@ -117,25 +201,25 @@ namespace intrusive
     }
 
     template<class T>
-    inline T* List<T>::begin()
+    inline typename List<T>::pointer_type List<T>::begin()
     {
         return top_.getNext();
     }
 
     template<class T>
-    inline T* List<T>::rbegin()
+    inline typename List<T>::pointer_type List<T>::rbegin()
     {
         return top_.getPrev();
     }
 
     template<class T>
-    inline T* List<T>::end()
+    inline typename List<T>::pointer_type List<T>::end()
     {
-        return static_cast<T*>(&top_);
+        return static_cast<pointer_type>(&top_);
     }
 
     template<class T>
-    void List<T>::erase(T* node)
+    void List<T>::remove(pointer_type node)
     {
         LASSERT(NULL != node);
         LASSERT(size_>0);
@@ -145,7 +229,7 @@ namespace intrusive
     }
 
     template<class T>
-    void List<T>::push_front(T* node)
+    void List<T>::push_front(pointer_type node)
     {
         LASSERT(NULL != node);
         node->link(top_.getNext());
@@ -153,10 +237,10 @@ namespace intrusive
     }
 
     template<class T>
-    void List<T>::push_back(T* node)
+    void List<T>::push_back(pointer_type node)
     {
         LASSERT(NULL != node);
-        node->link(static_cast<T*>(&top_));
+        node->link(static_cast<pointer_type>(&top_));
         ++size_;
     }
 

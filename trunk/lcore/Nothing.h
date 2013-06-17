@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_NOTHING_H__
+﻿#ifndef INC_LCORE_NOTHING_H__
 #define INC_LCORE_NOTHING_H__
 /**
 @file Nothing.h

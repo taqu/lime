@@ -1,4 +1,4 @@
-/**
+ï»¿/**
 @file Thread.cpp
 @author t-sakai
 @date 2011/08/06
@@ -87,7 +87,7 @@ namespace lcore
         return static_cast<WaitStatus>(WaitForSingleObject(handle_, timeout));
     }
 
-    // ƒXƒŒƒbƒhI—¹‚·‚×‚«‚©
+    // ã‚¹ãƒ¬ãƒƒãƒ‰çµ‚äº†ã™ã¹ãã‹
     bool Thread::canRun()
     {
         CSLock lock(cs_);
@@ -114,5 +114,27 @@ namespace lcore
         _endthreadex(0);
         thread->release();
         return 0;
+    }
+
+    MultipleWait::MultipleWait()
+    {
+        for(u32 i=0; i<NumMaxThreads; ++i){
+            handles_[i] = NULL;
+        }
+    }
+
+    MultipleWait::~MultipleWait()
+    {
+    }
+
+    void MultipleWait::set(u32 index, Thread* thread)
+    {
+        LASSERT(index<=NumMaxThreads);
+        handles_[index] = thread->handle_;
+    }
+
+    u32 MultipleWait::join(u32 numThreads, u32 timeout)
+    {
+        return WaitForMultipleObjects(numThreads, handles_, TRUE, timeout);
     }
 }

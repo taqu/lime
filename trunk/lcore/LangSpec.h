@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_LANGSPEC_H__
+﻿#ifndef INC_LCORE_LANGSPEC_H__
 #define INC_LCORE_LANGSPEC_H__
 /**
 @file LangSpec.h
