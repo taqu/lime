@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_BITSET_H__
+﻿#ifndef INC_LCORE_BITSET_H__
 #define INC_LCORE_BITSET_H__
 /**
 @file BitSet.h

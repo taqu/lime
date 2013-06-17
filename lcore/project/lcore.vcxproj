@@ -94,44 +94,36 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\allocator\dlmalloc.h" />
     <ClInclude Include="..\intrusive\AVLTree.h" />
     <ClInclude Include="..\intrusive\List.h" />
     <ClInclude Include="..\smart_ptr\intrusive_ptr.h" />
-    <ClInclude Include="..\smart_ptr\ScopedPtr.h" />
     <ClInclude Include="..\smart_ptr\shared_ptr.h" />
     <ClInclude Include="..\random\Random.h" />
     <ClInclude Include="..\async\Socket.h" />
     <ClInclude Include="..\async\SyncObject.h" />
     <ClInclude Include="..\async\Thread.h" />
-    <ClInclude Include="..\AllocatorMalloc.h" />
-    <ClInclude Include="..\AllocatorNew.h" />
     <ClInclude Include="..\BitSet.h" />
     <ClInclude Include="..\Buffer.h" />
     <ClInclude Include="..\CLibrary.h" />
-    <ClInclude Include="..\Container.h" />
     <ClInclude Include="..\CPU.h" />
     <ClInclude Include="..\FixedArray.h" />
     <ClInclude Include="..\Hash.h" />
     <ClInclude Include="..\HashMap.h" />
-    <ClInclude Include="..\HashSet.h" />
     <ClInclude Include="..\LangSpec.h" />
     <ClInclude Include="..\lcore.h" />
     <ClInclude Include="..\ldll.h" />
     <ClInclude Include="..\liostream.h" />
     <ClInclude Include="..\MemoryArena.h" />
-    <ClInclude Include="..\NonCopyable.h" />
     <ClInclude Include="..\Nothing.h" />
-    <ClInclude Include="..\Pair.h" />
     <ClInclude Include="..\Search.h" />
-    <ClInclude Include="..\Singleton.h" />
     <ClInclude Include="..\Sort.h" />
-    <ClInclude Include="..\Stack.h" />
     <ClInclude Include="..\String.h" />
-    <ClInclude Include="..\Tree.h" />
     <ClInclude Include="..\utility.h" />
     <ClInclude Include="..\Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\allocator\dlmalloc.c" />
     <ClCompile Include="..\random\Random.cpp" />
     <ClCompile Include="..\async\Socket.cpp" />
     <ClCompile Include="..\async\SyncObject.cpp" />

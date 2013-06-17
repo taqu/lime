@@ -1,5 +1,5 @@
-#ifndef INC_LNET_SOCKET_H__
-#define INC_LNET_SOCKET_H__
+ï»¿#ifndef INC_LCORE_SOCKET_H__
+#define INC_LCORE_SOCKET_H__
 /**
 @file Socket.h
 @author t-sakai
@@ -18,29 +18,16 @@
 #include <utility>
 #include <iosfwd>
 
-namespace lnet
+namespace lcore
 {
-    using lcore::s8;
-    using lcore::s16;
-    using lcore::s32;
-
-    using lcore::u8;
-    using lcore::u16;
-    using lcore::u32;
-
-    using lcore::f32;
-    using lcore::f64;
-
-    using lcore::Char;
-
-    /// ƒvƒƒgƒRƒ‹ƒtƒ@ƒ~ƒŠ
+    /// ãƒ—ãƒ­ãƒˆã‚³ãƒ«ãƒ•ã‚¡ãƒŸãƒª
     enum Family
     {
         Family_INET  = AF_INET,  /// IPv4
         Family_INET6 = AF_INET6, /// IPv6
     };
 
-    /// ’ÊM•û®
+    /// é€šä¿¡æ–¹å¼
     enum SocketType
     {
         SocketType_STREAM = SOCK_STREAM, /// TCP
@@ -48,20 +35,20 @@ namespace lnet
         SocketType_SEQPACKET = SOCK_SEQPACKET,
     };
 
-    /// ƒvƒƒgƒRƒ‹
+    /// ãƒ—ãƒ­ãƒˆã‚³ãƒ«
     enum Protocol
     {
-        Protocol_IP  = IPPROTO_IP,  /// ’Êí‚Í‚±‚¿‚ç‚ğw’è
-        Protocol_TCP = IPPROTO_TCP, /// –¾¦‚µ‚Ä‚à‰Â
-        Protocol_UDP = IPPROTO_UDP, /// –¾¦‚µ‚Ä‚à‰Â
+        Protocol_IP  = IPPROTO_IP,  /// é€šå¸¸ã¯ã“ã¡ã‚‰ã‚’æŒ‡å®š
+        Protocol_TCP = IPPROTO_TCP, /// æ˜ç¤ºã—ã¦ã‚‚å¯
+        Protocol_UDP = IPPROTO_UDP, /// æ˜ç¤ºã—ã¦ã‚‚å¯
     };
 
     enum Flag
     {
-        Flag_Passive = AI_PASSIVE, /// ‘Ò‚¿‚¤‚¯ƒtƒ‰ƒO
+        Flag_Passive = AI_PASSIVE, /// å¾…ã¡ã†ã‘ãƒ•ãƒ©ã‚°
     };
 
-    /// shutdown‚Ég—p
+    /// shutdownã«ä½¿ç”¨
     enum Shut
     {
         Shut_RECEIVE = SD_RECEIVE,
@@ -69,9 +56,104 @@ namespace lnet
         Shut_BOTH    = SD_BOTH,
     };
 
+    enum SocketOption
+    {
+        SocketOption_DEBUG = SO_DEBUG,
+        SocketOption_ACCEPTCONN = SO_ACCEPTCONN,
+        SocketOption_REUSEADDR = SO_REUSEADDR,
+        SocketOption_KEEPALIVE = SO_KEEPALIVE,
+        SocketOption_DONTROUTE = SO_DONTROUTE,
+        SocketOption_BROADCAST = SO_BROADCAST,
+        SocketOption_USELOOPBACK = SO_USELOOPBACK,
+        SocketOption_LINGER = SO_LINGER,
+        SocketOption_OOBINLINE = SO_OOBINLINE,
+        SocketOption_DONTLINGER = SO_DONTLINGER,
+        SocketOption_EXCLUSIVEADDRUSE = SO_EXCLUSIVEADDRUSE,
 
+        SocketOption_SNDBUF = SO_SNDBUF,
+        SocketOption_RCVBUF = SO_RCVBUF,
+        SocketOption_SNDLOWAT = SO_SNDLOWAT,
+        SocketOption_RCVLOWAT = SO_RCVLOWAT,
+        SocketOption_SNDTIMEO = SO_SNDTIMEO,
+        SocketOption_RCVTIMEO = SO_RCVTIMEO,
+
+        SocketOption_ERROR = SO_ERROR,
+        SocketOption_TYPE = SO_TYPE,
+    };
+
+    enum SocketError
+    {
+        SocketError_EINTR = WSAEINTR, //Interrupted function call
+        SocketError_EACCESS = WSAEACCES, //Permission denied
+        SocketError_EFAULT = WSAEFAULT, //Bad address
+        SocketError_EINVAL = WSAEINVAL, //Invalid argument
+        SocketError_EMFILE = WSAEMFILE, //Too many open files
+        SocketError_EWOULDBLOCK = WSAEWOULDBLOCK, //Resource temporarily unavailable
+        SocketError_EINPROGRESS = WSAEINPROGRESS, //Operation now in progress
+        SocketError_EALREADY = WSAEALREADY, //Operation already in progress
+        SocketError_ENOTSOCK = WSAENOTSOCK, //Socket operation on nonsocket
+        SocketError_EDESTANDDRREQ = WSAEDESTADDRREQ, //Destination address required
+        SocketError_EMSGSIZE = WSAEMSGSIZE, //Message too long
+        SocketError_EPROTOTYPE = WSAEPROTOTYPE, //Protocol wrong type for socket
+        SocketError_ENOPROTOOPT = WSAENOPROTOOPT, //Bad protocol option
+        SocketError_EPROTONOSUPPORT = WSAEPROTONOSUPPORT, //Protocol not supported
+        SocketError_ESOCKTNOSUPPORT = WSAESOCKTNOSUPPORT, //Socket type not supported
+        SocketError_EOPNOTSUPP = WSAEOPNOTSUPP, //Operation not supported
+        SocketError_EPFNOSUPPORT = WSAEPFNOSUPPORT, //Protocol family not supported
+        SocketError_EAFNOSUPPORT = WSAEAFNOSUPPORT, //Address family not supported by protocol family
+        SocketError_EADDRINUSE = WSAEADDRINUSE, //Address already in use
+        SocketError_EADDRNOTAVAIL = WSAEADDRNOTAVAIL, //Cannot assign requested address
+        SocketError_ENETDOWN = WSAENETDOWN, //Network is down
+        SocketError_ENETUNREACH = WSAENETUNREACH, //Network is unreachable
+        SocketError_ENETRESET = WSAENETRESET, //Network dropped connection on reset
+        SocketError_ECONNABORTED = WSAECONNABORTED, //Software caused connection abort
+        SocketError_ECONNRESET = WSAECONNRESET, //Connection reset by peer
+        SocketError_ENOBUFS = WSAENOBUFS, //No buffer space available
+        SocketError_EISCONN = WSAEISCONN, //Socket is already connected
+        SocketError_ENOTCONN = WSAENOTCONN, //Socket is not connected
+        SocketError_ESHUTDOWN = WSAESHUTDOWN, //Cannot send after socket shutdown
+        SocketError_ETIMEOUT = WSAETIMEDOUT, //Connection timed out
+        SocketError_ECONNREFUSED = WSAECONNREFUSED, //Connection refused
+        SocketError_EHOSTDOWN = WSAEHOSTDOWN, //Host is down
+        SocketError_EHOSTUNREACH = WSAEHOSTUNREACH, //No route to host
+        SocketError_EPROCLIM = WSAEPROCLIM, //Too many processes
+        SocketError_ESYSNOTREADY = WSASYSNOTREADY, //Network subsystem is unavailable
+        SocketError_EVERNOTSUPPORTED = WSAVERNOTSUPPORTED, //Winsock.dll version out of range
+        SocketError_ENOTINITIALISED = WSANOTINITIALISED, //Successful WSAStartup not yet performed
+        SocketError_EDISCON = WSAEDISCON, //Graceful shutdown in progress
+        SocketError_ETYPE_NOT_FOUND = WSATYPE_NOT_FOUND, //Class type not found
+        SocketError_EHOST_NOT_FOUND = WSAHOST_NOT_FOUND, //Host not found
+        SocketError_ETRY_AGAIN = WSATRY_AGAIN, //Nonauthoritative host not found
+        SocketError_ENO_RECOVERY = WSANO_RECOVERY, //This is a nonrecoverable error
+        SocketError_ENO_DATA_ = WSANO_DATA, //Valid name, no data record of requested type
+    };
+
+    static const u64 InAddrAny = INADDR_ANY;
+
+    class SocketBase;
     class SocketClient;
     class SocketServer;
+    class FDSet;
+
+#ifndef _WIN32
+    typedef s32 SOCKET;
+#endif
+
+    //----------------------------------------------------
+    //---
+    //--- SocketUtil
+    //---
+    //----------------------------------------------------
+    class SocketUtil
+    {
+    public:
+        static u64 getIP(Family family, const Char* ipInString);
+        static bool getIPString(Family family, Char* dst, u32 size, u64 ip);
+        static u16 htons(u16 port);
+        static u16 ntohs(u16 port);
+
+        static s32 select(s32 nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const timeval* timeout);
+    };
 
     //----------------------------------------------------
     //---
@@ -79,21 +161,21 @@ namespace lnet
     //---
     //----------------------------------------------------
     /**
-    @brief ƒ\ƒPƒbƒgƒVƒXƒeƒ€
+    @brief ã‚½ã‚±ãƒƒãƒˆã‚·ã‚¹ãƒ†ãƒ 
 
-    ƒ\ƒPƒbƒg‚Ìg—p‘OŒã‚ÉA‰Šú‰»‚ÆI—¹‚ğs‚¤B
+    ã‚½ã‚±ãƒƒãƒˆã®ä½¿ç”¨å‰å¾Œã«ã€åˆæœŸåŒ–ã¨çµ‚äº†ã‚’è¡Œã†ã€‚
     */
     class SocketSystem
     {
     public:
-        /// ‰Šú‰»
+        /// åˆæœŸåŒ–
         static bool initialize();
 
-        /// I—¹
+        /// çµ‚äº†
         static void terminate();
 
         /**
-        @brief ’¼‘O‚ÌƒGƒ‰[ƒR[ƒhæ“¾
+        @brief ç›´å‰ã®ã‚¨ãƒ©ãƒ¼ã‚³ãƒ¼ãƒ‰å–å¾—
         */
         static s32 getError();
 
@@ -107,7 +189,23 @@ namespace lnet
 
         static SocketSystem instance_;
 
-        WSADATA wsaData_; /// Windowsƒ\ƒPƒbƒg‰Šú‰»î•ñ
+        WSADATA wsaData_; /// Windowsã‚½ã‚±ãƒƒãƒˆåˆæœŸåŒ–æƒ…å ±
+    };
+
+    //----------------------------------------------------
+    //---
+    //--- FDSet
+    //---
+    //----------------------------------------------------
+    class FDSet
+    {
+    public:
+        void clear(SocketBase& socket);
+        s32 isSet(SocketBase& socket);
+        void set(SocketBase& socket);
+        void zero();
+
+        fd_set set_;
     };
 
     //----------------------------------------------------
@@ -116,12 +214,12 @@ namespace lnet
     //---
     //----------------------------------------------------
     /**
-    @brief Ú‘±î•ñ
+    @brief æ¥ç¶šæƒ…å ±
     */
     class AddrInfo
     {
     public:
-        /// ƒCƒeƒŒ[ƒ^
+        /// ã‚¤ãƒ†ãƒ¬ãƒ¼ã‚¿
         class Iterator
         {
         public:
@@ -166,14 +264,14 @@ namespace lnet
         }
 
         /**
-        @brief Ú‘±î•ñæ“¾
-        @return ¬”Û
-        @param node ... IP‚Ü‚½‚ÍƒzƒXƒg–¼
-        @param service ... ƒ|[ƒg
-        @param family ... ƒvƒƒgƒRƒ‹ƒtƒ@ƒ~ƒŠ
-        @param type ... ’ÊM•û®
-        @param protocol ... ƒvƒƒgƒRƒ‹
-        @param flag ... ƒtƒ‰ƒO
+        @brief æ¥ç¶šæƒ…å ±å–å¾—
+        @return æˆå¦
+        @param node ... IPã¾ãŸã¯ãƒ›ã‚¹ãƒˆå
+        @param service ... ãƒãƒ¼ãƒˆ
+        @param family ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«ãƒ•ã‚¡ãƒŸãƒª
+        @param type ... é€šä¿¡æ–¹å¼
+        @param protocol ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«
+        @param flag ... ãƒ•ãƒ©ã‚°
         */
         bool get(
             const Char* node,
@@ -183,7 +281,7 @@ namespace lnet
             Protocol protocol,
             s32 flag);
 
-        /// —LŒø‚©
+        /// æœ‰åŠ¹ã‹
         bool valid() const{ return addrInfo_ != NULL;}
 
         Iterator begin(){ return Iterator(addrInfo_);}
@@ -192,7 +290,7 @@ namespace lnet
         Iterator end(){ return Iterator();}
         Iterator end() const{ return Iterator();}
 
-        /// æ“ªæ“¾
+        /// å…ˆé ­å–å¾—
         const addrinfo& first() const
         {
             LASSERT(addrInfo_ != NULL);
@@ -202,10 +300,10 @@ namespace lnet
         AddrInfo(const AddrInfo&);
         AddrInfo& operator=(const AddrInfo&);
 
-        /// ‰ğ•ú
+        /// è§£æ”¾
         void release();
 
-        addrinfo* addrInfo_; /// À‘Ô
+        addrinfo* addrInfo_; /// å®Ÿæ…‹
     };
 
 
@@ -215,7 +313,7 @@ namespace lnet
     //---
     //----------------------------------------------------
     /**
-    @brief ƒ\ƒPƒbƒgŠÖ”ƒ‰ƒbƒp[
+    @brief ã‚½ã‚±ãƒƒãƒˆé–¢æ•°ãƒ©ãƒƒãƒ‘ãƒ¼
     */
     class SocketBase
     {
@@ -223,19 +321,29 @@ namespace lnet
         virtual ~SocketBase();
 
         /**
-        @brief ƒ\ƒPƒbƒgì¬
-        @return ¬”Û
-        @param family ... ƒvƒƒgƒRƒ‹ƒtƒ@ƒ~ƒŠ
-        @param type ... ’ÊM•û®
-        @param protocol ... ƒvƒƒgƒRƒ‹
+        @brief ã‚½ã‚±ãƒƒãƒˆä½œæˆ
+        @return æˆå¦
+        @param family ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«ãƒ•ã‚¡ãƒŸãƒª
+        @param type ... é€šä¿¡æ–¹å¼
+        @param protocol ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«
         */
-        bool create(s32 family, s32 type, s32 protocol);
+        bool create(Family family, SocketType type, Protocol protocol);
 
         /**
-        @brief ƒ\ƒPƒbƒg‚ª—LŒø‚©
-        @return —LŒøE–³Œø
+        @brief ã‚½ã‚±ãƒƒãƒˆãŒæœ‰åŠ¹ã‹
+        @return æœ‰åŠ¹ãƒ»ç„¡åŠ¹
         */
         bool valid() const{ return socket_ != INVALID_SOCKET;}
+
+        s32 setOption(SocketOption name, const Char* val, s32 length);
+
+        template<class T>
+        s32 setOption(SocketOption name, const T* val)
+        {
+            return setOption(name, reinterpret_cast<const Char*>(val), sizeof(T));
+        }
+
+        bool setNonBlock();
 
         /**
         @brief
@@ -243,94 +351,98 @@ namespace lnet
         void close();
 
         /**
-        @brief ƒoƒCƒgóM
-        @return ¬Œ÷‚È‚çóM‚µ‚½ƒoƒCƒg”A¸”s‚È‚ç-1
+        @brief ãƒã‚¤ãƒˆå—ä¿¡
+        @return æˆåŠŸãªã‚‰å—ä¿¡ã—ãŸãƒã‚¤ãƒˆæ•°ã€å¤±æ•—ãªã‚‰-1
         */
         inline s32 recv(Char* buff, s32 len, s32 flags);
 
         inline s32 recvfrom(Char* buff, s32 len, s32 flags, SOCKADDR* from, s32* fromlen);
 
         /**
-        @brief ƒoƒCƒg‘—M
-        @return ¬Œ÷‚È‚ç‘—M‚µ‚½ƒoƒCƒg”A¸”s‚È‚ç-1
+        @brief ãƒã‚¤ãƒˆé€ä¿¡
+        @return æˆåŠŸãªã‚‰é€ä¿¡ã—ãŸãƒã‚¤ãƒˆæ•°ã€å¤±æ•—ãªã‚‰-1
         */
         inline s32 send(const Char* buff, s32 len, s32 flags);
 
         inline s32 sendto(const Char* buff, s32 len, s32 flags, const SOCKADDR* to, s32 tolen);
 
         /**
-        @brief w’è•ûŒü‚ÌÚ‘±‚ğ•Â‚¶‚é
-        @return ¬”Û
-        @param •Â‚¶‚éÚ‘±•ûŒü
+        @brief æŒ‡å®šæ–¹å‘ã®æ¥ç¶šã‚’é–‰ã˜ã‚‹
+        @return æˆå¦
+        @param é–‰ã˜ã‚‹æ¥ç¶šæ–¹å‘
         */
-        bool shutdown(Shut how);
+        s32 shutdown(Shut how);
+
+        const SOCKET& getRaw(){ return socket_;}
 
     protected:
+        friend class FDSet;
+
         SocketBase();
 
         /**
-        @param family ... ƒvƒƒgƒRƒ‹ƒtƒ@ƒ~ƒŠ
-        @param type ... ’ÊM•û®
-        @param protocol ... ƒvƒƒgƒRƒ‹
-        @param socket ... ƒ\ƒPƒbƒgƒnƒ“ƒhƒ‹
+        @param family ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«ãƒ•ã‚¡ãƒŸãƒª
+        @param type ... é€šä¿¡æ–¹å¼
+        @param protocol ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«
+        @param socket ... ã‚½ã‚±ãƒƒãƒˆãƒãƒ³ãƒ‰ãƒ«
         */
-        SocketBase(s32 family, s32 type, s32 protocol, SOCKET socket);
+        SocketBase(Family family, SocketType type, Protocol protocol, SOCKET socket);
 
         /**
         @brief 
-        @return ¬”Û
+        @return æˆå¦
         */
-        bool connect(const addrinfo& info);
+        s32 connect(const addrinfo& info);
 
         /**
         @brief 
-        @return ¬”Û
+        @return æˆå¦
         */
-        bool connect(const SOCKADDR& info);
+        s32 connect(const SOCKADDR& info);
 
         /**
-        @brief ƒ\ƒPƒbƒg‚ÆƒAƒhƒŒƒXî•ñ‚ğŒ‹‚Ñ‚Â‚¯‚é
-        @return ¬”Û
+        @brief ã‚½ã‚±ãƒƒãƒˆã¨ã‚¢ãƒ‰ãƒ¬ã‚¹æƒ…å ±ã‚’çµã³ã¤ã‘ã‚‹
+        @return æˆå¦
         */
-        bool bind(const addrinfo& info);
+        s32 bind(const SOCKADDR& info);
 
         /**
-        @brief ƒ\ƒPƒbƒg‚ÆƒAƒhƒŒƒXî•ñ‚ğŒ‹‚Ñ‚Â‚¯‚é
-        @return ¬”Û
+        @brief ã‚½ã‚±ãƒƒãƒˆã¨ã‚¢ãƒ‰ãƒ¬ã‚¹æƒ…å ±ã‚’çµã³ã¤ã‘ã‚‹
+        @return æˆå¦
         */
-        bool bind(const SOCKADDR& info);
+        s32 bind(u16 port, u64 acceptIP);
 
         /**
-        @brief Ú‘±—v‹‘Ò‚¿ó‚¯
-        @return ¬”Û
-        @param backlog ... —v‹ƒLƒ…[‚ÌƒTƒCƒY
+        @brief æ¥ç¶šè¦æ±‚å¾…ã¡å—ã‘
+        @return æˆå¦
+        @param backlog ... è¦æ±‚ã‚­ãƒ¥ãƒ¼ã®ã‚µã‚¤ã‚º
         */
-        bool listen(s32 backlog);
+        s32 listen(s32 backlog);
 
         /**
-        @brief Ú‘±—v‹‚ğ‚Ğ‚Æ‚Âæ‚èo‚µAÚ‘±Šm—§‚µƒ\ƒPƒbƒgì¬
-        @return ¬”Û
-        @param socket ... o—ÍBÚ‘±Šm—§‚µ‚½ƒ\ƒPƒbƒg
-        @param addr ... o—ÍBÚ‘±æî•ñ
-        @param addrlen ... Ú‘±æî•ñƒTƒCƒY
+        @brief æ¥ç¶šè¦æ±‚ã‚’ã²ã¨ã¤å–ã‚Šå‡ºã—ã€æ¥ç¶šç¢ºç«‹ã—ã‚½ã‚±ãƒƒãƒˆä½œæˆ
+        @return æˆå¦
+        @param socket ... å‡ºåŠ›ã€‚æ¥ç¶šç¢ºç«‹ã—ãŸã‚½ã‚±ãƒƒãƒˆ
+        @param addr ... å‡ºåŠ›ã€‚æ¥ç¶šå…ˆæƒ…å ±
+        @param addrlen ... æ¥ç¶šå…ˆæƒ…å ±ã‚µã‚¤ã‚º
         */
         bool accept(SocketClient& socket, SOCKADDR* addr, s32* addrlen);
 
 
-        /// ƒXƒƒbƒv
+        /// ã‚¹ãƒ¯ãƒƒãƒ—
         void swap(SocketBase& rhs);
 
-        s32 family_; /// ƒvƒƒgƒRƒ‹ƒtƒ@ƒ~ƒŠ
-        s32 type_; /// ’ÊM•û®
-        s32 protocol_; /// ƒvƒƒgƒRƒ‹
-        SOCKET socket_; /// ƒ\ƒPƒbƒgƒnƒ“ƒhƒ‹
+        SOCKET socket_; /// ã‚½ã‚±ãƒƒãƒˆãƒãƒ³ãƒ‰ãƒ«
+        Family family_; /// ãƒ—ãƒ­ãƒˆã‚³ãƒ«ãƒ•ã‚¡ãƒŸãƒª
+        SocketType type_; /// é€šä¿¡æ–¹å¼
+        Protocol protocol_; /// ãƒ—ãƒ­ãƒˆã‚³ãƒ«
 
     private:
         SocketBase(const SocketBase&);
         SocketBase& operator=(const SocketBase&);
     };
 
-    // ƒoƒCƒgóM
+    // ãƒã‚¤ãƒˆå—ä¿¡
     inline s32 SocketBase::recv(Char* buff, s32 len, s32 flags)
     {
         LASSERT(socket_ != INVALID_SOCKET);
@@ -340,7 +452,7 @@ namespace lnet
         return ::recv(socket_, buff, len, flags);
     }
 
-    // ƒoƒCƒgóM
+    // ãƒã‚¤ãƒˆå—ä¿¡
     inline s32 SocketBase::recvfrom(Char* buff, s32 len, s32 flags, SOCKADDR* from, s32* fromlen)
     {
         LASSERT(socket_ != INVALID_SOCKET);
@@ -350,7 +462,7 @@ namespace lnet
         return ::recvfrom(socket_, buff, len, flags, from, fromlen);
     }
 
-    // ƒoƒCƒg‘—M
+    // ãƒã‚¤ãƒˆé€ä¿¡
     inline s32 SocketBase::send(const Char* buff, s32 len, s32 flags)
     {
         LASSERT(socket_ != INVALID_SOCKET);
@@ -360,7 +472,7 @@ namespace lnet
         return ::send(socket_, buff, len, flags);
     }
 
-    // ƒoƒCƒg‘—M
+    // ãƒã‚¤ãƒˆé€ä¿¡
     inline s32 SocketBase::sendto(const Char* buff, s32 len, s32 flags, const SOCKADDR* to, s32 tolen)
     {
         LASSERT(socket_ != INVALID_SOCKET);
@@ -376,7 +488,7 @@ namespace lnet
     //---
     //----------------------------------------------------
     /**
-    @brief ƒNƒ‰ƒCƒAƒ“ƒgƒ\ƒPƒbƒg
+    @brief ã‚¯ãƒ©ã‚¤ã‚¢ãƒ³ãƒˆã‚½ã‚±ãƒƒãƒˆ
     */
     class SocketClient : public SocketBase
     {
@@ -385,12 +497,12 @@ namespace lnet
         {}
 
         /**
-        @param family ... ƒvƒƒgƒRƒ‹ƒtƒ@ƒ~ƒŠ
-        @param type ... ’ÊM•û®
-        @param protocol ... ƒvƒƒgƒRƒ‹
-        @param socket ... ƒ\ƒPƒbƒgƒnƒ“ƒhƒ‹
+        @param family ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«ãƒ•ã‚¡ãƒŸãƒª
+        @param type ... é€šä¿¡æ–¹å¼
+        @param protocol ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«
+        @param socket ... ã‚½ã‚±ãƒƒãƒˆãƒãƒ³ãƒ‰ãƒ«
         */
-        SocketClient(s32 family, s32 type, s32 protocol, SOCKET socket)
+        SocketClient(Family family, SocketType type, Protocol protocol, SOCKET socket)
             :SocketBase(family, type, protocol, socket)
         {}
 
@@ -399,23 +511,23 @@ namespace lnet
 
         /**
         @brief 
-        @return ¬”Û
+        @return æˆå¦
         */
-        inline bool connect(const addrinfo& info)
+        inline s32 connect(const addrinfo& info)
         {
             return SocketBase::connect(info);
         }
 
         /**
         @brief 
-        @return ¬”Û
+        @return æˆå¦
         */
-        inline bool connect(const SOCKADDR& info)
+        inline s32 connect(const SOCKADDR& info)
         {
             return SocketBase::connect(info);
         }
 
-        /// ƒXƒƒbƒv
+        /// ã‚¹ãƒ¯ãƒƒãƒ—
         inline void swap(SocketClient& rhs)
         {
             SocketBase::swap(rhs);
@@ -428,7 +540,7 @@ namespace lnet
     //---
     //----------------------------------------------------
     /**
-    @brief ƒT[ƒoƒ\ƒPƒbƒg
+    @brief ã‚µãƒ¼ãƒã‚½ã‚±ãƒƒãƒˆ
     */
     class SocketServer : public SocketBase
     {
@@ -437,12 +549,12 @@ namespace lnet
         {}
 
         /**
-        @param family ... ƒvƒƒgƒRƒ‹ƒtƒ@ƒ~ƒŠ
-        @param type ... ’ÊM•û®
-        @param protocol ... ƒvƒƒgƒRƒ‹
-        @param socket ... ƒ\ƒPƒbƒgƒnƒ“ƒhƒ‹
+        @param family ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«ãƒ•ã‚¡ãƒŸãƒª
+        @param type ... é€šä¿¡æ–¹å¼
+        @param protocol ... ãƒ—ãƒ­ãƒˆã‚³ãƒ«
+        @param socket ... ã‚½ã‚±ãƒƒãƒˆãƒãƒ³ãƒ‰ãƒ«
         */
-        SocketServer(s32 family, s32 type, s32 protocol, SOCKET socket)
+        SocketServer(Family family, SocketType type, Protocol protocol, SOCKET socket)
             :SocketBase(family, type, protocol, socket)
         {}
 
@@ -450,51 +562,51 @@ namespace lnet
         {}
 
         /**
-        @brief ƒ\ƒPƒbƒg‚ÆƒAƒhƒŒƒXî•ñ‚ğŒ‹‚Ñ‚Â‚¯‚é
-        @return ¬”Û
+        @brief ã‚½ã‚±ãƒƒãƒˆã¨ã‚¢ãƒ‰ãƒ¬ã‚¹æƒ…å ±ã‚’çµã³ã¤ã‘ã‚‹
+        @return æˆå¦
         */
-        inline bool bind(const addrinfo& info)
+        inline s32 bind(const SOCKADDR& info)
         {
             return SocketBase::bind(info);
         }
 
         /**
-        @brief ƒ\ƒPƒbƒg‚ÆƒAƒhƒŒƒXî•ñ‚ğŒ‹‚Ñ‚Â‚¯‚é
-        @return ¬”Û
+        @brief ã‚½ã‚±ãƒƒãƒˆã¨ã‚¢ãƒ‰ãƒ¬ã‚¹æƒ…å ±ã‚’çµã³ã¤ã‘ã‚‹
+        @return æˆå¦
         */
-        inline bool bind(const SOCKADDR& info)
+        inline s32 bind(u16 port, u64 acceptIP)
         {
-            return SocketBase::bind(info);
+            return SocketBase::bind(port, acceptIP);
         }
 
         /**
-        @brief Ú‘±—v‹‘Ò‚¿ó‚¯
-        @return ¬”Û
-        @param backlog ... —v‹ƒLƒ…[‚ÌƒTƒCƒY
+        @brief æ¥ç¶šè¦æ±‚å¾…ã¡å—ã‘
+        @return æˆå¦
+        @param backlog ... è¦æ±‚ã‚­ãƒ¥ãƒ¼ã®ã‚µã‚¤ã‚º
         */
-        inline bool listen(s32 backlog)
+        inline s32 listen(s32 backlog)
         {
             return SocketBase::listen(backlog);
         }
 
         /**
-        @brief Ú‘±—v‹‚ğ‚Ğ‚Æ‚Âæ‚èo‚µAÚ‘±Šm—§‚µƒ\ƒPƒbƒgì¬
-        @return ¬”Û
-        @param socket ... o—ÍBÚ‘±Šm—§‚µ‚½ƒ\ƒPƒbƒg
-        @param addr ... o—ÍBÚ‘±æî•ñ
-        @param addrlen ... Ú‘±æî•ñƒTƒCƒY
+        @brief æ¥ç¶šè¦æ±‚ã‚’ã²ã¨ã¤å–ã‚Šå‡ºã—ã€æ¥ç¶šç¢ºç«‹ã—ã‚½ã‚±ãƒƒãƒˆä½œæˆ
+        @return æˆå¦
+        @param socket ... å‡ºåŠ›ã€‚æ¥ç¶šç¢ºç«‹ã—ãŸã‚½ã‚±ãƒƒãƒˆ
+        @param addr ... å‡ºåŠ›ã€‚æ¥ç¶šå…ˆæƒ…å ±
+        @param addrlen ... æ¥ç¶šå…ˆæƒ…å ±ã‚µã‚¤ã‚º
         */
         inline bool accept(SocketClient& socket, SOCKADDR* addr, s32* addrlen)
         {
             return SocketBase::accept(socket, addr, addrlen);
         }
 
-        /// ƒXƒƒbƒv
+        /// ã‚¹ãƒ¯ãƒƒãƒ—
         inline void swap(SocketServer& rhs)
         {
-            return SocketBase::swap(rhs);
+            SocketBase::swap(rhs);
         }
     };
 }
 
-#endif //INC_LNET_SOCKET_H__
+#endif //INC_LCORE_SOCKET_H__

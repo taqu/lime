@@ -1,18 +1,17 @@
-#ifndef INC_LCORE_AVLTREE_H__
+﻿#ifndef INC_LCORE_AVLTREE_H__
 #define INC_LCORE_AVLTREE_H__
 /**
 @file AVLTree.h
 @author t-sakai
 @date 2008/11/13 create
 */
-#include "Container.h"
-#include "AllocatorMalloc.h"
+#include "../lcore.h"
 
 namespace lcore
 {
 namespace intrusive
 {
-    template<class ValueType, class Predicate, class Allocator> class AVLTree;
+    template<class ValueType, class Predicate> class AVLTree;
 
     template<class T>
     struct DefaultPredicate
@@ -33,16 +32,16 @@ namespace intrusive
     //---
     //---------------------------------------------------------------
     /// ノード基底
-    template<class T, class Allocator>
+    template<class T>
     class AVLNodeBase
     {
     private:
-        friend class AVLTree<T, Allocator>;
+        friend class AVLTree<T>;
 
         /// コンストラクタ
         AVLNodeBase()
-            :left_(0),
-            right_(0),
+            :left_(NULL),
+            right_(NULL),
             height_(0)
         {
         }
@@ -77,34 +76,32 @@ namespace intrusive
     //---
     //---------------------------------------------------------------
     /// AVL木
-    template<class ValueType,
-    class Predicate = DefaultPredicate<ValueType>,
-    class Allocator = AllocatorMalloc< AVLNodeBase<ValueType> > >
+    template<class ValueType, class Predicate = DefaultPredicate<ValueType> >
     class AVLTree : protected Container
     {
     public:
-        typedef size_t size_type;
+        typedef u32 size_type;
         typedef ValueType* pointer;
         typedef const ValueType* const_pointer;
         typedef ValueType& reference;
         typedef const ValueType& const_reference;
         typedef ValueType value_type;
-        typedef AVLTree<ValueType, Allocator> this_type;
-        typedef AVLNodeBase<ValueType, Allocator> node_type;
+        typedef AVLTree<ValueType> this_type;
+        typedef AVLNodeBase<ValueType> node_type;
 
         AVLTree()
-            :root_(0)
+            :root_(NULL)
         {
         }
 
         ~AVLTree()
         {
-            if(root_ != 0){
+            if(NULL != root_){
                 eraseAll();
             }
         }
 
-        bool isEmpty() const{ return (root_ == 0);}
+        bool isEmpty() const{ return (NULL == root_);}
 
         void insert(value_type& value)
         {
@@ -119,7 +116,7 @@ namespace intrusive
         void eraseAll()
         {
             eraseNode(root_);
-            root_ = 0;
+            root_ = NULL;
         }
 
         const value_type* search(const value_type& key) const;
@@ -129,9 +126,9 @@ namespace intrusive
 
         const value_type& getMin() const
         {
-            LASSERT(root_ != 0);
+            LASSERT(NULL != root_);
             node_type* node = root_;
-            while(node->left_ != 0){
+            while(NULL != node->left_){
                 node = node->left_;
             }
             return *node;
@@ -139,9 +136,9 @@ namespace intrusive
 
         const value_type& getMax() const
         {
-            LASSERT(root_ != 0);
+            LASSERT(NULL != root_);
             node_type* node = root_;
-            while(node->right_ != 0){
+            while(NULL != node->right_){
                 node = node->right_;
             }
             return *node;
@@ -166,7 +163,7 @@ namespace intrusive
 
         inline s32 nodeHeight(node_type* node)
         {
-            return (node != 0)? node->height_ : 0;
+            return (NULL != node)? node->height_ : 0;
         }
 
         inline s32 calcHeight(const node_type* node)
@@ -174,24 +171,16 @@ namespace intrusive
             return maximum( nodeHeight(node->left_), nodeHeight(node->right_) ) + 1;
         }
 
-        static Allocator _allocator;
-
         node_type *root_;
     };
 
     //---------------------------------------------------------------
-    // アロケータ実体
-    template<class ValueType, class Predicate, class Allocator>
-    Allocator AVLTree<ValueType, Allocator>::_allocator;
-
-
-    //---------------------------------------------------------------
-    template<class ValueType, class Predicate, class Allocator>
-    typename AVLTree<ValueType, Predicate, Allocator>::node_type*
-        AVLTree<ValueType, Predicate, Allocator>::popMaxNode(node_type* node, node_type** maxNode)
+    template<class ValueType, class Predicate>
+    typename AVLTree<ValueType, Predicate>::node_type*
+        AVLTree<ValueType, Predicate>::popMaxNode(node_type* node, node_type** maxNode)
     {
         LASSERT(node != NULL);
-        if(node->right_ == 0){
+        if(NULL == node->right_){
             *maxNode = node;
             return node->left_;
         }
@@ -203,14 +192,14 @@ namespace intrusive
 
     //---------------------------------------------------------------
     // 右回転
-    template<class ValueType, class Predicate, class Allocator>
-    typename AVLTree<ValueType, Predicate, Allocator>::node_type*
-        AVLTree<ValueType, Predicate, Allocator>::rotateRight(node_type* node)
+    template<class ValueType, class Predicate>
+    typename AVLTree<ValueType, Predicate>::node_type*
+        AVLTree<ValueType, Predicate>::rotateRight(node_type* node)
     {
-        LASSERT(node != 0);
+        LASSERT(NULL != node);
 
         node_type* left = node->left_;
-        LASSERT(left != 0); //右回転する場合必ず存在
+        LASSERT(NULL != left); //右回転する場合必ず存在
 
         node->_left = left->rigt_;
         left->right_ = node;
@@ -222,14 +211,14 @@ namespace intrusive
 
     //---------------------------------------------------------------
     // 左回転
-    template<class ValueType, class Predicate, class Allocator>
-    typename AVLTree<ValueType, Predicate, Allocator>::node_type*
-        AVLTree<ValueType, Predicate, Allocator>::rotateLeft(node_type* node)
+    template<class ValueType, class Predicate>
+    typename AVLTree<ValueType, Predicate>::node_type*
+        AVLTree<ValueType, Predicate>::rotateLeft(node_type* node)
     {
-        P_ASSERT(node != 0);
+        LASSERT(NULL != node);
 
         node_type* right = node->_right;
-        P_ASSERT(right != 0); //左回転する場合必ず存在
+        LASSERT(NULL != right); //左回転する場合必ず存在
 
         node->_right = right->_left;
         right->_left = node;
@@ -240,11 +229,11 @@ namespace intrusive
 
 
     //---------------------------------------------------------------
-    template<class ValueType, class Predicate, class Allocator>
-    typename AVLTree<ValueType, Predicate, Allocator>::node_type*
-        AVLTree<ValueType, Predicate, Allocator>::insert(node_type* node, value_type& value)
+    template<class ValueType, class Predicate>
+    typename AVLTree<ValueType, Predicate>::node_type*
+        AVLTree<ValueType, Predicate>::insert(node_type* node, value_type& value)
     {
-        if(node == 0){
+        if(NULL == node){
             // 挿入位置
             return &value;
         }
@@ -269,11 +258,11 @@ namespace intrusive
 
 
     //---------------------------------------------------------------
-    template<class ValueType, class Predicate, class Allocator>
-    typename AVLTree<ValueType, Predicate, Allocator>::node_type*
-        AVLTree<ValueType, Predicate, Allocator>::balance(node_type* node)
+    template<class ValueType, class Predicate>
+    typename AVLTree<ValueType, Predicate>::node_type*
+        AVLTree<ValueType, Predicate>::balance(node_type* node)
     {
-        LASSERT(node != 0);
+        LASSERT(NULL != node);
 
         s32 diff = nodeHeight(node->right_) - nodeHeight(node->left_);
         node_type *ret = node;
@@ -305,13 +294,13 @@ namespace intrusive
 
 
     //---------------------------------------------------------------
-    template<class ValueType, class Predicate, class Allocator>
-    typename AVLTree<ValueType, Predicate, Allocator>::node_type*
-        AVLTree<ValueType, Predicate, Allocator>::erase(node_type* node, value_type& value)
+    template<class ValueType, class Predicate>
+    typename AVLTree<ValueType, Predicate>::node_type*
+        AVLTree<ValueType, Predicate>::erase(node_type* node, value_type& value)
     {
-        if(node == 0){
+        if(NULL == node){
             // 見つからなかった
-            return 0;
+            return NULL;
         }
 
         value_type &nodeVal = (value_type)*node;
@@ -328,8 +317,7 @@ namespace intrusive
             }else{
                 node = oldNode->right_;
             }
-            _allocator.destroy(oldNode);
-            _allocator.deallocate(oldNode, sizeof(value_type));
+            LIME_DELETE(oldNode);
 
         }else if( ret<0 ){
             node->left_ = erase(node->left_, value);
@@ -338,31 +326,30 @@ namespace intrusive
             node->right_ = erase(node->right_, value);
         }
 
-        if(node != 0){
+        if(NULL != node){
             node = balance(node); //左右部分木バランスどり
         }
         return node;
     }
 
     //---------------------------------------------------------------
-    template<class ValueType, class Predicate, class Allocator>
-    void AVLTree<ValueType, Predicate, Allocator>::eraseNode(node_type* node)
+    template<class ValueType, class Predicate>
+    void AVLTree<ValueType, Predicate>::eraseNode(node_type* node)
     {
-        if(node != 0){
+        if(NULL != node){
             eraseNode(node->left_);
             eraseNode(node->right_);
-            _allocator.destroy(node);
-            _allocator.deallocate(node, sizeof(ValueType));
+            LIME_DELETE(node);
         }
     }
 
     //---------------------------------------------------------------
-    template<class ValueType, class Predicate, class Allocator>
-    const typename AVLTree<ValueType, Predicate, Allocator>::value_type*
-        AVLTree<ValueType, Predicate, Allocator>::search(const value_type& key) const
+    template<class ValueType, class Predicate>
+    const typename AVLTree<ValueType, Predicate>::value_type*
+        AVLTree<ValueType, Predicate>::search(const value_type& key) const
     {
         node_type* node = root_;
-        while(node != 0){
+        while(NULL != node){
             value_type &nodeVal = (value_type)*node;
             s32 ret = Predicate(value, nodeVal);
             if( ret==0 ){
@@ -376,12 +363,12 @@ namespace intrusive
         return (value_type*)node;
     }
 
-    template<class ValueType, class Predicate, class Allocator, class EqualFunc>
-    const typename AVLTree<ValueType, Predicate, Allocator>::value_type*
-        AVLTree<ValueType, Predicate, Allocator>::search(const EqualFunc& func)
+    template<class ValueType, class Predicate, class EqualFunc>
+    const typename AVLTree<ValueType, Predicate>::value_type*
+        AVLTree<ValueType, Predicate>::search(const EqualFunc& func)
     {
         node_type* node = root_;
-        while(node != 0){
+        while(NULL != node){
             value_type &nodeVal = (value_type)*node;
             s32 ret = func(nodeVal, key);
             if( ret==0 ){

@@ -13,6 +13,9 @@
     <Filter Include="async">
       <UniqueIdentifier>{1327b7e5-781e-45f3-8e3d-13321009aa6e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="allocator">
+      <UniqueIdentifier>{6718125d-1044-4982-99e7-8c03456a8e0a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\intrusive\AVLTree.h">
@@ -22,9 +25,6 @@
       <Filter>intrusive</Filter>
     </ClInclude>
     <ClInclude Include="..\smart_ptr\intrusive_ptr.h">
-      <Filter>smart_ptr</Filter>
-    </ClInclude>
-    <ClInclude Include="..\smart_ptr\ScopedPtr.h">
       <Filter>smart_ptr</Filter>
     </ClInclude>
     <ClInclude Include="..\smart_ptr\shared_ptr.h">
@@ -42,33 +42,27 @@
     <ClInclude Include="..\async\Thread.h">
       <Filter>async</Filter>
     </ClInclude>
-    <ClInclude Include="..\AllocatorMalloc.h" />
-    <ClInclude Include="..\AllocatorNew.h" />
     <ClInclude Include="..\BitSet.h" />
     <ClInclude Include="..\Buffer.h" />
     <ClInclude Include="..\CLibrary.h" />
-    <ClInclude Include="..\Container.h" />
     <ClInclude Include="..\CPU.h" />
     <ClInclude Include="..\FixedArray.h" />
     <ClInclude Include="..\Hash.h" />
     <ClInclude Include="..\HashMap.h" />
-    <ClInclude Include="..\HashSet.h" />
     <ClInclude Include="..\LangSpec.h" />
     <ClInclude Include="..\lcore.h" />
     <ClInclude Include="..\ldll.h" />
     <ClInclude Include="..\liostream.h" />
     <ClInclude Include="..\MemoryArena.h" />
-    <ClInclude Include="..\NonCopyable.h" />
     <ClInclude Include="..\Nothing.h" />
-    <ClInclude Include="..\Pair.h" />
     <ClInclude Include="..\Search.h" />
-    <ClInclude Include="..\Singleton.h" />
     <ClInclude Include="..\Sort.h" />
-    <ClInclude Include="..\Stack.h" />
     <ClInclude Include="..\String.h" />
-    <ClInclude Include="..\Tree.h" />
     <ClInclude Include="..\utility.h" />
     <ClInclude Include="..\Vector.h" />
+    <ClInclude Include="..\allocator\dlmalloc.h">
+      <Filter>allocator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\random\Random.cpp">
@@ -90,5 +84,8 @@
     <ClCompile Include="..\ldll.cpp" />
     <ClCompile Include="..\liostream.cpp" />
     <ClCompile Include="..\utlity.cpp" />
+    <ClCompile Include="..\allocator\dlmalloc.c">
+      <Filter>allocator</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

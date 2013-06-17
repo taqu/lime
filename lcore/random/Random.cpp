@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Random.cpp
 @author t-sakai
 @date 2011/09/04
@@ -66,7 +66,7 @@ namespace lcore
 
 #ifdef _WIN32
 
-//#if 0x0501<=WINVER //XP�ȏ�
+//#if 0x0501<=WINVER //XP以上
 //        if(TRUE != RtlGenRandom(&seed, sizeof(u32))){
 //            seed = getRandomBasedOnDisckUsage();
 //        }

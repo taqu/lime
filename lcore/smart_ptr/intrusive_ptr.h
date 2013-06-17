@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_INTRUSIVE_PTR_H__
+﻿#ifndef INC_LCORE_INTRUSIVE_PTR_H__
 #define INC_LCORE_INTRUSIVE_PTR_H__
 /**
 @file intrusive_ptr.h

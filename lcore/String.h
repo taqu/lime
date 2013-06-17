@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_STRING_H__
+﻿#ifndef INC_LCORE_STRING_H__
 #define INC_LCORE_STRING_H__
 /**
 @file String.h

@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_LIOSTREAM_
+﻿#ifndef INC_LCORE_LIOSTREAM_
 #define INC_LCORE_LIOSTREAM_
 /**
 @file lfstream

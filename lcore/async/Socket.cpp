@@ -1,4 +1,4 @@
-/**
+Ôªø/**
 @file Socket.cpp
 @author t-sakai
 @date 2011/08/06
@@ -8,30 +8,65 @@
 #include <memory.h>
 #include <iostream>
 
-namespace lnet
+namespace lcore
 {
+    //----------------------------------------------------
+    //---
+    //--- SocketUtil
+    //---
+    //----------------------------------------------------
+    u64 SocketUtil::getIP(Family family, const Char* ipInString)
+    {
+        LASSERT(NULL != ipInString);
+
+        u64 ip;
+        s32 ret = inet_pton(family, ipInString, &(ip));
+        return (0<ret)? ip : 0;
+    }
+
+    bool SocketUtil::getIPString(Family family, Char* dst, u32 size, u64 ip)
+    {
+        const Char* ret = inet_ntop(family, &ip, dst, size);
+        return (NULL != ret);
+    }
+
+    u16 SocketUtil::htons(u16 port)
+    {
+        return ::htons(port);
+    }
+
+    u16 SocketUtil::ntohs(u16 port)
+    {
+        return ::ntohs(port);
+    }
+
+    s32 SocketUtil::select(s32 nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, const timeval* timeout)
+    {
+        return ::select(nfds, readfds, writefds, exceptfds, timeout);
+    }
+
     //----------------------------------------------------
     //---
     //--- SocketSystem
     //---
     //----------------------------------------------------
-    // ÉCÉìÉXÉ^ÉìÉX
+    // „Ç§„É≥„Çπ„Çø„É≥„Çπ
     SocketSystem SocketSystem::instance_;
 
-    // èâä˙âª
+    // ÂàùÊúüÂåñ
     bool SocketSystem::initialize()
     {
         s32 ret = WSAStartup(MAKEWORD(2,2), &instance_.wsaData_);
         return ret == 0;
     }
 
-    // èIóπ
+    // ÁµÇ‰∫Ü
     void SocketSystem::terminate()
     {
         WSACleanup();
     }
 
-    // ÉGÉâÅ[ÉRÅ[ÉhéÊìæ
+    // „Ç®„É©„Éº„Ç≥„Éº„ÉâÂèñÂæó
     s32 SocketSystem::getError()
     {
         return WSAGetLastError();
@@ -43,6 +78,31 @@ namespace lnet
             os << message;
         }
         os << "(code " << getError() << ')' << std::endl;
+    }
+
+    //----------------------------------------------------
+    //---
+    //--- FDSet
+    //---
+    //----------------------------------------------------
+    void FDSet::clear(SocketBase& socket)
+    {
+        FD_CLR(socket.socket_, &set_);
+    }
+
+    s32 FDSet::isSet(SocketBase& socket)
+    {
+        return FD_ISSET(socket.socket_, &set_);
+    }
+
+    void FDSet::set(SocketBase& socket)
+    {
+        FD_SET(socket.socket_, &set_);
+    }
+
+    void FDSet::zero()
+    {
+        FD_ZERO(&set_);
     }
 
     //----------------------------------------------------
@@ -86,14 +146,14 @@ namespace lnet
     //---
     //----------------------------------------------------
     SocketBase::SocketBase()
-        :family_(0)
-        ,type_(0)
-        ,protocol_(0)
+        :family_(Family_INET)
+        ,type_(SocketType_STREAM)
+        ,protocol_(Protocol_TCP)
         ,socket_(INVALID_SOCKET)
     {
     }
 
-    SocketBase::SocketBase(s32 family, s32 type, s32 protocol, SOCKET socket)
+    SocketBase::SocketBase(Family family, SocketType type, Protocol protocol, SOCKET socket)
         :family_(family)
         ,type_(type)
         ,protocol_(protocol)
@@ -106,7 +166,7 @@ namespace lnet
         close();
     }
 
-    bool SocketBase::create(s32 family, s32 type, s32 protocol)
+    bool SocketBase::create(Family family, SocketType type, Protocol protocol)
     {
         SOCKET socket = ::socket(family, type, protocol);
         if(socket != INVALID_SOCKET){
@@ -119,51 +179,71 @@ namespace lnet
         return (socket != INVALID_SOCKET);
     }
 
+    s32 SocketBase::setOption(SocketOption name, const Char* val, s32 length)
+    {
+        return ::setsockopt(socket_, SOL_SOCKET, name, val, length);
+    }
+
+    bool SocketBase::setNonBlock()
+    {
+        LASSERT(socket_ != INVALID_SOCKET);
+#ifdef _WIN32
+        u_long val = 1;
+        return SOCKET_ERROR != ioctlsocket(socket_, FIONBIO, &val);
+#else
+        if(fcntl(socket_, F_SETFL, O_NONBLOCK) < 0){
+            return false;
+        }
+        return true;
+#endif
+    }
+
     void SocketBase::close()
     {
         if(socket_ != INVALID_SOCKET){
             closesocket(socket_);
-            family_ = 0;
-            type_ = 0;
-            protocol_ = 0;
             socket_ = INVALID_SOCKET;
         }
     }
 
-    bool SocketBase::shutdown(Shut how)
+    s32 SocketBase::shutdown(Shut how)
     {
         LASSERT(socket_ != INVALID_SOCKET);
-        return (SOCKET_ERROR != ::shutdown(socket_, how));
+        return ::shutdown(socket_, how);
     }
 
-
-    bool SocketBase::connect(const addrinfo& info)
+    s32 SocketBase::connect(const addrinfo& info)
     {
         LASSERT(socket_ != INVALID_SOCKET);
-        return (SOCKET_ERROR != ::connect(socket_, info.ai_addr, static_cast<int>(info.ai_addrlen)) );
+        return ::connect(socket_, info.ai_addr, static_cast<int>(info.ai_addrlen));
     }
 
-    bool SocketBase::connect(const SOCKADDR& info)
+    s32 SocketBase::connect(const SOCKADDR& info)
     {
         LASSERT(socket_ != INVALID_SOCKET);
-        return (SOCKET_ERROR != ::connect(socket_, &info, static_cast<int>(sizeof(SOCKADDR))) );
+        return ::connect(socket_, &info, static_cast<int>(sizeof(SOCKADDR)));
     }
 
-    bool SocketBase::bind(const addrinfo& info)
+    s32 SocketBase::bind(const SOCKADDR& info)
     {
         LASSERT(socket_ != INVALID_SOCKET);
-        return (SOCKET_ERROR != ::bind(socket_, info.ai_addr, static_cast<int>(info.ai_addrlen)) );
+        return ::bind(socket_, &info, static_cast<int>(sizeof(SOCKADDR)));
     }
 
-    bool SocketBase::bind(const SOCKADDR& info)
+    s32 SocketBase::bind(u16 port, u64 acceptIP)
     {
         LASSERT(socket_ != INVALID_SOCKET);
-        return (SOCKET_ERROR != ::bind(socket_, &info, static_cast<int>(sizeof(SOCKADDR))) );
+        sockaddr_in info;
+        info.sin_family = static_cast<ADDRESS_FAMILY>(family_);
+        info.sin_port = htons(port);
+        info.sin_addr.S_un.S_addr = static_cast<ULONG>(acceptIP);
+
+        return ::bind(socket_, (const sockaddr*)&info, static_cast<int>(sizeof(sockaddr_in)));
     }
 
-    bool SocketBase::listen(s32 backlog)
+    s32 SocketBase::listen(s32 backlog)
     {
-        return (SOCKET_ERROR != ::listen(socket_, backlog));
+        return ::listen(socket_, backlog);
     }
 
     bool SocketBase::accept(SocketClient& socket, SOCKADDR* addr, s32* addrlen)
@@ -180,7 +260,7 @@ namespace lnet
         return false;
     }
 
-    // ÉXÉèÉbÉv
+    // „Çπ„ÉØ„ÉÉ„Éó
     void SocketBase::swap(SocketBase& rhs)
     {
         std::swap(family_, rhs.family_);

@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_HASH_H__
+﻿#ifndef INC_LCORE_HASH_H__
 #define INC_LCORE_HASH_H__
 /*
 Copyright (c) 2005, Google Inc.

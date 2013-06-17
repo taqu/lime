@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file utlity.cpp
 @author t-sakai
 @date 2011/02/05

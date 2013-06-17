@@ -1,4 +1,4 @@
-#ifndef INC_LCORE_FIXEDARRAY_H__
+﻿#ifndef INC_LCORE_FIXEDARRAY_H__
 #define INC_LCORE_FIXEDARRAY_H__
 /**
 @file FixedArray.h
