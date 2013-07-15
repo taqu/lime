@@ -18,7 +18,7 @@ namespace lcore
     class BitSet
     {
     public:
-        typedef BitSet<4> this_type;
+        typedef BitSet<SizeInByte> this_type;
 
         BitSet()
         {
@@ -43,7 +43,7 @@ namespace lcore
         inline bool check(u32 index) const
         {
             u8 bit = index & 0x07U;
-            index = index >> 8;
+            index = index >> 3;
             return ((bits_[index] & (0x01U<<bit)) != 0);
         }
 
@@ -53,7 +53,7 @@ namespace lcore
         inline void set(u32 index)
         {
             u8 bit = index & 0x07U;
-            index = index >> 8;
+            index = index >> 3;
             bits_[index] |= (0x01U<<bit);
         }
 
@@ -75,7 +75,7 @@ namespace lcore
         inline void reset(u32 index)
         {
             u8 bit = index & 0x07U;
-            index = index >> 8;
+            index = index >> 3;
             bits_[index] &= ~(0x01U<<bit);
         }
 
