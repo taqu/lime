@@ -9,6 +9,60 @@
 
 namespace lgraphics
 {
+    //--------------------------------------
+    //---
+    //--- DepthStencilStateRef
+    //---
+    //--------------------------------------
+    DepthStencilStateRef::DepthStencilStateRef()
+        :state_(NULL)
+    {}
+
+    DepthStencilStateRef::DepthStencilStateRef(const DepthStencilStateRef& rhs)
+        :state_(rhs.state_)
+    {
+        if(state_ != NULL){
+            state_->AddRef();
+        }
+    }
+
+    DepthStencilStateRef::~DepthStencilStateRef()
+    {
+        destroy();
+    }
+
+    void DepthStencilStateRef::destroy()
+    {
+        SAFE_RELEASE(state_);
+    }
+
+    DepthStencilStateRef::DepthStencilStateRef(ID3D11DepthStencilState* state)
+        :state_(state)
+    {}
+
+    bool DepthStencilStateRef::valid() const
+    {
+        return (NULL != state_);
+    }
+
+    DepthStencilStateRef& DepthStencilStateRef::operator=(const DepthStencilStateRef& rhs)
+    {
+        DepthStencilStateRef tmp(rhs);
+        tmp.swap(*this);
+        return *this;
+    }
+
+    void DepthStencilStateRef::swap(DepthStencilStateRef& rhs)
+    {
+        lcore::swap(state_, rhs.state_);
+    }
+
+    //--------------------------------------
+    //---
+    //--- GraphicsDeviceRef
+    //---
+    //--------------------------------------
+
     static const Char* GSModels[] =
     {
         "gs_4_0",
@@ -75,6 +129,8 @@ namespace lgraphics
     //---------------------------------------------------------
     bool GraphicsDeviceRef::initialize(const InitParam& initParam)
     {
+        LASSERT(0<initParam.supportHardwareLevel_);
+
         u32 deviceFlags = 0;
 #ifdef _DEBUG
         deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -131,11 +187,10 @@ namespace lgraphics
         HRESULT hr = D3D11CreateDeviceAndSwapChain(
             NULL, //IDXGIAdapter。デフォルトを使用する場合NULL
             (D3D_DRIVER_TYPE)initParam.type_, //ドライバタイプ
-            NULL, //HMODULE ドライバタイプがSOFTWAREの場合LoadLibraryでDLLをロードして渡す。
-                  //それ以外のタイプではNULL
+            NULL, //HMODULE ドライバタイプがSOFTWAREの場合LoadLibraryでDLLをロードして渡す。それ以外のタイプではNULL
             deviceFlags, //フラグ
             attemptFeatureLevel, //FutureLevel配列
-            3,                   //FutureLevel配列要素数
+            initParam.supportHardwareLevel_, //FutureLevel配列要素数
             D3D11_SDK_VERSION,
             &swapChainDesc,
             &swapChain_,
@@ -145,12 +200,35 @@ namespace lgraphics
 
         if(FAILED(hr)){
             lcore::Log("Cannot create Direct3D Device");
-            return false;
+            if(0 == initParam.allowSoftwareDevice_){
+                return false;
+            }
+            lcore::Log("Try to create Reference Device");
+
+            //リファレンスデバイス作成
+            hr = D3D11CreateDeviceAndSwapChain(
+                NULL, //IDXGIAdapter。デフォルトを使用する場合NULL
+                D3D_DRIVER_TYPE_REFERENCE, //ドライバタイプ
+                NULL, //HMODULE ドライバタイプがSOFTWAREの場合LoadLibraryでDLLをロードして渡す。それ以外のタイプではNULL
+                deviceFlags, //フラグ
+                attemptFeatureLevel, //FutureLevel配列
+                initParam.supportHardwareLevel_, //FutureLevel配列要素数
+                D3D11_SDK_VERSION,
+                &swapChainDesc,
+                &swapChain_,
+                &device_,
+                &supportedLevel,
+                &context_);
+
+            if(FAILED(hr)){
+                lcore::Log("Cannot create Reference Device");
+                return false;
+            }
         }
         featureLevel_ = supportedLevel;
 
-        //VSModel = (supportedLevel >= D3D_FEATURE_LEVEL_11_0)? VSModels[1] : VSModels[0];
-        //PSModel = (supportedLevel >= D3D_FEATURE_LEVEL_11_0)? PSModels[1] : PSModels[0];
+        VSModel = (supportedLevel >= D3D_FEATURE_LEVEL_11_0)? VSModels[1] : VSModels[0];
+        PSModel = (supportedLevel >= D3D_FEATURE_LEVEL_11_0)? PSModels[1] : PSModels[0];
 
         createBackBuffer(width, height, initParam.depthStencilFormat_);
 
@@ -176,9 +254,22 @@ namespace lgraphics
                 return false;
             }
 
-            rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+            rasterizerDesc.CullMode = D3D11_CULL_NONE;
+            hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_FillSolidNoCull]);
+            if(FAILED(hr)){
+                return false;
+            }
 
+            rasterizerDesc.CullMode = D3D11_CULL_BACK;
+            rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
             hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_FillWireFrame]);
+            if(FAILED(hr)){
+                return false;
+            }
+
+            rasterizerDesc.CullMode = D3D11_CULL_NONE;
+            rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+            hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_FillWireFrameNoCull]);
             if(FAILED(hr)){
                 return false;
             }
@@ -186,7 +277,7 @@ namespace lgraphics
             rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 
             //デプスバッファのフォーマットによってDepthBiasの扱いが異なる
-            const f32 depthBias = 0.005f;
+            const f32 depthBias = 0.001f;
             switch(initParam.depthStencilFormat_)
             {
             case lgraphics::Data_D16_UNorm:
@@ -206,8 +297,8 @@ namespace lgraphics
             //rasterizerDesc.SlopeScaledDepthBias = 1.0f;
             //rasterizerDesc.DepthBiasClamp = 0.05f;
             //rasterizerDesc.DepthBias = 0;
-            rasterizerDesc.SlopeScaledDepthBias = 0.0f;
-            rasterizerDesc.DepthBiasClamp = 0.0f;
+            rasterizerDesc.SlopeScaledDepthBias = 3.0f;
+            rasterizerDesc.DepthBiasClamp = 0.01f;
 
             hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_DepthMap]);
             if(FAILED(hr)){
@@ -359,6 +450,12 @@ namespace lgraphics
     }
 
     //---------------------------------------------------------
+    void GraphicsDeviceRef::setBlendState(BlendStateRef& state)
+    {
+        context_->OMSetBlendState(state.get(), blendFactors_, 0xFFFFFFFFU);
+    }
+
+    //---------------------------------------------------------
     void GraphicsDeviceRef::getRenderTargetDesc(u32& width, u32& height)
     {
         width = 1;
@@ -385,7 +482,7 @@ namespace lgraphics
     }
 
     //---------------------------------------------------------
-    void GraphicsDeviceRef::onSize(u32 width, u32 height)
+    void GraphicsDeviceRef::onSize(u32 /*width*/, u32 /*height*/)
     {
         if(NULL == swapChain_ || NULL == context_){
             return;
@@ -436,5 +533,58 @@ namespace lgraphics
         }else{
             swapChain_->SetFullscreenState(TRUE, NULL);
         }
+    }
+
+    //---------------------------------------------------------
+    void GraphicsDeviceRef::restoreDefaultRenderTargets()
+    {
+        D3D11_TEXTURE2D_DESC desc;
+        backBuffer_->GetDesc(&desc);
+
+        context_->OMSetRenderTargets(1, &renderTargetView_, depthStencilView_);
+        setViewport(0, 0, desc.Width, desc.Height);
+    }
+
+    //---------------------------------------------------------
+    DepthStencilStateRef GraphicsDeviceRef::createDepthStencilState(
+        bool depthEnable,
+        DepthWriteMask depthWriteMask,
+        CmpFunc depthFunc,
+        bool stencilEnable,
+        u8 stencilReadMask,
+        u8 stencilWriteMask,
+        const DepthStencilStateRef::StencilOPDesc& frontFace,
+        const DepthStencilStateRef::StencilOPDesc& backFace)
+    {
+        D3D11_DEPTH_STENCIL_DESC desc;
+        desc.DepthEnable = (depthEnable)? TRUE : FALSE;
+        desc.DepthWriteMask = (D3D11_DEPTH_WRITE_MASK)depthWriteMask;
+        desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(depthFunc);
+        desc.StencilEnable = (stencilEnable)? TRUE : FALSE;
+        desc.StencilReadMask = stencilReadMask;
+        desc.StencilWriteMask = stencilWriteMask;
+
+        desc.FrontFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>(frontFace.failOp_);
+        desc.FrontFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>(frontFace.depthFailOp_);
+        desc.FrontFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>(frontFace.passOp_);
+        desc.FrontFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>(frontFace.cmpFunc_);
+
+        desc.BackFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>(backFace.failOp_);
+        desc.BackFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>(backFace.depthFailOp_);
+        desc.BackFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>(backFace.passOp_);
+        desc.BackFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>(backFace.cmpFunc_);
+
+        ID3D11DepthStencilState* state = NULL;
+        device_->CreateDepthStencilState(&desc, &state);
+
+        return DepthStencilStateRef(state);
+    }
+
+    //---------------------------------------------------------
+    void GraphicsDeviceRef::setDepthStencilState(DepthStencilStateRef& state, u32 stencilRef)
+    {
+        LASSERT(state.valid());
+
+        context_->OMSetDepthStencilState(state.state_, stencilRef);
     }
 }

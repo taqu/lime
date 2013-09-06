@@ -7,7 +7,6 @@
 #include "../lgraphicscore.h"
 
 #include "IODDS.h"
-#include "../api/Enumerations.h"
 #include "../api/TextureRef.h"
 #include "MemoryStream.h"
 
@@ -75,6 +74,20 @@ namespace io
             UINT reserved_;
         };
 
+        // old format
+        enum D3DFMT
+        {
+            D3DFMT_A16B16G16R16 = 36,
+            D3DFMT_R16F = 111,
+            D3DFMT_G16R16F = 112,
+            D3DFMT_A16B16G16R16F = 113,
+            D3DFMT_R32F = 114,
+            D3DFMT_G32R32F = 115,
+            D3DFMT_A32B32G32R32F = 116,
+        };
+
+#define IsBitMask(r,g,b,a) ((r) == ddpf.RBitMask_ && (g) == ddpf.GBitMask_ && (b) == ddpf.BBitMask_)
+
         /**
         @param ddpf ... ピクセルフォーマット
 
@@ -82,88 +95,151 @@ namespace io
         */
         DataFormat selectFormat(const IODDS::DDS_PIXELFORMAT& ddpf)
         {
-            DataFormat format = Data_Unknown;
-            switch(ddpf.flags_)
-            {
-            case DDPF_RGBA:
+            if(ddpf.flags_ & DDPF_RGB){
+                switch (ddpf.RGBBitCount_)
                 {
-                    if((ddpf.RBitMask_ == 0x3ffU)
-                        && (ddpf.GBitMask_ == 0xffc00U)
-                        && (ddpf.BBitMask_ == 0x3ff00000U))
-                    {
-                        format = Data_R10G10B10A2_UInt;
-
-                    }else if((ddpf.RBitMask_ == 0xffU)
-                        && (ddpf.GBitMask_ == 0xff00U)
-                        && (ddpf.BBitMask_ == 0xff0000U))
-                    {
-                        format = Data_R8G8B8A8_UNorm_SRGB;
-
-                    }else if((ddpf.RBitMask_ == 0xff0000U)
-                        && (ddpf.GBitMask_ == 0xff00U)
-                        && (ddpf.BBitMask_ == 0xffU))
-                    {
-                        format = Data_B8G8R8A8_UNorm_SRGB;
+                case 32:
+                    if( IsBitMask(0x00ff0000,0x0000ff00,0x000000ff,0xff000000) ){
+                        return Data_B8G8R8A8_UNorm_SRGB;
                     }
-                }
-                break;
 
-            case DDPF_RGB:
-                {
-                    if((ddpf.RBitMask_ == 0xffffU)
-                        && (ddpf.GBitMask_ == 0xffff0000U))
-                    {
-                        format = Data_R16G16_UNorm;
-
-                    }else if((ddpf.RBitMask_ == 0xff0000U)
-                        && (ddpf.GBitMask_ == 0xff00U)
-                        && (ddpf.BBitMask_ == 0xffU))
-                    {
-                        if(ddpf.RGBBitCount_ == 32){
-                            format = Data_B8G8R8X8_UNorm_SRGB;
-                        }
-
+                    if( IsBitMask(0x00ff0000,0x0000ff00,0x000000ff,0x00000000) ){
+                        return Data_B8G8R8X8_UNorm_SRGB;
                     }
-                }
-                break;
-
-            case DDPF_ALPHA:
-                {
-                    format = Data_A8_UNorm;
-                }
-                break;
-
-            case DDPF_LUMINANCE:
-                {
-                    if(ddpf.RGBBitCount_ == 8){
-                        format = Data_R8_UNorm;
-
-                    }else if(ddpf.RGBBitCount_ == 16){
-                        format = Data_R16_UNorm;
+                    
+                    if( IsBitMask(0x000000ff,0x0000ff00,0x00ff0000,0xff000000) ){
+                        return Data_R8G8B8A8_UNorm_SRGB;
                     }
-                }
-                break;
+                    
+                    if( IsBitMask(0x000000ff,0x0000ff00,0x00ff0000,0x00000000) ){
+                        return Data_R8G8B8A8_UNorm_SRGB;
+                    }
 
-            case DDPF_FOURCC:
-                {
-                    //圧縮形式
-                    switch(ddpf.fourCC_)
-                    {
-                    case DXFORCC_DXT1:
-                        format = Data_BC1_UNorm_SRGB;
-                        break;
-                    case DXFORCC_DXT3:
-                        format = Data_BC2_UNorm_SRGB;
-                        break;
-                    case DXFORCC_DXT5:
-                        format = Data_BC3_UNorm_SRGB;
-                        break;
-                    };
+                    // Not support
+                    if( IsBitMask(0x3ff00000,0x000ffc00,0x000003ff,0xc0000000) ){
+                        return Data_Unknown;
+                    }
+
+                    if( IsBitMask(0x000003ff,0x000ffc00,0x3ff00000,0xc0000000) ){
+                        return Data_R10G10B10A2_UNorm;
+                    }
+
+                    if( IsBitMask(0x0000ffff,0xffff0000,0x00000000,0x00000000) ){
+                        return Data_R16G16_UNorm;
+                    }
+
+                    if( IsBitMask(0xffffffff,0x00000000,0x00000000,0x00000000) ){
+                        return Data_R32_Float;
+                    }
+                    break;
+
+                case 24:
+                    // Not support B8G8A8
+                    if( IsBitMask(0x00ff0000,0x0000ff00,0x000000ff,0x00000000) ){
+                        return Data_Unknown;
+                    }
+                    break;
+
+                case 16:
+                    if( IsBitMask(0x0000f800,0x000007e0,0x0000001f,0x00000000) ){
+                        return Data_B5G6R5_UNorm;
+                    }
+
+                    if( IsBitMask(0x00007c00,0x000003e0,0x0000001f,0x00008000) ){
+                        return Data_B5G5R5A1_UNorm;
+                    }
+
+                    if( IsBitMask(0x00007c00,0x000003e0,0x0000001f,0x00000000) ){
+                        return Data_B5G5R5A1_UNorm;
+                    }
+
+                    // Not support B4G4R4A4
+                    if( IsBitMask(0x00000f00,0x000000f0,0x0000000f,0x0000f000) ){
+                        return Data_Unknown;
+                    }
+
+                    // Not support B4G4R4X4
+                    if( IsBitMask(0x00000f00,0x000000f0,0x0000000f,0x00000000) ){
+                        return Data_Unknown;
+                    }
+
+                    // Not support B2G3R3A8
+                    if( IsBitMask(0x000000e0,0x0000001c,0x00000003,0x0000ff00) ){
+                        return Data_Unknown;
+                    }
+                    break;
                 }
-                break;
+
+            }else if(ddpf.flags_ & DDPF_LUMINANCE){
+                switch(ddpf.RGBBitCount_)
+                {
+                case 16:
+                    if( IsBitMask(0x0000ffff,0x00000000,0x00000000,0x00000000) ){
+                        return Data_R16_UNorm;
+                    }
+
+                    if( IsBitMask(0x000000ff,0x00000000,0x00000000,0x0000ff00) ){
+                        return Data_R8G8_UNorm;
+                    }
+                    break;
+
+                case 8:
+                    //Not support A4L4
+                    if( IsBitMask(0x0000000f,0x00000000,0x00000000,0x000000f0) ){
+                        return Data_Unknown;
+                    }
+
+                    if( IsBitMask(0x000000ff,0x00000000,0x00000000,0x00000000) ){
+                        return Data_R8_UNorm;
+                    }
+                    break;
+                }
+
+            }else if(ddpf.flags_ & DDPF_ALPHA){
+                switch(ddpf.RGBBitCount_)
+                {
+                case 8:
+                    return Data_A8_UNorm;
+                    break;
+                }
+
+            }else if(ddpf.flags_ & DDPF_FOURCC){
+                //圧縮形式
+                switch(ddpf.fourCC_)
+                {
+                case DXFORCC_DXT1:
+                    return Data_BC1_UNorm_SRGB;
+
+                case DXFORCC_DXT3:
+                    return Data_BC2_UNorm_SRGB;
+
+                case DXFORCC_DXT5:
+                    return Data_BC3_UNorm_SRGB;
+
+                case D3DFMT_A16B16G16R16:
+                    return Data_R16G16B16A16_UNorm;
+
+                case D3DFMT_R16F:
+                    return Data_R16_Float;
+
+                case D3DFMT_G16R16F:
+                    return Data_R16G16_Float;
+
+                case D3DFMT_A16B16G16R16F:
+                    return Data_R16G16B16A16_Float;
+
+                case D3DFMT_R32F:
+                    return Data_R32_Float;
+
+                case D3DFMT_G32R32F:
+                    return Data_R32G32_Float;
+
+                case D3DFMT_A32B32G32R32F:
+                    return Data_R32G32B32A32_Float;
+                };
             }
 
-            return format;
+            return Data_Unknown;
         }
 
         void getSize(DataFormat format, u32 width, u32 height, u32& size, u32& pitch, u32& numRows)
@@ -218,9 +294,9 @@ namespace io
 
     }
 
-    bool IODDS::read(const s8* data, u32 size, Texture2DRef& texture)
+    bool IODDS::read(Texture2DRef& texture, const s8* data, u32 size, Usage usage, TextureFilterType filter, TextureAddress adress)
     {
-        static const u32 MaxNumSubResourceData = 64;
+        static const u32 MaxNumSubResourceData = 256;
         SubResourceData initData[MaxNumSubResourceData];
 
         MemoryStream memStream(data, size);
@@ -253,7 +329,27 @@ namespace io
             arraySize = header10.arraySize_;
         }else{
             format = selectFormat(header.ddpf_);
-            arraySize = 1;
+
+            if((header.caps2_ & DDSCAPS2_CUBEMAP) != 0){
+                arraySize = 0;
+                u32 cubeMapFlags[] =
+                {
+                    DDSCAPS2_CUBEMAP_POSITIVEX,
+                    DDSCAPS2_CUBEMAP_NEGATIVEX,
+                    DDSCAPS2_CUBEMAP_POSITIVEY,
+                    DDSCAPS2_CUBEMAP_NEGATIVEY,
+                    DDSCAPS2_CUBEMAP_POSITIVEZ,
+                    DDSCAPS2_CUBEMAP_NEGATIVEZ,
+                };
+                for(s32 i=0; i<6; ++i){
+                    if((header.caps2_ & cubeMapFlags[i]) != 0){
+                        ++arraySize;
+                    }
+                }
+
+            }else{
+                arraySize = 1;
+            }
         }
 
         if(format == Data_Unknown){
@@ -289,10 +385,18 @@ namespace io
             }
         }
 
+        //u32 fileSize = (u32)mem - (u32)data;
+
         ResourceViewDesc viewDesc;
         viewDesc.format_ = format;
-        viewDesc.tex2D_.mostDetailedMip_ = 0;
-        viewDesc.tex2D_.mipLevels_ = mipmapLevel;
+
+        if(arraySize>1){
+            viewDesc.texCube_.mostDetailedMip_ = 0;
+            viewDesc.texCube_.mipLevels_ = mipmapLevel;
+        }else{
+            viewDesc.tex2D_.mostDetailedMip_ = 0;
+            viewDesc.tex2D_.mipLevels_ = mipmapLevel;
+        }
 
         texture = Texture::create2D(
             header.width_,
@@ -300,12 +404,12 @@ namespace io
             mipmapLevel,
             arraySize,
             format,
-            Usage_Default,
+            usage,
             BindFlag_ShaderResource,
             CPUAccessFlag_None,
             ResourceMisc_None,
-            TexFilter_MinMagLinearMipPoint,
-            TexAddress_Clamp,
+            filter,
+            adress,
             0.0f,
             initData,
             &viewDesc);

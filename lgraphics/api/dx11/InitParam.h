@@ -12,6 +12,13 @@ namespace lgraphics
 {
     struct InitParam
     {
+        enum HardwareLevel
+        {
+            HardwareLevel_11 = 1,
+            HardwareLevel_10_1,
+            HardwareLevel_10,
+        };
+
         InitParam()
             :type_(DriverType_Hardware)
             ,backBufferWidth_(1)
@@ -21,8 +28,10 @@ namespace lgraphics
             ,refreshRate_(60)
             ,windowHandle_(NULL)
             ,windowed_(1)
+            ,allowSoftwareDevice_(0)
             ,interval_(PresentInterval_One)
             ,swapEffect_(DXGISwapEffect_Discard)
+            ,supportHardwareLevel_(HardwareLevel_10)
         {
         }
 
@@ -33,7 +42,9 @@ namespace lgraphics
         u32 depthStencilFormat_;
         u32 refreshRate_;
         HWND__ *windowHandle_;
-        s32 windowed_;
+        s16 windowed_;
+        s16 allowSoftwareDevice_;
+        s32 supportHardwareLevel_;
 
         PresentInterval interval_;
         DXGISwapEffect swapEffect_;

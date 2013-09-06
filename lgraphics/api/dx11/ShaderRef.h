@@ -259,6 +259,34 @@ namespace lgraphics
         @param size ... 
         */
         static GeometryShaderRef createGeometryShaderFromBinary(const u8* memory, u32 size);
+
+
+        /**
+        @brief メモリからピクセルシェーダ作成
+        @param memory ... 
+        @param size ... 
+        @param numDefines ... defineマクロの数
+        @param defines ... defineマクロ名
+        */
+        static BlobRef createPixelShaderBlobFromMemory(const Char* memory, u32 size, const Char* profile, s32 numDefines, const char** defines, BlobRef* error);
+
+        /**
+        @brief メモリから頂点シェーダ作成
+        @param memory ... 
+        @param size ... 
+        @param numDefines ... defineマクロの数
+        @param defines ... defineマクロ名
+        */
+        static BlobRef createVertexShaderBlobFromMemory(const Char* memory, u32 size, const Char* profile, s32 numDefines, const char** defines, BlobRef* error);
+
+        /**
+        @brief メモリからジオメトリシェーダ作成
+        @param memory ... 
+        @param size ... 
+        @param numDefines ... defineマクロの数
+        @param defines ... defineマクロ名
+        */
+        static BlobRef createGeometryShaderBlobFromMemory(const Char* memory, u32 size, const Char* profile, s32 numDefines, const char** defines, BlobRef* error);
     };
 
 

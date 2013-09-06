@@ -7,6 +7,7 @@
 
 #include <memory.h>
 #include <iostream>
+#include "../clibrary.h"
 
 namespace lcore
 {
@@ -110,7 +111,7 @@ namespace lcore
     //--- AddrInfo
     //---
     //----------------------------------------------------
-    bool AddrInfo::get(
+    s32 AddrInfo::get(
             const Char* node,
             const Char* service,
             Family family,
@@ -121,14 +122,14 @@ namespace lcore
         release();
 
         addrinfo hints;
-        memset(&hints, 0, sizeof(addrinfo));
+        lcore::memset(&hints, 0, sizeof(addrinfo));
         hints.ai_family = family;
         hints.ai_socktype = type;
         hints.ai_protocol = protocol;
         hints.ai_flags = flag;
 
         s32 result = getaddrinfo(node, service, &hints, &addrInfo_);
-        return (result == 0);
+        return result;
     }
 
     void AddrInfo::release()
@@ -184,6 +185,11 @@ namespace lcore
         return ::setsockopt(socket_, SOL_SOCKET, name, val, length);
     }
 
+    s32 SocketBase::getOption(SocketOption name, Char* val, s32* length)
+    {
+        return ::getsockopt(socket_, SOL_SOCKET, name, val, length);
+    }
+
     bool SocketBase::setNonBlock()
     {
         LASSERT(socket_ != INVALID_SOCKET);
@@ -191,7 +197,12 @@ namespace lcore
         u_long val = 1;
         return SOCKET_ERROR != ioctlsocket(socket_, FIONBIO, &val);
 #else
-        if(fcntl(socket_, F_SETFL, O_NONBLOCK) < 0){
+        s32 flags = fcntl(socket_, F_GETFL);
+        if(flags<0){
+            return false;
+        }
+        flags |= O_NONBLOCK;
+        if(fcntl(socket_, F_SETFL, flags) < 0){
             return false;
         }
         return true;
@@ -246,14 +257,14 @@ namespace lcore
         return ::listen(socket_, backlog);
     }
 
-    bool SocketBase::accept(SocketClient& socket, SOCKADDR* addr, s32* addrlen)
+    bool SocketBase::accept(SocketBase& socket, SOCKADDR* addr, s32* addrlen)
     {
         LASSERT(socket_ != INVALID_SOCKET);
 
         SOCKET ret = ::accept(socket_, addr, addrlen);
 
         if(ret != INVALID_SOCKET){
-            SocketClient tmp(family_, type_, protocol_, ret);
+            SocketBase tmp(family_, type_, protocol_, ret);
             socket.swap(tmp);
             return true;
         }
@@ -267,5 +278,5 @@ namespace lcore
         std::swap(type_, rhs.type_);
         std::swap(protocol_, rhs.protocol_);
         std::swap(socket_, rhs.socket_);
-    }
+    }    
 }

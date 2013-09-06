@@ -19,6 +19,7 @@ namespace lgraphics
 {
     namespace io
     {
+        //-----------------------------------------------------------------
         bool IOTGA::read(lcore::istream& is, u8* buffer, u32& width, u32& height, DataFormat& format, bool transpose)
         {
             u8 tgaHeader[TGA_HEADER_SIZE];
@@ -49,7 +50,7 @@ namespace lgraphics
                 return false;
             }
 
-            format = Data_R8G8B8A8_UNorm;
+            format = Data_R8G8B8A8_UNorm_SRGB;
             if(NULL == buffer){
                 is.seekg(startPos, lcore::ios::beg); //ファイルポインタを元の位置に戻す
                 return true;
@@ -125,6 +126,127 @@ namespace lgraphics
 
             return true;
         }
+namespace
+{
+        u8 calcRunLength(const u8* buffer, u32 index, u32 pixels)
+        {
+            static const u32 bpp = 4;
+            static const u32 maxCount = 0x7FU;
 
+            if(pixels<=(index+1)){
+                return 0x80U | 0x01U;
+            }
+
+            const u8* next = buffer + bpp;
+
+
+            u8 count = 0;
+            if((buffer[0] == next[0])
+                && (buffer[1] == next[1])
+                && (buffer[2] == next[2])
+                && (buffer[3] == next[3]))
+            {
+                for(u32 i=index; i<(pixels-1); ++i){
+
+                    if((buffer[0] != next[0])
+                        || (buffer[1] != next[1])
+                        || (buffer[2] != next[2])
+                        || (buffer[3] != next[3]))
+                    {
+                        break;
+                    }
+
+                    if(maxCount<=++count){
+                        break;
+                    }
+                    next += bpp;
+                }
+                return 0x80U | count;
+
+            }else{
+
+                for(u32 i=index; i<(pixels-1); ++i){
+                    if((buffer[0] == next[0])
+                        && (buffer[1] == next[1])
+                        && (buffer[2] == next[2])
+                        && (buffer[3] == next[3]))
+                    {
+                        break;
+                    }
+
+                    if(maxCount<=++count){
+                        break;
+                    }
+                    buffer += bpp;
+                    next += bpp;
+                }
+                return count;
+            }
+        }
+
+        void write32RLE(lcore::ostream& os, const u8* buffer, u32 width, u32 height)
+        {
+            static const u32 bpp = 4;
+
+            u32 pixels = width*height;
+            for(u32 i=0; i<pixels;){
+
+                u8 run = calcRunLength(buffer, i, pixels);
+                u8 count = run & 0x7FU;
+
+                lcore::io::write(os, run);
+
+                if((run & 0x80U) != 0){
+                    lcore::io::write(os, buffer, 4);
+                }else{
+                    lcore::io::write(os, buffer, count*4);
+                }
+                buffer += count*4;
+                i += count;
+            }
+        }
+
+        void write32(lcore::ostream& os, const u8* buffer, u32 width, u32 height)
+        {
+            static const u32 bpp = 4;
+
+            u32 pixels = width*height;
+            u8 tmp[bpp];
+            for(u32 i=0; i<pixels; ++i){
+                tmp[0] = buffer[2];
+                tmp[1] = buffer[1];
+                tmp[2] = buffer[0];
+                tmp[3] = buffer[3];
+                lcore::io::write(os, tmp, bpp);
+                buffer += bpp;
+            }
+
+        }
+}
+
+        //-----------------------------------------------------------------
+        bool IOTGA::write(lcore::ostream& os, const u8* buffer, u32 width, u32 height)
+        {
+            u8 tgaHeader[TGA_HEADER_SIZE];
+            lcore::memset(tgaHeader, 0, TGA_HEADER_SIZE);
+
+            tgaHeader[Offset_WidthL] = width & 0xFFU;
+            tgaHeader[Offset_WidthH] = (width>>8) & 0xFFU;
+
+            tgaHeader[Offset_HeightL] = height & 0xFFU;
+            tgaHeader[Offset_HeightH] = (height>>8) & 0xFFU;
+
+            tgaHeader[Offset_BitPerPixel] = 32;
+
+            tgaHeader[Offset_ImageType] = Type_FullColor;
+            //tgaHeader[Offset_ImageType] = Type_FullColorRLE;
+
+            tgaHeader[Offset_Discripter] = 8; //4bitのアルファチェネルビット深度
+
+            lcore::io::write(os, tgaHeader, TGA_HEADER_SIZE);
+            //write32RLE(os, buffer, width, height);
+            write32(os, buffer, width, height);
+            return true;
+        }
     }
 }

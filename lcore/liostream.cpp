@@ -44,6 +44,7 @@ namespace lcore
         "ab+",
     };
 
+
     const Char* ios::getModeString(int mode)
     {
         for(int i=0; i<Mode_Num; ++i){

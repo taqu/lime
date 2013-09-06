@@ -1,4 +1,4 @@
-#include "stdafx.h"
+Ôªø#include "stdafx.h"
 
 #include "FontPacker.h"
 #include "DistanceField.h"
@@ -10,6 +10,7 @@ FontPacker::FontPacker()
 ,bmpOutlined_(NULL)
 ,dataBmp_(NULL)
 ,dataOutlined_(NULL)
+,numCodes_(0)
 ,textHeight_(0)
 ,spaceWidth_(0)
 {
@@ -98,7 +99,7 @@ bool FontPacker::draw(HWND hwnd)
     memset(dataOutlined_, 0, sizeof(DWORD)*info_.width_*info_.height_);
 
     int fontWeight = (info_.bold_)? FW_BOLD : FW_NORMAL;
-    font_ = CreateFontA(
+    font_ = CreateFont(
         info_.size_,
         0,
         0,
@@ -150,29 +151,31 @@ bool FontPacker::draw(HWND hwnd)
     int outlineWidth = outlineOffset << 1;
     textHeight_ = metrics.tmHeight + outlineWidth;
 
-    char str[2] = {'\0', '\0'};
+    TCHAR str[2] = {'\0', '\0'};
 
     int padding = outlineOffset+1;
 
     GLYPHMETRICS glyphMetrics;
 
-    //2x2ïœä∑çsóÒ
+    //2x2Â§âÊèõË°åÂàó
     MAT2 mat=
     {
         {0,1}, {0,0},
         {0,0}, {0,1}
     };
 
-    //ãÛîíÉTÉCÉY
-    GetGlyphOutlineA(memDC, 32, GGO_METRICS, &glyphMetrics, 0, NULL, &mat);
+    //Á©∫ÁôΩ„Çµ„Ç§„Ç∫
+    GetGlyphOutline(memDC, 32, GGO_METRICS, &glyphMetrics, 0, NULL, &mat);
     spaceWidth_ = glyphMetrics.gmCellIncX + outlineWidth;
 
     GlyphInfo* tmpInfo[NumCode];
     for(unsigned int i=0; i<NumCode; ++i){
-        unsigned int code = i + StartCode;
-        GetGlyphOutlineA(memDC, code, GGO_METRICS, &glyphMetrics, 0, NULL, &mat);
+        unsigned short code;
+        U16ToSTR(code, charcode::SJIS_LEVEL1[i].code_);
 
-        glyphInfo_[i].fitWCoded_ = code;
+        GetGlyphOutline(memDC, code, GGO_METRICS, &glyphMetrics, 0, NULL, &mat);
+
+        glyphInfo_[i].fitWCoded_ = *(short*)&code;
         glyphInfo_[i].width_ = glyphMetrics.gmCellIncX + outlineWidth;
         glyphInfo_[i].fitWidth_ = glyphMetrics.gmBlackBoxX + outlineWidth;
         glyphInfo_[i].fitHeight_ = glyphMetrics.gmBlackBoxY + outlineWidth;
@@ -200,9 +203,16 @@ bool FontPacker::draw(HWND hwnd)
             prevHeight = tmpInfo[i]->fitHeight_;
         }
 
-        str[0] = info.fitWCoded_;
+        charcode::u16 code = *(charcode::u16*)(&info.fitWCoded_);
+        str[0] = code & 0xFFU;
+        str[1] = (code>>8) & 0xFFU;
 
-        //(0Ç©ÇÁÉeÉNÉXÉ`ÉÉÉTÉCÉY)ÇïÑçÜït16ÉrÉbÉgÇ…ÉRÅ[Éhâª
+        int len = 1;
+        if(isTwoBytes(str)){
+            len = 2;
+        }
+
+        //(0„Åã„Çâ„ÉÜ„ÇØ„Çπ„ÉÅ„É£„Çµ„Ç§„Ç∫)„ÇíÁ¨¶Âè∑‰ªò16„Éì„ÉÉ„Éà„Å´„Ç≥„Éº„ÉâÂåñ
         info.fitWCoded_ = info.fitWidth_*ratioX;
         info.fitHCoded_ = info.fitHeight_*ratioY;
 
@@ -213,12 +223,12 @@ bool FontPacker::draw(HWND hwnd)
         int offsety = y-info.offsetY_ + outlineOffset;
 
         BeginPath(memDC);
-        TextOutA(memDC, offsetx, offsety, str, 1);
+        TextOut(memDC, offsetx, offsety, str, len);
         EndPath(memDC);
         FillPath(memDC);
 
         BeginPath(memDCOutlined);
-        TextOutA(memDCOutlined, offsetx, offsety, str, 1);
+        TextOut(memDCOutlined, offsetx, offsety, str, len);
         EndPath(memDCOutlined);
         StrokePath(memDCOutlined);
 
@@ -258,7 +268,7 @@ void FontPacker::sort(GlyphInfo** info)
 }
 
 
-void FontPacker::save(const char* bmppath, const char* infopath)
+void FontPacker::save(const TCHAR* bmppath, const TCHAR* infopath)
 {
     saveBMP(bmppath);
 
@@ -267,8 +277,9 @@ void FontPacker::save(const char* bmppath, const char* infopath)
         PackHeader header;
         header.textHeight_ = textHeight_;
         header.spaceWidth_ = spaceWidth_;
-        header.startCode_ = StartCode;
-        header.endCode_ = EndCode;
+        //header.startCode_ = StartCode;
+        //header.endCode_ = EndCode;
+        header.numCodes_ = NumCode;
         header.resolutionX_ = info_.width_;
         header.resolutionY_ = info_.height_;
         header.distanceField_ = (info_.distanceField_)? 1 : 0;
@@ -280,7 +291,7 @@ void FontPacker::save(const char* bmppath, const char* infopath)
     }
 }
 
-void FontPacker::saveBMP(const char* bmppath)
+void FontPacker::saveBMP(const TCHAR* bmppath)
 {
     BITMAPINFOHEADER bmpih;
     memset(&bmpih, 0, sizeof(BITMAPINFOHEADER));

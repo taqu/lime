@@ -120,7 +120,8 @@ namespace lscene
 
         void updateMatrix();
 
-        inline void getViewTranslation(lmath::Vector3& pos) const;
+        void getEyePosition(lmath::Vector4& eye) const;
+
     protected:
         f32 znear_;
         f32 zfar_;
@@ -132,13 +133,6 @@ namespace lscene
         lmath::Matrix44 projMatrix_;
         lmath::Matrix44 viewProjMatrix_;
     };
-
-    inline void Camera::getViewTranslation(lmath::Vector3& pos) const
-    {
-        pos.x_ = viewMatrix_.m_[0][3];
-        pos.y_ = viewMatrix_.m_[1][3];
-        pos.z_ = viewMatrix_.m_[2][3];
-    }
 }
 
 #endif //INC_LSCENE_CAMERA_H__

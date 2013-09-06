@@ -13,13 +13,11 @@
 #if defined(_WIN32)
 
 #if defined(_DEBUG)
-#define _CRTDBG_MAP_ALLOC
-#include <crtdbg.h>
 #include <malloc.h>
 #include <new>
 
-//#define LIME_NEW new(_NORMAL_BLOCK,__FILE__,__LINE__)
-#define LIME_NEW new
+#define LIME_NEW new(__FILE__,__LINE__)
+//#define LIME_NEW new
 #define LIME_RAW_NEW new
 
 #else //_DEBUG
@@ -56,6 +54,7 @@
 
 #include "LangSpec.h"
 
+
 // メモリ確保・開放
 //-------------------
 void* lcore_malloc(std::size_t size);
@@ -64,6 +63,10 @@ void* lcore_malloc(std::size_t size, std::size_t alignment);
 void lcore_free(void* ptr);
 void lcore_free(void* ptr, std::size_t alignment);
 
+void* lcore_malloc(std::size_t size, const char* file, int line);
+void* lcore_malloc(std::size_t size, std::size_t alignment, const char* file, int line);
+
+//-------------------
 inline void* operator new(std::size_t size)
 {
     return lcore_malloc(size);
@@ -84,10 +87,54 @@ inline void operator delete[](void* ptr)
     lcore_free(ptr);
 }
 
+//-------------------
+inline void* operator new(std::size_t size, const char* file, int line)
+{
+    return lcore_malloc(size, file, line);
+}
+
+inline void operator delete(void* ptr, const char* /*file*/, int /*line*/)
+{
+    lcore_free(ptr);
+}
+
+inline void* operator new[](std::size_t size, const char* file, int line)
+{
+    return lcore_malloc(size, file, line);
+}
+
+inline void operator delete[](void* ptr, const char* /*file*/, int /*line*/)
+{
+    lcore_free(ptr);
+}
+
+
+/// 16バイトアライメント変数指定
+#define LIME_ALIGN16 _declspec(align(16))
+
+#if defined(_DEBUG)
 
 #define LIME_PLACEMENT_NEW(ptr) new(ptr)
 #define LIME_DELETE(p) { delete p; (p)=NULL;}
-#define LIME_DELETE_NONULL delete
+#define LIME_DELETE_NONULL(p) delete p
+//#define LIME_OPERATOR_NEW ::operator new
+//#define LIME_OPERATOR_DELETE ::operator delete
+
+#define LIME_DELETE_ARRAY(p) {delete[] (p); (p) = NULL;}
+
+#define LIME_MALLOC(size) (lcore_malloc(size, __FILE__, __LINE__))
+#define LIME_FREE(mem) {lcore_free(mem); mem = NULL;}
+
+/// アライメント指定malloc
+#define LIME_ALIGNED_MALLOC(size, align) (lcore_malloc(size, align, __FILE__, __LINE__))
+/// アライメント指定free
+#define LIME_ALIGNED_FREE(mem, align) (lcore_free(mem, align))
+
+#else //defined(_DEBUG)
+
+#define LIME_PLACEMENT_NEW(ptr) new(ptr)
+#define LIME_DELETE(p) { delete p; (p)=NULL;}
+#define LIME_DELETE_NONULL(p) delete p
 //#define LIME_OPERATOR_NEW ::operator new
 //#define LIME_OPERATOR_DELETE ::operator delete
 
@@ -96,18 +143,17 @@ inline void operator delete[](void* ptr)
 #define LIME_MALLOC(size) (lcore_malloc(size))
 #define LIME_FREE(mem) {lcore_free(mem); mem = NULL;}
 
-/// 16バイトアライメント変数指定
-#define LIME_ALIGN16 _declspec(align(16))
-
 /// アライメント指定malloc
 #define LIME_ALIGNED_MALLOC(size, align) (lcore_malloc(size, align))
-
 /// アライメント指定free
 #define LIME_ALIGNED_FREE(mem, align) (lcore_free(mem, align))
+#endif
+
 
 // 例外
 //-------------------
 #define LIME_THROW0 throw()
+
 
 // Assertion
 //-------------------
@@ -353,6 +399,62 @@ namespace lcore
         return static_cast<u8>((rgba) & 0xFFU);
     }
 
+    enum RefractiveIndex
+    {
+        RefractiveIndex_Vacuum =0,
+
+        //気体
+        RefractiveIndex_Air,
+        
+        //液体
+        RefractiveIndex_Water,
+        RefractiveIndex_Sea,
+
+        //個体
+        RefractiveIndex_SodiumChloride, //塩化ナトリウム
+        RefractiveIndex_Carbon, //炭素
+        RefractiveIndex_Silicon, //ケイ素
+
+        //樹脂
+        RefractiveIndex_FluorocarbonPolymers, //フッ素樹脂
+        RefractiveIndex_SiliconPolymers, //シリコン樹脂
+        RefractiveIndex_AcrylicResin, //アクリル樹脂
+        RefractiveIndex_Polyethylene, //ポリエチレン
+        RefractiveIndex_Polycarbonate, //ポリカーボネート
+        RefractiveIndex_Asphalt, //アスファルト
+
+        //ガラス
+        RefractiveIndex_Fluorite, //フローライト
+        RefractiveIndex_SodaLimeGlass, //ソーダ石灰ガラス
+        RefractiveIndex_LeadGlass, //鉛ガラス、クリスタルガラス
+
+        //結晶
+        RefractiveIndex_Ice, //氷
+        RefractiveIndex_RockCrystal, //水晶
+        RefractiveIndex_Peridot, //ペリドット
+        RefractiveIndex_Diamond, //ダイヤモンド
+
+        //その他
+        RefractiveIndex_Perl, //パール
+
+        RefractiveIndex_Num,
+    };
+
+    f32 getRefractiveIndex(RefractiveIndex index);
+
+    /**
+    @brief 真空に対するフレネル反射係数の実部
+    @param refract ... 出射側媒質の屈折率
+    */
+    f32 calcFresnelTerm(f32 refract);
+
+    /**
+    @brief フレネル反射係数の実部
+    @param refract0 ... 入射側媒質の屈折率
+    @param refract1 ... 出射側媒質の屈折率
+    */
+    f32 calcFresnelTerm(f32 refract0, f32 refract1);
+
 #define LIME_MAKE_FOURCC(c0, c1, c2, c3)\
     ( (lcore::u32)(c0) | ((lcore::u32)(c1) << 8) | ((lcore::u32)(c2) << 16) | ((lcore::u32)(c3) << 24) )
 
@@ -395,6 +497,7 @@ namespace lcore
         bool create(u32 capacity, Locked locked=Locked_Disable);
         void destroy();
 
+        bool valid() const;
         void* allocate(u32 size);
         void deallocate(void* mem);
     private:

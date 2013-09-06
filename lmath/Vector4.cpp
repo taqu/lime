@@ -441,4 +441,18 @@ namespace lmath
         y_ = rot.y_;
         z_ = rot.z_;
     }
+
+    void Vector4::rotate(const Quaternion& rotation, const Vector4& v)
+    {
+        Quaternion conj;
+        conj.conjugate(rotation);
+        Quaternion rot;
+
+        rot.mul(rotation, v);
+        rot.mul(rot, conj);
+
+        x_ = rot.x_;
+        y_ = rot.y_;
+        z_ = rot.z_;
+    }
 }

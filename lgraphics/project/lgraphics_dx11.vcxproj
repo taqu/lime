@@ -199,6 +199,7 @@
     <ClInclude Include="..\api\dx11\VertexBufferRef.h" />
     <ClInclude Include="..\io11\IOBMP.h" />
     <ClInclude Include="..\io11\IODDS.h" />
+    <ClInclude Include="..\io11\IOPNG.h" />
     <ClInclude Include="..\io11\IOTGA.h" />
     <ClInclude Include="..\io11\MemoryStream.h" />
     <ClInclude Include="..\lgraphics.h" />
@@ -223,6 +224,7 @@
     <ClCompile Include="..\api\dx11\VertexBufferRef.cpp" />
     <ClCompile Include="..\io11\IOBMP.cpp" />
     <ClCompile Include="..\io11\IODDS.cpp" />
+    <ClCompile Include="..\io11\IOPNG.cpp" />
     <ClCompile Include="..\io11\IOTGA.cpp" />
     <ClCompile Include="..\io11\MemoryStream.cpp" />
     <ClCompile Include="..\lgraphics.cpp" />

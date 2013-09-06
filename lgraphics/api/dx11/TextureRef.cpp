@@ -48,6 +48,25 @@ namespace lgraphics
 
     //--------------------------------------------------------
     //---
+    //--- UnorderedAccessViewRef
+    //---
+    //--------------------------------------------------------
+    UnorderedAccessViewRef::UnorderedAccessViewRef(const UnorderedAccessViewRef& rhs)
+        :view_(rhs.view_)
+    {
+        if(view_){
+            view_->AddRef();
+        }
+    }
+
+    void UnorderedAccessViewRef::destroy()
+    {
+        SAFE_RELEASE(view_);
+    }
+
+
+    //--------------------------------------------------------
+    //---
     //--- Texture1DRef
     //---
     //--------------------------------------------------------
@@ -91,6 +110,20 @@ namespace lgraphics
         parent_type::destroy();
     }
 
+    //--------------------------------------------------------
+    //---
+    //--- BufferRef
+    //---
+    //--------------------------------------------------------
+    BufferRef::BufferRef(const BufferRef& rhs)
+        :parent_type(rhs)
+    {
+    }
+
+    void BufferRef::destroy()
+    {
+        parent_type::destroy();
+    }
 
     //--------------------------------------------------------
     //---
@@ -215,7 +248,7 @@ namespace lgraphics
         desc.Usage = static_cast<D3D11_USAGE>(usage);
         desc.BindFlags = bind;
         desc.CPUAccessFlags = access;
-        desc.MiscFlags = misc;
+        desc.MiscFlags = (1<arraySize)? D3D11_RESOURCE_MISC_TEXTURECUBE|misc : misc;
 
         ID3D11Device* device = Graphics::getDevice().getD3DDevice();
 
@@ -236,11 +269,9 @@ namespace lgraphics
         D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
         viewDesc.Format = static_cast<DXGI_FORMAT>(resourceViewDesc->format_);
         if(arraySize>1){
-            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-            viewDesc.Texture2DArray.MostDetailedMip = resourceViewDesc->tex2DArray_.mostDetailedMip_;
-            viewDesc.Texture2DArray.MipLevels = resourceViewDesc->tex2DArray_.mipLevels_;
-            viewDesc.Texture2DArray.FirstArraySlice = resourceViewDesc->tex2DArray_.firstArraySlice_;
-            viewDesc.Texture2DArray.ArraySize = resourceViewDesc->tex2DArray_.arraySize_;
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+            viewDesc.TextureCube.MostDetailedMip = resourceViewDesc->texCube_.mostDetailedMip_;
+            viewDesc.TextureCube.MipLevels = resourceViewDesc->texCube_.mipLevels_;
 
         }else{
             viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
@@ -331,6 +362,71 @@ namespace lgraphics
         }else{
             texture->Release();
             return Texture3DRef();
+        }
+    }
+
+
+    BufferRef Texture::createBuffer(
+        u32 size,
+        Usage usage,
+        u32 bind,
+        CPUAccessFlag access,
+        ResourceMisc misc,
+        u32 structureByteStride,
+        const SubResourceData* initData,
+        const ResourceViewDesc* resourceViewDesc)
+    {
+        SamplerStateRef sampler = SamplerState::create(
+            TextureFilterType::TexFilter_MinMagMipPoint,
+            TextureAddress::TexAddress_Clamp,
+            TextureAddress::TexAddress_Clamp,
+            TextureAddress::TexAddress_Clamp);
+        if(false == sampler.valid()){
+            return BufferRef();
+        }
+
+        D3D11_BUFFER_DESC desc;
+
+        desc.ByteWidth = size;
+        desc.Usage = static_cast<D3D11_USAGE>(usage);
+        desc.BindFlags = bind;
+        desc.CPUAccessFlags = access;
+        desc.MiscFlags = misc;
+        desc.StructureByteStride = structureByteStride;
+
+        ID3D11Device* device = Graphics::getDevice().getD3DDevice();
+
+        ID3D11Buffer* buffer = NULL;
+        HRESULT hr = device->CreateBuffer(
+            &desc,
+            reinterpret_cast<const D3D11_SUBRESOURCE_DATA*>(initData),
+            &buffer);
+
+        if(FAILED(hr)){
+            return BufferRef();
+        }
+
+        if(NULL == resourceViewDesc){
+            return BufferRef(sampler, NULL, buffer);
+        }
+
+        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
+        viewDesc.Format = static_cast<DXGI_FORMAT>(resourceViewDesc->format_);
+        viewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+        viewDesc.Buffer.FirstElement = resourceViewDesc->buffer_.firstElement_;
+        viewDesc.Buffer.NumElements = resourceViewDesc->buffer_.numElements_;
+
+        ID3D11ShaderResourceView* view = NULL;
+        hr = device->CreateShaderResourceView(
+            buffer,
+            &viewDesc,
+            &view);
+
+        if(SUCCEEDED(hr)){
+            return BufferRef(sampler, view, buffer);
+        }else{
+            buffer->Release();
+            return BufferRef();
         }
     }
 }

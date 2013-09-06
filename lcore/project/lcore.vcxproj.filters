@@ -63,6 +63,11 @@
     <ClInclude Include="..\allocator\dlmalloc.h">
       <Filter>allocator</Filter>
     </ClInclude>
+    <ClInclude Include="..\intrusive\RedBlackTree.h">
+      <Filter>intrusive</Filter>
+    </ClInclude>
+    <ClInclude Include="..\AES.h" />
+    <ClInclude Include="..\ARCFOUR.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\random\Random.cpp">
@@ -87,5 +92,7 @@
     <ClCompile Include="..\allocator\dlmalloc.c">
       <Filter>allocator</Filter>
     </ClCompile>
+    <ClCompile Include="..\AES.cpp" />
+    <ClCompile Include="..\ARCFOUR.cpp" />
   </ItemGroup>
 </Project>

@@ -148,8 +148,10 @@ namespace lmath
     //-----------------------------------------------------------
     // 線分とAABBの交差判定
     bool testRayAABB(f32& tmin, f32& tmax, const Ray& ray, const Vector3& bmin, const Vector3& bmax)
-    {        
-#if 0
+    {
+        tmin = 0.0f;
+        tmax = lcore::numeric_limits<f32>::maximum();
+
         for(s32 i=0; i<3; ++i){
             if(lcore::absolute(ray.direction_[i])<F32_EPSILON){
                 //光線とスラブが平行で、原点がスラブの中にない
@@ -158,7 +160,7 @@ namespace lmath
                 }
 
             }else{
-                f32 invD = 1.0f/ray.direction_[i];
+                f32 invD = ray.invDirection_[i];
                 f32 t1 = (bmin[i] - ray.origin_[i]) * invD;
                 f32 t2 = (bmax[i] - ray.origin_[i]) * invD;
 
@@ -178,28 +180,6 @@ namespace lmath
                 }
             }
         }
-#else
-        for(s32 i=0; i<3; ++i){
-            f32 invD = ray.invDirection_[i];
-            f32 t1 = (bmin[i] - ray.origin_[i]) * invD;
-            f32 t2 = (bmax[i] - ray.origin_[i]) * invD;
-
-            if(t1>t2){
-                if(t2>tmin) tmin = t2;
-                if(t1<tmax) tmax = t1;
-            }else{
-                if(t1>tmin) tmin = t1;
-                if(t2<tmax) tmax = t2;
-            }
-
-            if(tmin > tmax){
-                return false;
-            }
-            if(tmax < 0.0f){
-                return false;
-            }
-        }
-#endif
         return true;
     }
 

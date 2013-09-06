@@ -1,4 +1,4 @@
-#ifndef INC_DIALOGBASE_H__
+﻿#ifndef INC_DIALOGBASE_H__
 #define INC_DIALOGBASE_H__
 /**
 @file DialogBase.h

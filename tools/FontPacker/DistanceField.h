@@ -1,4 +1,4 @@
-#ifndef INC_FIDTANCEFIELD_H__
+﻿#ifndef INC_FIDTANCEFIELD_H__
 #define INC_FIDTANCEFIELD_H__
 
 float signedDistance(int cx,

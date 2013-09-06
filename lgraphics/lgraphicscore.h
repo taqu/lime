@@ -30,21 +30,17 @@ namespace lgraphics
     using lcore::s8;
     using lcore::s16;
     using lcore::s32;
+    using lcore::s64;
     using lcore::u8;
     using lcore::u16;
     using lcore::u32;
+    using lcore::u64;
     using lcore::f32;
     using lcore::f64;
 
     using lcore::Char;
 
     static const u32 LIME_MAX_VERTEX_STREAMS = 2; //最大頂点ストリーム数
-
-    static const u32 LIME_MAX_PALLET_MATRICES = 256;
-
-    static const u32 LIME_MAX_NAME_SIZE = (24 - 1);
-
-    static const u32 LIME_MAX_ANIM_NODE = 512;
 
 #if defined(LIME_GLES1) || defined(LIME_GLES2)
 #define LIME_GL (1)
@@ -84,24 +80,6 @@ namespace lgraphics
         T* ptr_;
     };
 
-    inline u32 getColorRGBA32(u8 r, u8 g, u8 b, u8 a)
-    {
-        u32 ur = r;
-        u32 ug = g;
-        u32 ub = b;
-        u32 ua = a;
-        return (ur<<0) | (ug<<8) | (ub<<16) | (ua<<24);
-    }
-
-    inline u32 getColorARGB32(u8 r, u8 g, u8 b, u8 a)
-    {
-        u32 ur = r;
-        u32 ug = g;
-        u32 ub = b;
-        u32 ua = a;
-        return (ua<<0) | (ur<<8) | (ug<<16) | (ub<<24);
-    }
-
 //----------------------------------------------------------
 //---
 //--- プラットフォーム、API依存のdefine
@@ -116,7 +94,7 @@ namespace lgraphics
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (80);
+static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (64);
 
 #elif defined(LIME_DX11)
 //----------------------------------------------------------
@@ -126,7 +104,7 @@ static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (80);
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (80);
+static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (256-1);
 static const u32 MaxRenderTargets = 8;
 
 #elif defined(LIME_GLES1)

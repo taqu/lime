@@ -26,7 +26,17 @@ namespace
 
         u32 pixels = width*height;
 
-        lcore::io::read(src, buffer, pixels*bpp);
+        u8 tmp[bpp];
+        for(u32 i=0; i<pixels; ++i){
+            lcore::io::read(src, tmp, bpp);
+            buffer[0] = tmp[2];
+            buffer[1] = tmp[1];
+            buffer[2] = tmp[0];
+            buffer[3] = tmp[3];
+            buffer += bpp;
+        }
+
+        //lcore::io::read(src, buffer, pixels*bpp);
     }
 
     void read32RLE(u8* buffer, lcore::istream& src, u32 width, u32 height)
@@ -46,15 +56,20 @@ namespace
                 //連続するデータ
                 lcore::io::read(src, tmp, bpp);
                 for(u32 j=0; j<count; ++j){
-                    for(u32 k=0; k<bpp; ++k){
-                        *buffer = tmp[k];
-                        ++buffer;
-                    }
+                    buffer[0] = tmp[2];
+                    buffer[1] = tmp[1];
+                    buffer[2] = tmp[0];
+                    buffer[3] = tmp[3];
+                    buffer += bpp;
                 }
             }else{
                 //連続しないデータ
                 for(u32 j=0; j<count; ++j){
-                    lcore::io::read(src, buffer, bpp);
+                    lcore::io::read(src, tmp, bpp);
+                    buffer[0] = tmp[2];
+                    buffer[1] = tmp[1];
+                    buffer[2] = tmp[0];
+                    buffer[3] = tmp[3];
                     buffer += bpp;
                 }
             }
@@ -70,8 +85,12 @@ namespace
 
         u32 pixels = width*height;
 
+        u8 tmp[bpp];
         for(u32 i=0; i<pixels; ++i){
-            lcore::io::read(src, buffer, bpp);
+            lcore::io::read(src, tmp, bpp);
+            buffer[0] = tmp[2];
+            buffer[1] = tmp[1];
+            buffer[2] = tmp[0];
             buffer[bpp] = 0xFFU;
             buffer += dstBpp;
         }
@@ -95,9 +114,9 @@ namespace
                 //連続するデータ
                 lcore::io::read(src, tmp, bpp);
                 for(u32 j=0; j<count; ++j){
-                    buffer[0] = tmp[0];
+                    buffer[0] = tmp[2];
                     buffer[1] = tmp[1];
-                    buffer[2] = tmp[2];
+                    buffer[2] = tmp[0];
                     buffer[3] = 0xFFU;
                     buffer += dstBpp;
                 }
@@ -105,9 +124,9 @@ namespace
                 //連続しないデータ
                 for(u32 j=0; j<count; ++j){
                     lcore::io::read(src, tmp, bpp);
-                    buffer[0] = tmp[0];
+                    buffer[0] = tmp[2];
                     buffer[1] = tmp[1];
-                    buffer[2] = tmp[2];
+                    buffer[2] = tmp[0];
                     buffer[3] = 0xFFU;
                     buffer += dstBpp;
                 }
@@ -132,9 +151,9 @@ namespace
             u8* row = tmpBuffer;
             for(u32 j=0; j<width; ++j){
                 lcore::io::read(src, tmp, bpp);
-                row[0] = tmp[0];
+                row[0] = tmp[2];
                 row[1] = tmp[1];
-                row[2] = tmp[2];
+                row[2] = tmp[0];
                 row[3] = tmp[3];
                 row += bpp;
             }
@@ -167,9 +186,9 @@ namespace
                 lcore::io::read(src, tmp, bpp);
                 for(u32 j=0; j<count; ++j){
 
-                    row[0] = tmp[0];
+                    row[0] = tmp[2];
                     row[1] = tmp[1];
-                    row[2] = tmp[2];
+                    row[2] = tmp[0];
                     row[3] = tmp[3];
 
                     row += bpp;
@@ -184,9 +203,9 @@ namespace
                 //連続しないデータ
                 for(u32 j=0; j<count; ++j){
                     lcore::io::read(src, tmp, bpp);
-                    row[0] = tmp[0];
+                    row[0] = tmp[2];
                     row[1] = tmp[1];
-                    row[2] = tmp[2];
+                    row[2] = tmp[0];
                     row[3] = tmp[3];
 
                     row += bpp;
@@ -217,9 +236,9 @@ namespace
             u8* row = tmpBuffer;
             for(u32 j=0; j<width; ++j){
                 lcore::io::read(src, tmp, bpp);
-                row[0] = tmp[0];
+                row[0] = tmp[2];
                 row[1] = tmp[1];
-                row[2] = tmp[2];
+                row[2] = tmp[0];
                 row[bpp] = 0xFFU;
                 row += dstBpp;
             }
@@ -253,9 +272,9 @@ namespace
                 //連続するデータ
                 lcore::io::read(src, tmp, bpp);
                 for(u32 j=0; j<count; ++j){
-                    row[0] = tmp[0];
+                    row[0] = tmp[2];
                     row[1] = tmp[1];
-                    row[2] = tmp[2];
+                    row[2] = tmp[0];
                     row[bpp] = 0xFFU;
                     row += dstBpp;
 
@@ -269,7 +288,10 @@ namespace
             }else{
                 //連続しないデータ
                 for(u32 j=0; j<count; ++j){
-                    lcore::io::read(src, row, bpp);
+                    lcore::io::read(src, tmp, bpp);
+                    row[0] = tmp[2];
+                    row[1] = tmp[1];
+                    row[2] = tmp[0];
                     row[bpp] = 0xFFU;
                     row += dstBpp;
 

@@ -90,7 +90,7 @@ namespace linput
     {
         getMousePoint();
 
-        DIMOUSESTATE state;
+        //DIMOUSESTATE state;
 
         DWORD items = BufferSize;
         HRESULT hr = device_->GetDeviceData(

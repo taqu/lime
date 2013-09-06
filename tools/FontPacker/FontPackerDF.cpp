@@ -1,4 +1,4 @@
-/**
+Ôªø/**
 @file FontPackerDF.cpp
 @author t-sakai
 @date 2011/11/30 create
@@ -11,7 +11,7 @@
 
 namespace
 {
-    int set(FontPackerDF::GlyphInfoDF& info, int spread)
+    void set(FontPackerDF::GlyphInfoDF& info, int spread)
     {
         int dx = 0;
         if(spread>info.offsetX_){
@@ -32,9 +32,6 @@ namespace
         if(dw>info.width_){
             info.width_ = dw;
         }
-
-        int dh = info.offsetY_ + info.fitHeight_ + spread;
-        return dh;
     }
 
     void set(GlyphInfo& info, FontPackerDF::GlyphInfoDF& infoDF, float invScale)
@@ -46,12 +43,56 @@ namespace
 
         info.width_ = static_cast<short>( floor(infoDF.width_ * invScale) );
     }
+
+    DWORD getGlyphMetrics(GLYPHMETRICS& metrics, HDC hdc, unsigned short code)
+    {
+        //2x2Â§âÊèõË°åÂàó
+        MAT2 mat=
+        {
+            {0,1}, {0,0},
+            {0,0}, {0,1}
+        };
+        return GetGlyphOutline(hdc, code, GGO_METRICS, &metrics, 0, NULL, &mat);
+    }
+
+    HBITMAP createBMP(int size, DWORD** data)
+    {
+        BITMAPINFO bmi;
+        bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+        bmi.bmiHeader.biWidth = size;
+        bmi.bmiHeader.biHeight = -size;
+        bmi.bmiHeader.biPlanes = 1;
+        bmi.bmiHeader.biBitCount = 32;
+        bmi.bmiHeader.biCompression = BI_RGB;
+        bmi.bmiHeader.biSizeImage = 0;
+        bmi.bmiHeader.biXPelsPerMeter = 0;
+        bmi.bmiHeader.biYPelsPerMeter = 0;
+        bmi.bmiHeader.biClrUsed = 0;
+        bmi.bmiHeader.biClrImportant = 0;
+
+        bmi.bmiColors[0].rgbBlue = 0xFFU;
+        bmi.bmiColors[0].rgbGreen = 0xFFU;
+        bmi.bmiColors[0].rgbRed = 0xFFU;
+        bmi.bmiColors[0].rgbReserved = 0;
+
+        DWORD* tmpBmp = NULL;
+
+        HBITMAP bmp = CreateDIBSection(
+            NULL,
+            &bmi,
+            DIB_RGB_COLORS,
+            (VOID**)data,
+            NULL,
+            0);
+        return bmp;
+    }
 }
 
 FontPackerDF::FontPackerDF()
 :font_(NULL)
 ,bmp_(NULL)
 ,dataBmp_(NULL)
+,numCodes_(0)
 ,textHeight_(0)
 ,spaceWidth_(0)
 {
@@ -67,10 +108,10 @@ bool FontPackerDF::create(HWND hwnd, const FontInfo& info)
     release();
 
     info_ = info;
+    numCodes_ = (info_.asciiOnly_)? NumASCII : NumTableEntries;
 
     bool ret = false;
-    ret = createGlyphInfos(hwnd);
-        ret = drawScaled(hwnd);
+    ret = drawScaled(hwnd);
     return ret;
 }
 
@@ -91,127 +132,15 @@ void FontPackerDF::release()
     }
 }
 
-
-bool FontPackerDF::createGlyphInfos(HWND hwnd)
-{
-    int fontWeight = (info_.bold_)? FW_BOLD : FW_NORMAL;
-    font_ = CreateFontA(
-        info_.size_ * info_.distanceScale_,
-        0,
-        0,
-        0,
-        fontWeight,
-        FALSE,
-        FALSE,
-        FALSE,
-        DEFAULT_CHARSET,
-        OUT_DEFAULT_PRECIS,
-        CLIP_DEFAULT_PRECIS,
-        NONANTIALIASED_QUALITY,
-        FF_DONTCARE|DEFAULT_PITCH,
-        info_.face_.c_str());
-
-
-    HDC memDC = NULL;
-    {
-        HDC hdc = GetDC(hwnd);
-        memDC = CreateCompatibleDC(hdc);
-        ReleaseDC(hwnd, hdc);
-    }
-
-    HFONT oldFont = (HFONT)SelectObject(memDC, font_);
-
-    SetBkMode(memDC, TRANSPARENT);
-    TEXTMETRICA  metrics;
-    GetTextMetricsA(memDC, &metrics);
-
-    textHeight_ = metrics.tmHeight;
-
-    GLYPHMETRICS glyphMetrics;
-
-    //2x2ïœä∑çsóÒ
-    MAT2 mat=
-    {
-        {0,1}, {0,0},
-        {0,0}, {0,1}
-    };
-
-    //ãÛîíÉTÉCÉY
-    GetGlyphOutlineA(memDC, 32, GGO_METRICS, &glyphMetrics, 0, NULL, &mat);
-    spaceWidth_ = static_cast<short>( floor(glyphMetrics.gmCellIncX * (1.0f/info_.distanceScale_)) );
-
-    int spread = (info_.distanceScale_<info_.distanceSpread_)? info_.distanceSpread_ : info_.distanceScale_;
-
-    for(unsigned int i=0; i<NumCode; ++i){
-        unsigned int code = i + StartCode;
-        GetGlyphOutlineA(memDC, code, GGO_METRICS, &glyphMetrics, 0, NULL, &mat);
-
-        glyphInfoDF_[i].code_ = code;
-
-        glyphInfoDF_[i].width_ = glyphMetrics.gmCellIncX;
-        glyphInfoDF_[i].fitWidth_ = glyphMetrics.gmBlackBoxX;
-        glyphInfoDF_[i].fitHeight_ = glyphMetrics.gmBlackBoxY;
-        glyphInfoDF_[i].offsetX_ = glyphMetrics.gmptGlyphOrigin.x;
-        glyphInfoDF_[i].offsetY_ = metrics.tmAscent - glyphMetrics.gmptGlyphOrigin.y;
-
-        int h = set(glyphInfoDF_[i], spread);
-
-        if(h>textHeight_){
-            textHeight_ = h;
-        }
-    }
-
-    SelectObject(memDC, oldFont);
-
-    ReleaseDC(hwnd, memDC);
-
-    return true;
-}
-
-
 bool FontPackerDF::drawScaled(HWND hwnd)
 {
-    int tmpHeight = textHeight_ * 2;
-
-    BITMAPINFO bmi;
-    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    bmi.bmiHeader.biWidth = tmpHeight;
-    bmi.bmiHeader.biHeight = -tmpHeight;
-    bmi.bmiHeader.biPlanes = 1;
-    bmi.bmiHeader.biBitCount = 32;
-    bmi.bmiHeader.biCompression = BI_RGB;
-    bmi.bmiHeader.biSizeImage = 0;
-    bmi.bmiHeader.biXPelsPerMeter = 0;
-    bmi.bmiHeader.biYPelsPerMeter = 0;
-    bmi.bmiHeader.biClrUsed = 0;
-    bmi.bmiHeader.biClrImportant = 0;
-
-    bmi.bmiColors[0].rgbBlue = 0xFFU;
-    bmi.bmiColors[0].rgbGreen = 0xFFU;
-    bmi.bmiColors[0].rgbRed = 0xFFU;
-    bmi.bmiColors[0].rgbReserved = 0;
-
-    DWORD* tmpBmp = NULL;
-
-    HBITMAP bmp = CreateDIBSection(
-        NULL,
-        &bmi,
-        DIB_RGB_COLORS,
-        (VOID**)&tmpBmp,
-        NULL,
-        0);
-
-    if(NULL == bmp){
-        return false;
-    }
-
     dataBmp_ = new DWORD[info_.width_*info_.height_];
     memset(dataBmp_, 0, sizeof(DWORD)*info_.width_*info_.height_);
 
     int fontWeight = (info_.bold_)? FW_BOLD : FW_NORMAL;
-    //ÉXÉPÅ[ÉãÇµÇΩÉtÉHÉìÉgçÏê¨
+    //„Çπ„Ç±„Éº„É´„Åó„Åü„Éï„Ç©„É≥„Éà‰ΩúÊàê
     if(NULL == font_){
-        font_ = CreateFontA(
+        font_ = CreateFont(
             info_.size_*info_.distanceScale_,
             0,
             0,
@@ -220,11 +149,11 @@ bool FontPackerDF::drawScaled(HWND hwnd)
             FALSE,
             FALSE,
             FALSE,
-            DEFAULT_CHARSET,
-            OUT_DEFAULT_PRECIS,
+            SHIFTJIS_CHARSET,
+            OUT_TT_ONLY_PRECIS,
             CLIP_DEFAULT_PRECIS,
-            NONANTIALIASED_QUALITY, //ãóó£èÍÇÃèÍçáÇÕÉAÉìÉ`ÉGÉCÉäÉAÉXÇ»Çµ
-            FF_DONTCARE|DEFAULT_PITCH,
+            NONANTIALIASED_QUALITY, //Ë∑ùÈõ¢Â†¥„ÅÆÂ†¥Âêà„ÅØ„Ç¢„É≥„ÉÅ„Ç®„Ç§„É™„Ç¢„Çπ„Å™„Åó
+            FIXED_PITCH|FF_MODERN,
             info_.face_.c_str());
     }
 
@@ -235,23 +164,59 @@ bool FontPackerDF::drawScaled(HWND hwnd)
         ReleaseDC(hwnd, hdc);
     }
 
+    HFONT oldFont = (HFONT)SelectObject(memDC, font_);
+
+    SetBkMode(memDC, TRANSPARENT);
+
+    TEXTMETRIC  metrics;
+    GetTextMetrics(memDC, &metrics);
+
+    int spread = (info_.distanceScale_<info_.distanceSpread_)? info_.distanceSpread_ : info_.distanceScale_;
+    textHeight_ =  metrics.tmHeight + spread;
+
+    int tmpHeight = textHeight_*2;
+    DWORD* tmpBmp = NULL;
+    HBITMAP bmp = createBMP(tmpHeight, &tmpBmp);
+    if(NULL == bmp){
+        return false;
+    }
+
+
     HBRUSH brush = (HBRUSH)CreateSolidBrush(RGB(255, 255, 255));
 
     HPEN pen = (HPEN)CreatePen(PS_SOLID, info_.outline_, RGB(255,255,255));
 
-
     HBITMAP oldBMP = (HBITMAP)SelectObject(memDC, bmp);
-
-    HFONT oldFont = (HFONT)SelectObject(memDC, font_);
 
     HBRUSH oldBrush = (HBRUSH)SelectObject(memDC, brush);
 
     HPEN oldPen = (HPEN)SelectObject(memDC, pen);
 
-    SetBkMode(memDC, TRANSPARENT);
+    GLYPHMETRICS glyphMetrics;
 
-    TEXTMETRICA  metrics;
-    GetTextMetricsA(memDC, &metrics);
+    //Á©∫ÁôΩ„Çµ„Ç§„Ç∫
+    getGlyphMetrics(glyphMetrics, memDC, ' ');
+    spaceWidth_ = static_cast<short>( floor(glyphMetrics.gmCellIncX * (1.0f/info_.distanceScale_)) );
+
+    for(unsigned int i=0; i<numCodes_; ++i){
+        
+        unsigned short code;
+        U16ToSTR(code, charcode::SJIS_LEVEL1[i].code_);
+        if(GDI_ERROR == getGlyphMetrics(glyphMetrics, memDC, charcode::SJIS_LEVEL1[i].code_)){
+            glyphInfoDF_[i].code_ = 0;
+            continue;
+        }
+
+        glyphInfoDF_[i].code_ = code;
+
+        glyphInfoDF_[i].width_ = glyphMetrics.gmCellIncX;
+        glyphInfoDF_[i].fitWidth_ = glyphMetrics.gmBlackBoxX;
+        glyphInfoDF_[i].fitHeight_ = glyphMetrics.gmBlackBoxY;
+        glyphInfoDF_[i].offsetX_ = glyphMetrics.gmptGlyphOrigin.x;
+        glyphInfoDF_[i].offsetY_ = metrics.tmAscent - glyphMetrics.gmptGlyphOrigin.y;
+
+        set(glyphInfoDF_[i], spread);
+    }
 
     char str[2] = {'\0', '\0'};
 
@@ -267,24 +232,32 @@ bool FontPackerDF::drawScaled(HWND hwnd)
 
     textHeight_ = static_cast<short>( floor(textHeight_ * invScale) );
 
-    for(unsigned int i=0; i<NumCode; ++i){
+    for(unsigned int i=0; i<numCodes_; ++i){
         GlyphInfo& info = glyphInfo_[i];
         GlyphInfoDF& infoDF = glyphInfoDF_[i];
 
-        //àÍéûÉoÉbÉtÉ@Ç…ï∂éöÇï`âÊ
+        //‰∏ÄÊôÇ„Éê„ÉÉ„Éï„Ç°„Å´ÊñáÂ≠ó„ÇíÊèèÁîª
         {
             memset(tmpBmp, 0, sizeof(DWORD)*tmpHeight*tmpHeight);
 
-            str[0] = i + StartCode;
-
             BeginPath(memDC);
-            TextOutA(memDC, infoDF.dx_, infoDF.dy_, str, 1);
+
+            str[0] = infoDF.code_ & 0xFFU;
+            str[1] = (infoDF.code_>>8) & 0xFFU;
+
+            if(isTwoBytes(str)){
+                TextOut(memDC, infoDF.dx_, infoDF.dy_, str, 2);
+            }else{
+                TextOut(memDC, infoDF.dx_, infoDF.dy_, str, 1);
+            }
+
             EndPath(memDC);
             FillPath(memDC);
         }
 
 
         set(info, infoDF, invScale);
+        info.code_ = infoDF.code_;
         info.fitWidth_ = info.width_;
         info.fitHeight_ = textHeight_;
 
@@ -344,8 +317,8 @@ bool FontPackerDF::drawScaled(HWND hwnd)
 
 void FontPackerDF::sort(GlyphInfo** info)
 {
-    for(int i=0; i<NumCode; ++i){
-        for(int j=i+1; j<NumCode; ++j){
+    for(int i=0; i<numCodes_; ++i){
+        for(int j=i+1; j<numCodes_; ++j){
             if(info[i]->fitHeight_ < info[j]->fitHeight_){
                 std::swap(info[i], info[j]);
             }
@@ -354,7 +327,7 @@ void FontPackerDF::sort(GlyphInfo** info)
 }
 
 
-void FontPackerDF::save(const char* bmppath, const char* infopath)
+void FontPackerDF::save(const TCHAR* bmppath, const TCHAR* infopath)
 {
     saveDistanceFieldBMP(bmppath);
 
@@ -363,21 +336,22 @@ void FontPackerDF::save(const char* bmppath, const char* infopath)
         PackHeader header;
         header.textHeight_ = textHeight_;
         header.spaceWidth_ = spaceWidth_;
-        header.startCode_ = StartCode;
-        header.endCode_ = EndCode;
+        //header.startCode_ = StartCode;
+        //header.endCode_ = EndCode;
+        header.numCodes_ = numCodes_;
         header.resolutionX_ = info_.width_;
         header.resolutionY_ = info_.height_;
         header.distanceField_ = (info_.distanceField_)? 1 : 0;
 
         DWORD written = 0;
         WriteFile(file, &header, sizeof(PackHeader), &written, NULL);
-        WriteFile(file, glyphInfo_, sizeof(GlyphInfo)*NumCode, &written, NULL);
+        WriteFile(file, glyphInfo_, sizeof(GlyphInfo)*numCodes_, &written, NULL);
         CloseHandle(file);
     }
 }
 
 
-void FontPackerDF::saveDistanceFieldBMP(const char* bmppath)
+void FontPackerDF::saveDistanceFieldBMP(const TCHAR* bmppath)
 {
 
     BITMAPINFOHEADER bmpih;

@@ -93,6 +93,78 @@ namespace lmath
         z_ = lmath::sinf(over2);
     }
 
+    void Quaternion::setRotateXYZ(f32 radx, f32 rady, f32 radz)
+    {
+        lmath::Quaternion rotX, rotY, rotZ;
+        rotX.setRotateX(radx);
+        rotY.setRotateX(rady);
+        rotZ.setRotateX(radz);
+
+        *this = rotX;
+        *this *= rotY;
+        *this *= rotZ;
+    }
+
+    void Quaternion::setRotateXZY(f32 radx, f32 rady, f32 radz)
+    {
+        lmath::Quaternion rotX, rotY, rotZ;
+        rotX.setRotateX(radx);
+        rotY.setRotateX(rady);
+        rotZ.setRotateX(radz);
+
+        *this = rotX;
+        *this *= rotZ;
+        *this *= rotY;
+    }
+
+    void Quaternion::setRotateYZX(f32 radx, f32 rady, f32 radz)
+    {
+        lmath::Quaternion rotX, rotY, rotZ;
+        rotX.setRotateX(radx);
+        rotY.setRotateX(rady);
+        rotZ.setRotateX(radz);
+
+        *this = rotY;
+        *this *= rotZ;
+        *this *= rotX;
+    }
+
+    void Quaternion::setRotateYXZ(f32 radx, f32 rady, f32 radz)
+    {
+        lmath::Quaternion rotX, rotY, rotZ;
+        rotX.setRotateX(radx);
+        rotY.setRotateX(rady);
+        rotZ.setRotateX(radz);
+
+        *this = rotY;
+        *this *= rotX;
+        *this *= rotZ;
+    }
+
+    void Quaternion::setRotateZXY(f32 radx, f32 rady, f32 radz)
+    {
+        lmath::Quaternion rotX, rotY, rotZ;
+        rotX.setRotateX(radx);
+        rotY.setRotateX(rady);
+        rotZ.setRotateX(radz);
+
+        *this = rotZ;
+        *this *= rotX;
+        *this *= rotY;
+    }
+
+    void Quaternion::setRotateZYX(f32 radx, f32 rady, f32 radz)
+    {
+        lmath::Quaternion rotX, rotY, rotZ;
+        rotX.setRotateX(radx);
+        rotY.setRotateX(rady);
+        rotZ.setRotateX(radz);
+
+        *this = rotZ;
+        *this *= rotY;
+        *this *= rotX;
+    }
+
     void Quaternion::setRotateAxis(f32 x, f32 y, f32 z, f32 radian)
     {
         //LASSERT( lmath::isEqual(axis.lengthSqr(), 1.0f) );
@@ -432,6 +504,34 @@ namespace lmath
 #endif
     }
 
+    void Quaternion::getEulerAngles(f32& x, f32& y, f32& z)
+    {
+        f32 xx = x_ * x_;
+        f32 yy = y_ * y_;
+        f32 zz = z_ * z_;
+        f32 ww = w_ * w_;
+
+        f32 r11 = ww + xx - yy - zz;
+        f32 r21 = 2.0f*(x_*y_ + w_*z_);
+        f32 r31 = 2.0f*(x_*z_ - w_*y_);
+        f32 r32 = 2.0f*(y_*z_ + w_*x_);
+        f32 r33 = ww - xx - yy - zz;
+
+        f32 tmp = lcore::absolute(r31);
+        if(0.9999f<tmp){
+            f32 r12 = 2.0f*(x_*y_ - w_*z_);
+            f32 r13 = 2.0f*(x_*z_ + w_*y_);
+
+            x = -PI_2 * r31/tmp;
+            y = lmath::atan2(-r12, -r31*r13);
+            z = 0.0f;
+            return;
+        }
+
+        x = lmath::asin(-r31);
+        y = lmath::atan2(r21, r11);
+        z = lmath::atan2(r32, r33);
+    }
 
     void Quaternion::exp(f32 exponent)
     {

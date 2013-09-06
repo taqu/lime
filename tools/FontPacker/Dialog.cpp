@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Dialog.cpp
 @author t-sakai
 @date 2011/09/23
@@ -18,6 +18,7 @@ namespace font
         fontInfo_.height_ = 128;
         fontInfo_.width_ = 128;
         fontInfo_.outline_ = 0;
+        fontInfo_.asciiOnly_ = true;
 
         fontInfo_.distanceField_ = false;
         fontInfo_.distanceScale_ = 4;
@@ -37,53 +38,61 @@ namespace font
     {
         outline_.set( GetDlgItem(hDlg, IDC_COMBO_OUTLINE) );
         outline_.resetContent();
-        outline_.addString("0");
-        outline_.addString("1");
-        outline_.addString("2");
-        outline_.addString("3");
-        outline_.addString("4");
-        outline_.addString("5");
+        outline_.addString(_T("0"));
+        outline_.addString(_T("1"));
+        outline_.addString(_T("2"));
+        outline_.addString(_T("3"));
+        outline_.addString(_T("4"));
+        outline_.addString(_T("5"));
         outline_.setCurSel(0);
         outline_.setTopIndex(0);
 
         resolution_.set( GetDlgItem(hDlg, IDC_COMBO_RESOLUTION) );
         resolution_.resetContent();
-        resolution_.addString("128");
-        resolution_.addString("256");
-        resolution_.addString("512");
-        resolution_.addString("1024");
-        resolution_.addString("2048");
+        resolution_.addString(_T("128"));
+        resolution_.addString(_T("256"));
+        resolution_.addString(_T("512"));
+        resolution_.addString(_T("1024"));
+        resolution_.addString(_T("2048"));
         resolution_.setCurSel(1);
         resolution_.setTopIndex(1);
 
         distanceScale_.set( GetDlgItem(hDlg, IDC_COMBO_DISTANCESCALE) );
         distanceScale_.resetContent();
-        distanceScale_.addString("1");
-        distanceScale_.addString("2");
-        distanceScale_.addString("3");
-        distanceScale_.addString("4");
-        distanceScale_.addString("5");
-        distanceScale_.addString("6");
-        distanceScale_.addString("7");
-        distanceScale_.addString("8");
+        distanceScale_.addString(_T("1"));
+        distanceScale_.addString(_T("2"));
+        distanceScale_.addString(_T("3"));
+        distanceScale_.addString(_T("4"));
+        distanceScale_.addString(_T("5"));
+        distanceScale_.addString(_T("6"));
+        distanceScale_.addString(_T("7"));
+        distanceScale_.addString(_T("8"));
         distanceScale_.setCurSel(7);
         distanceScale_.setTopIndex(7);
 
         distanceSpread_.set( GetDlgItem(hDlg, IDC_COMBO_DISTANCESPREAD) );
         distanceSpread_.resetContent();
-        distanceSpread_.addString("1");
-        distanceSpread_.addString("2");
-        distanceSpread_.addString("3");
-        distanceSpread_.addString("4");
-        distanceSpread_.addString("5");
-        distanceSpread_.addString("6");
-        distanceSpread_.addString("7");
-        distanceSpread_.addString("8");
+        distanceSpread_.addString(_T("1"));
+        distanceSpread_.addString(_T("2"));
+        distanceSpread_.addString(_T("3"));
+        distanceSpread_.addString(_T("4"));
+        distanceSpread_.addString(_T("5"));
+        distanceSpread_.addString(_T("6"));
+        distanceSpread_.addString(_T("7"));
+        distanceSpread_.addString(_T("8"));
         distanceSpread_.setCurSel(7);
         distanceSpread_.setTopIndex(7);
 
         checkDistanceField_.set( GetDlgItem(hDlg, IDC_CHECK_DISTANCE) );
         checkDistanceField_.setUnCheck();
+
+        checkASCIIOnly_.set( GetDlgItem(hDlg, IDC_CHECK_ASCII_ONLY) );
+
+        if(fontInfo_.asciiOnly_){
+            checkASCIIOnly_.setCheck();
+        }else{
+            checkASCIIOnly_.setUnCheck();
+        }
 
         return (INT_PTR)TRUE;
     }
@@ -97,14 +106,21 @@ namespace font
                 if(fontInfo_.face_.size()>0){
                     readBack();
 
+                    //fontInfo_.distanceField_ = true;
                     if(fontInfo_.distanceField_){
                         FontPackerDF fontPacker;
+                        //fontInfo_.height_ = 1024;
+                        //fontInfo_.width_ = 1024;
+                        //fontInfo_.outline_ = 0;
+                        //fontInfo_.distanceScale_ = 1;
+                        //fontInfo_.distanceSpread_ = 1;
+
                         fontPacker.create(hDlg, fontInfo_);
-                        fontPacker.save("out.bmp", "out.def");
+                        fontPacker.save(_T("out.bmp"), _T("out.def"));
                     }else{
                         FontPacker fontPacker;
                         fontPacker.create(hDlg, fontInfo_);
-                        fontPacker.save("out.bmp", "out.def");
+                        fontPacker.save(_T("out.bmp"), _T("out.def"));
                     }
                 }
             }
@@ -140,7 +156,7 @@ namespace font
                 cf.nFontType = SCREEN_FONTTYPE;
 
                 BOOL ret = ChooseFont(&cf);
-                size_t l = strlen(logFont.lfFaceName);
+                size_t l = _tcslen(logFont.lfFaceName);
                 if(TRUE == ret && l>0){
 
                     fontInfo_.face_ = logFont.lfFaceName;
@@ -162,6 +178,7 @@ namespace font
         fontInfo_.outline_ = outline_.getCurSel();
 
         fontInfo_.distanceField_ = (checkDistanceField_.getCheck() != 0);
+        fontInfo_.asciiOnly_ = (checkASCIIOnly_.getCheck() != 0);
 
         LRESULT curSel = resolution_.getCurSel();
         switch(curSel)

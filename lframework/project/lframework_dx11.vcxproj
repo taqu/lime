@@ -165,6 +165,15 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\anim\AnimationClip.cpp" />
+    <ClCompile Include="..\anim\AnimationControler.cpp" />
+    <ClCompile Include="..\anim\AnimationControlerPartial.cpp" />
+    <ClCompile Include="..\anim\AnimationSystem.cpp" />
+    <ClCompile Include="..\anim\IKPack.cpp" />
+    <ClCompile Include="..\anim\JointAnimation.cpp" />
+    <ClCompile Include="..\anim\lanim.cpp" />
+    <ClCompile Include="..\anim\Skeleton.cpp" />
+    <ClCompile Include="..\anim\SkeletonPose.cpp" />
     <ClCompile Include="..\scene\Camera.cpp" />
     <ClCompile Include="..\scene\Frustum.cpp" />
     <ClCompile Include="..\scene\Scene.cpp" />
@@ -173,6 +182,17 @@
     <ClCompile Include="..\Static.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\anim\AnimationClip.h" />
+    <ClInclude Include="..\anim\AnimationControler.h" />
+    <ClInclude Include="..\anim\AnimationControlerPartial.h" />
+    <ClInclude Include="..\anim\AnimationSystem.h" />
+    <ClInclude Include="..\anim\IKPack.h" />
+    <ClInclude Include="..\anim\Joint.h" />
+    <ClInclude Include="..\anim\JointAnimation.h" />
+    <ClInclude Include="..\anim\JointPose.h" />
+    <ClInclude Include="..\anim\lanim.h" />
+    <ClInclude Include="..\anim\Skeleton.h" />
+    <ClInclude Include="..\anim\SkeletonPose.h" />
     <ClInclude Include="..\scene\Camera.h" />
     <ClInclude Include="..\scene\DirectionalLight.h" />
     <ClInclude Include="..\scene\Frustum.h" />
