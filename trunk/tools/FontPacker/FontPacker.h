@@ -1,4 +1,4 @@
-#ifndef INC_FONTPACKER_H__
+﻿#ifndef INC_FONTPACKER_H__
 #define INC_FONTPACKER_H__
 
 #ifndef WIN32_LEAN_AND_MEAN
@@ -6,17 +6,68 @@
 #endif
 #include <windows.h>
 #include <string>
+#include "charcode/sjis1.h"
+
+inline bool isTwoBytes(const char* s)
+{
+    unsigned char c = *((unsigned char*)&(s[0]));
+    if((0x81U<=c && c<=0x9FU)
+        || (0xE0U<=c && c<=0xFCU))
+    {
+        c = *((unsigned char*)&(s[1]));
+        if((0x40U<=c && c<=0xFCU)){
+            return true;
+        }
+    }
+    return false;
+
+}
+
+inline int SJISToU16(unsigned short& code, const char* s)
+{
+    unsigned char c = *((unsigned char*)&(s[0]));
+    code = c;
+
+    if((0x81U<=c && c<=0x9FU)
+        || (0xE0U<=c && c<=0xFCU))
+    {
+        c = *((unsigned char*)&(s[1]));
+        if((0x40U<=c && c<=0xFCU)){
+            unsigned short code2 = c;
+            code |= (code2<<8);
+            return 2;
+        }
+    }
+    return 1;
+}
+
+inline int U16ToSTR(unsigned short& dst, unsigned short code)
+{
+    char* str = (char*)&dst;
+
+    str[1] = code & 0xFFU;
+    str[0] = (code>>8) & 0xFFU;
+
+    if(isTwoBytes(str)){
+        return 2;
+    }else{
+        str[0] = code & 0xFFU;
+        str[1] = 0;
+        return 1;
+    }
+}
 
 struct FontInfo
 {
     std::string face_;
+
     int size_;
     int width_;
     int height_;
     int outline_;
     bool bold_;
     bool distanceField_;
-    bool dummy0_;
+    bool asciiOnly_;
     bool dummy1_;
     int distanceScale_;
     int distanceSpread_;
@@ -26,8 +77,7 @@ struct PackHeader
 {
     int textHeight_;
     int spaceWidth_;
-    unsigned int startCode_;
-    unsigned int endCode_;
+    int numCodes_;
     int resolutionX_;
     int resolutionY_;
     int distanceField_;
@@ -35,6 +85,7 @@ struct PackHeader
 
 struct GlyphInfo
 {
+    unsigned int code_;
     short x_;
     short y_;
     short width_;
@@ -49,9 +100,7 @@ struct GlyphInfo
 class FontPacker
 {
 public:
-    static const unsigned int StartCode = 33;
-    static const unsigned int EndCode = 126;
-    static const unsigned int NumCode = EndCode - StartCode + 1;
+    static const unsigned int NumCode = charcode::NumEntries;
 
     FontPacker();
     ~FontPacker();
@@ -60,12 +109,12 @@ public:
 
     HBITMAP getBitmap(){ return bmp_;}
 
-    void save(const char* bmppath, const char* infopath);
+    void save(const TCHAR* bmppath, const TCHAR* infopath);
 private:
     void release();
     bool draw(HWND hwnd);
 
-    void saveBMP(const char* bmppath);
+    void saveBMP(const TCHAR* bmppath);
 
     void sort(GlyphInfo** info);
 
@@ -76,6 +125,8 @@ private:
     FontInfo info_;
     DWORD* dataBmp_;
     DWORD* dataOutlined_;
+
+    unsigned int numCodes_;
 
     short textHeight_;
     short spaceWidth_;

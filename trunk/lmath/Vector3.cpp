@@ -340,4 +340,19 @@ namespace lmath
         y_ = rot.y_;
         z_ = rot.z_;
     }
+
+    void Vector3::rotate(const Quaternion& rotation, const Vector3& v)
+    {
+        //Q x V x conjugate(Q)
+        Quaternion conj;
+        conj.conjugate(rotation);
+        Quaternion rot;
+
+        rot.mul(rotation, v);
+        rot.mul(rot, conj);
+
+        x_ = rot.x_;
+        y_ = rot.y_;
+        z_ = rot.z_;
+    }
 }

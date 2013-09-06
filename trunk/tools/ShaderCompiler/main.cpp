@@ -18,11 +18,37 @@ enum ShaderType
     Shader_None,
 };
 
+enum Profile
+{
+    Profile_4_0 =0,
+    Profile_5_0,
+};
+
+const lcore::Char* ProfilePSName[] =
+{
+    "ps_4_0",
+    "ps_5_0",
+};
+
+const lcore::Char* ProfileVSName[] =
+{
+    "vs_4_0",
+    "vs_5_0",
+};
+
+const lcore::Char* ProfileGSName[] =
+{
+    "gs_4_0",
+    "gs_5_0",
+};
+
 int main(int argc, char** argv)
 {
     if(argc < 3){
         return 0;
     }
+
+    Profile profile = Profile_4_0;
 
     ShaderType type = Shader_None;
     bool ps = false;
@@ -35,6 +61,10 @@ int main(int argc, char** argv)
             type = Shader_GS;
         }else if(lcore::strncmp(argv[i], "-vs", 3) == 0){
             type = Shader_VS;
+        }else if(lcore::strncmp(argv[i], "-p4", 3) == 0){
+            profile = Profile_4_0;
+        }else if(lcore::strncmp(argv[i], "-p5", 3) == 0){
+            profile = Profile_5_0;
         }else{
             if(numFiles<2){
                 files[numFiles].assign(argv[i]);
@@ -82,24 +112,67 @@ int main(int argc, char** argv)
 
     {
         lgraphics::BlobRef blob;
+        lgraphics::BlobRef error;
         lgraphics::VertexShaderRef vertexShader;
         lgraphics::GeometryShaderRef geometryShader;
         lgraphics::PixelShaderRef pixelShader;
+
+        lcore::ifstream in(files[0].c_str(), lcore::ios::binary);
+        if(!in.is_open()){
+            std::cerr << "can't open file: " << files[0] << std::endl;
+            lgraphics::Graphics::terminate();
+            window.terminate();
+            return -1;
+        }
+
+        lcore::u32 size = in.getSize(0);
+
+        lcore::ScopedArrayPtr<lcore::Char> buff(LIME_NEW lcore::Char[size]);
+        in.read(buff.get(), size);
+        in.close();
+
         switch(type)
         {
         case Shader_VS:
-            vertexShader = lgraphics::Shader::createVertexShaderFromFile(files[0].c_str(), 0, NULL, &blob);
+            blob = lgraphics::Shader::createVertexShaderBlobFromMemory(
+                buff.get(),
+                size,
+                ProfileVSName[profile],
+                0, NULL,
+                &error);
             break;
 
         case Shader_GS:
-            geometryShader = lgraphics::Shader::createGeometryShaderFromFile(files[0].c_str(), 0, NULL, &blob);
+            blob = lgraphics::Shader::createGeometryShaderBlobFromMemory(
+                buff.get(),
+                size,
+                ProfileGSName[profile],
+                0, NULL,
+                &error);
             break;
 
         case Shader_PS:
-            pixelShader = lgraphics::Shader::createPixelShaderFromFile(files[0].c_str(), 0, NULL, &blob);
+            blob = lgraphics::Shader::createPixelShaderBlobFromMemory(
+                buff.get(),
+                size,
+                ProfilePSName[profile],
+                0, NULL,
+                &error);
             break;
 
         };
+
+        if(!blob.valid()){
+            std::cerr << "error: ";
+            if(error.valid()){
+                const lcore::Char* msg = (const lcore::Char*)error.getPointer();
+                std::cerr << msg;
+            }
+            std::cerr << std::endl;
+            lgraphics::Graphics::terminate();
+            window.terminate();
+            return -1;
+        }
 
         lgraphics::ShaderCompresser compresser;
         lcore::u8* data = reinterpret_cast<lcore::u8*>(blob.getPointer());

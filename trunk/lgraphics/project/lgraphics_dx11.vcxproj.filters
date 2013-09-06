@@ -119,6 +119,9 @@
     <ClInclude Include="..\api\dx11\Display.h">
       <Filter>api\dx11</Filter>
     </ClInclude>
+    <ClInclude Include="..\io11\IOPNG.h">
+      <Filter>io11</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\api\dx11\BlendStateRef.cpp">
@@ -173,6 +176,9 @@
     </ClCompile>
     <ClCompile Include="..\api\dx11\Display.cpp">
       <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\io11\IOPNG.cpp">
+      <Filter>io11</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

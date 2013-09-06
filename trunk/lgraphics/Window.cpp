@@ -23,8 +23,8 @@ namespace lgraphics
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wPara, LPARAM lParam);
 
     Window::Window()
-        :viewWidth_(1)
-        ,viewHeight_(1)
+        //:viewWidth_(1)
+        //,viewHeight_(1)
     {
         handle_.hWnd_ = NULL;
     }
@@ -106,8 +106,8 @@ namespace lgraphics
         UpdateWindow(handle_.hWnd_);
         SetFocus(handle_.hWnd_);
 
-        viewWidth_ = param.width_;
-        viewHeight_ = param.height_;
+        //viewWidth_ = param.width_;
+        //viewHeight_ = param.height_;
         return true;
     }
 
@@ -171,7 +171,17 @@ namespace lgraphics
         ShowWindow(handle_.hWnd_, (enable)?SW_SHOW : SW_HIDE);
     }
 
-    
+    void Window::getViewSize(u32& width, u32& height)
+    {
+        RECT rect;
+        if(TRUE == GetClientRect(handle_.hWnd_, &rect)){
+            width = rect.right - rect.left;
+            height = rect.bottom - rect.top;
+        }else{
+            width = 1;
+            height = 1;
+        }
+    }
 
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {

@@ -52,4 +52,13 @@ namespace lscene
         viewProjMatrix_ = projMatrix_;
         viewProjMatrix_ *= viewMatrix_;
     }
+
+    void Camera::getEyePosition(lmath::Vector4& eye) const
+    {
+        const lmath::Matrix44& view = viewMatrix_;
+
+        eye.x_ = -(view.m_[0][0] * view.m_[0][3] + view.m_[1][0] * view.m_[1][3] + view.m_[2][0] * view.m_[2][3]);
+        eye.y_ = -(view.m_[0][1] * view.m_[0][3] + view.m_[1][1] * view.m_[1][3] + view.m_[2][1] * view.m_[2][3]);
+        eye.z_ = -(view.m_[0][2] * view.m_[0][3] + view.m_[1][2] * view.m_[1][3] + view.m_[2][2] * view.m_[2][3]);
+    }
 }

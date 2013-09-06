@@ -31,6 +31,108 @@
 #endif
 
 #include "allocator/dlmalloc.h"
+#include "utility.h"
+#include "clibrary.h"
+
+namespace
+{
+#ifdef _DEBUG
+    static const lcore::s32 DebugInfoMemorySize = 1024*1024;
+    static const lcore::s32 DebugInfoFileNameLength = 63;
+    lcore::MemorySpace debugInfoMemorySpace_;
+
+    struct MemoryInfo
+    {
+        MemoryInfo* prev_;
+        MemoryInfo* next_;
+        void* memory_;
+        lcore::s32 line_;
+        lcore::Char file_[DebugInfoFileNameLength+1];
+    };
+
+    MemoryInfo* memoryInfoTop_ = NULL;
+
+    void push(MemoryInfo* info)
+    {
+        if(NULL == memoryInfoTop_){
+            memoryInfoTop_ = info;
+            return;
+        }
+
+        info->prev_ = memoryInfoTop_->prev_;
+        info->next_ = memoryInfoTop_;
+
+        memoryInfoTop_->prev_->next_ = info;
+        memoryInfoTop_->prev_ = info;
+    }
+
+    void pop(MemoryInfo* info)
+    {
+        if(info->next_ == info && info->prev_ == info){
+            memoryInfoTop_ = NULL;
+        }else{
+            info->prev_->next_ = info->next_;
+            info->next_->prev_ = info->prev_;
+        }
+        debugInfoMemorySpace_.deallocate(info);
+    }
+
+    void pushMemoryInfo(void* ptr, const lcore::Char* file, lcore::s32 line)
+    {
+        if(!debugInfoMemorySpace_.valid()){
+            return;
+        }
+
+        MemoryInfo* info = (MemoryInfo*)debugInfoMemorySpace_.allocate(sizeof(MemoryInfo));
+
+        info->prev_ = info;
+        info->next_ = info;
+        info->memory_ = ptr;
+        info->line_ = line;
+        info->file_[0] = '\0';
+
+
+        lcore::s32 len = 0;
+        const lcore::Char* name = "";
+
+        if(NULL != file){
+            len = lcore::strlen(file);
+            const lcore::Char* slash = lcore::rFindChr(file, '\\', len);
+            if(NULL != slash){
+                name = slash + 1;
+                len = lcore::strlen(name);
+                len = lcore::minimum(DebugInfoFileNameLength, len);
+            }
+        }
+
+        for(lcore::s32 i=0; i<=len; ++i){
+            info->file_[i] = name[i];
+        }
+        push(info);
+    }
+
+    void popMemoryInfo(void* ptr)
+    {
+        if(NULL == memoryInfoTop_){
+            return;
+        }
+
+        if(memoryInfoTop_->memory_ == ptr){
+            pop(memoryInfoTop_);
+            return;
+        }
+        MemoryInfo* end = memoryInfoTop_;
+        MemoryInfo* itr = memoryInfoTop_->next_;
+        while(end != itr){
+            if(itr->memory_ == ptr){
+                pop(itr);
+                return;
+            }
+            itr = itr->next_;
+        }
+    }
+#endif
+}
 
 void* lcore_malloc(std::size_t size)
 {
@@ -39,22 +141,120 @@ void* lcore_malloc(std::size_t size)
 
 void* lcore_malloc(std::size_t size, std::size_t alignment)
 {
-    return dlmemalign(size, alignment);
+    return dlmemalign(alignment, size);
 }
-
 
 void lcore_free(void* ptr)
 {
+#ifdef _DEBUG
+    popMemoryInfo(ptr);
+#endif
     dlfree(ptr);
 }
 
 void lcore_free(void* ptr, std::size_t /*alignment*/)
 {
+#ifdef _DEBUG
+    popMemoryInfo(ptr);
+#endif
     dlfree(ptr);
 }
 
+
+void* lcore_malloc(std::size_t size, const char* file, int line)
+{
+    void* ptr = dlmalloc(size);
+#ifdef _DEBUG
+    pushMemoryInfo(ptr, file, line);
+#endif
+    return ptr;
+}
+
+void* lcore_malloc(std::size_t size, std::size_t alignment, const char* file, int line)
+{
+    void* ptr = dlmemalign(alignment, size);
+#ifdef _DEBUG
+    pushMemoryInfo(ptr, file, line);
+#endif
+    return ptr;
+}
+
+
 namespace lcore
 {
+namespace
+{
+    static const f32 RefractiveIndexTable[] =
+    {
+        1.0f,
+
+        1.000293f,//空気
+
+        1.333f, //水
+        1.343f, //海水
+
+        1.49065f,
+        2.0f,
+        3.4179f,
+
+        1.35f,
+        1.43f,
+        1.51f, //1.49 - 1.53
+        1.53f,
+        1.59f,
+        1.63f,
+
+        1.43f,
+        1.51f,
+        1.56f,
+
+        1.309f,
+        1.545f, //1.54-1.55
+        1.67f, //1.65-1.69
+        2.4195f,
+
+        1.608f, //1.53～1.686
+    };
+
+#ifdef _DEBUG
+    void beginMalloc()
+    {
+        debugInfoMemorySpace_.create(DebugInfoMemorySize);
+
+    }
+
+    void endMalloc()
+    {
+        lcore::Log("-------------------");
+        lcore::Log("--- malloc info ---");
+        lcore::Log("-------------------");
+
+        if(NULL != memoryInfoTop_){
+            lcore::Log("%s (%d)", memoryInfoTop_->file_, memoryInfoTop_->line_);
+            MemoryInfo* end = memoryInfoTop_;
+            MemoryInfo* itr = memoryInfoTop_->next_;
+            while(end != itr){
+                lcore::Log("%s (%d)", memoryInfoTop_->file_, itr->line_);
+                itr = itr->next_;
+            }
+        }
+
+        lcore::Log("-------------------");
+
+        debugInfoMemorySpace_.destroy();
+    }
+
+#else
+    void beginMalloc()
+    {
+    }
+
+    void endMalloc()
+    {
+    }
+#endif
+}
+
     bool isLittleEndian()
     {
         u32 v = 1;
@@ -135,17 +335,43 @@ namespace lcore
         return t.f_;
     }
 
+    f32 getRefractiveIndex(RefractiveIndex index)
+    {
+        return RefractiveIndexTable[index];
+    }
+
+    // 真空に対するフレネル反射係数の実部
+    f32 calcFresnelTerm(f32 refract)
+    {
+        f32 v0 = refract - 1.0f;
+        f32 v1 = 1.0f + refract;
+
+        f32 ret = v0/v1;
+        return (ret*ret);
+    }
+
+    // フレネル反射係数の実部
+    f32 calcFresnelTerm(f32 refract0, f32 refract1)
+    {
+        f32 v0 = refract1 - refract0;
+        f32 v1 = refract0 + refract1;
+
+        f32 ret = v0/v1;
+        return (ret*ret);
+    }
 
 #if defined(_WIN32)
     LeakCheck::LeakCheck()
     {
-#ifdef _DEBUG
-        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-#endif
+//#ifdef _DEBUG
+//        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+//#endif
+        beginMalloc();
     }
 
     LeakCheck::~LeakCheck()
     {
+        endMalloc();
     }
 
     System::System()
@@ -161,10 +387,12 @@ namespace lcore
 #else
     LeakCheck::LeakCheck()
     {
+        beginMalloc();
     }
 
     LeakCheck::~LeakCheck()
     {
+        endMalloc();
     }
 
     System::System()
@@ -242,6 +470,11 @@ namespace lcore
             lcore::Log("mspace size freed %d", size);
             mspace_ = NULL;
         }
+    }
+
+    bool MemorySpace::valid() const
+    {
+        return (NULL != mspace_);
     }
 
     void* MemorySpace::allocate(u32 size)

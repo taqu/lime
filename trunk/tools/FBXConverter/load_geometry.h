@@ -12,6 +12,48 @@
 
 namespace load
 {
+    struct VertexPN
+    {
+        f32 x_;
+        f32 y_;
+        f32 z_;
+
+        f32 nx_;
+        f32 ny_;
+        f32 nz_;
+    };
+
+    struct VertexPNU
+    {
+        f32 x_;
+        f32 y_;
+        f32 z_;
+        
+        f32 nx_;
+        f32 ny_;
+        f32 nz_;
+
+        f32 u_;
+        f32 v_;
+    };
+
+    struct VertexPNUBone
+    {
+        f32 x_;
+        f32 y_;
+        f32 z_;
+        
+        f32 nx_;
+        f32 ny_;
+        f32 nz_;
+
+        f32 u_;
+        f32 v_;
+
+        u16 bone_[2];
+        f32 weight_;
+    };
+
     class Geometry
     {
     public:

@@ -4,6 +4,9 @@
     <Filter Include="scene">
       <UniqueIdentifier>{f93f2fa8-f686-4956-8128-e811a1498dd3}</UniqueIdentifier>
     </Filter>
+    <Filter Include="anim">
+      <UniqueIdentifier>{4e5a05cb-ded4-47fa-b263-99bd26ce23be}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\scene\Camera.cpp">
@@ -18,6 +21,33 @@
     <ClCompile Include="..\Application.cpp" />
     <ClCompile Include="..\MessageDriven.cpp" />
     <ClCompile Include="..\Static.cpp" />
+    <ClCompile Include="..\anim\AnimationSystem.cpp">
+      <Filter>anim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\anim\AnimationClip.cpp">
+      <Filter>anim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\anim\AnimationControler.cpp">
+      <Filter>anim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\anim\AnimationControlerPartial.cpp">
+      <Filter>anim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\anim\IKPack.cpp">
+      <Filter>anim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\anim\JointAnimation.cpp">
+      <Filter>anim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\anim\Skeleton.cpp">
+      <Filter>anim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\anim\SkeletonPose.cpp">
+      <Filter>anim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\anim\lanim.cpp">
+      <Filter>anim</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\scene\Camera.h">
@@ -43,5 +73,38 @@
     <ClInclude Include="..\lframework.h" />
     <ClInclude Include="..\MessageDriven.h" />
     <ClInclude Include="..\Static.h" />
+    <ClInclude Include="..\anim\AnimationClip.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\AnimationControler.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\AnimationControlerPartial.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\AnimationSystem.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\IKPack.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\Joint.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\JointAnimation.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\JointPose.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\lanim.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\Skeleton.h">
+      <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\anim\SkeletonPose.h">
+      <Filter>anim</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

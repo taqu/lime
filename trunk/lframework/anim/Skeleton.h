@@ -40,8 +40,8 @@ namespace lanim
         /// ジョイント名取得
         inline const Name& getJointName(s32 index) const;
 
-        /// ジョイント名取得
-        inline Name& getJointName(s32 index);
+        /// ジョイント名セット
+        inline void setJointName(s32 index, const Name& name);
 
         /// 名前取得
         inline const Name& getName() const;
@@ -70,10 +70,8 @@ namespace lanim
         /// ハッシュテーブル再計算
         void recalcHash();
 
-        //bool createFromMemory(const s8* data, u32 bytes);
-        //u32 calcSizeToSave() const;
-        //void saveToMemory(s8* data) const;
-
+        static bool serialize(lcore::ostream& os, Skeleton::pointer& anim);
+        static bool deserialize(Skeleton::pointer& anim, lcore::istream& is);
     private:
         friend inline void intrusive_ptr_addref(Skeleton* ptr);
         friend inline void intrusive_ptr_release(Skeleton* ptr);
@@ -88,7 +86,7 @@ namespace lanim
         void release()
         {
             if(--refCount_ == 0){
-                LIME_DELETE_NONULL this;
+                LIME_DELETE_NONULL(this);
             }
         }
 
@@ -130,11 +128,11 @@ namespace lanim
         return jointNames_[index];
     }
 
-    // ジョイント名取得
-    inline Name& Skeleton::getJointName(s32 index)
+    // ジョイント名セット
+    inline void Skeleton::setJointName(s32 index, const Name& name)
     {
         LASSERT(0<=index && index<numJoints_);
-        return jointNames_[index];
+        jointNames_[index] = name;
     }
 
     // 名前取得

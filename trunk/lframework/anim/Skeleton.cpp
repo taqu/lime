@@ -7,6 +7,7 @@
 #include "Skeleton.h"
 #include "Joint.h"
 #include <lcore/Hash.h>
+#include <lcore/liostream.h>
 
 namespace lanim
 {
@@ -17,7 +18,6 @@ namespace lanim
         ,jointNames_(NULL)
     {
     }
-
 
     Skeleton::Skeleton(s32 numJoints)
         :refCount_(0)
@@ -99,17 +99,41 @@ namespace lanim
         }
     }
 
-    //bool Skeleton::createFromMemory(const s8* data, u32 bytes)
-    //{
-    //    return false;
-    //}
 
-    //u32 Skeleton::calcSizeToSave() const
-    //{
-    //    return 0;
-    //}
+    bool Skeleton::serialize(lcore::ostream& os, Skeleton::pointer& skeleton)
+    {
+        write(os, skeleton->getName());
+        lcore::io::write(os, skeleton->getNumJoints());
+        for(s32 i=0; i<skeleton->getNumJoints(); ++i){
+            write(os, skeleton->getJointName(i));
+        }
 
-    //void Skeleton::saveToMemory(s8* data) const
-    //{
-    //}
+        for(s32 i=0; i<skeleton->getNumJoints(); ++i){
+            const Joint& joint = skeleton->getJoint(i);
+            lcore::io::write(os, joint);
+        }
+        return true;
+    }
+
+    bool Skeleton::deserialize(Skeleton::pointer& skeleton, lcore::istream& is)
+    {
+        Name name;
+        read(name, is);
+        
+        s32 numJoints = 0;
+        lcore::io::read(is, numJoints);
+        skeleton = LIME_NEW Skeleton(numJoints);
+        skeleton->setName(name);
+
+        for(s32 i=0; i<skeleton->getNumJoints(); ++i){
+            read(name, is);
+            skeleton->setJointName(i, name);
+        }
+        for(s32 i=0; i<skeleton->getNumJoints(); ++i){
+            Joint& joint = skeleton->getJoint(i);
+            lcore::io::read(is, joint);
+        }
+        skeleton->recalcHash();
+        return true;
+    }
 }

@@ -32,6 +32,13 @@ namespace load
     static const u32 LOAD_TRUE = 1;
     static const u32 LOAD_FALSE = 0;
 
+    enum Flag
+    {
+        Flag_CastShadow = 0x01U << 0,
+        Flag_RecieveShadow = 0x01U << 1,
+    };
+
+
     enum Elem
     {
         Elem_Geometry =0,
@@ -51,6 +58,8 @@ namespace load
         VElem_Binormal = (0x01U << 3),
         VElem_Color    = (0x01U << 4),
         VElem_Texcoord = (0x01U << 5),
+        VElem_Bone     = (0x01U<<6),
+        VElem_BoneWeight = (0x01U<<7),
         VElem_Num = 8,
     };
 

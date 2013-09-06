@@ -75,6 +75,59 @@ namespace
         return true;
     }
 
+
+    bool compileShader(
+        const Char* memory,
+        u32 size,
+        const Char* filename,
+        const Char* entryName,
+        const Char* profile,
+        s32 numDefines,
+        const Char** defines,
+        ID3DBlob** blob,
+        ID3DBlob** error)
+    {
+        LASSERT(blob != NULL);
+        LASSERT(numDefines<=Shader::MaxDefines);
+
+        //マクロ配列作成
+        D3D10_SHADER_MACRO macro[Shader::MaxDefines+1];
+        for(s32 i=0; i<numDefines; ++i){
+            macro[i].Name = defines[i];
+            macro[i].Definition = NULL;
+        }
+        macro[numDefines].Name = NULL;
+        macro[numDefines].Definition = NULL;
+
+
+        ID3DBlob *errorMsg = NULL;
+        HRESULT hr;
+        hr=D3DCompile(
+            memory,
+            size,
+            filename,
+            macro,
+            NULL,
+            entryName,
+            profile,
+            0,
+            0,
+            blob,
+            &errorMsg);
+
+        if(FAILED(hr)){
+            SAFE_RELEASE(*blob);
+            if(errorMsg && (NULL != *error)){
+                *error = errorMsg;
+            }else{
+                SAFE_RELEASE(errorMsg);
+            }
+
+            return false;
+        }
+        SAFE_RELEASE(errorMsg);
+        return true;
+    }
 }
 
     const char* ShaderEntryFunctionName = "main";
@@ -322,6 +375,54 @@ namespace
 
         return GeometryShaderRef(shader);
     }
+
+
+
+    // メモリからピクセルシェーダ作成
+    BlobRef Shader::createPixelShaderBlobFromMemory(const Char* memory, u32 size, const Char* profile, s32 numDefines, const char** defines, BlobRef* error)
+    {
+        LASSERT(memory != NULL);
+
+        ID3DBlob* d3dBlob = NULL;
+        ID3DBlob* errorBlob = NULL;
+        bool ret = compileShader(memory, size, NULL, ShaderEntryFunctionName, profile, numDefines, defines, &d3dBlob, &errorBlob);
+        if(NULL != error){
+            *error = BlobRef(errorBlob);
+        }
+
+        return (ret)? BlobRef(d3dBlob) : BlobRef();
+    }
+
+    // メモリから頂点シェーダ作成
+    BlobRef Shader::createVertexShaderBlobFromMemory(const Char* memory, u32 size, const Char* profile, s32 numDefines, const char** defines, BlobRef* error)
+    {
+        LASSERT(memory != NULL);
+
+        ID3DBlob* d3dBlob = NULL;
+        ID3DBlob* errorBlob = NULL;
+        bool ret = compileShader(memory, size, NULL, ShaderEntryFunctionName, profile, numDefines, defines, &d3dBlob, &errorBlob);
+        if(NULL != error){
+            *error = BlobRef(errorBlob);
+        }
+
+        return (ret)? BlobRef(d3dBlob) : BlobRef();
+    }
+
+    // メモリからジオメトリシェーダ作成
+    BlobRef Shader::createGeometryShaderBlobFromMemory(const Char* memory, u32 size, const Char* profile, s32 numDefines, const char** defines, BlobRef* error)
+    {
+        LASSERT(memory != NULL);
+
+        ID3DBlob* d3dBlob = NULL;
+        ID3DBlob* errorBlob = NULL;
+        bool ret = compileShader(memory, size, NULL, ShaderEntryFunctionName, profile, numDefines, defines, &d3dBlob, &errorBlob);
+        if(NULL != error){
+            *error = BlobRef(errorBlob);
+        }
+
+        return (ret)? BlobRef(d3dBlob) : BlobRef();
+    }
+
 
     //------------------------------------------------------------
     //---

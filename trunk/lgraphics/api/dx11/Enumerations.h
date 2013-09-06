@@ -178,16 +178,6 @@ namespace lgraphics
         Primitive_PatchList32 = D3D11_PRIMITIVE_TOPOLOGY_32_CONTROL_POINT_PATCHLIST,
     };
 
-#if 0
-    //--------------------------------------------------------
-    enum Lock
-    {
-        Lock_None = 0,
-        Lock_Discard = D3DLOCK_DISCARD,
-        Lock_NoOverwrite = D3DLOCK_NOOVERWRITE,
-    };
-#endif
-
 
     //--------------------------------------------------------
     /// データフォーマット
@@ -383,23 +373,6 @@ namespace lgraphics
         MutiSample_15 = D3DMULTISAMPLE_15_SAMPLES,
         MutiSample_16 = D3DMULTISAMPLE_16_SAMPLES,
     };
-
-    //--------------------------------------------------------
-    enum TextureType
-    {
-        TexType_Diffuse =0,
-        TexType_Specular,
-        TexType_Ambient,
-        TexType_Emissive,
-        TexType_Height,
-        TexType_Normal,
-        TexType_Shininess,
-        TexType_Opacity,
-        TexType_Displacement,
-        TexType_LightMap,
-        TexType_Reflection,
-        TexType_User,
-    };
 #endif
 
     //--------------------------------------------------------
@@ -477,6 +450,43 @@ namespace lgraphics
         ColorWrite_A = D3D11_COLOR_WRITE_ENABLE_ALPHA,
         ColorWrite_All = D3D11_COLOR_WRITE_ENABLE_ALL,
     };
+
+    enum DepthWriteMask
+    {
+        DepthWrite_Zero = D3D11_DEPTH_WRITE_MASK_ZERO,
+        DepthWrite_All = D3D11_DEPTH_WRITE_MASK_ALL,
+    };
+
+    enum StencilOp
+    {
+        StencilOp_Keep = D3D11_STENCIL_OP_KEEP,
+        StencilOp_Zero = D3D11_STENCIL_OP_ZERO,
+        StencilOp_Replace = D3D11_STENCIL_OP_REPLACE,
+        StencilOp_IncrSat = D3D11_STENCIL_OP_INCR_SAT,
+        StencilOp_DecrSat = D3D11_STENCIL_OP_DECR_SAT,
+        StencilOp_Invert = D3D11_STENCIL_OP_INVERT,
+        StencilOp_Incr = D3D11_STENCIL_OP_INCR,
+        StencilOp_Decr = D3D11_STENCIL_OP_DECR,
+    };
+
+    enum UAVDimension
+    {
+        UAVDimension_Unknown = D3D11_UAV_DIMENSION_UNKNOWN,
+        UAVDimension_Buffer = D3D11_UAV_DIMENSION_BUFFER,
+        UAVDimension_Texture1D = D3D11_UAV_DIMENSION_TEXTURE1D,
+        UAVDimension_Texture1DArray = D3D11_UAV_DIMENSION_TEXTURE1DARRAY,
+        UAVDimension_Texture2D = D3D11_UAV_DIMENSION_TEXTURE2D,
+        UAVDimension_Texture2DArray = D3D11_UAV_DIMENSION_TEXTURE2DARRAY,
+        UAVDimension_Texture3D = D3D11_UAV_DIMENSION_TEXTURE3D,
+    };
+
+    enum UAVFlag
+    {
+        UAVFlag_RAW = D3D11_BUFFER_UAV_FLAG_RAW,
+        UAVFlag_Append = D3D11_BUFFER_UAV_FLAG_APPEND,
+        UAVFlag_Counter = D3D11_BUFFER_UAV_FLAG_COUNTER,
+    };
+
 
     /**
     @brief bits per pixel取得

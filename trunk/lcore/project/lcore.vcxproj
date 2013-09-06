@@ -94,9 +94,12 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\AES.h" />
     <ClInclude Include="..\allocator\dlmalloc.h" />
+    <ClInclude Include="..\ARCFOUR.h" />
     <ClInclude Include="..\intrusive\AVLTree.h" />
     <ClInclude Include="..\intrusive\List.h" />
+    <ClInclude Include="..\intrusive\RedBlackTree.h" />
     <ClInclude Include="..\smart_ptr\intrusive_ptr.h" />
     <ClInclude Include="..\smart_ptr\shared_ptr.h" />
     <ClInclude Include="..\random\Random.h" />
@@ -123,7 +126,9 @@
     <ClInclude Include="..\Vector.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\AES.cpp" />
     <ClCompile Include="..\allocator\dlmalloc.c" />
+    <ClCompile Include="..\ARCFOUR.cpp" />
     <ClCompile Include="..\random\Random.cpp" />
     <ClCompile Include="..\async\Socket.cpp" />
     <ClCompile Include="..\async\SyncObject.cpp" />

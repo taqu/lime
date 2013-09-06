@@ -1,4 +1,4 @@
-#ifndef INC_WIDGET_H__
+ï»¿#ifndef INC_WIDGET_H__
 #define INC_WIDGET_H__
 /**
 @file Widget.h
@@ -33,7 +33,7 @@ namespace widget
     typedef float f32;
     typedef double f64;
 
-    typedef char Char;
+    typedef TCHAR Char;
 
     typedef HINSTANCE HMODULE;
 
@@ -86,21 +86,21 @@ namespace widget
     {
     public:
         /**
-        @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-        @param hWnd ... ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹
+        @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+        @param hWnd ... ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
         */
         explicit inline Window(HWND hWnd = NULL);
 
-        /// ƒfƒXƒgƒ‰ƒNƒ^
+        /// ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
         inline ~Window();
 
-        /// —LŒø‚©
+        /// æœ‰åŠ¹ã‹
         inline bool valid() const;
 
         /**
-        @brief ‘ã“ü
+        @brief ä»£å…¥
 
-        ‰½‚à‚µ‚È‚¢‚Åã‘‚«
+        ä½•ã‚‚ã—ãªã„ã§ä¸Šæ›¸ã
         */
         inline void set(HWND hWnd);
 
@@ -118,27 +118,27 @@ namespace widget
 
         inline BOOL enable(BOOL e);
     protected:
-        HWND hWnd_; /// ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹
+        HWND hWnd_; /// ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
     };
 
-    // ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+    // ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
     inline Window::Window(HWND hWnd)
         :hWnd_(hWnd)
     {
     }
 
-    // ƒfƒXƒgƒ‰ƒNƒ^
+    // ãƒ‡ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
     inline Window::~Window()
     {
     }
 
-    // —LŒø‚©
+    // æœ‰åŠ¹ã‹
     inline bool Window::valid() const
     {
         return (hWnd_ != NULL);
     }
 
-    // ‘ã“ü
+    // ä»£å…¥
     void Window::set(HWND hWnd)
     {
         hWnd_ = hWnd;
@@ -159,26 +159,26 @@ namespace widget
     {
     public:
         /**
-        @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-        @param hWnd ... ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹
+        @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+        @param hWnd ... ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
         */
         explicit inline Dialog(HWND hWnd = NULL);
 
         /**
-        @brief ƒ_ƒCƒAƒƒOƒAƒCƒeƒ€æ“¾
-        @return ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹
-        @param ƒAƒCƒeƒ€ID
+        @brief ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚¢ã‚¤ãƒ†ãƒ å–å¾—
+        @return ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
+        @param ã‚¢ã‚¤ãƒ†ãƒ ID
         */
         inline HWND getItem(s32 id);
     };
 
-    // ƒRƒ“ƒXƒgƒ‰ƒNƒ^
+    // ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
     inline Dialog::Dialog(HWND hWnd)
         :Window(hWnd)
     {
     }
 
-    // ƒ_ƒCƒAƒƒOƒAƒCƒeƒ€æ“¾
+    // ãƒ€ã‚¤ã‚¢ãƒ­ã‚°ã‚¢ã‚¤ãƒ†ãƒ å–å¾—
     inline HWND Dialog::getItem(s32 id)
     {
         return GetDlgItem(getHWnd(), id);
@@ -194,103 +194,103 @@ namespace widget
     {
     public:
         /**
-        @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-        @param hWnd ... ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹
+        @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+        @param hWnd ... ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
         */
         explicit inline ComboBox(HWND hWnd = NULL)
             :Window(hWnd)
         {}
 
         /**
-        @brief •¶š—ñ‘}“ü
-        @return •¶š—ñ‚ª‘}“ü‚³‚ê‚½ƒCƒ“ƒfƒbƒNƒX
-        @return CB_ERR ... ƒGƒ‰[
-        @return CB_ERRSPACE ... •¶š—ñ‚ğŠi”[‚·‚é—Ìˆæ‚ª‘«‚è‚È‚©‚Á‚½ê‡
-        @param str ... •¶š—ñ
+        @brief æ–‡å­—åˆ—æŒ¿å…¥
+        @return æ–‡å­—åˆ—ãŒæŒ¿å…¥ã•ã‚ŒãŸã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
+        @return CB_ERRSPACE ... æ–‡å­—åˆ—ã‚’æ ¼ç´ã™ã‚‹é ˜åŸŸãŒè¶³ã‚Šãªã‹ã£ãŸå ´åˆ
+        @param str ... æ–‡å­—åˆ—
         */
         inline LRESULT addString(const Char* str);
 
         /**
-        @brief •¶š—ñŒŸõ
-        @return •¶š—ñ‚ÌƒCƒ“ƒfƒbƒNƒX
-        @return CB_ERR ... •¶š—ñ‚ª‚È‚©‚Á‚½‚©A¸”s
-        @param index ... ŒŸõŠJnˆÊ’u
-        @param str ... ŒŸõ•¶š—ñ
+        @brief æ–‡å­—åˆ—æ¤œç´¢
+        @return æ–‡å­—åˆ—ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+        @return CB_ERR ... æ–‡å­—åˆ—ãŒãªã‹ã£ãŸã‹ã€å¤±æ•—
+        @param index ... æ¤œç´¢é–‹å§‹ä½ç½®
+        @param str ... æ¤œç´¢æ–‡å­—åˆ—
         */
         inline LRESULT findString(s32 index, const Char* str);
 
         /**
-        @brief •¶š—ñíœ
-        @return ƒRƒ“ƒ{ƒ{ƒbƒNƒX‚É‚ ‚éc‚è‚Ì•¶š—ñ”
-        @return CB_ERR ... ƒGƒ‰[
-        @param index ... íœ‚·‚éƒCƒ“ƒfƒbƒNƒX
+        @brief æ–‡å­—åˆ—å‰Šé™¤
+        @return ã‚³ãƒ³ãƒœãƒœãƒƒã‚¯ã‚¹ã«ã‚ã‚‹æ®‹ã‚Šã®æ–‡å­—åˆ—æ•°
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
+        @param index ... å‰Šé™¤ã™ã‚‹ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
         */
         inline LRESULT deleteString(s32 index);
 
         /**
-        @brief •¶š—ñ”æ“¾
-        @return •¶š—ñ”
-        @return CB_ERR ... ƒGƒ‰[
+        @brief æ–‡å­—åˆ—æ•°å–å¾—
+        @return æ–‡å­—åˆ—æ•°
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
         */
         inline LRESULT getCount();
 
         /**
-        @brief ‘I‘ğ’†ƒCƒ“ƒfƒbƒNƒXæ“¾
-        @return ƒCƒ“ƒfƒbƒNƒX
-        @return CB_ERR ... ƒGƒ‰[
+        @brief é¸æŠä¸­ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹å–å¾—
+        @return ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
         */
         inline LRESULT getCurSel();
 
         /**
-        @brief •¶š—ñ’·æ“¾
-        @return ƒkƒ‹•¶š‚ğœ‚¢‚½•¶š—ñ’·
-        @return CB_ERR ... ƒGƒ‰[
-        @param index ... ƒCƒ“ƒfƒbƒNƒX
-        @param str ... •¶š—ñ‚ğ•Ô‚·ƒoƒbƒtƒ@
+        @brief æ–‡å­—åˆ—é•·å–å¾—
+        @return ãƒŒãƒ«æ–‡å­—ã‚’é™¤ã„ãŸæ–‡å­—åˆ—é•·
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
+        @param index ... ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+        @param str ... æ–‡å­—åˆ—ã‚’è¿”ã™ãƒãƒƒãƒ•ã‚¡
         */
         inline LRESULT getLBTextLen(s32 index);
 
         /**
-        @brief •¶š—ñæ“¾
-        @return ƒkƒ‹•¶š‚ğœ‚¢‚½•¶š—ñ’·
-        @return CB_ERR ... ƒGƒ‰[
-        @param index ... ƒCƒ“ƒfƒbƒNƒX
+        @brief æ–‡å­—åˆ—å–å¾—
+        @return ãƒŒãƒ«æ–‡å­—ã‚’é™¤ã„ãŸæ–‡å­—åˆ—é•·
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
+        @param index ... ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
         */
         inline LRESULT getLBText(s32 index, Char* str);
 
         /**
-        @brief •\¦‚³‚ê‚Ä‚¢‚é€–Ú‚ÌƒCƒ“ƒfƒbƒNƒXæ“¾
-        @return CB_ERR ... ƒGƒ‰[
+        @brief è¡¨ç¤ºã•ã‚Œã¦ã„ã‚‹é …ç›®ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹å–å¾—
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
         */
         inline LRESULT getTopIndex();
 
         /**
-        @brief •¶š—ñ‘}“ü
-        @return ‘}“ü‚µ‚½•¶š—ñ‚ÌƒCƒ“ƒfƒbƒNƒX
-        @return CB_ERR ... ƒGƒ‰[
-        @return CB_ERRSPACE ... •¶š—ñ‚ğŠi”[‚·‚é—Ìˆæ‚ª‘«‚è‚È‚©‚Á‚½ê‡
-        @param index ... ƒCƒ“ƒfƒbƒNƒX
-        @param str ... •¶š—ñ
+        @brief æ–‡å­—åˆ—æŒ¿å…¥
+        @return æŒ¿å…¥ã—ãŸæ–‡å­—åˆ—ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
+        @return CB_ERRSPACE ... æ–‡å­—åˆ—ã‚’æ ¼ç´ã™ã‚‹é ˜åŸŸãŒè¶³ã‚Šãªã‹ã£ãŸå ´åˆ
+        @param index ... ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+        @param str ... æ–‡å­—åˆ—
         */
         inline LRESULT insertString(s32 index, const Char* str);
 
         /**
-        @brief €–ÚƒNƒŠƒA
+        @brief é …ç›®ã‚¯ãƒªã‚¢
         */
         inline LRESULT resetContent();
 
         /**
-        @brief €–Ú‚ğ‘I‘ğ
-        @return ‘I‘ğ‚µ‚½€–Ú‚ÌƒCƒ“ƒfƒbƒNƒX
-        @return CB_ERR ... ƒGƒ‰[
-        @param ƒCƒ“ƒfƒbƒNƒXB-1‚È‚ç‘I‘ğ‚ğƒNƒŠƒA
+        @brief é …ç›®ã‚’é¸æŠ
+        @return é¸æŠã—ãŸé …ç›®ã®ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
+        @param ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹ã€‚-1ãªã‚‰é¸æŠã‚’ã‚¯ãƒªã‚¢
         */
         inline LRESULT setCurSel(s32 index);
 
         /**
-        @brief •\¦‚·‚é€–ÚƒZƒbƒg
-        @return CB_ERR ... ƒGƒ‰[
-        @param ƒCƒ“ƒfƒbƒNƒX
+        @brief è¡¨ç¤ºã™ã‚‹é …ç›®ã‚»ãƒƒãƒˆ
+        @return CB_ERR ... ã‚¨ãƒ©ãƒ¼
+        @param ã‚¤ãƒ³ãƒ‡ãƒƒã‚¯ã‚¹
         */
         inline LRESULT setTopIndex(s32 index);
     };
@@ -366,8 +366,8 @@ namespace widget
     {
     public:
         /**
-        @brief ƒRƒ“ƒXƒgƒ‰ƒNƒ^
-        @param hWnd ... ƒEƒBƒ“ƒhƒEƒnƒ“ƒhƒ‹
+        @brief ã‚³ãƒ³ã‚¹ãƒˆãƒ©ã‚¯ã‚¿
+        @param hWnd ... ã‚¦ã‚£ãƒ³ãƒ‰ã‚¦ãƒãƒ³ãƒ‰ãƒ«
         */
         explicit inline Button(HWND hWnd = NULL)
             :Window(hWnd)

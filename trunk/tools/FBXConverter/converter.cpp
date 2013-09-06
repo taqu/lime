@@ -618,7 +618,7 @@ namespace
                 static_cast<f32>(phong->Diffuse.Get()[0]),
                 static_cast<f32>(phong->Diffuse.Get()[1]),
                 static_cast<f32>(phong->Diffuse.Get()[2]),
-                static_cast<f32>(phong->SpecularFactor.Get()));
+                static_cast<f32>(1.0 - phong->TransparencyFactor.Get()));
 
             material.specular_.set(
                 static_cast<f32>(phong->Specular.Get()[0]),
@@ -626,11 +626,17 @@ namespace
                 static_cast<f32>(phong->Specular.Get()[2]),
                 static_cast<f32>(phong->Shininess.Get()));
 
-            material.transparent_.set(
-                static_cast<f32>(phong->TransparentColor.Get()[0]),
-                static_cast<f32>(phong->TransparentColor.Get()[1]),
-                static_cast<f32>(phong->TransparentColor.Get()[2]),
-                static_cast<f32>(1.0 - phong->TransparencyFactor.Get()));
+            //material.transparent_.set(
+            //    static_cast<f32>(phong->TransparentColor.Get()[0]),
+            //    static_cast<f32>(phong->TransparentColor.Get()[1]),
+            //    static_cast<f32>(phong->TransparentColor.Get()[2]),
+            //    static_cast<f32>(phong->SpecularFactor.Get()));
+
+            material.shadow_.set(
+                0.0f,
+                0.0f,
+                0.0f,
+                static_cast<f32>(phong->SpecularFactor.Get()));
 
 
         }else if( src->GetClassId().Is(FbxSurfaceLambert::ClassId) ){
@@ -640,20 +646,27 @@ namespace
                 static_cast<f32>(lambert->Diffuse.Get()[0]),
                 static_cast<f32>(lambert->Diffuse.Get()[1]),
                 static_cast<f32>(lambert->Diffuse.Get()[2]),
-                1.0f);
-
-            material.transparent_.set(
-                static_cast<f32>(lambert->TransparentColor.Get()[0]),
-                static_cast<f32>(lambert->TransparentColor.Get()[1]),
-                static_cast<f32>(lambert->TransparentColor.Get()[2]),
-                static_cast<f32>(1.0 - lambert->TransparencyFactor.Get()));
+                1.0 - lambert->TransparencyFactor.Get());
 
             material.specular_.set(0.0f, 0.0f, 0.0f, 0.0f);
+
+            //material.transparent_.set(
+            //    static_cast<f32>(lambert->TransparentColor.Get()[0]),
+            //    static_cast<f32>(lambert->TransparentColor.Get()[1]),
+            //    static_cast<f32>(lambert->TransparentColor.Get()[2]),
+            //    1.0f);
+
+            material.shadow_.set(
+                0.0f,
+                0.0f,
+                0.0f,
+                1.0f);
 
         }else{
             material.diffuse_.set(0.0f, 0.0f, 0.0f, 1.0f);
             material.specular_.set(0.0f, 0.0f, 0.0f, 0.0f);
-            material.transparent_.set(0.0f, 0.0f, 0.0f, 1.0f);
+            //material.transparent_.set(0.0f, 0.0f, 0.0f, 1.0f);
+            material.shadow_.set(0.0f, 0.0f, 0.0f, 1.0f);
         }
 
         FbxProperty prop;

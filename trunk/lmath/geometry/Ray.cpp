@@ -21,9 +21,9 @@ namespace lmath
     {
         for(s32 i=0; i<3; ++i){
             if(isPositive(direction_[i])){
-                invDirection_[i] = (lmath::isZeroPositive(direction_[i]))? lcore::numeric_limits<f32>::maximum() : 1.0f/direction_[i];
+                invDirection_[i] = (lmath::isZeroPositive(direction_[i]))? lcore::numeric_limits<f32>::inifinity() : 1.0f/direction_[i];
             }else{
-                invDirection_[i] = (lmath::isZero(direction_[i]))? lcore::numeric_limits<f32>::minimum() : 1.0f/direction_[i];
+                invDirection_[i] = (lmath::isZero(direction_[i]))? -lcore::numeric_limits<f32>::inifinity() : 1.0f/direction_[i];
             }
         }
     }

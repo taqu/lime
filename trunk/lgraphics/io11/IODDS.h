@@ -6,6 +6,7 @@
 @date 2012/07/26 create
 */
 #include "../lgraphicscore.h"
+#include "../api/Enumerations.h"
 
 namespace lgraphics
 {
@@ -52,7 +53,7 @@ namespace io
         };
 
 
-        static bool read(const s8* data, u32 size, Texture2DRef& texture);
+        static bool read(Texture2DRef& texture, const s8* data, u32 size, Usage usage, TextureFilterType filter, TextureAddress adress);
 
     };
 }

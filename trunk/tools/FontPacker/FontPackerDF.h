@@ -1,4 +1,4 @@
-#ifndef INC_FONTPACKERDF_H__
+﻿#ifndef INC_FONTPACKERDF_H__
 #define INC_FONTPACKERDF_H__
 /**
 @file FontPackerDF.h
@@ -10,9 +10,8 @@
 class FontPackerDF
 {
 public:
-    static const unsigned int StartCode = 33;
-    static const unsigned int EndCode = 126;
-    static const unsigned int NumCode = EndCode - StartCode + 1;
+    static const unsigned int NumTableEntries = charcode::NumEntries;
+    static const unsigned int NumASCII = 158;
 
     struct GlyphInfoDF
     {
@@ -33,15 +32,13 @@ public:
 
     HBITMAP getBitmap(){ return bmp_;}
 
-    void save(const char* bmppath, const char* infopath);
+    void save(const TCHAR* bmppath, const TCHAR* infopath);
 private:
     void release();
 
-    bool createGlyphInfos(HWND hwnd);
-
     bool drawScaled(HWND hwnd);
 
-    void saveDistanceFieldBMP(const char* bmppath);
+    void saveDistanceFieldBMP(const TCHAR* bmppath);
 
     void sort(GlyphInfo** info);
 
@@ -51,10 +48,14 @@ private:
     FontInfo info_;
     DWORD* dataBmp_;
 
+    unsigned int numCodes_;
+
     short textHeight_;
     short spaceWidth_;
-    GlyphInfo glyphInfo_[NumCode];
-    GlyphInfoDF glyphInfoDF_[NumCode];
+    GlyphInfo glyphInfo_[NumTableEntries];
+    GlyphInfoDF glyphInfoDF_[NumTableEntries];
+
+    int outGlyphCount_;
 };
 
 #endif //INC_FONTPACKERDF_H__

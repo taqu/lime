@@ -104,6 +104,12 @@ namespace lgraphics
         };
     };
 
+    struct BufferSRV
+    {
+        u32 firstElement_;
+        u32 numElements_;
+    };
+
     struct Texture1DSRV
     {
         u32 mostDetailedMip_;
@@ -138,11 +144,26 @@ namespace lgraphics
         u32 mipLevels_;
     };
 
+    struct TextureCubeSRV
+    {
+        u32 mostDetailedMip_;
+        u32 mipLevels_;
+    };
+
+    struct TextureCubeArraySRV
+    {
+        u32 mostDetailedMip_;
+        u32 mipLevels_;
+        u32 first2DArraySlice_;
+        u32 numCubes_;
+    };
+
     struct ResourceViewDesc
     {
         DataFormat format_;
         union
         {
+            BufferSRV buffer_;
             Texture1DSRV tex1D_;
             Texture1DArraySRV tex1DArray_;
 
@@ -150,6 +171,64 @@ namespace lgraphics
             Texture2DArraySRV tex2DArray_;
 
             Texture3DSRV tex3D_;
+
+            TextureCubeSRV texCube_;
+            TextureCubeArraySRV texCubeArray_;
+        };
+    };
+
+    struct BufferUAV
+    {
+        u32 firstElement_;
+        u32 numElements_;
+        u32 flags_;
+    };
+
+    struct Texture1DUAV
+    {
+        u32 mipSlice_;
+    };
+
+    struct Texture1DArrayUAV
+    {
+        u32 mipSlice_;
+        u32 firstArraySlice_;
+        u32 arraySize_;
+    };
+
+    struct Texture2DUAV
+    {
+        u32 mipSlice_;
+    };
+
+    struct Texture2DArrayUAV
+    {
+        u32 mipSlice_;
+        u32 firstArraySlice_;
+        u32 arraySize_;
+    };
+
+    struct Texture3DUAV
+    {
+        u32 mipSlice_;
+        u32 firstWSlice_;
+        u32 wsize_;
+    };
+
+    struct UAVDesc
+    {
+        DataFormat format_;
+        UAVDimension dimension_;
+        union
+        {
+            BufferUAV buffer_;
+            Texture1DUAV tex1D_;
+            Texture1DArrayUAV tex1DArray_;
+
+            Texture2DUAV tex2D_;
+            Texture2DArrayUAV tex2DArray_;
+
+            Texture3DUAV tex3D_;
         };
     };
 
@@ -251,6 +330,50 @@ namespace lgraphics
 
     //--------------------------------------------------------
     //---
+    //--- UnorderedAccessViewRef
+    //---
+    //--------------------------------------------------------
+    class UnorderedAccessViewRef
+    {
+    public:
+        UnorderedAccessViewRef()
+            :view_(NULL)
+        {}
+
+        UnorderedAccessViewRef(const UnorderedAccessViewRef& rhs);
+
+        explicit UnorderedAccessViewRef(ID3D11UnorderedAccessView* view)
+            :view_(view)
+        {}
+
+        ~UnorderedAccessViewRef()
+        {
+            destroy();
+        }
+
+        UnorderedAccessViewRef& operator=(const UnorderedAccessViewRef& rhs)
+        {
+            UnorderedAccessViewRef tmp(rhs);
+            tmp.swap(*this);
+            return *this;
+        }
+
+        void destroy();
+
+        bool valid() const{ return (NULL != view_);}
+
+        void swap(UnorderedAccessViewRef& rhs)
+        {
+            lcore::swap(view_, rhs.view_);
+        }
+
+        ID3D11UnorderedAccessView* getView(){ return view_;}
+    private:
+        ID3D11UnorderedAccessView* view_;
+    };
+
+    //--------------------------------------------------------
+    //---
     //--- TextureRefBase
     //---
     //--------------------------------------------------------
@@ -261,6 +384,7 @@ namespace lgraphics
         typedef TextureRefBase<T> this_type;
         typedef T element_type;
 
+        element_type* get() { return texture_;}
         bool hasSampler() const{ return sampler_.valid();}
         bool hasResourceView() const{ return (NULL != view_);}
         bool valid() const{ return (NULL != texture_);}
@@ -270,6 +394,7 @@ namespace lgraphics
 
         RenderTargetViewRef createRTView(const RTVDesc& desc);
         DepthStencilViewRef createDSView(const DSVDesc& desc);
+        UnorderedAccessViewRef createUAView(const UAVDesc& desc);
 
         void setSamplerState(TextureFilterType filter, TextureAddress adress)
         {
@@ -279,6 +404,10 @@ namespace lgraphics
         inline void attachVS(u32 viewIndex, u32 samplerIndex);
         inline void attachGS(u32 viewIndex, u32 samplerIndex);
         inline void attachPS(u32 viewIndex, u32 samplerIndex);
+
+        inline void attachVS(u32 viewIndex);
+        inline void attachGS(u32 viewIndex);
+        inline void attachPS(u32 viewIndex);
 
         inline void copy(this_type& src);
         inline bool map(void*& data, u32& rowPitch, u32& depthPitch, s32 type);
@@ -424,6 +553,63 @@ namespace lgraphics
     }
 
     template<class T>
+    UnorderedAccessViewRef TextureRefBase<T>::createUAView(const UAVDesc& desc)
+    {
+        D3D11_UNORDERED_ACCESS_VIEW_DESC viewDesc;
+        viewDesc.Format = static_cast<DXGI_FORMAT>(desc.format_);
+        viewDesc.ViewDimension = static_cast<D3D11_UAV_DIMENSION>(desc.dimension_);
+
+        switch(desc.dimension_)
+        {
+        case UAVDimension_Unknown:
+            break;
+
+        case UAVDimension_Buffer:
+            viewDesc.Buffer.FirstElement = desc.buffer_.firstElement_;
+            viewDesc.Buffer.NumElements = desc.buffer_.numElements_;
+            viewDesc.Buffer.Flags = desc.buffer_.flags_;
+            break;
+
+        case UAVDimension_Texture1D:
+            viewDesc.Texture1D.MipSlice = desc.tex1D_.mipSlice_;
+            break;
+
+        case UAVDimension_Texture1DArray:
+            viewDesc.Texture1DArray.MipSlice        = desc.tex1DArray_.mipSlice_;
+            viewDesc.Texture1DArray.FirstArraySlice = desc.tex1DArray_.firstArraySlice_;
+            viewDesc.Texture1DArray.ArraySize       = desc.tex1DArray_.arraySize_;
+            break;
+
+        case UAVDimension_Texture2D:
+            viewDesc.Texture2D.MipSlice = desc.tex2D_.mipSlice_;
+            break;
+
+        case UAVDimension_Texture2DArray:
+            viewDesc.Texture2DArray.MipSlice        = desc.tex2DArray_.mipSlice_;
+            viewDesc.Texture2DArray.FirstArraySlice = desc.tex2DArray_.firstArraySlice_;
+            viewDesc.Texture2DArray.ArraySize       = desc.tex2DArray_.arraySize_;
+            break;
+
+        case UAVDimension_Texture3D:
+            viewDesc.Texture3D.MipSlice        = desc.tex3D_.mipSlice_;
+            viewDesc.Texture3D.FirstWSlice = desc.tex3D_.firstWSlice_;
+            viewDesc.Texture3D.WSize       = desc.tex3D_.wsize_;
+            break;
+        };
+
+        ID3D11Device* device = Graphics::getDevice().getD3DDevice();
+
+        ID3D11UnorderedAccessView* view = NULL;
+        HRESULT hr = device->CreateUnorderedAccessView(
+            texture_,
+            &viewDesc,
+            &view);
+
+        return (SUCCEEDED(hr))? UnorderedAccessViewRef(view) : UnorderedAccessViewRef();
+    }
+
+
+    template<class T>
     inline void TextureRefBase<T>::attachVS(u32 viewIndex, u32 samplerIndex)
     {
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
@@ -445,6 +631,28 @@ namespace lgraphics
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         device.setPSResources(viewIndex, 1, &view_);
         device.setPSSamplers(samplerIndex, 1, sampler_.get());
+    }
+
+
+    template<class T>
+    inline void TextureRefBase<T>::attachVS(u32 viewIndex)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.setVSResources(viewIndex, 1, &view_);
+    }
+
+    template<class T>
+    inline void TextureRefBase<T>::attachGS(u32 viewIndex)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.setGSResources(viewIndex, 1, &view_);
+    }
+
+    template<class T>
+    inline void TextureRefBase<T>::attachPS(u32 viewIndex)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.setPSResources(viewIndex, 1, &view_);
     }
 
     template<class T>
@@ -592,6 +800,49 @@ namespace lgraphics
         {}
     };
 
+
+    //--------------------------------------------------------
+    //---
+    //--- BufferRef
+    //---
+    //--------------------------------------------------------
+    class BufferRef : public TextureRefBase<ID3D11Buffer>
+    {
+    public:
+        typedef TextureRefBase<ID3D11Buffer> parent_type;
+
+        BufferRef()
+        {}
+
+        BufferRef(const BufferRef& rhs);
+
+        ~BufferRef()
+        {
+            destroy();
+        }
+
+        void destroy();
+
+        BufferRef& operator=(const BufferRef& rhs)
+        {
+            BufferRef tmp(rhs);
+            tmp.swap(*this);
+            return *this;
+        }
+
+        void swap(BufferRef& rhs)
+        {
+            parent_type::swap(rhs);
+        }
+    private:
+        friend class Texture;
+
+        explicit BufferRef(const SamplerStateRef& sampler, ID3D11ShaderResourceView* view, ID3D11Buffer* texture)
+            :parent_type(sampler, view, texture)
+        {}
+    };
+
+
     //--------------------------------------------------------
     //---
     //--- Texture
@@ -645,6 +896,15 @@ namespace lgraphics
             const SubResourceData* initData,
             const ResourceViewDesc* resourceViewDesc);
             
+        static BufferRef createBuffer(
+            u32 size,
+            Usage usage,
+            u32 bind,
+            CPUAccessFlag access,
+            ResourceMisc misc,
+            u32 structureByteStride,
+            const SubResourceData* initData,
+            const ResourceViewDesc* resourceViewDesc);
     };
 }
 #endif //INC_LGRAPHICS_DX11_TEXTUREREF_H__

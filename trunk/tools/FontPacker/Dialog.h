@@ -1,4 +1,4 @@
-#ifndef INC_DIALOG_H__
+﻿#ifndef INC_DIALOG_H__
 #define INC_DIALOG_H__
 /**
 @file Dialog.h
@@ -31,6 +31,7 @@ namespace font
         widget::ComboBox distanceScale_;
         widget::ComboBox distanceSpread_;
         widget::Button checkDistanceField_;
+        widget::Button checkASCIIOnly_;
     };
 }
 #endif //INC_DIALOG_H__

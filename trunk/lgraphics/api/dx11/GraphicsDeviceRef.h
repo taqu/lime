@@ -14,7 +14,9 @@ struct IDXGISwapChain;
 namespace lgraphics
 {
     struct InitParam;
+    class BlendStateRef;
 
+    //Bufferの場合はバイト単位、テクスチャの場合はテクセル単位
     struct Box
     {
         Box(){}
@@ -35,6 +37,45 @@ namespace lgraphics
         u32 back_;
     };
 
+    //--------------------------------------
+    //---
+    //--- DepthStencilStateRef
+    //---
+    //--------------------------------------
+    class DepthStencilStateRef
+    {
+    public:
+        struct StencilOPDesc
+        {
+            StencilOp failOp_;
+            StencilOp depthFailOp_;
+            StencilOp passOp_;
+            CmpFunc cmpFunc_;
+        };
+
+        DepthStencilStateRef();
+        DepthStencilStateRef(const DepthStencilStateRef& rhs);
+        ~DepthStencilStateRef();
+
+        void destroy();
+
+        bool valid() const;
+        DepthStencilStateRef& operator=(const DepthStencilStateRef& rhs);
+        void swap(DepthStencilStateRef& rhs);
+    private:
+        friend class GraphicsDeviceRef;
+
+        explicit DepthStencilStateRef(ID3D11DepthStencilState* state);
+
+        ID3D11DepthStencilState* state_;
+    };
+
+
+    //--------------------------------------
+    //---
+    //--- GraphicsDeviceRef
+    //---
+    //--------------------------------------
     /**
     @brief Direct3D11 グラフィクスデバイス
     */
@@ -50,7 +91,9 @@ namespace lgraphics
         enum RasterizerState
         {
             Rasterizer_FillSolid = 0,
+            Rasterizer_FillSolidNoCull,
             Rasterizer_FillWireFrame,
+            Rasterizer_FillWireFrameNoCull,
             Rasterizer_DepthMap,
             Rasterizer_Num,
         };
@@ -113,6 +156,7 @@ namespace lgraphics
 
         inline void clearRenderTargetView(ID3D11RenderTargetView* view, const f32* color);
         inline void clearDepthStencilView(ID3D11DepthStencilView* view, u32 flags, f32 depth, u8 stencil);
+        inline void clearUnorderedAccessView(ID3D11UnorderedAccessView* view, const u32 values[4]);
 
         inline void draw(u32 numVertices, u32 start);
         inline void drawIndexed(u32 numIndices, u32 start, u32 baseVertex);
@@ -123,7 +167,7 @@ namespace lgraphics
 
         inline void setRasterizerState(RasterizerState state);
 
-        inline void setBlendState(ID3D11BlendState* state);
+        void setBlendState(BlendStateRef& state);
         inline void setBlendState(BlendState state);
         inline void setDepthStencilState(DepthStencilState state);
 
@@ -158,6 +202,15 @@ namespace lgraphics
             ID3D11RenderTargetView** views,
             ID3D11DepthStencilView** depthStencilView);
 
+        inline void setRenderTargetsAndUAV(
+            u32 numViews,
+            ID3D11RenderTargetView* const* views,
+            ID3D11DepthStencilView* depthStencilView,
+            u32 UAVStart,
+            u32 numUAVs,
+            ID3D11UnorderedAccessView* const* uavs,
+            const u32* UAVInitCounts);
+
         inline void updateSubresource(
             ID3D11Resource* dstResource,
             u32 dstSubresource,
@@ -171,9 +224,27 @@ namespace lgraphics
         inline void clearPSResources(u32 numResources);
         inline void clearRenderTargets(u32 numResources);
 
+        void restoreDefaultRenderTargets();
+
+        inline void copyResource(ID3D11Resource* dst, u32 dstSubResource, u32 dstX, u32 dstY, u32 dstZ, ID3D11Resource* src, u32 srcSubResource, const Box* box);
         inline void copyResource(ID3D11Resource* dst, ID3D11Resource* src);
+        inline void copyStructureCount(ID3D11Buffer* dst, u32 dstOffset, ID3D11UnorderedAccessView* view);
+
         inline bool map(void*& data, u32& rowPitch, u32& depthPitch, ID3D11Resource* resource, s32 type);
         inline void unmap(ID3D11Resource* resource);
+
+        DepthStencilStateRef createDepthStencilState(
+            bool depthEnable,
+            DepthWriteMask depthWriteMask,
+            CmpFunc depthFunc,
+            bool stencilEnable,
+            u8 stencilReadMask,
+            u8 stencilWriteMask,
+            const DepthStencilStateRef::StencilOPDesc& frontFace,
+            const DepthStencilStateRef::StencilOPDesc& backFace);
+
+        void setDepthStencilState(DepthStencilStateRef& state, u32 stencilRef);
+
     private:
         static const u32 MaxShaderResources = 32;
         static ID3D11ShaderResourceView* const NULLResources[MaxShaderResources];
@@ -257,6 +328,11 @@ namespace lgraphics
         context_->ClearDepthStencilView(view, flags, depth, stencil);
     }
 
+    inline void GraphicsDeviceRef::clearUnorderedAccessView(ID3D11UnorderedAccessView* view, const u32 values[4])
+    {
+        context_->ClearUnorderedAccessViewUint(view, values);
+    }
+
     inline void GraphicsDeviceRef::draw(u32 numVertices, u32 start)
     {
         context_->Draw(numVertices, start);
@@ -277,14 +353,9 @@ namespace lgraphics
         context_->RSSetState(rasterizerStates_[state]);
     }
 
-    inline void GraphicsDeviceRef::setBlendState(ID3D11BlendState* state)
-    {
-        context_->OMSetBlendState(state, blendFactors_, 0xFFFFFFFFU);
-    }
-
     inline void GraphicsDeviceRef::setBlendState(BlendState state)
     {
-        setBlendState(blendStates_[state]);
+        context_->OMSetBlendState(blendStates_[state], blendFactors_, 0xFFFFFFFFU);
     }
 
     inline void GraphicsDeviceRef::setDepthStencilState(DepthStencilState state)
@@ -388,6 +459,18 @@ namespace lgraphics
         context_->OMGetRenderTargets(numViews, views, depthStencilView);
     }
 
+    inline void GraphicsDeviceRef::setRenderTargetsAndUAV(
+        u32 numViews,
+        ID3D11RenderTargetView* const* views,
+        ID3D11DepthStencilView* depthStencilView,
+        u32 UAVStart,
+        u32 numUAVs,
+        ID3D11UnorderedAccessView* const* uavs,
+        const u32* UAVInitCounts)
+    {
+        context_->OMSetRenderTargetsAndUnorderedAccessViews(numViews, views, depthStencilView, UAVStart, numUAVs, uavs, UAVInitCounts);
+    }
+
     inline void GraphicsDeviceRef::updateSubresource(
         ID3D11Resource* dstResource,
         u32 dstSubresource,
@@ -429,9 +512,19 @@ namespace lgraphics
         context_->OMSetRenderTargets(numTargets, NullTargets, NULL);
     }
 
+    inline void GraphicsDeviceRef::copyResource(ID3D11Resource* dst, u32 dstSubResource, u32 dstX, u32 dstY, u32 dstZ, ID3D11Resource* src, u32 srcSubResource, const Box* box)
+    {
+        context_->CopySubresourceRegion(dst, dstSubResource, dstX, dstY, dstZ, src, srcSubResource, reinterpret_cast<const D3D11_BOX*>(box));
+    }
+
     inline void GraphicsDeviceRef::copyResource(ID3D11Resource* dst, ID3D11Resource* src)
     {
         context_->CopyResource(dst, src);
+    }
+
+    inline void GraphicsDeviceRef::copyStructureCount(ID3D11Buffer* dst, u32 dstOffset, ID3D11UnorderedAccessView* view)
+    {
+        context_->CopyStructureCount(dst, dstOffset, view);
     }
 
     inline bool GraphicsDeviceRef::map(void*& data, u32& rowPitch, u32& depthPitch, ID3D11Resource* resource, s32 type)
