@@ -52,6 +52,10 @@ namespace linput
         LASSERT(hWnd != NULL);
         LASSERT(device != NULL);
 
+        if(NULL == device){
+            return false;
+        }
+
         Device devTmp(device);
         device_.swap(devTmp);
 
@@ -114,6 +118,10 @@ namespace linput
 
     void Joystick::poll()
     {
+        if(false == device_.valid()){
+            return;
+        }
+
         DWORD items = BufferSize;
         HRESULT hr = device_->GetDeviceData(
             sizeof(DIDEVICEOBJECTDATA), 

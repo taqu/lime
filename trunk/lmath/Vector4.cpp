@@ -119,6 +119,16 @@ namespace lmath
 #endif
     }
 
+    void Vector4::normalizeChecked()
+    {
+        f32 l = lengthSqr();
+        if(lmath::isZeroPositive(l)){
+            zero();
+        }else{
+            normalize(l);
+        }
+    }
+
     f32 Vector4::dot(const Vector4& v) const
     {
 #if defined(LMATH_USE_SSE)

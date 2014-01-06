@@ -387,13 +387,17 @@ namespace io
 
         //u32 fileSize = (u32)mem - (u32)data;
 
+        lgraphics::ResourceMisc miscFlag = ResourceMisc_None;
         ResourceViewDesc viewDesc;
         viewDesc.format_ = format;
 
         if(arraySize>1){
+            viewDesc.dimension_ = ViewSRVDimension_Cube;
             viewDesc.texCube_.mostDetailedMip_ = 0;
             viewDesc.texCube_.mipLevels_ = mipmapLevel;
+            miscFlag = lgraphics::ResourceMisc_TextureCube;
         }else{
+            viewDesc.dimension_ = ViewSRVDimension_Texture2D;
             viewDesc.tex2D_.mostDetailedMip_ = 0;
             viewDesc.tex2D_.mipLevels_ = mipmapLevel;
         }
@@ -407,9 +411,10 @@ namespace io
             usage,
             BindFlag_ShaderResource,
             CPUAccessFlag_None,
-            ResourceMisc_None,
+            miscFlag,
             filter,
             adress,
+            lgraphics::Cmp_Never,
             0.0f,
             initData,
             &viewDesc);

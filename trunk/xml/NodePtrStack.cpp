@@ -4,7 +4,6 @@
 @date 2009/02/02 create
 @data 2009/05/19 lcoreライブラリ用に変更
 */
-#include <algorithm>
 #include "NodePtrStack.h"
 
 namespace xml
@@ -14,26 +13,27 @@ namespace xml
     void NodePtrStack::push(xml::Node *node)
     {
         // スタック個数インクリメント
-        ++_count;
+        ++count_;
 
         // 配列サイズを超えたら、配列を２倍に拡張
-        if(_count >= _nodes.size()){
-            expand(_nodes.size() * 2);
+        if(count_ >= nodes_.size()){
+            expand(nodes_.size() * 2);
         }
 
-        _nodes[_count - 1] = node;
+        nodes_[count_ - 1] = node;
     }
 
     //-------------------------------------------------
     // スタック領域を拡張
-    void NodePtrStack::expand(size_t newSize)
+    void NodePtrStack::expand(u32 newSize)
     {
-        XML_ASSERT(_nodes.size() <= newSize);
+        XML_ASSERT(nodes_.size() <= newSize);
 
         NodeArray newStack(newSize);
 
-        std::copy(_nodes.begin(), _nodes.end(), newStack.begin());
-
-        _nodes.swap(newStack);
+        for(NodeArray::size_type i=0; i<nodes_.size(); ++i){
+            newStack[i] = nodes_[i];
+        }
+        nodes_.swap(newStack);
     }
 }

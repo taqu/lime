@@ -5,131 +5,13 @@
 */
 #include "ShaderRef.h"
 
-#include "../../lgraphicsAPIInclude.h"
-#include <D3Dcompiler.h>
-
 #include <zlib.h>
 
-#include <lcore/liostream.h>
-#include <lcore/utility.h>
-#include <lmath/Matrix44.h>
 #include "../../lgraphics.h"
 #include "GraphicsDeviceRef.h"
 
-#include "ShaderRef.h"
-#include "BlobRef.h"
-
 namespace lgraphics
 {
-namespace
-{
-    bool compileShader(
-        const Char* memory,
-        u32 size,
-        const Char* filename,
-        const Char* entryName,
-        const Char* profile,
-        s32 numDefines,
-        const Char** defines,
-        ID3DBlob** blob)
-    {
-        LASSERT(blob != NULL);
-        LASSERT(numDefines<=Shader::MaxDefines);
-
-        //マクロ配列作成
-        D3D10_SHADER_MACRO macro[Shader::MaxDefines+1];
-        for(s32 i=0; i<numDefines; ++i){
-            macro[i].Name = defines[i];
-            macro[i].Definition = NULL;
-        }
-        macro[numDefines].Name = NULL;
-        macro[numDefines].Definition = NULL;
-
-
-        ID3DBlob *errorMsg = NULL;
-        HRESULT hr;
-        hr=D3DCompile(
-            memory,
-            size,
-            filename,
-            macro,
-            NULL,
-            entryName,
-            profile,
-            0,
-            0,
-            blob,
-            &errorMsg);
-
-        if(FAILED(hr)){
-            SAFE_RELEASE(*blob);
-            if(errorMsg){
-                const char* message = (const char*)errorMsg->GetBufferPointer();
-                lcore::Log( message );
-                errorMsg->Release();
-                errorMsg = NULL;
-            }
-            return false;
-        }
-        SAFE_RELEASE(errorMsg);
-        return true;
-    }
-
-
-    bool compileShader(
-        const Char* memory,
-        u32 size,
-        const Char* filename,
-        const Char* entryName,
-        const Char* profile,
-        s32 numDefines,
-        const Char** defines,
-        ID3DBlob** blob,
-        ID3DBlob** error)
-    {
-        LASSERT(blob != NULL);
-        LASSERT(numDefines<=Shader::MaxDefines);
-
-        //マクロ配列作成
-        D3D10_SHADER_MACRO macro[Shader::MaxDefines+1];
-        for(s32 i=0; i<numDefines; ++i){
-            macro[i].Name = defines[i];
-            macro[i].Definition = NULL;
-        }
-        macro[numDefines].Name = NULL;
-        macro[numDefines].Definition = NULL;
-
-
-        ID3DBlob *errorMsg = NULL;
-        HRESULT hr;
-        hr=D3DCompile(
-            memory,
-            size,
-            filename,
-            macro,
-            NULL,
-            entryName,
-            profile,
-            0,
-            0,
-            blob,
-            &errorMsg);
-
-        if(FAILED(hr)){
-            SAFE_RELEASE(*blob);
-            if(errorMsg && (NULL != *error)){
-                *error = errorMsg;
-            }else{
-                SAFE_RELEASE(errorMsg);
-            }
-
-            return false;
-        }
-        SAFE_RELEASE(errorMsg);
-        return true;
-    }
-}
-
     const char* ShaderEntryFunctionName = "main";
 
 
@@ -138,174 +20,6 @@ namespace
     //--- Shader
     //---
     //------------------------------------------------------------
-    // ファイルからピクセルシェーダ作成
-    PixelShaderRef Shader::createPixelShaderFromFile(const Char* filename, s32 numDefines, const char** defines, BlobRef* blob)
-    {
-        LASSERT(filename != NULL);
-        lcore::ifstream in(filename, lcore::ios::binary);
-        if(!in.is_open()){
-            return PixelShaderRef();
-        }
-
-        u32 size = in.getSize(0);
-
-        lcore::ScopedArrayPtr<Char> buff(LIME_NEW Char[size]);
-        in.read(buff.get(), size);
-        in.close();
-        
-        return createPixelShaderFromMemory(buff.get(), size, numDefines, defines, blob);
-    }
-
-    //------------------------------------------------------------
-    // メモリからピクセルシェーダ作成
-    PixelShaderRef Shader::createPixelShaderFromMemory(const Char* memory, u32 size, s32 numDefines, const char** defines, BlobRef* blob)
-    {
-        LASSERT(memory != NULL);
-
-        ID3DBlob *d3dBlob = NULL;
-        bool ret = compileShader(memory, size, NULL, ShaderEntryFunctionName, GraphicsDeviceRef::PSModel, numDefines, defines, &d3dBlob);
-
-        if(!ret){
-            return PixelShaderRef();
-        }
-
-        ID3D11PixelShader *shader = NULL;
-
-        ID3D11Device *d3ddevice = Graphics::getDevice().getD3DDevice();
-
-        HRESULT hr = d3ddevice->CreatePixelShader(
-            d3dBlob->GetBufferPointer(),
-            d3dBlob->GetBufferSize(),
-            NULL,
-            &shader);
-
-        if(NULL == blob){
-            SAFE_RELEASE(d3dBlob);
-        }else{
-            *blob = BlobRef(d3dBlob);
-        }
-        if(FAILED(hr)){
-            return PixelShaderRef();
-        }
-
-        return PixelShaderRef(shader);
-    }
-
-
-    //------------------------------------------------------------
-    // ファイルから頂点シェーダ作成
-    VertexShaderRef Shader::createVertexShaderFromFile(const Char* filename, s32 numDefines, const char** defines, BlobRef* blob)
-    {
-        LASSERT(filename != NULL);
-        lcore::ifstream in(filename, lcore::ios::binary);
-        if(!in.is_open()){
-            return VertexShaderRef();
-        }
-
-        u32 size = in.getSize(0);
-
-        lcore::ScopedArrayPtr<Char> buff(LIME_NEW Char[size]);
-        in.read(buff.get(), size);
-        in.close();
-        
-        return createVertexShaderFromMemory(buff.get(), size, numDefines, defines, blob);
-    }
-
-
-    //------------------------------------------------------------
-    // メモリから頂点シェーダ作成
-    VertexShaderRef Shader::createVertexShaderFromMemory(const Char* memory, u32 size, s32 numDefines, const char** defines, BlobRef* blob)
-    {
-        LASSERT(memory != NULL);
-
-        ID3DBlob *d3dBlob = NULL;
-        bool ret = compileShader(memory, size, NULL, ShaderEntryFunctionName, GraphicsDeviceRef::VSModel, numDefines, defines, &d3dBlob);
-
-        if(!ret){
-            return VertexShaderRef();
-        }
-
-        ID3D11VertexShader *shader = NULL;
-
-        ID3D11Device *d3ddevice = Graphics::getDevice().getD3DDevice();
-
-        HRESULT hr = d3ddevice->CreateVertexShader(
-            d3dBlob->GetBufferPointer(),
-            d3dBlob->GetBufferSize(),
-            NULL,
-            &shader);
-
-        if(NULL == blob){
-            SAFE_RELEASE(d3dBlob);
-        }else{
-            *blob = BlobRef(d3dBlob);
-        }
-
-        if(FAILED(hr)){
-            return VertexShaderRef();
-        }
-
-        return VertexShaderRef(shader);
-    }
-
-
-    //------------------------------------------------------------
-    // ファイルからジオメトリシェーダ作成
-    GeometryShaderRef Shader::createGeometryShaderFromFile(const Char* filename, s32 numDefines, const char** defines, BlobRef* blob)
-    {
-        LASSERT(filename != NULL);
-        lcore::ifstream in(filename, lcore::ios::binary);
-        if(!in.is_open()){
-            return GeometryShaderRef();
-        }
-
-        u32 size = in.getSize(0);
-
-        lcore::ScopedArrayPtr<Char> buff(LIME_NEW Char[size]);
-        in.read(buff.get(), size);
-        in.close();
-        
-        return createGeometryShaderFromMemory(buff.get(), size, numDefines, defines, blob);
-    }
-
-
-    //------------------------------------------------------------
-    // メモリからジオメトリシェーダ作成
-    GeometryShaderRef Shader::createGeometryShaderFromMemory(const Char* memory, u32 size, s32 numDefines, const char** defines, BlobRef* blob)
-    {
-        LASSERT(memory != NULL);
-
-        ID3DBlob *d3dBlob = NULL;
-        bool ret = compileShader(memory, size, NULL, ShaderEntryFunctionName, GraphicsDeviceRef::GSModel, numDefines, defines, &d3dBlob);
-
-        if(!ret){
-            return GeometryShaderRef();
-        }
-
-        ID3D11GeometryShader *shader = NULL;
-
-        ID3D11Device *d3ddevice = Graphics::getDevice().getD3DDevice();
-
-        HRESULT hr = d3ddevice->CreateGeometryShader(
-            d3dBlob->GetBufferPointer(),
-            d3dBlob->GetBufferSize(),
-            NULL,
-            &shader);
-
-        if(NULL == blob){
-            SAFE_RELEASE(d3dBlob);
-        }else{
-            *blob = BlobRef(d3dBlob);
-        }
-
-        if(FAILED(hr)){
-            return GeometryShaderRef();
-        }
-
-        return GeometryShaderRef(shader);
-    }
-
-
 
     //------------------------------------------------------------
     // メモリからピクセルシェーダ作成
@@ -377,50 +91,51 @@ namespace
     }
 
 
-
-    // メモリからピクセルシェーダ作成
-    BlobRef Shader::createPixelShaderBlobFromMemory(const Char* memory, u32 size, const Char* profile, s32 numDefines, const char** defines, BlobRef* error)
+    //------------------------------------------------------------
+    // メモリからジオメトリシェーダ作成。StreamOutput用
+    GeometryShaderRef Shader::createGeometryShaderWithStreamOutputFromBinary(
+        const u8* memory,
+        u32 size,
+        const StreamOutputDeclarationEntry* entries,
+        u32 numEntries,
+        const u32* bufferStrides,
+        u32 numStrides,
+        u32 rasterizedStream)
     {
-        LASSERT(memory != NULL);
 
-        ID3DBlob* d3dBlob = NULL;
-        ID3DBlob* errorBlob = NULL;
-        bool ret = compileShader(memory, size, NULL, ShaderEntryFunctionName, profile, numDefines, defines, &d3dBlob, &errorBlob);
-        if(NULL != error){
-            *error = BlobRef(errorBlob);
+        LASSERT(memory != NULL);
+        LASSERT(0<=numEntries && numEntries<= D3D11_SO_STREAM_COUNT * D3D11_SO_OUTPUT_COMPONENT_COUNT);
+
+        D3D11_SO_DECLARATION_ENTRY soEntries[D3D11_SO_STREAM_COUNT * D3D11_SO_OUTPUT_COMPONENT_COUNT];
+        for(u32 i=0; i<numEntries; ++i){
+            soEntries[i].Stream = entries[i].stream_;
+            soEntries[i].SemanticName = entries[i].semanticName_;
+            soEntries[i].SemanticIndex = entries[i].semanticIndex_;
+            soEntries[i].StartComponent = entries[i].startComponent_;
+            soEntries[i].ComponentCount = entries[i].componentCount_;
+            soEntries[i].OutputSlot = entries[i].outputSlot_;
         }
 
-        return (ret)? BlobRef(d3dBlob) : BlobRef();
-    }
+        ID3D11GeometryShader *shader = NULL;
 
-    // メモリから頂点シェーダ作成
-    BlobRef Shader::createVertexShaderBlobFromMemory(const Char* memory, u32 size, const Char* profile, s32 numDefines, const char** defines, BlobRef* error)
-    {
-        LASSERT(memory != NULL);
+        ID3D11Device *d3ddevice = Graphics::getDevice().getD3DDevice();
 
-        ID3DBlob* d3dBlob = NULL;
-        ID3DBlob* errorBlob = NULL;
-        bool ret = compileShader(memory, size, NULL, ShaderEntryFunctionName, profile, numDefines, defines, &d3dBlob, &errorBlob);
-        if(NULL != error){
-            *error = BlobRef(errorBlob);
+        HRESULT hr = d3ddevice->CreateGeometryShaderWithStreamOutput(
+            memory,
+            size,
+            soEntries,
+            numEntries,
+            bufferStrides,
+            numStrides,
+            rasterizedStream,
+            NULL,
+            &shader);
+
+        if(FAILED(hr)){
+            return GeometryShaderRef();
         }
 
-        return (ret)? BlobRef(d3dBlob) : BlobRef();
-    }
-
-    // メモリからジオメトリシェーダ作成
-    BlobRef Shader::createGeometryShaderBlobFromMemory(const Char* memory, u32 size, const Char* profile, s32 numDefines, const char** defines, BlobRef* error)
-    {
-        LASSERT(memory != NULL);
-
-        ID3DBlob* d3dBlob = NULL;
-        ID3DBlob* errorBlob = NULL;
-        bool ret = compileShader(memory, size, NULL, ShaderEntryFunctionName, profile, numDefines, defines, &d3dBlob, &errorBlob);
-        if(NULL != error){
-            *error = BlobRef(errorBlob);
-        }
-
-        return (ret)? BlobRef(d3dBlob) : BlobRef();
+        return GeometryShaderRef(shader);
     }
 
 
@@ -574,7 +289,7 @@ namespace
         LASSERT(NULL != dst);
 
         uLongf size = getDecompressedSize();
-        if(Z_OK != uncompress(dst, &size, compressed_+sizeof(u32), compressedSize_)){
+        if(Z_OK != uncompress(dst, &size, compressed_+sizeof(u32), compressedSize_-sizeof(u32))){
             return 0;
         }
         return size;

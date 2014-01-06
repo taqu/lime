@@ -1,5 +1,5 @@
-#ifndef INC_PACK_PACKWRITER_H__
-#define INC_PACK_PACKWRITER_H__
+#ifndef INC_LPACK_PACKWRITER_H__
+#define INC_LPACK_PACKWRITER_H__
 /**
 @file PackWriter.h
 @author t-sakai
@@ -8,9 +8,9 @@
 */
 #include <lcore/liostream.h>
 #include <lcore/vector.h>
-#include "Pack.h"
+#include "lpack.h"
 
-namespace pack
+namespace lpack
 {
     class PackWriter
     {
@@ -51,4 +51,4 @@ namespace pack
         stream_.close();
     }
 }
-#endif //INC_PACK_PACKWRITER_H__
+#endif //INC_LPACK_PACKWRITER_H__

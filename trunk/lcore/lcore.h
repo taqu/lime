@@ -291,7 +291,7 @@ namespace lcore
     }
 
     template<class T>
-    inline T lerp(const T& v0, const T& v1, const T& ratio)
+    inline T lerp(const T& v0, const T& v1, f32 ratio)
     {
         return v0 + ratio*(v1 - v0);
         //return (1.0f-ratio)*v0 + ratio*v1;
@@ -353,6 +353,11 @@ namespace lcore
         return (a << 24) | (r << 16) | (g << 8) | b;
     }
 
+    inline u32 getABGR(u8 a, u8 r, u8 g, u8 b)
+    {
+        return (a << 24) | r | (g << 8) | (b << 16);
+    }
+
     inline u32 getRGBA(u8 a, u8 r, u8 g, u8 b)
     {
         return (r << 24) | (g << 16) | (b << 8) | a;
@@ -378,6 +383,28 @@ namespace lcore
     {
         return static_cast<u8>((argb) & 0xFFU);
     }
+
+
+    inline u8 getAFromABGR(u32 abgr)
+    {
+        return static_cast<u8>((abgr>>24) & 0xFFU);
+    }
+
+    inline u8 getRFromABGR(u32 abgr)
+    {
+        return static_cast<u8>((abgr) & 0xFFU);
+    }
+
+    inline u8 getGFromABGR(u32 abgr)
+    {
+        return static_cast<u8>((abgr>>8) & 0xFFU);
+    }
+
+    inline u8 getBFromABGR(u32 abgr)
+    {
+        return static_cast<u8>((abgr>>16) & 0xFFU);
+    }
+
 
     inline u8 getRFromRGBA(u32 rgba)
     {

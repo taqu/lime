@@ -94,6 +94,46 @@ namespace lmath
     }
 
     //---------------------------------------------------------------------------------
+    f32 sqDistancePointAABB(
+        const lmath::Vector4& point,
+        const lmath::Vector4& bmin,
+        const lmath::Vector4& bmax)
+    {
+        f32 distance = 0.0f;
+        for(s32 i=0; i<3; ++i){
+            if(point[i]<bmin[i]){
+                f32 t = bmin[i] - point[i];
+                distance += t*t;
+            }
+            if(bmax[i]<point[i]){
+                f32 t = point[i] - bmax[i];
+                distance += t*t;
+            }
+        }
+        return distance;
+    }
+
+    //---------------------------------------------------------------------------------
+    void closestPointPointVSAABB(
+        lmath::Vector4& result,
+        const lmath::Vector4& point,
+        const lmath::Vector4& bmin,
+        const lmath::Vector4& bmax)
+    {
+        result.w_ = 0.0f;
+        for(s32 i=0; i<3; ++i){
+            f32 v = point[i];
+            if(v<bmin[i]){
+                v = bmin[i];
+            }
+            if(bmax[i]<v){
+                v = bmax[i];
+            }
+            result[i] = v;
+        }
+    }
+
+    //---------------------------------------------------------------------------------
     // 球と平面が交差するか
     bool testSphereVsPlane(f32 &t, const Sphere& sphere, const Plane& plane)
     {
@@ -117,6 +157,41 @@ namespace lmath
         f32 radius = sphere0.s_.w_ + sphere1.s_.w_ + F32_EPSILON;
 
         return (distance <= radius);
+    }
+
+    //---------------------------------------------------------------------------------
+    bool testAABBVsAABB(const lmath::Vector4& bmin0, const lmath::Vector4& bmax0, const lmath::Vector4& bmin1, const lmath::Vector4& bmax1)
+    {
+        if(bmax0.x_<bmin1.x_ || bmin0.x_>bmax1.x_){
+            return false;
+        }
+
+        if(bmax0.y_<bmin1.y_ || bmin0.y_>bmax1.y_){
+            return false;
+        }
+
+        if(bmax0.z_<bmin1.z_ || bmin0.z_>bmax1.z_){
+            return false;
+        }
+        return true;
+    }
+
+    //---------------------------------------------------------------------------------
+    bool testSphereVsAABB(const Sphere& sphere, const lmath::Vector4& bmin, const lmath::Vector4& bmax)
+    {
+        f32 distance = sqDistancePointAABB(sphere.s_, bmin, bmax);
+        return distance <= (sphere.getRadius()*sphere.getRadius());
+    }
+
+    //---------------------------------------------------------------------------------
+    bool testSphereVsAABB(lmath::Vector4& close, const Sphere& sphere, const lmath::Vector4& bmin, const lmath::Vector4& bmax)
+    {
+        closestPointPointVSAABB(close, sphere.s_, bmin, bmax);
+
+        lmath::Vector4 d;
+        d.sub(close, sphere.s_);
+        d.w_ = 0.0f;
+        return d.lengthSqr() <= (sphere.getRadius()*sphere.getRadius());
     }
 
     //---------------------------------------------------------------------------------

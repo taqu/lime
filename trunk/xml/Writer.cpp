@@ -14,8 +14,7 @@ namespace xml
             return true;
         }
 
-        file_ = fopen(filepath, "wb");
-        if(file_ == NULL){
+        if(0 != fopen_s(&file_, filepath, "wb")){
             return false;
         }
 

@@ -7,10 +7,10 @@
 #include <iostream>
 #include <lcore/liostream.h>
 
-#include "Pack.h"
-#include "PackWriter.h"
+#include <lframework/pack/lpack.h>
+#include <lframework/pack/PackWriter.h>
 
-namespace pack
+namespace lpack
 {
     bool isFile(const WIN32_FIND_DATA& data)
     {
@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 
     {
         std::string path = argv[inIndex];
-        pack::u32 len = path.size();
+        lpack::u32 len = path.size();
         if('\\' != path[len-1]
         && '/' != path[len-1])
         {
@@ -84,12 +84,12 @@ int main(int argc, char** argv)
         }
 
         std::string filepath;
-        pack::PackWriter writer;
-        pack::u32 size = 0;
+        lpack::PackWriter writer;
+        lpack::u32 size = 0;
         lcore::ifstream in;
-        pack::s8* buffer = NULL;
+        lpack::s8* buffer = NULL;
         for(;;){
-            if(pack::isFile(findData)){
+            if(lpack::isFile(findData)){
                 std::cerr << findData.cFileName << std::endl;
                 filepath = inpath;
                 filepath.append(findData.cFileName);
@@ -98,10 +98,10 @@ int main(int argc, char** argv)
                     in.seekg(0, std::ios::end);
                     size = in.tellg();
                     in.seekg(0, std::ios::beg);
-                    buffer = new pack::s8[size];
+                    buffer = new lpack::s8[size];
                     in.read(buffer, size);
                     in.close();
-
+                    
                     writer.push_back(findData.cFileName, size, buffer);
 
                     delete[] buffer;

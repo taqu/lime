@@ -21,6 +21,9 @@ namespace linput
     {
         LASSERT(hWnd != NULL);
         LASSERT(device != NULL);
+        if(NULL == device){
+            return false;
+        }
 
         hWnd_ = hWnd;
         {
@@ -88,6 +91,10 @@ namespace linput
 
     void Mouse::poll()
     {
+        if(false == device_.valid()){
+            return;
+        }
+
         getMousePoint();
 
         //DIMOUSESTATE state;

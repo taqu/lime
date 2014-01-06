@@ -43,7 +43,6 @@ namespace
 
     struct MemoryInfo
     {
-        MemoryInfo* prev_;
         MemoryInfo* next_;
         void* memory_;
         lcore::s32 line_;
@@ -51,31 +50,6 @@ namespace
     };
 
     MemoryInfo* memoryInfoTop_ = NULL;
-
-    void push(MemoryInfo* info)
-    {
-        if(NULL == memoryInfoTop_){
-            memoryInfoTop_ = info;
-            return;
-        }
-
-        info->prev_ = memoryInfoTop_->prev_;
-        info->next_ = memoryInfoTop_;
-
-        memoryInfoTop_->prev_->next_ = info;
-        memoryInfoTop_->prev_ = info;
-    }
-
-    void pop(MemoryInfo* info)
-    {
-        if(info->next_ == info && info->prev_ == info){
-            memoryInfoTop_ = NULL;
-        }else{
-            info->prev_->next_ = info->next_;
-            info->next_->prev_ = info->prev_;
-        }
-        debugInfoMemorySpace_.deallocate(info);
-    }
 
     void pushMemoryInfo(void* ptr, const lcore::Char* file, lcore::s32 line)
     {
@@ -85,8 +59,6 @@ namespace
 
         MemoryInfo* info = (MemoryInfo*)debugInfoMemorySpace_.allocate(sizeof(MemoryInfo));
 
-        info->prev_ = info;
-        info->next_ = info;
         info->memory_ = ptr;
         info->line_ = line;
         info->file_[0] = '\0';
@@ -108,7 +80,14 @@ namespace
         for(lcore::s32 i=0; i<=len; ++i){
             info->file_[i] = name[i];
         }
-        push(info);
+        if(NULL == memoryInfoTop_){
+            memoryInfoTop_ = info;
+            return;
+        }
+
+        info->next_ = memoryInfoTop_;
+
+        memoryInfoTop_ = info;
     }
 
     void popMemoryInfo(void* ptr)
@@ -118,16 +97,22 @@ namespace
         }
 
         if(memoryInfoTop_->memory_ == ptr){
-            pop(memoryInfoTop_);
+            MemoryInfo* info = memoryInfoTop_;
+            memoryInfoTop_ = memoryInfoTop_->next_;
+
+            debugInfoMemorySpace_.deallocate(info);
             return;
         }
-        MemoryInfo* end = memoryInfoTop_;
+
+        MemoryInfo* prev = memoryInfoTop_;
         MemoryInfo* itr = memoryInfoTop_->next_;
-        while(end != itr){
+        while(NULL != itr){
             if(itr->memory_ == ptr){
-                pop(itr);
+                prev->next_ = itr->next_;
+                debugInfoMemorySpace_.deallocate(itr);
                 return;
             }
+            prev = itr;
             itr = itr->next_;
         }
     }
@@ -231,10 +216,10 @@ namespace
 
         if(NULL != memoryInfoTop_){
             lcore::Log("%s (%d)", memoryInfoTop_->file_, memoryInfoTop_->line_);
-            MemoryInfo* end = memoryInfoTop_;
             MemoryInfo* itr = memoryInfoTop_->next_;
-            while(end != itr){
-                lcore::Log("%s (%d)", memoryInfoTop_->file_, itr->line_);
+
+            while(NULL != itr){
+                lcore::Log("%s (%d)", itr->file_, itr->line_);
                 itr = itr->next_;
             }
         }

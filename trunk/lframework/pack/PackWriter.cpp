@@ -6,8 +6,9 @@
 */
 
 #include "PackWriter.h"
+#include <lcore/utility.h>
 
-namespace pack
+namespace lpack
 {
     //-------------------------------------------------
     PackWriter::PackWriter()
@@ -56,7 +57,7 @@ namespace pack
             return false;
         }
 
-        header_.numFiles_ = entries_.size();
+        header_.numFiles_ = static_cast<u16>( entries_.size() );
 
         lcore::lsize_t ret = lcore::io::write(stream_, header_);
         if(0 == ret){
@@ -100,11 +101,26 @@ namespace pack
         if(false == open(path)){
             return false;
         }
+
+        Char buffer[MaxFileNameLength*2];
+
         for(FileEntryArray::iterator itr = entries_.begin();
             itr != entries_.end();
             ++itr)
         {
-            stream_.print("%s\r\n", itr->name_);
+            lcore::lsize_t len = lcore::strlen(itr->name_);
+
+            const Char* dot = lcore::rFindChr(itr->name_, '.', len);
+
+            if(NULL != dot){
+                lcore::strncpy(buffer, MaxFileNameLength*2, itr->name_, dot - itr->name_);
+            }else{
+                lcore::strncpy(buffer, MaxFileNameLength*2, itr->name_, len);
+            }
+            for(Char* c = buffer; *c != '\0'; ++c){
+                *c = toupper(*c);
+            }
+            stream_.print("%s,\n", buffer);
         }
 
         close();

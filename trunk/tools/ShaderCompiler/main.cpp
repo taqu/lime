@@ -8,7 +8,10 @@
 #include <lgraphics/Window.h>
 #include <lgraphics/api/InputLayoutRef.h>
 #include <lgraphics/api/ShaderRef.h>
+#include <lgraphics/api/dx11/ShaderCompiler.h>
 #include <lgraphics/api/BlobRef.h>
+
+typedef lgraphics::ShaderCompiler<0> ConcreteShaderCompiler;
 
 enum ShaderType
 {
@@ -134,7 +137,7 @@ int main(int argc, char** argv)
         switch(type)
         {
         case Shader_VS:
-            blob = lgraphics::Shader::createVertexShaderBlobFromMemory(
+            blob = ConcreteShaderCompiler::createVertexShaderBlobFromMemory(
                 buff.get(),
                 size,
                 ProfileVSName[profile],
@@ -143,7 +146,7 @@ int main(int argc, char** argv)
             break;
 
         case Shader_GS:
-            blob = lgraphics::Shader::createGeometryShaderBlobFromMemory(
+            blob = ConcreteShaderCompiler::createGeometryShaderBlobFromMemory(
                 buff.get(),
                 size,
                 ProfileGSName[profile],
@@ -152,7 +155,7 @@ int main(int argc, char** argv)
             break;
 
         case Shader_PS:
-            blob = lgraphics::Shader::createPixelShaderBlobFromMemory(
+            blob = ConcreteShaderCompiler::createPixelShaderBlobFromMemory(
                 buff.get(),
                 size,
                 ProfilePSName[profile],

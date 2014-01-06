@@ -39,6 +39,8 @@ namespace lmath
             x_ = x; y_ = y; z_ = z;
         }
 
+        Vector3& operator=(const lmath::Vector4& rhs);
+
         void set(const lmath::Vector4& v);
 
         inline void zero();
@@ -47,7 +49,6 @@ namespace lmath
         inline f32 operator[](s32 index) const;
         inline f32& operator[](s32 index);
         inline Vector3 operator-() const;
-
 
         inline Vector3& operator+=(const Vector3& v);
         inline Vector3& operator-=(const Vector3& v);
@@ -67,6 +68,9 @@ namespace lmath
         inline f32 length() const;
         inline f32 lengthSqr() const;
         void normalize();
+        void normalize(f32 lengthSqr);
+        void normalizeChecked();
+
         inline f32 dot(const Vector3& v) const;
         f32 distanceSqr(const Vector3& v) const;
         inline f32 distance(const Vector3& v) const;

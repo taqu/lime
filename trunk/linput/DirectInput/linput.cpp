@@ -89,32 +89,33 @@ namespace linput
         
         Error error = Error_None;
         if(param.initDevices_[DevType_Keyboard]){
+            LIME_DELETE(instance.devices_[DevType_Joystick]);
+
             device = impl.createDevice(GUID_SysKeyboard);
 
             Keyboard* keyboard = LIME_NEW Keyboard;
             if(false == keyboard->initialize(param.hWnd_, device)){
-                LIME_DELETE(keyboard);
+                keyboard->terminate();
                 error = Error_Init;
-            }else{
-                LIME_DELETE(instance.devices_[DevType_Keyboard]);
-                instance.devices_[DevType_Keyboard] = keyboard;
             }
+            instance.devices_[DevType_Keyboard] = keyboard;
         }
 
         if(param.initDevices_[DevType_Mouse]){
+            LIME_DELETE(instance.devices_[DevType_Joystick]);
+
             device = impl.createDevice(GUID_SysMouse);
 
             Mouse* mouse = LIME_NEW Mouse;
             if(false == mouse->initialize(param.hWnd_, device)){
-                LIME_DELETE(mouse);
+                mouse->terminate();
                 error = Error_Init;
-            }else{
-                LIME_DELETE(instance.devices_[DevType_Mouse]);
-                instance.devices_[DevType_Mouse] = mouse;
             }
+            instance.devices_[DevType_Mouse] = mouse;
         }
 
         if(param.initDevices_[DevType_Joystick]){
+            LIME_DELETE(instance.devices_[DevType_Joystick]);
 
             EnumContext context(impl.get(), 0);
 
@@ -123,12 +124,12 @@ namespace linput
             if(SUCCEEDED(hr) && context.device_ != NULL){
                 Joystick* joystick = LIME_NEW Joystick;
                 if(false == joystick->initialize(param.hWnd_, context.device_)){
-                    LIME_DELETE(joystick);
+                    joystick->terminate();
                     error = Error_Init;
-                }else{
-                    LIME_DELETE(instance.devices_[DevType_Joystick]);
-                    instance.devices_[DevType_Joystick] = joystick;
                 }
+                instance.devices_[DevType_Joystick] = joystick;
+            }else{
+                instance.devices_[DevType_Joystick] = LIME_NEW Joystick;
             }
         }
         return error;

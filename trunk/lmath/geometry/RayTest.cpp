@@ -150,7 +150,7 @@ namespace lmath
     bool testRayAABB(f32& tmin, f32& tmax, const Ray& ray, const Vector3& bmin, const Vector3& bmax)
     {
         tmin = 0.0f;
-        tmax = lcore::numeric_limits<f32>::maximum();
+        tmax = ray.t_;
 
         for(s32 i=0; i<3; ++i){
             if(lcore::absolute(ray.direction_[i])<F32_EPSILON){
@@ -221,6 +221,20 @@ namespace lmath
         if(lcore::absolute(m.x_ * d.y_ - m.y_ * d.x_) > (e.x_ * ady + e.y_ * adx)) return false;
 
         return true;
+    }
+
+    bool testRayAABB(f32& tmin, f32& tmax, const Ray& ray, const Vector4& bmin, const Vector4& bmax)
+    {
+        Vector3 bmin3(bmin);
+        Vector3 bmax3(bmax);
+        return testRayAABB(tmin, tmax, ray, bmin3, bmax3);
+    }
+
+    bool testRayAABB(const Ray& ray, const Vector4& bmin, const Vector4& bmax)
+    {
+        Vector3 bmin3(bmin);
+        Vector3 bmax3(bmax);
+        return testRayAABB(ray, bmin3, bmax3);
     }
 
     //-----------------------------------------------------------
