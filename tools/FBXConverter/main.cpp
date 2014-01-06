@@ -6,6 +6,7 @@
 int main(int argc, char** argv)
 {
     if(argc < 3){
+        std::cout << argv[0] << " input output" << std::endl;
         return 0;
     }
 

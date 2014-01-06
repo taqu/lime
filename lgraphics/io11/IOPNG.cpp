@@ -25,7 +25,7 @@ namespace io
         }
     }
 
-    bool IOPNG::read(lcore::istream& is, u8* buffer, u32& width, u32& height, u32& rowBytes, DataFormat& format)
+    bool IOPNG::read(lcore::istream& is, u8* buffer, u32& width, u32& height, u32& rowBytes, DataFormat& format, SwapRGB swap)
     {
         s32 startPos = is.tellg();
 
@@ -104,6 +104,7 @@ namespace io
 
         //カラータイプチェック。テクスチャフォーマット
         format = Data_Unknown;
+        bool swapBytes = false;
         switch(color_type)
         {
         case PNG_COLOR_TYPE_GRAY:
@@ -113,23 +114,26 @@ namespace io
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             png_set_gray_to_rgb(png_ptr); //グレースケールをRGBに変換
             //png_set_bgr(png_ptr); //RGBをBGRに
-            format= Data_R8G8B8A8_UNorm_SRGB;
+            format= (swap == Swap_BGR)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
             break;
 
         case PNG_COLOR_TYPE_PALETTE:
             png_set_palette_to_rgb(png_ptr);
             png_set_add_alpha(png_ptr, 0xFFU, PNG_FILLER_AFTER);
-            format= Data_R8G8B8A8_UNorm_SRGB;
+            format= (swap == Swap_BGR)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            swapBytes = (swap == Swap_BGR);
             break;
 
         case PNG_COLOR_TYPE_RGB:
             png_set_add_alpha(png_ptr, 0xFFU, PNG_FILLER_AFTER);
-            format= Data_R8G8B8A8_UNorm_SRGB;
+            format= (swap == Swap_BGR)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            swapBytes = (swap == Swap_BGR);
             break;
 
         case PNG_COLOR_TYPE_RGB_ALPHA:
             //png_set_bgr(png_ptr); //RGBをBGRに
-            format= Data_R8G8B8A8_UNorm_SRGB;
+            format= (swap == Swap_BGR)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            swapBytes = (swap == Swap_BGR);
             break;
 
         case PNG_COLOR_MASK_PALETTE:
@@ -156,6 +160,13 @@ namespace io
 
         png_read_image(png_ptr, rowPointers);
 
+        if(swapBytes){
+            for(u32 i=0; i<height; ++i){
+                for(u32 j=0; j<rowBytes; j+=4){
+                    lcore::swap(rowPointers[i][j+0], rowPointers[i][j+2]);
+                }
+            }
+        }
 
         LIME_DELETE_ARRAY(rowPointers);
         png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);

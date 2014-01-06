@@ -158,9 +158,10 @@ namespace lgraphics
         u32 numCubes_;
     };
 
-    struct ResourceViewDesc
+    struct SRVDesc
     {
         DataFormat format_;
+        ViewSRVDimension dimension_;
         union
         {
             BufferSRV buffer_;
@@ -175,7 +176,11 @@ namespace lgraphics
             TextureCubeSRV texCube_;
             TextureCubeArraySRV texCubeArray_;
         };
+
+        static bool copy(D3D11_SHADER_RESOURCE_VIEW_DESC& viewDesc, const SRVDesc& desc);
     };
+
+    typedef SRVDesc ResourceViewDesc;
 
     struct BufferUAV
     {
@@ -239,6 +244,50 @@ namespace lgraphics
         u32 slicePitch_;
     };
 
+    //--------------------------------------------------------
+    //---
+    //--- ShaderResourceViewRef
+    //---
+    //--------------------------------------------------------
+    class ShaderResourceViewRef
+    {
+    public:
+        ShaderResourceViewRef()
+            :view_(NULL)
+        {}
+
+        ShaderResourceViewRef(const ShaderResourceViewRef& rhs);
+
+        explicit ShaderResourceViewRef(ID3D11ShaderResourceView* view)
+            :view_(view)
+        {}
+
+        ~ShaderResourceViewRef()
+        {
+            destroy();
+        }
+
+        ShaderResourceViewRef& operator=(const ShaderResourceViewRef& rhs)
+        {
+            ShaderResourceViewRef tmp(rhs);
+            tmp.swap(*this);
+            return *this;
+        }
+
+        void destroy();
+
+        bool valid() const{ return (NULL != view_);}
+
+        void swap(ShaderResourceViewRef& rhs)
+        {
+            lcore::swap(view_, rhs.view_);
+        }
+
+        ID3D11ShaderResourceView* getView(){ return view_;}
+        ID3D11ShaderResourceView* const* get(){ return &view_;}
+    private:
+        ID3D11ShaderResourceView* view_;
+    };
 
     //--------------------------------------------------------
     //---
@@ -280,6 +329,9 @@ namespace lgraphics
         }
 
         ID3D11RenderTargetView* getView(){ return view_;}
+        ID3D11RenderTargetView* const* get(){ return &view_;}
+
+        ShaderResourceViewRef createSRView(const SRVDesc& desc);
     private:
         ID3D11RenderTargetView* view_;
     };
@@ -324,6 +376,7 @@ namespace lgraphics
         }
 
         ID3D11DepthStencilView* getView(){ return view_;}
+        ID3D11DepthStencilView* const* get(){ return &view_;}
     private:
         ID3D11DepthStencilView* view_;
     };
@@ -386,15 +439,31 @@ namespace lgraphics
 
         element_type* get() { return texture_;}
         bool hasSampler() const{ return sampler_.valid();}
-        bool hasResourceView() const{ return (NULL != view_);}
+        bool hasResourceView() const{ return shaderResourceView_.valid();}
         bool valid() const{ return (NULL != texture_);}
 
         ID3D11SamplerState* const* getSampler(){ return sampler_.get();}
-        ID3D11ShaderResourceView* const* getView(){ return &view_;}
+        ID3D11ShaderResourceView* const* getView(){ return shaderResourceView_.get();}
 
-        RenderTargetViewRef createRTView(const RTVDesc& desc);
-        DepthStencilViewRef createDSView(const DSVDesc& desc);
-        UnorderedAccessViewRef createUAView(const UAVDesc& desc);
+        ShaderResourceViewRef createSRView(const SRVDesc& desc)
+        {
+            return createSRView(desc, texture_);
+        }
+
+        RenderTargetViewRef createRTView(const RTVDesc& desc)
+        {
+            return createRTView(desc, texture_);
+        }
+
+        DepthStencilViewRef createDSView(const DSVDesc& desc)
+        {
+            return createDSView(desc, texture_);
+        }
+
+        UnorderedAccessViewRef createUAView(const UAVDesc& desc)
+        {
+            return createUAView(desc, texture_);
+        }
 
         void setSamplerState(TextureFilterType filter, TextureAddress adress)
         {
@@ -412,22 +481,18 @@ namespace lgraphics
         inline void copy(this_type& src);
         inline bool map(void*& data, u32& rowPitch, u32& depthPitch, s32 type);
         inline void unmap();
+
     protected:
 
         TextureRefBase()
-            :view_(NULL)
-            ,texture_(NULL)
+            :texture_(NULL)
         {}
 
         TextureRefBase(const this_type& rhs)
             :sampler_(rhs.sampler_)
-            ,view_(rhs.view_)
+            ,shaderResourceView_(rhs.shaderResourceView_)
             ,texture_(rhs.texture_)
         {
-            if(view_){
-                view_->AddRef();
-            }
-
             if(texture_){
                 texture_->AddRef();
             }
@@ -435,7 +500,7 @@ namespace lgraphics
 
         explicit TextureRefBase(const SamplerStateRef& sampler, ID3D11ShaderResourceView* view, element_type* texture)
             :sampler_(sampler)
-            ,view_(view)
+            ,shaderResourceView_(view)
             ,texture_(texture)
         {}
 
@@ -447,25 +512,50 @@ namespace lgraphics
         void destroy()
         {
             sampler_.destroy();
-            SAFE_RELEASE(view_);
+            shaderResourceView_.destroy();
             SAFE_RELEASE(texture_);
         }
 
         void swap(this_type& rhs)
         {
             sampler_.swap(rhs.sampler_);
-            lcore::swap(view_, rhs.view_);
+            shaderResourceView_.swap(rhs.shaderResourceView_);
             lcore::swap(texture_, rhs.texture_);
         }
 
+        ShaderResourceViewRef createSRView(const SRVDesc& desc, ID3D11Resource* resource);
+        RenderTargetViewRef createRTView(const RTVDesc& desc, ID3D11Resource* resource);
+        DepthStencilViewRef createDSView(const DSVDesc& desc, ID3D11Resource* resource);
+        UnorderedAccessViewRef createUAView(const UAVDesc& desc, ID3D11Resource* resource);
+
         SamplerStateRef sampler_;
-        ID3D11ShaderResourceView* view_;
+        ShaderResourceViewRef shaderResourceView_;
         element_type* texture_;
     };
 
+    template<class T>
+    ShaderResourceViewRef TextureRefBase<T>::createSRView(const SRVDesc& desc, ID3D11Resource* /*resource*/)
+    {
+        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
+
+        if(SRVDesc::copy(viewDesc, desc)){
+            ID3D11Device* device = Graphics::getDevice().getD3DDevice();
+
+            ID3D11ShaderResourceView* view = NULL;
+            HRESULT hr = device->CreateShaderResourceView(
+                texture_,
+                &viewDesc,
+                &view);
+
+            if(SUCCEEDED(hr)){
+                return ShaderResourceViewRef(view);
+            }
+        }
+        return ShaderResourceViewRef();
+    }
 
     template<class T>
-    RenderTargetViewRef TextureRefBase<T>::createRTView(const RTVDesc& desc)
+    RenderTargetViewRef TextureRefBase<T>::createRTView(const RTVDesc& desc, ID3D11Resource* resource)
     {
         D3D11_RENDER_TARGET_VIEW_DESC viewDesc;
         viewDesc.Format = static_cast<DXGI_FORMAT>(desc.format_);
@@ -503,7 +593,7 @@ namespace lgraphics
 
         ID3D11RenderTargetView* view = NULL;
         HRESULT hr = device->CreateRenderTargetView(
-            texture_,
+            resource,
             &viewDesc,
             &view);
 
@@ -511,7 +601,7 @@ namespace lgraphics
     }
 
     template<class T>
-    DepthStencilViewRef TextureRefBase<T>::createDSView(const DSVDesc& desc)
+    DepthStencilViewRef TextureRefBase<T>::createDSView(const DSVDesc& desc, ID3D11Resource* resource)
     {
         D3D11_DEPTH_STENCIL_VIEW_DESC viewDesc;
         viewDesc.Format = static_cast<DXGI_FORMAT>(desc.format_);
@@ -545,7 +635,7 @@ namespace lgraphics
 
         ID3D11DepthStencilView* view = NULL;
         HRESULT hr = device->CreateDepthStencilView(
-            texture_,
+            resource,
             &viewDesc,
             &view);
 
@@ -553,7 +643,7 @@ namespace lgraphics
     }
 
     template<class T>
-    UnorderedAccessViewRef TextureRefBase<T>::createUAView(const UAVDesc& desc)
+    UnorderedAccessViewRef TextureRefBase<T>::createUAView(const UAVDesc& desc, ID3D11Resource* resource)
     {
         D3D11_UNORDERED_ACCESS_VIEW_DESC viewDesc;
         viewDesc.Format = static_cast<DXGI_FORMAT>(desc.format_);
@@ -601,7 +691,7 @@ namespace lgraphics
 
         ID3D11UnorderedAccessView* view = NULL;
         HRESULT hr = device->CreateUnorderedAccessView(
-            texture_,
+            resource,
             &viewDesc,
             &view);
 
@@ -613,7 +703,8 @@ namespace lgraphics
     inline void TextureRefBase<T>::attachVS(u32 viewIndex, u32 samplerIndex)
     {
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.setVSResources(viewIndex, 1, &view_);
+        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
+        device.setVSResources(viewIndex, 1, &view);
         device.setVSSamplers(samplerIndex, 1, sampler_.get());
     }
 
@@ -621,7 +712,8 @@ namespace lgraphics
     inline void TextureRefBase<T>::attachGS(u32 viewIndex, u32 samplerIndex)
     {
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.setGSResources(viewIndex, 1, &view_);
+        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
+        device.setGSResources(viewIndex, 1, &view);
         device.setGSSamplers(samplerIndex, 1, sampler_.get());
     }
 
@@ -629,7 +721,8 @@ namespace lgraphics
     inline void TextureRefBase<T>::attachPS(u32 viewIndex, u32 samplerIndex)
     {
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.setPSResources(viewIndex, 1, &view_);
+        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
+        device.setPSResources(viewIndex, 1, &view);
         device.setPSSamplers(samplerIndex, 1, sampler_.get());
     }
 
@@ -638,21 +731,24 @@ namespace lgraphics
     inline void TextureRefBase<T>::attachVS(u32 viewIndex)
     {
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.setVSResources(viewIndex, 1, &view_);
+        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
+        device.setVSResources(viewIndex, 1, &view);
     }
 
     template<class T>
     inline void TextureRefBase<T>::attachGS(u32 viewIndex)
     {
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.setGSResources(viewIndex, 1, &view_);
+        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
+        device.setGSResources(viewIndex, 1, &view);
     }
 
     template<class T>
     inline void TextureRefBase<T>::attachPS(u32 viewIndex)
     {
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.setPSResources(viewIndex, 1, &view_);
+        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
+        device.setPSResources(viewIndex, 1, &view);
     }
 
     template<class T>
@@ -862,8 +958,10 @@ namespace lgraphics
             ResourceMisc misc,
             TextureFilterType filter,
             TextureAddress adress,
+            CmpFunc compFunc,
+            f32 borderColor,
             const SubResourceData* initData,
-            const ResourceViewDesc* resourceViewDesc);
+            const SRVDesc* resourceViewDesc);
 
         static Texture2DRef create2D(
             u32 width,
@@ -877,9 +975,10 @@ namespace lgraphics
             ResourceMisc misc,
             TextureFilterType filter,
             TextureAddress adress,
+            CmpFunc compFunc,
             f32 borderColor,
             const SubResourceData* initData,
-            const ResourceViewDesc* resourceViewDesc);
+            const SRVDesc* resourceViewDesc);
 
         static Texture3DRef create3D(
             u32 width,
@@ -893,8 +992,10 @@ namespace lgraphics
             ResourceMisc misc,
             TextureFilterType filter,
             TextureAddress adress,
+            CmpFunc compFunc,
+            f32 borderColor,
             const SubResourceData* initData,
-            const ResourceViewDesc* resourceViewDesc);
+            const SRVDesc* resourceViewDesc);
             
         static BufferRef createBuffer(
             u32 size,
@@ -904,7 +1005,7 @@ namespace lgraphics
             ResourceMisc misc,
             u32 structureByteStride,
             const SubResourceData* initData,
-            const ResourceViewDesc* resourceViewDesc);
+            const SRVDesc* resourceViewDesc);
     };
 }
 #endif //INC_LGRAPHICS_DX11_TEXTUREREF_H__

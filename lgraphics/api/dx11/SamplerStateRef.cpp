@@ -36,6 +36,7 @@ namespace lgraphics
         TextureAddress addressU,
         TextureAddress addressV,
         TextureAddress addressW,
+        CmpFunc compFunc,
         f32 borderColor)
     {
         D3D11_SAMPLER_DESC desc;
@@ -45,7 +46,7 @@ namespace lgraphics
         desc.AddressW = static_cast<D3D11_TEXTURE_ADDRESS_MODE>(addressW);
         desc.MipLODBias = 0.0f;
         desc.MaxAnisotropy = 16;
-        desc.ComparisonFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_Never);
+        desc.ComparisonFunc = static_cast<D3D11_COMPARISON_FUNC>(compFunc);
         desc.BorderColor[0] = borderColor;
         desc.BorderColor[1] = borderColor;
         desc.BorderColor[2] = borderColor;

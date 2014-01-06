@@ -131,11 +131,15 @@ namespace lgraphics
         static const u32 MinRefreshRate = 15;
         static const u32 MaxRefreshRate = 120;
 
+        static const u32 MaxSOBufferSlot = D3D11_SO_BUFFER_SLOT_COUNT;
+        static const u32 MaxSOStreamCount = D3D11_SO_STREAM_COUNT;
+        static const u32 SONoRasterizedStream = D3D11_SO_NO_RASTERIZED_STREAM;
+
         u32 getRefreshRate() const{ return refreshRate_;}
         u32 getFeatureLevel() const{ return featureLevel_;}
         ID3D11Device* getD3DDevice(){ return device_;}
         ID3D11DeviceContext* getContext(){ return context_;}
-
+        ID3D11ShaderResourceView* getDepthStencilShaderResourceView(){ return depthStencilShaderResourceView_;}
 
         void onSize(u32 width, u32 height);
 
@@ -162,8 +166,13 @@ namespace lgraphics
         inline void drawIndexed(u32 numIndices, u32 start, u32 baseVertex);
 
         inline void drawInstanced(u32 numVertices, u32 numInstances, u32 startVertex, u32 startInstance);
+        inline void drawIndexedInstanced(u32 numIndices, u32 numInstances, u32 startIndex, u32 baseVertex, u32 startInstance);
 
-        void setViewport(s32 x, s32 y, u32 width, u32 height);
+        inline void drawAuto();
+
+        void setViewport(u32 x, u32 y, u32 width, u32 height);
+        void setDefaultViewport(u32 x, u32 y, u32 width, u32 height);
+        void restoreDefaultViewport();
 
         inline void setRasterizerState(RasterizerState state);
 
@@ -173,8 +182,10 @@ namespace lgraphics
 
         inline void setPrimitiveTopology(Primitive topology);
         inline void setInputLayout(ID3D11InputLayout* layout);
-        inline void setVertexBuffers(u32 start, u32 num, ID3D11Buffer* const* buffers, const u32* strides, const u32* offsets);
-        inline void setIndexBuffer(ID3D11Buffer* buffer, DataFormat format, u32 offset);
+        inline void setVertexBuffers(u32 startSlot, u32 num, ID3D11Buffer* const* buffers, const u32* strides, const u32* offsetInBytes);
+        inline void clearVertexBuffers(u32 startSlot, u32 num);
+
+        inline void setIndexBuffer(ID3D11Buffer* buffer, DataFormat format, u32 offsetInBytes);
 
         inline void setVSConstantBuffers(u32 start, u32 num, ID3D11Buffer* const* buffers);
         inline void setGSConstantBuffers(u32 start, u32 num, ID3D11Buffer* const* buffers);
@@ -210,6 +221,9 @@ namespace lgraphics
             u32 numUAVs,
             ID3D11UnorderedAccessView* const* uavs,
             const u32* UAVInitCounts);
+
+        inline void setStreamOutTargets(u32 num, ID3D11Buffer* const* buffers, const u32* offsetInBytes);
+        inline void clearStreamOutTargets(u32 num);
 
         inline void updateSubresource(
             ID3D11Resource* dstResource,
@@ -258,8 +272,9 @@ namespace lgraphics
 
         bool initialize(const InitParam& initParam);
         void terminate();
-        bool createBackBuffer(u32 width, u32 height, u32 depthStencilFormat);
+        bool createBackBuffer(u32 width, u32 height, u32 depthStencilFormat, u32 flag);
 
+        u32 flags_;
         f32 clearColor_[4];
         u32 clearDepthStencilFlag_;
         f32 clearDepth_;
@@ -267,6 +282,11 @@ namespace lgraphics
         u32 syncInterval_;
         u32 refreshRate_;
         u32 featureLevel_;
+
+        u32 viewportX_;
+        u32 viewportY_;
+        u32 viewportWidth_;
+        u32 viewportHeight_;
 
         ID3D11RasterizerState* rasterizerStates_[Rasterizer_Num];
 
@@ -281,6 +301,11 @@ namespace lgraphics
         ID3D11RenderTargetView* renderTargetView_;
         ID3D11Texture2D* depthStencil_;
         ID3D11DepthStencilView* depthStencilView_;
+        ID3D11ShaderResourceView* depthStencilShaderResourceView_;
+
+#ifdef _DEBUG
+        ID3D11Debug* debug_;
+#endif
     };
 
     inline void GraphicsDeviceRef::present()
@@ -348,6 +373,16 @@ namespace lgraphics
         context_->DrawInstanced(numVertices, numInstances, startVertex, startInstance);
     }
 
+    inline void GraphicsDeviceRef::drawIndexedInstanced(u32 numIndices, u32 numInstances, u32 startIndex, u32 baseVertex, u32 startInstance)
+    {
+        context_->DrawIndexedInstanced(numIndices, numInstances, startIndex, baseVertex, startInstance);
+    }
+
+    inline void GraphicsDeviceRef::drawAuto()
+    {
+        context_->DrawAuto();
+    }
+
     inline void GraphicsDeviceRef::setRasterizerState(RasterizerState state)
     {
         context_->RSSetState(rasterizerStates_[state]);
@@ -373,14 +408,23 @@ namespace lgraphics
         context_->IASetInputLayout(layout);
     }
 
-    inline void GraphicsDeviceRef::setVertexBuffers(u32 start, u32 num, ID3D11Buffer* const* buffers, const u32* strides, const u32* offsets)
+    inline void GraphicsDeviceRef::setVertexBuffers(u32 startSlot, u32 num, ID3D11Buffer* const* buffers, const u32* strides, const u32* offsetInBytes)
     {
-        context_->IASetVertexBuffers(start, num, buffers, strides, offsets);
+        context_->IASetVertexBuffers(startSlot, num, buffers, strides, offsetInBytes);
     }
 
-    inline void GraphicsDeviceRef::setIndexBuffer(ID3D11Buffer* buffer, DataFormat format, u32 offset)
+    inline void GraphicsDeviceRef::clearVertexBuffers(u32 startSlot, u32 num)
     {
-        context_->IASetIndexBuffer(buffer, static_cast<DXGI_FORMAT>(format), offset);
+        ID3D11Buffer* const buffers[] = {NULL, NULL, NULL, NULL};
+        const u32 strides[] = {0, 0, 0, 0};
+        const u32 offsets[] = {0, 0, 0, 0};
+
+        context_->IASetVertexBuffers(startSlot, num, buffers, strides, offsets);
+    }
+
+    inline void GraphicsDeviceRef::setIndexBuffer(ID3D11Buffer* buffer, DataFormat format, u32 offsetInBytes)
+    {
+        context_->IASetIndexBuffer(buffer, static_cast<DXGI_FORMAT>(format), offsetInBytes);
     }
 
     inline void GraphicsDeviceRef::setVSConstantBuffers(u32 start, u32 num, ID3D11Buffer* const* buffers)
@@ -469,6 +513,19 @@ namespace lgraphics
         const u32* UAVInitCounts)
     {
         context_->OMSetRenderTargetsAndUnorderedAccessViews(numViews, views, depthStencilView, UAVStart, numUAVs, uavs, UAVInitCounts);
+    }
+
+    inline void GraphicsDeviceRef::setStreamOutTargets(u32 num, ID3D11Buffer* const* buffers, const u32* offsetInBytes)
+    {
+        context_->SOSetTargets(num, buffers, offsetInBytes);
+    }
+
+    inline void GraphicsDeviceRef::clearStreamOutTargets(u32 num)
+    {
+        ID3D11Buffer* const buffers[MaxSOBufferSlot] = {NULL, NULL, NULL, NULL};
+        const u32 offsets[MaxSOBufferSlot] = {0, 0, 0, 0};
+
+        context_->SOSetTargets(num, buffers, offsets);
     }
 
     inline void GraphicsDeviceRef::updateSubresource(

@@ -92,7 +92,8 @@ namespace lgraphics
     const Char* GraphicsDeviceRef::PSModel = PSModels[0];
 
     GraphicsDeviceRef::GraphicsDeviceRef()
-        :clearDepth_(1.0f)
+        :flags_(0)
+        ,clearDepth_(1.0f)
         ,clearStencil_(0)
         ,clearDepthStencilFlag_(ClearDepth)
         ,syncInterval_(0)
@@ -104,6 +105,10 @@ namespace lgraphics
         ,renderTargetView_(NULL)
         ,depthStencil_(NULL)
         ,depthStencilView_(NULL)
+        ,depthStencilShaderResourceView_(NULL)
+#ifdef _DEBUG
+        ,debug_(NULL)
+#endif
     {
         for(u32 i=0; i<MaxRenderTargets; ++i){
             blendFactors_[i] = 1.0f;
@@ -131,6 +136,7 @@ namespace lgraphics
     {
         LASSERT(0<initParam.supportHardwareLevel_);
 
+        flags_ = initParam.flags_;
         u32 deviceFlags = 0;
 #ifdef _DEBUG
         deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
@@ -227,10 +233,14 @@ namespace lgraphics
         }
         featureLevel_ = supportedLevel;
 
+#ifdef _DEBUG
+        device_->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debug_));
+#endif
+
         VSModel = (supportedLevel >= D3D_FEATURE_LEVEL_11_0)? VSModels[1] : VSModels[0];
         PSModel = (supportedLevel >= D3D_FEATURE_LEVEL_11_0)? PSModels[1] : PSModels[0];
 
-        createBackBuffer(width, height, initParam.depthStencilFormat_);
+        createBackBuffer(width, height, initParam.depthStencilFormat_, flags_);
 
         syncInterval_ = initParam.interval_;
         refreshRate_ = lcore::clamp(initParam.refreshRate_, MinRefreshRate, MaxRefreshRate);
@@ -294,11 +304,8 @@ namespace lgraphics
                 break;
             };
 
-            //rasterizerDesc.SlopeScaledDepthBias = 1.0f;
-            //rasterizerDesc.DepthBiasClamp = 0.05f;
-            //rasterizerDesc.DepthBias = 0;
-            rasterizerDesc.SlopeScaledDepthBias = 3.0f;
-            rasterizerDesc.DepthBiasClamp = 0.01f;
+            rasterizerDesc.SlopeScaledDepthBias = 2.0f;
+            rasterizerDesc.DepthBiasClamp = 0.02f;
 
             hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_DepthMap]);
             if(FAILED(hr)){
@@ -368,6 +375,10 @@ namespace lgraphics
                 lgraphics::ColorWrite_All);
         }
 
+        if(0 == initParam.windowed_){
+            ShowCursor(FALSE);
+        }
+
         return true;
     }
 
@@ -378,6 +389,8 @@ namespace lgraphics
             context_->ClearState();
             context_->Flush();
         }
+
+        context_->OMSetRenderTargets(0, NULL, NULL);
 
         for(s32 i=0; i<BlendState_Num; ++i){
             SAFE_RELEASE(blendStates_[i]);
@@ -391,18 +404,39 @@ namespace lgraphics
             SAFE_RELEASE(rasterizerStates_[i]);
         }
 
+        SAFE_RELEASE(depthStencilShaderResourceView_);
         SAFE_RELEASE(renderTargetView_);
         SAFE_RELEASE(depthStencilView_);
         SAFE_RELEASE(backBuffer_);
         SAFE_RELEASE(depthStencil_);
 
-        SAFE_RELEASE(swapChain_);
+        if(NULL != swapChain_){
+            BOOL fullscreen = FALSE;
+            IDXGIOutput* output = NULL;
+            HRESULT hr = swapChain_->GetFullscreenState(&fullscreen, &output);
+            if(SUCCEEDED(hr) && fullscreen){
+                swapChain_->SetFullscreenState(FALSE, NULL);
+                ShowCursor(TRUE);
+            }
+            SAFE_RELEASE(output);
+            swapChain_->Release();
+            swapChain_ = NULL;
+        }
+
+
         SAFE_RELEASE(context_);
+
+#ifdef _DEBUG
+        if(NULL != debug_){
+            debug_->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+        }
+        SAFE_RELEASE(debug_);
+#endif
         SAFE_RELEASE(device_);
     }
 
     //---------------------------------------------------------
-    bool GraphicsDeviceRef::createBackBuffer(u32 width, u32 height, u32 depthStencilFormat)
+    bool GraphicsDeviceRef::createBackBuffer(u32 width, u32 height, u32 depthStencilFormat, u32 flag)
     {
         HRESULT hr = swapChain_->GetBuffer(0, __uuidof(ID3D11Texture2D), (LPVOID*)&backBuffer_);
         if(FAILED(hr)){
@@ -415,16 +449,37 @@ namespace lgraphics
         }
 
         if(depthStencilFormat != 0){
+            DXGI_FORMAT depthFormat = (DXGI_FORMAT)depthStencilFormat;
+            if(0 != (flag & InitParam::Flag_DepthStencilShaderResource)){
+                switch(depthFormat)
+                {
+                case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
+                    depthFormat = DXGI_FORMAT_R32G8X24_TYPELESS;
+                    break;
+                case DXGI_FORMAT_D32_FLOAT:
+                    depthFormat = DXGI_FORMAT_R32_TYPELESS;
+                    break;
+                case DXGI_FORMAT_D24_UNORM_S8_UINT:
+                    depthFormat = DXGI_FORMAT_R24G8_TYPELESS;
+                    break;
+                case DXGI_FORMAT_D16_UNORM:
+                    depthFormat = DXGI_FORMAT_R16_TYPELESS;
+                    break;
+                default:
+                    depthFormat = DXGI_FORMAT_R24G8_TYPELESS;
+                    break;
+                }
+            }
             D3D11_TEXTURE2D_DESC desc;
             desc.Width = width;
             desc.Height = height;
             desc.MipLevels = 1;
             desc.ArraySize = 1;
-            desc.Format = (DXGI_FORMAT)depthStencilFormat;
+            desc.Format = depthFormat;
             desc.SampleDesc.Count = 1;
             desc.SampleDesc.Quality = 0;
             desc.Usage = D3D11_USAGE_DEFAULT;
-            desc.BindFlags = D3D11_BIND_DEPTH_STENCIL;
+            desc.BindFlags = (0 != (flag & InitParam::Flag_DepthStencilShaderResource))? D3D11_BIND_DEPTH_STENCIL|D3D11_BIND_SHADER_RESOURCE : D3D11_BIND_DEPTH_STENCIL;
             desc.CPUAccessFlags = CPUAccessFlag_None;
             desc.MiscFlags = ResourceMisc_None;
             hr = device_->CreateTexture2D(&desc, NULL, &depthStencil_);
@@ -434,7 +489,7 @@ namespace lgraphics
 
             D3D11_DEPTH_STENCIL_VIEW_DESC viewDesc;
             lcore::memset(&viewDesc, 0, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
-            viewDesc.Format = desc.Format;
+            viewDesc.Format = (DXGI_FORMAT)depthStencilFormat;
             viewDesc.ViewDimension = D3D11_DSV_DIMENSION_TEXTURE2D;
             viewDesc.Texture2D.MipSlice = 0;
 
@@ -442,10 +497,46 @@ namespace lgraphics
             if(FAILED(hr)){
                 return false;
             }
+
+            if(0 != (flag & InitParam::Flag_DepthStencilShaderResource)){
+                D3D11_SHADER_RESOURCE_VIEW_DESC resourceDesc;
+
+                DXGI_FORMAT format;
+                switch((DXGI_FORMAT)depthStencilFormat)
+                {
+                case DXGI_FORMAT_D32_FLOAT_S8X24_UINT:
+                    format = DXGI_FORMAT_R32_FLOAT_X8X24_TYPELESS;
+                    break;
+                case DXGI_FORMAT_D32_FLOAT:
+                    format = DXGI_FORMAT_R32_FLOAT;
+                    break;
+                case DXGI_FORMAT_D24_UNORM_S8_UINT:
+                    format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+                    break;
+                case DXGI_FORMAT_D16_UNORM:
+                    format = DXGI_FORMAT_R16_UNORM;
+                    break;
+                default:
+                    format = DXGI_FORMAT_R24_UNORM_X8_TYPELESS;
+                    break;
+                }
+
+                resourceDesc.Format = format;
+                resourceDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+                resourceDesc.Texture2D.MipLevels = 1;
+                resourceDesc.Texture2D.MostDetailedMip = 0;
+
+                hr = device_->CreateShaderResourceView(depthStencil_, &resourceDesc, &depthStencilShaderResourceView_);
+                if(FAILED(hr)){
+                    return false;
+                }
+            }
         }
+
         context_->OMSetRenderTargets(1, &renderTargetView_, depthStencilView_);
 
-        setViewport(0, 0, width, height);
+        setDefaultViewport(0, 0, width, height);
+        restoreDefaultViewport();
         return true;
     }
 
@@ -469,7 +560,7 @@ namespace lgraphics
     }
 
     //---------------------------------------------------------
-    void GraphicsDeviceRef::setViewport(s32 x, s32 y, u32 width, u32 height)
+    void GraphicsDeviceRef::setViewport(u32 x, u32 y, u32 width, u32 height)
     {
         D3D11_VIEWPORT vp;
         vp.Width = static_cast<f32>(width);
@@ -479,6 +570,21 @@ namespace lgraphics
         vp.TopLeftX = static_cast<f32>(x);
         vp.TopLeftY = static_cast<f32>(y);
         context_->RSSetViewports(1, &vp );
+    }
+
+    //---------------------------------------------------------
+    void GraphicsDeviceRef::setDefaultViewport(u32 x, u32 y, u32 width, u32 height)
+    {
+        viewportX_ = x;
+        viewportY_ = y;
+        viewportWidth_ = width;
+        viewportHeight_ = height;
+    }
+
+    //---------------------------------------------------------
+    void GraphicsDeviceRef::restoreDefaultViewport()
+    {
+        setViewport(viewportX_, viewportY_, viewportWidth_, viewportHeight_);
     }
 
     //---------------------------------------------------------
@@ -503,6 +609,7 @@ namespace lgraphics
 
         context_->OMSetRenderTargets(0, NULL, NULL);
         SAFE_RELEASE(renderTargetView_);
+        SAFE_RELEASE(depthStencilShaderResourceView_);
         SAFE_RELEASE(depthStencilView_);
         SAFE_RELEASE(backBuffer_);
         SAFE_RELEASE(depthStencil_);
@@ -514,7 +621,7 @@ namespace lgraphics
             swapChainDesc.BufferDesc.Format,
             swapChainDesc.Flags);
 
-        createBackBuffer(swapChainDesc.BufferDesc.Width, swapChainDesc.BufferDesc.Height, depthStencilFormat);
+        createBackBuffer(swapChainDesc.BufferDesc.Width, swapChainDesc.BufferDesc.Height, depthStencilFormat, flags_);
     }
 
     //---------------------------------------------------------
@@ -530,19 +637,18 @@ namespace lgraphics
     {
         if(isFullScreen()){
             swapChain_->SetFullscreenState(FALSE, NULL);
+            ShowCursor(TRUE);
         }else{
             swapChain_->SetFullscreenState(TRUE, NULL);
+            ShowCursor(FALSE);
         }
     }
 
     //---------------------------------------------------------
     void GraphicsDeviceRef::restoreDefaultRenderTargets()
     {
-        D3D11_TEXTURE2D_DESC desc;
-        backBuffer_->GetDesc(&desc);
-
         context_->OMSetRenderTargets(1, &renderTargetView_, depthStencilView_);
-        setViewport(0, 0, desc.Width, desc.Height);
+        restoreDefaultViewport();
     }
 
     //---------------------------------------------------------

@@ -28,16 +28,18 @@ namespace lmath
 
         inline Vector4(f32 x, f32 y, f32 z, f32 w);
         inline Vector4(const Vector4& rhs);
-        inline Vector4& operator=(const Vector4& rhs);
-        inline Vector4& operator=(const Vector3& rhs);
-
         inline explicit Vector4(const Vector3& v);
         inline Vector4(const Vector3& v, f32 w);
+        inline explicit Vector4(f32 v);
+
+        inline Vector4& operator=(const Vector4& rhs);
+        inline Vector4& operator=(const Vector3& rhs);
+        inline Vector4& operator=(f32 rhs);
 
         inline void set(f32 x, f32 y, f32 z, f32 w);
-
         inline void set(const Vector3& v);
         inline void set(const Vector3& v, f32 w);
+        inline void set(f32 v);
 
         inline void zero();
         inline void identity();
@@ -67,6 +69,7 @@ namespace lmath
         f32 lengthSqr() const;
         void normalize();
         void normalize(f32 lengthSqr);
+        void normalizeChecked();
 
         f32 dot(const Vector4& v) const;
         void cross3(const Vector4& v0, const Vector4& v1);
@@ -182,6 +185,32 @@ namespace lmath
 #endif
     }
 
+    inline Vector4::Vector4(const Vector3& v)
+        :x_(v.x_)
+        ,y_(v.y_)
+        ,z_(v.z_)
+        ,w_(0.0f)
+    {
+    }
+
+    inline Vector4::Vector4(const Vector3& v, f32 w)
+        :x_(v.x_)
+        ,y_(v.y_)
+        ,z_(v.z_)
+        ,w_(w)
+    {
+    }
+
+    inline Vector4::Vector4(f32 v)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 t = _mm_load1_ps(&v);
+        store(*this, t);
+#else
+        x_ = y_ = z_ = w_ = v;
+#endif
+    }
+
     inline Vector4& Vector4::operator=(const Vector4& rhs)
     {
 #if defined(LMATH_USE_SSE)
@@ -199,21 +228,10 @@ namespace lmath
         return *this;
     }
 
-
-    inline Vector4::Vector4(const Vector3& v)
-        :x_(v.x_)
-        ,y_(v.y_)
-        ,z_(v.z_)
-        ,w_(0.0f)
+    inline Vector4& Vector4::operator=(f32 v)
     {
-    }
-
-    inline Vector4::Vector4(const Vector3& v, f32 w)
-        :x_(v.x_)
-        ,y_(v.y_)
-        ,z_(v.z_)
-        ,w_(w)
-    {
+        set(v);
+        return *this;
     }
 
     inline void Vector4::set(f32 x, f32 y, f32 z, f32 w)
@@ -235,6 +253,16 @@ namespace lmath
         y_ = v.y_;
         z_ = v.z_;
         w_ = w;
+    }
+
+    inline void Vector4::set(f32 v)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 t = _mm_load1_ps(&v);
+        store(*this, t);
+#else
+        x_ = y_ = z_ = w_ = v;
+#endif
     }
 
     inline void Vector4::zero()

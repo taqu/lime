@@ -7,6 +7,9 @@
     <Filter Include="anim">
       <UniqueIdentifier>{4e5a05cb-ded4-47fa-b263-99bd26ce23be}</UniqueIdentifier>
     </Filter>
+    <Filter Include="pack">
+      <UniqueIdentifier>{d8ffbc5b-9541-4e23-a758-8b79a4ba2916}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\scene\Camera.cpp">
@@ -47,6 +50,15 @@
     </ClCompile>
     <ClCompile Include="..\anim\lanim.cpp">
       <Filter>anim</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pack\PackReader.cpp">
+      <Filter>pack</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pack\lpack.cpp">
+      <Filter>pack</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pack\PackWriter.cpp">
+      <Filter>pack</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -105,6 +117,15 @@
     </ClInclude>
     <ClInclude Include="..\anim\SkeletonPose.h">
       <Filter>anim</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pack\lpack.h">
+      <Filter>pack</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pack\PackReader.h">
+      <Filter>pack</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pack\PackWriter.h">
+      <Filter>pack</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

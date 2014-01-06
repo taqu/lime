@@ -23,6 +23,12 @@ namespace lmath
         x_ = v.x_; y_ = v.y_; z_ = v.z_;
     }
 
+    Vector3& Vector3::operator=(const lmath::Vector4& rhs)
+    {
+        x_ = rhs.x_; y_ = rhs.y_; z_ = rhs.z_;
+        return *this;
+    }
+
     void Vector3::cross(const Vector3& v0, const Vector3& v1)
     {
 //#if defined(LMATH_USE_SSE)
@@ -107,6 +113,30 @@ namespace lmath
         l = 1.0f/ lmath::sqrt(l);
         *this *= l;
 #endif
+    }
+
+    void Vector3::normalize(f32 lengthSqr)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 xv0 = load(*this);
+        lm128 xv1 = load(lengthSqr);
+        xv1 = _mm_sqrt_ps(xv1);
+        lm128 xv2 = _mm_div_ps(xv0, xv1);
+        store(*this, xv2);
+#else
+        f32 l = 1.0f/ lmath::sqrt(lengthSqr);
+        *this *= l;
+#endif
+    }
+
+    void Vector3::normalizeChecked()
+    {
+        f32 l = lengthSqr();
+        if(lmath::isZeroPositive(l)){
+            zero();
+        }else{
+            normalize(l);
+        }
     }
 
     f32 Vector3::distanceSqr(const Vector3& v) const

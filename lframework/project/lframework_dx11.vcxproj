@@ -108,7 +108,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;LIME_DX11;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader />
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
@@ -129,7 +129,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <AdditionalIncludeDirectories>..\..\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <PreprocessorDefinitions>WIN32;NDEBUG;_LIB;LIME_DX11;LMATH_USE_SSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <PrecompiledHeader />
       <ProgramDataBaseFileName>$(IntDir)vc$(PlatformToolsetVersion).pdb</ProgramDataBaseFileName>
@@ -151,7 +151,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_LIB;LIME_DX11;LMATH_USE_SSE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <MinimalRebuild>true</MinimalRebuild>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader />
       <ProgramDataBaseFileName>$(OutDir)$(ProjectName)_dx11_sse_vc110_d.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
@@ -174,6 +174,9 @@
     <ClCompile Include="..\anim\lanim.cpp" />
     <ClCompile Include="..\anim\Skeleton.cpp" />
     <ClCompile Include="..\anim\SkeletonPose.cpp" />
+    <ClCompile Include="..\pack\lpack.cpp" />
+    <ClCompile Include="..\pack\PackReader.cpp" />
+    <ClCompile Include="..\pack\PackWriter.cpp" />
     <ClCompile Include="..\scene\Camera.cpp" />
     <ClCompile Include="..\scene\Frustum.cpp" />
     <ClCompile Include="..\scene\Scene.cpp" />
@@ -193,6 +196,9 @@
     <ClInclude Include="..\anim\lanim.h" />
     <ClInclude Include="..\anim\Skeleton.h" />
     <ClInclude Include="..\anim\SkeletonPose.h" />
+    <ClInclude Include="..\pack\lpack.h" />
+    <ClInclude Include="..\pack\PackReader.h" />
+    <ClInclude Include="..\pack\PackWriter.h" />
     <ClInclude Include="..\scene\Camera.h" />
     <ClInclude Include="..\scene\DirectionalLight.h" />
     <ClInclude Include="..\scene\Frustum.h" />

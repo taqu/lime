@@ -92,6 +92,24 @@ namespace lcore
         u32 state_[N];
         u32 index_;
     };
+
+namespace random
+{
+    template<class T, class U>
+    U range(T& random, U vmin, U vmax)
+    {
+        LASSERT(vmin<=vmax);
+        U ret = static_cast<U>(random.frand()*(vmax-vmin) + vmin);
+        return ret;
+    }
+
+    template<class T>
+    f32 range(T& random, f32 vmin, f32 vmax)
+    {
+        LASSERT(vmin<=vmax);
+        return (vmax-vmin)*random.frand() + vmin;
+    }
+}
 }
 
 #endif //INC_RANDOM_H__

@@ -56,7 +56,7 @@ namespace lgraphics
     ID3D11Buffer* BufferBase::create(
         u32 size,
         Usage usage,
-        BindFlag bindFlags,
+        u32 bindFlags,
         CPUAccessFlag accessFlags,
         ResourceMisc miscFlags,
         u32 structureByteStride,

@@ -18,7 +18,7 @@ namespace lscene
 {
     //---------------------------------------------------
     // ビュー空間の視錐台計算
-    void Frustum::calc(const Camera& camera, f32 zfar)
+    void Frustum::calc(const Camera& camera, f32 znear, f32 zfar)
     {
         const lmath::Matrix44& proj = camera.getProjMatrix();
 
@@ -104,7 +104,7 @@ namespace lscene
         planes_[4].v_.x_ = 0.0f;
         planes_[4].v_.y_ = 0.0f;
         planes_[4].v_.z_ = -1.0f;
-        planes_[4].v_.w_ = camera.getZNear();
+        planes_[4].v_.w_ = znear;//camera.getZNear();
 
         planes_[5].v_.x_ = 0.0f;
         planes_[5].v_.y_ = 0.0f;
@@ -200,7 +200,7 @@ namespace lscene
         //const lmath::Matrix44& proj = camera.getProjMatrix();
 
         Frustum frustum;
-        frustum.calc(camera, camera.getZFar());
+        frustum.calc(camera, camera.getZNear(), camera.getZFar());
 
 
         f32 zfar = minz;

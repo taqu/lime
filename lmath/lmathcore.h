@@ -425,6 +425,12 @@ namespace lmath
         return lcore::clamp01((x-e0)/(e1-e0));
     }
 
+    inline f32 smooth(f32 x)
+    {
+        LASSERT(0<=x && x<=1.0f);
+    	return x * x * (3.0f - 2.0f*x);
+    }
+
     inline f32 smoothstep(f32 x, f32 e0, f32 e1)
     {
         x = lcore::clamp01((x - e0) / (e1 - e0));

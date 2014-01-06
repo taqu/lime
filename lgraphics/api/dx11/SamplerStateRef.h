@@ -41,6 +41,13 @@ namespace lgraphics
             lcore::swap(state_, rhs.state_);
         }
 
+        SamplerStateRef& operator=(const SamplerStateRef& rhs)
+        {
+            SamplerStateRef tmp(rhs);
+            tmp.swap(*this);
+            return *this;
+        }
+
     private:
         friend class SamplerState;
 
@@ -64,6 +71,7 @@ namespace lgraphics
             TextureAddress addressU,
             TextureAddress addressV,
             TextureAddress addressW,
+            CmpFunc compFunc,
             f32 borderColor = 0.0f);
     };
 }

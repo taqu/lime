@@ -68,6 +68,7 @@
     </ClInclude>
     <ClInclude Include="..\AES.h" />
     <ClInclude Include="..\ARCFOUR.h" />
+    <ClInclude Include="..\ChunkAllocator.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\random\Random.cpp">
@@ -94,5 +95,6 @@
     </ClCompile>
     <ClCompile Include="..\AES.cpp" />
     <ClCompile Include="..\ARCFOUR.cpp" />
+    <ClCompile Include="..\ChunkAllocator.cpp" />
   </ItemGroup>
 </Project>

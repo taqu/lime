@@ -10,6 +10,90 @@
 
 namespace lgraphics
 {
+    bool SRVDesc::copy(D3D11_SHADER_RESOURCE_VIEW_DESC& viewDesc, const SRVDesc& desc)
+    {
+        viewDesc.Format = static_cast<DXGI_FORMAT>(desc.format_);
+
+        switch(desc.dimension_)
+        {
+        case ViewSRVDimension_Buffer:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
+            viewDesc.Buffer.FirstElement = desc.buffer_.firstElement_;
+            viewDesc.Buffer.NumElements = desc.buffer_.numElements_;
+            break;
+
+        case ViewSRVDimension_Texture1D:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+            viewDesc.Texture1D.MostDetailedMip = desc.tex1D_.mostDetailedMip_;
+            viewDesc.Texture1D.MipLevels = desc.tex1D_.mipLevels_;
+            break;
+
+        case ViewSRVDimension_Texture1DArray:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1DARRAY;
+            viewDesc.Texture1DArray.MostDetailedMip = desc.tex1DArray_.mostDetailedMip_;
+            viewDesc.Texture1DArray.MipLevels = desc.tex1DArray_.mipLevels_;
+            viewDesc.Texture1DArray.FirstArraySlice = desc.tex1DArray_.firstArraySlice_;
+            viewDesc.Texture1DArray.ArraySize = desc.tex1DArray_.arraySize_;
+            break;
+
+        case ViewSRVDimension_Texture2D:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
+            viewDesc.Texture2D.MostDetailedMip = desc.tex2D_.mostDetailedMip_;
+            viewDesc.Texture2D.MipLevels = desc.tex2D_.mipLevels_;
+            break;
+
+        case ViewSRVDimension_Texture2DArray:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+            viewDesc.Texture2DArray.MostDetailedMip = desc.tex2DArray_.mostDetailedMip_;
+            viewDesc.Texture2DArray.MipLevels = desc.tex2DArray_.mipLevels_;
+            viewDesc.Texture2DArray.FirstArraySlice = desc.tex2DArray_.firstArraySlice_;
+            viewDesc.Texture2DArray.ArraySize = desc.tex2DArray_.arraySize_;
+            break;
+
+        case ViewSRVDimension_Texture3D:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
+            viewDesc.Texture2D.MostDetailedMip = desc.tex3D_.mostDetailedMip_;
+            viewDesc.Texture2D.MipLevels = desc.tex3D_.mipLevels_;
+            break;
+
+        case ViewSRVDimension_Cube:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+            viewDesc.TextureCube.MostDetailedMip = desc.texCube_.mostDetailedMip_;
+            viewDesc.TextureCube.MipLevels = desc.texCube_.mipLevels_;
+            break;
+
+        case ViewSRVDimension_CubeArray:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBEARRAY;
+            viewDesc.TextureCubeArray.MostDetailedMip = desc.texCubeArray_.mostDetailedMip_;
+            viewDesc.TextureCubeArray.MipLevels = desc.texCubeArray_.mipLevels_;
+            viewDesc.TextureCubeArray.First2DArrayFace = desc.texCubeArray_.first2DArraySlice_;
+            viewDesc.TextureCubeArray.NumCubes = desc.texCubeArray_.numCubes_;
+            break;
+
+        default:
+            return false;
+        };
+        return true;
+    }
+
+    //--------------------------------------------------------
+    //---
+    //--- ShaderResourceViewRef
+    //---
+    //--------------------------------------------------------
+    ShaderResourceViewRef::ShaderResourceViewRef(const ShaderResourceViewRef& rhs)
+        :view_(rhs.view_)
+    {
+        if(view_){
+            view_->AddRef();
+        }
+    }
+
+    void ShaderResourceViewRef::destroy()
+    {
+        SAFE_RELEASE(view_);
+    }
+
     //--------------------------------------------------------
     //---
     //--- RenderTargetViewRef
@@ -26,6 +110,32 @@ namespace lgraphics
     void RenderTargetViewRef::destroy()
     {
         SAFE_RELEASE(view_);
+    }
+
+    ShaderResourceViewRef RenderTargetViewRef::createSRView(const SRVDesc& desc)
+    {
+        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
+
+        if(SRVDesc::copy(viewDesc, desc)){
+            ID3D11Device* device = Graphics::getDevice().getD3DDevice();
+
+            ID3D11Resource* resource = NULL;
+            view_->GetResource(&resource);
+            if(NULL != resource){
+                ID3D11ShaderResourceView* view = NULL;
+                HRESULT hr = device->CreateShaderResourceView(
+                    resource,
+                    &viewDesc,
+                    &view);
+
+                resource->Release();
+
+                if(SUCCEEDED(hr)){
+                    return ShaderResourceViewRef(view);
+                }
+            }
+        }
+        return ShaderResourceViewRef();
     }
 
     //--------------------------------------------------------
@@ -141,14 +251,18 @@ namespace lgraphics
         ResourceMisc misc,
         TextureFilterType filter,
         TextureAddress adress,
+        CmpFunc compFunc,
+        f32 borderColor,
         const SubResourceData* initData,
-        const ResourceViewDesc* resourceViewDesc)
+        const SRVDesc* resourceViewDesc)
     {
         SamplerStateRef sampler = SamplerState::create(
             filter,
             adress,
             adress,
-            adress);
+            adress,
+            compFunc,
+            borderColor);
         if(false == sampler.valid()){
             return Texture1DRef();
         }
@@ -182,18 +296,26 @@ namespace lgraphics
 
         D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
         viewDesc.Format = static_cast<DXGI_FORMAT>(resourceViewDesc->format_);
-        if(arraySize>1){
+
+        switch(resourceViewDesc->dimension_)
+        {
+        case ViewSRVDimension_Texture1D:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
+            viewDesc.Texture1D.MostDetailedMip = resourceViewDesc->tex1D_.mostDetailedMip_;
+            viewDesc.Texture1D.MipLevels = resourceViewDesc->tex1D_.mipLevels_;
+            break;
+
+        case ViewSRVDimension_Texture1DArray:
             viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1DARRAY;
             viewDesc.Texture1DArray.MostDetailedMip = resourceViewDesc->tex1DArray_.mostDetailedMip_;
             viewDesc.Texture1DArray.MipLevels = resourceViewDesc->tex1DArray_.mipLevels_;
             viewDesc.Texture1DArray.FirstArraySlice = resourceViewDesc->tex1DArray_.firstArraySlice_;
             viewDesc.Texture1DArray.ArraySize = resourceViewDesc->tex1DArray_.arraySize_;
+            break;
 
-        }else{
-            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
-            viewDesc.Texture1D.MostDetailedMip = resourceViewDesc->tex1D_.mostDetailedMip_;
-            viewDesc.Texture1D.MipLevels = resourceViewDesc->tex1D_.mipLevels_;
-        }
+        default:
+            return Texture1DRef(sampler, NULL, texture);
+        };
 
         ID3D11ShaderResourceView* view = NULL;
         hr = device->CreateShaderResourceView(
@@ -222,15 +344,17 @@ namespace lgraphics
         ResourceMisc misc,
         TextureFilterType filter,
         TextureAddress adress,
+        CmpFunc compFunc,
         f32 borderColor,
         const SubResourceData* initData,
-        const ResourceViewDesc* resourceViewDesc)
+        const SRVDesc* resourceViewDesc)
     {
         SamplerStateRef sampler = SamplerState::create(
             filter,
             adress,
             adress,
             adress,
+            compFunc,
             borderColor);
         if(false == sampler.valid()){
             return Texture2DRef();
@@ -248,7 +372,7 @@ namespace lgraphics
         desc.Usage = static_cast<D3D11_USAGE>(usage);
         desc.BindFlags = bind;
         desc.CPUAccessFlags = access;
-        desc.MiscFlags = (1<arraySize)? D3D11_RESOURCE_MISC_TEXTURECUBE|misc : misc;
+        desc.MiscFlags = misc;
 
         ID3D11Device* device = Graphics::getDevice().getD3DDevice();
 
@@ -268,16 +392,40 @@ namespace lgraphics
 
         D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
         viewDesc.Format = static_cast<DXGI_FORMAT>(resourceViewDesc->format_);
-        if(arraySize>1){
-            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-            viewDesc.TextureCube.MostDetailedMip = resourceViewDesc->texCube_.mostDetailedMip_;
-            viewDesc.TextureCube.MipLevels = resourceViewDesc->texCube_.mipLevels_;
 
-        }else{
+        switch(resourceViewDesc->dimension_)
+        {
+        case ViewSRVDimension_Texture2D:
             viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
             viewDesc.Texture2D.MostDetailedMip = resourceViewDesc->tex2D_.mostDetailedMip_;
             viewDesc.Texture2D.MipLevels = resourceViewDesc->tex2D_.mipLevels_;
-        }
+            break;
+
+        case ViewSRVDimension_Texture2DArray:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
+            viewDesc.Texture2DArray.MostDetailedMip = resourceViewDesc->tex2DArray_.mostDetailedMip_;
+            viewDesc.Texture2DArray.MipLevels = resourceViewDesc->tex2DArray_.mipLevels_;
+            viewDesc.Texture2DArray.FirstArraySlice = resourceViewDesc->tex2DArray_.firstArraySlice_;
+            viewDesc.Texture2DArray.ArraySize = resourceViewDesc->tex2DArray_.arraySize_;
+            break;
+
+        case ViewSRVDimension_Cube:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
+            viewDesc.TextureCube.MostDetailedMip = resourceViewDesc->texCube_.mostDetailedMip_;
+            viewDesc.TextureCube.MipLevels = resourceViewDesc->texCube_.mipLevels_;
+            break;
+
+        case ViewSRVDimension_CubeArray:
+            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBEARRAY;
+            viewDesc.TextureCubeArray.MostDetailedMip = resourceViewDesc->texCubeArray_.mostDetailedMip_;
+            viewDesc.TextureCubeArray.MipLevels = resourceViewDesc->texCubeArray_.mipLevels_;
+            viewDesc.TextureCubeArray.First2DArrayFace = resourceViewDesc->texCubeArray_.first2DArraySlice_;
+            viewDesc.TextureCubeArray.NumCubes = resourceViewDesc->texCubeArray_.numCubes_;
+            break;
+
+        default:
+            return Texture2DRef(sampler, NULL, texture);
+        };
 
         ID3D11ShaderResourceView* view = NULL;
         hr = device->CreateShaderResourceView(
@@ -305,14 +453,18 @@ namespace lgraphics
         ResourceMisc misc,
         TextureFilterType filter,
         TextureAddress adress,
+        CmpFunc compFunc,
+        f32 borderColor,
         const SubResourceData* initData,
-        const ResourceViewDesc* resourceViewDesc)
+        const SRVDesc* resourceViewDesc)
     {
         SamplerStateRef sampler = SamplerState::create(
             filter,
             adress,
             adress,
-            adress);
+            adress,
+            compFunc,
+            borderColor);
         if(false == sampler.valid()){
             return Texture3DRef();
         }
@@ -374,13 +526,14 @@ namespace lgraphics
         ResourceMisc misc,
         u32 structureByteStride,
         const SubResourceData* initData,
-        const ResourceViewDesc* resourceViewDesc)
+        const SRVDesc* resourceViewDesc)
     {
         SamplerStateRef sampler = SamplerState::create(
             TextureFilterType::TexFilter_MinMagMipPoint,
             TextureAddress::TexAddress_Clamp,
             TextureAddress::TexAddress_Clamp,
-            TextureAddress::TexAddress_Clamp);
+            TextureAddress::TexAddress_Clamp,
+            Cmp_Never);
         if(false == sampler.valid()){
             return BufferRef();
         }
