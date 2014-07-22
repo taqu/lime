@@ -484,7 +484,7 @@ namespace etc
         }
 
         for(u32 i=sy; i<ey; ++i){
-            const u8* row = src + 3*(sy*width_ + sx);
+            const u8* row = src + 3*(i*width_ + sx);
             Texel *trow = texels_ + ((i-sy) << 2);
 
             for(u32 j=sx; j<ex; ++j){
@@ -601,11 +601,11 @@ namespace etc
 
             s32 tmp;
             for(s32 i=0; i<3; ++i){
-                tmp = rgb1[i];
-                tmp += diff[i];
-                tmp = lcore::clamp(tmp, 0, 255);
+                rgb1[i] = (rgb5bit1[i]<<3) | (rgb5bit1[i]>>2);
 
-                rgb1[i] = (rgb1[i]<<3) | (rgb1[i]>>2);
+                tmp = rgb5bit1[i];
+                tmp += diff[i];
+                tmp = lmath::clamp(tmp, 0, 255);
 
                 rgb2[i] = tmp;
                 rgb2[i] = (rgb2[i]<<3) | (rgb2[i]>>2);
@@ -774,11 +774,10 @@ namespace etc
 
                 s32 tmp;
                 for(s32 i=0; i<3; ++i){
-                    tmp = rgb1[i];
+                    rgb1[i] = (rgb5bit1[i]<<3) | (rgb5bit1[i]>>2);
+                    tmp = rgb5bit1[i];
                     tmp += diff[i];
-                    tmp = lcore::clamp(tmp, 0, 255);
-
-                    rgb1[i] = (rgb1[i]<<3) | (rgb1[i]>>2);
+                    tmp = lmath::clamp(tmp, 0, 255);
 
                     rgb2[i] = tmp;
                     rgb2[i] = (rgb2[i]<<3) | (rgb2[i]>>2);
@@ -1968,17 +1967,11 @@ namespace etc
 
         for(u8 i=0; i<8; ++i){
 
-#if 1
             msb[0] = dst[4];
             msb[1] = dst[5];
             lsb[0] = dst[6];
             lsb[1] = dst[7];
-#else
-            msb[1] = dst[4];
-            msb[0] = dst[5];
-            lsb[1] = dst[6];
-            lsb[0] = dst[7];
-#endif
+
 
             f32 error = encode2x4(msb, lsb, i, rgb, sx, ex);
             if(error < min_error){
@@ -1989,24 +1982,17 @@ namespace etc
             }
         }
 
-#if 1
         dst[4] = best_msb[0];
         dst[5] = best_msb[1];
         dst[6] = best_lsb[0];
         dst[7] = best_lsb[1];
-#else
-        dst[4] = best_msb[1];
-        dst[5] = best_msb[0];
-        dst[6] = best_lsb[1];
-        dst[7] = best_lsb[1];
-#endif
+
         return min_error;
     }
 
     //---------------------------------------------------------------------
     f32 ETC1Codec::encode2x4(u8* msb, u8* lsb, u8 table, const u8* rgb, u32 sx, u32 ex)
     {
-        s32 candidate[3];
         f32 min_error;
         f32 sum_error = 0.0f;
         s32 pix;
@@ -2017,12 +2003,10 @@ namespace etc
             pix = 0;
 
             for(s32 j=0; j<4; ++j){
-                candidate[0] = lmath::clamp( ModifierTable[table][j] + rgb[0], 0, 255 );
-                candidate[1] = lmath::clamp( ModifierTable[table][j] + rgb[1], 0, 255 );
-                candidate[2] = lmath::clamp( ModifierTable[table][j] + rgb[2], 0, 255 );
-                f32 err = WeightR* sqr( candidate[0] - texel.r_ );
-                err += WeightG* sqr(candidate[1] - texel.g_);
-                err += WeightB* sqr(candidate[2] - texel.b_);
+                s32 r = clamp( ModifierTable[table][j] + rgb[0], 0, 255 );
+                s32 g = clamp( ModifierTable[table][j] + rgb[1], 0, 255 );
+                s32 b = clamp( ModifierTable[table][j] + rgb[2], 0, 255 );
+                f32 err = WeightR* sqr(r - texel.r_) + WeightG* sqr(g - texel.g_) + WeightB* sqr(b - texel.b_);
 
                 if(err<min_error){
                     min_error = err;
@@ -2032,9 +2016,7 @@ namespace etc
 
             u8 y = i >> 2;
             u8 x = i - (y<<2);
-            u8 p = (x << 2) + y;
-            ModeBase::setMSB(msb, p, pix);
-            ModeBase::setLSB(lsb, p, pix);
+            ModeBase::setBit(msb, lsb, x, y, pix);
 
             sum_error += min_error;
         }
@@ -2053,17 +2035,12 @@ namespace etc
         u8 best_lsb[2];
 
         for(u8 i=0; i<8; ++i){
-#if 1
+
             msb[0] = dst[4];
             msb[1] = dst[5];
             lsb[0] = dst[6];
             lsb[1] = dst[7];
-#else
-            msb[1] = dst[4];
-            msb[0] = dst[5];
-            lsb[1] = dst[6];
-            lsb[0] = dst[7];
-#endif
+
             f32 error = encode4x2(msb, lsb, i, rgb, sx, ex);
             if(error < min_error){
                 min_error = error;
@@ -2072,17 +2049,11 @@ namespace etc
                 best_lsb[0] = lsb[0]; best_lsb[1] = lsb[1];
             }
         }
-#if 1
+
         dst[4] = best_msb[0];
         dst[5] = best_msb[1];
         dst[6] = best_lsb[0];
         dst[7] = best_lsb[1];
-#else
-        dst[4] = best_msb[1];
-        dst[5] = best_msb[0];
-        dst[6] = best_lsb[1];
-        dst[7] = best_lsb[1];
-#endif
 
         return min_error;
     }
@@ -2090,7 +2061,6 @@ namespace etc
     //---------------------------------------------------------------------
     f32 ETC1Codec::encode4x2(u8* msb, u8* lsb, u8 table, const u8* rgb, u32 sx, u32 ex)
     {
-        s32 candidate[3];
         f32 min_error;
         f32 sum_error = 0.0f;
         s32 pix;
@@ -2105,12 +2075,10 @@ namespace etc
                 pix = 0;
 
                 for(s32 k=0; k<4; ++k){
-                    candidate[0] = lmath::clamp( ModifierTable[table][k] + rgb[0], 0, 255 );
-                    candidate[1] = lmath::clamp( ModifierTable[table][k] + rgb[1], 0, 255 );
-                    candidate[2] = lmath::clamp( ModifierTable[table][k] + rgb[2], 0, 255 );
-                    f32 err = WeightR* sqr(candidate[0] - texel.r_);
-                    err += WeightG* sqr(candidate[1] - texel.g_);
-                    err += WeightB* sqr(candidate[2] - texel.b_);
+                    s32 r = clamp( ModifierTable[table][k] + rgb[0], 0, 255 );
+                    s32 g = clamp( ModifierTable[table][k] + rgb[1], 0, 255 );
+                    s32 b = clamp( ModifierTable[table][k] + rgb[2], 0, 255 );
+                    f32 err = WeightR* sqr(r - texel.r_) + WeightG* sqr(g - texel.g_) + WeightB* sqr(b - texel.b_);
 
                     if(err<min_error){
                         min_error = err;
@@ -2118,11 +2086,7 @@ namespace etc
                     }
                 }
 
-                u8 y = index >> 2;
-                u8 x = index - (y<<2);
-                u8 p = (x << 2) + y;
-                ModeBase::setMSB(msb, p, pix);
-                ModeBase::setLSB(lsb, p, pix);
+                ModeBase::setBit(msb, lsb, i, j, pix);
 
                 sum_error += min_error;
             }

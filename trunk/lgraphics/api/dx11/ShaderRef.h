@@ -65,6 +65,7 @@ namespace lgraphics
 
     private:
         friend class Shader;
+        template<int T> friend class ShaderCompiler;
 
         void destroy();
 
@@ -115,6 +116,7 @@ namespace lgraphics
 
     private:
         friend class Shader;
+        template<int T> friend class ShaderCompiler;
 
         void destroy();
 
@@ -165,6 +167,7 @@ namespace lgraphics
 
     private:
         friend class Shader;
+        template<int T> friend class ShaderCompiler;
 
         void destroy();
 
