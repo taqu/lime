@@ -80,7 +80,7 @@ namespace lscene
         lmath::Vector4 frustumPoints[8];
 
         lscene::Frustum frustum;
-        frustum.calc(getCamera(), shadowMapZNear, shadowMapZFar);
+        frustum.calcInView(getCamera(), shadowMapZNear, shadowMapZFar);
         frustum.getPoints(frustumPoints);
 
         lmath::Vector4 lightCameraOrhoMin(FLT_MAX, FLT_MAX, FLT_MAX, 1.0f);
@@ -94,8 +94,8 @@ namespace lscene
             frustumPoints[i].mul(invView, frustumPoints[i]);
             //ライトの座標へ変換
             worldPoint.mul(lightView, frustumPoints[i]);
-            lightCameraOrhoMin.min(lightCameraOrhoMin, worldPoint);
-            lightCameraOrhoMax.max(lightCameraOrhoMax, worldPoint);
+            lightCameraOrhoMin.minimum(lightCameraOrhoMin, worldPoint);
+            lightCameraOrhoMax.maximum(lightCameraOrhoMax, worldPoint);
         }
 
         lmath::Vector4 diagonal = frustumPoints[0];
