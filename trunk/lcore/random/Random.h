@@ -41,6 +41,11 @@ namespace lcore
         f32 frand();
 
         /**
+        @brief 0.0 - 0.999999881の乱数生成
+        */
+        f32 frand2();
+
+        /**
         @brief 0 - 1の乱数生成
         */
         f64 drand();
@@ -82,6 +87,11 @@ namespace lcore
         f32 frand();
 
         /**
+        @brief 0.0 - 0.999999881の乱数生成
+        */
+        f32 frand2();
+
+        /**
         @brief 0 - 1の乱数生成
         */
         f64 drand();
@@ -95,12 +105,18 @@ namespace lcore
 
 namespace random
 {
+    /**
+    @brief [vmin, vmax]
+    */
     template<class T, class U>
     U range(T& random, U vmin, U vmax)
     {
         LASSERT(vmin<=vmax);
-        U ret = static_cast<U>(random.frand()*(vmax-vmin) + vmin);
-        return ret;
+
+        //return static_cast<U>(random.frand2()*(vmax-vmin)) + vmin;
+
+        u32 i = random.rand() % (vmax - vmin + 1);
+        return vmin + static_cast<U>(i);
     }
 
     template<class T>

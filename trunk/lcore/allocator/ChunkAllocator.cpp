@@ -5,7 +5,7 @@
 */
 #include "ChunkAllocator.h"
 #include <Windows.h>
-#include "clibrary.h"
+#include "../clibrary.h"
 
 namespace lcore
 {
@@ -255,33 +255,6 @@ namespace
         } //while(NULL != chunk)
     }
 
-    //------------------------------------------------------
-    // 最上位ビット位置
-    u32 ChunkAllocator::mostSignificantBit(u32 v)
-    {
-        static const u32 shifttable[] =
-        {
-            0, 1, 2, 2, 3, 3, 3, 3,
-            4, 4, 4, 4, 4, 4, 4, 4,
-        };
-        u32 ret = 0;
-
-        if(v & 0xFFFF0000U){
-            ret += 16;
-            v >>= 16;
-        }
-
-        if(v & 0xFF00U){
-            ret += 8;
-            v >>= 8;
-        }
-
-        if(v & 0xF0U){
-            ret += 4;
-            v >>= 4;
-        }
-        return ret + shifttable[v];
-    }
 
     //------------------------------------------------------
     u32 ChunkAllocator::calcAllocSize(u32 size)
@@ -289,10 +262,6 @@ namespace
         LASSERT(0<size && size<=MaxSize);
         u32 index = calcBankIndex(size);
         return AllocSizeTable[index];
-
-        //u32 msb = mostSignificantBit(size) - 1;
-        //u32 flag = size & ((0x01U << msb) - 1);
-        //return lcore::maximum(MinPower, (flag)? (msb+1) : msb);
     }
 
     //------------------------------------------------------
