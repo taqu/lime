@@ -27,12 +27,5 @@ namespace load
         s16 texColor_;
         s16 texNormal_;
     };
-
-    class MaterialCVT : public Material
-    {
-    public:
-        u64 uniqueID_;
-        std::string name_;
-    };
 }
 #endif //INC_LOAD_MATERIAL_H__

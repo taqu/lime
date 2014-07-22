@@ -150,10 +150,10 @@ bool FontPackerDF::drawScaled(HWND hwnd)
             FALSE,
             FALSE,
             SHIFTJIS_CHARSET,
-            OUT_TT_ONLY_PRECIS,
+            OUT_DEFAULT_PRECIS,//OUT_TT_ONLY_PRECIS,
             CLIP_DEFAULT_PRECIS,
-            NONANTIALIASED_QUALITY, //距離場の場合はアンチエイリアスなし
-            FIXED_PITCH|FF_MODERN,
+            ANTIALIASED_QUALITY,//NONANTIALIASED_QUALITY, //距離場の場合はアンチエイリアスなし
+            DEFAULT_PITCH | FF_DONTCARE, //FIXED_PITCH|FF_MODERN,
             info_.face_.c_str());
     }
 
