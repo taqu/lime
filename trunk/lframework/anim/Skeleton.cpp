@@ -6,7 +6,6 @@
 */
 #include "Skeleton.h"
 #include "Joint.h"
-#include <lcore/Hash.h>
 #include <lcore/liostream.h>
 
 namespace lanim
@@ -22,7 +21,6 @@ namespace lanim
     Skeleton::Skeleton(s32 numJoints)
         :refCount_(0)
         ,numJoints_(numJoints)
-        ,nameJointIndexMap_(numJoints<<1)
     {
         u32 size[] = 
         {
@@ -56,29 +54,28 @@ namespace lanim
     // 名前からジョイント検索
     const Joint* Skeleton::findJoint(const Name& name) const
     {
-        NameJointIndexMap::size_type pos = nameJointIndexMap_.find(name.c_str(), name.size());
-        if(pos == nameJointIndexMap_.end()){
-            return NULL;
+        for(u32 i=0; i<numJoints_; ++i){
+            if(jointNames_[i] == name){
+                return &joints_[i];
+            }
         }
-
-        s32 index = nameJointIndexMap_.getValue(pos);
-        LASSERT(0<=index && index<numJoints_);
-        return &(joints_[index]);
+        return NULL;
     }
 
     // 名前からジョイント検索
-    const Joint* Skeleton::findJoint(const char* name) const
+    const Joint* Skeleton::findJoint(const Char* name) const
     {
         LASSERT(name != NULL);
+        u32 hash = lcore::calc_hash_string(reinterpret_cast<const u8*>(name));
 
-        NameJointIndexMap::size_type pos = nameJointIndexMap_.find(name);
-        if(pos == nameJointIndexMap_.end()){
-            return NULL;
+        for(u32 i=0; i<numJoints_; ++i){
+            if(hash == jointNames_[i].getHash()
+                && jointNames_[i] == name)
+            {
+                return &joints_[i];
+            }
         }
-
-        s32 index = nameJointIndexMap_.getValue(pos);
-        LASSERT(0<=index && index<numJoints_);
-        return &(joints_[index]);
+        return NULL;
     }
 
     // スワップ
@@ -87,18 +84,8 @@ namespace lanim
         lcore::swap(numJoints_, rhs.numJoints_);
         lcore::swap(joints_, rhs.joints_);
         lcore::swap(jointNames_, rhs.jointNames_);
-
-        nameJointIndexMap_.swap(rhs.nameJointIndexMap_);
         resourceBuffer_.swap(rhs.resourceBuffer_);
     }
-
-    void Skeleton::recalcHash()
-    {
-        for(s32 i=0; i<numJoints_; ++i){
-            nameJointIndexMap_.insert(jointNames_[i].c_str(), i);
-        }
-    }
-
 
     bool Skeleton::serialize(lcore::ostream& os, Skeleton::pointer& skeleton)
     {
@@ -133,7 +120,6 @@ namespace lanim
             Joint& joint = skeleton->getJoint(i);
             lcore::io::read(is, joint);
         }
-        skeleton->recalcHash();
         return true;
     }
 }

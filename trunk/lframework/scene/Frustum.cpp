@@ -18,13 +18,14 @@ namespace lscene
 {
     //---------------------------------------------------
     // ビュー空間の視錐台計算
-    void Frustum::calc(const Camera& camera, f32 znear, f32 zfar)
+    void Frustum::calcInView(const Camera& camera, f32 znear, f32 zfar)
     {
         const lmath::Matrix44& proj = camera.getProjMatrix();
 
 #if defined(LMATH_USE_SSE)
         //lm128 r0 = _mm_loadu_ps(&proj.m_[0][0]);
         //lm128 r1 = _mm_loadu_ps(&proj.m_[1][0]);
+        //lm128 r2 = _mm_loadu_ps(&proj.m_[2][0]);
         //lm128 r3 = _mm_loadu_ps(&proj.m_[3][0]);
 
         //lm128 t0 = _mm_add_ps(r3, r0);
@@ -39,9 +40,16 @@ namespace lscene
         //lm128 t3 = _mm_sub_ps(r3, r1);
         //_mm_storeu_ps(&planes_[3].v_.x_, t3);
 
+        //_mm_storeu_ps(&planes_[4].v_.x_, r2);
+
+        //lm128 t5 = _mm_sub_ps(r2, r3);
+        //_mm_storeu_ps(&planes_[5].v_.x_, t5);
+
         lm128 r0 = _mm_loadu_ps(&proj.m_[0][0]);
         lm128 r1 = _mm_loadu_ps(&proj.m_[1][0]);
+        //lm128 r2 = _mm_loadu_ps(&proj.m_[2][0]);
         lm128 r3 = _mm_loadu_ps(&proj.m_[3][0]);
+
         f32 f;
         *((u32*)&f) = 0x80000000U;
         lm128 mask = _mm_load1_ps(&f);
@@ -60,6 +68,11 @@ namespace lscene
         lm128 t3 = _mm_sub_ps(r1, r3);
         _mm_storeu_ps(&planes_[3].v_.x_, t3);
 
+        //lm128 t4 = _mm_xor_ps(r2, _mm_set1_ps(-0.0f));
+        //_mm_storeu_ps(&planes_[4].v_.x_, t4);
+
+        //lm128 t5 = _mm_sub_ps(r2, r3);
+        //_mm_storeu_ps(&planes_[5].v_.x_, t5);
 #else
         //planes_[0].v_.x_ = proj.m_[3][0] + proj.m_[0][0];
         //planes_[0].v_.y_ = proj.m_[3][1] + proj.m_[0][1];
@@ -81,6 +94,16 @@ namespace lscene
         //planes_[3].v_.z_ = proj.m_[3][2] - proj.m_[1][2];
         //planes_[3].v_.w_ = proj.m_[3][3] - proj.m_[1][3];
 
+        //planes_[4].v_.x_ = proj.m_[2][0];
+        //planes_[4].v_.y_ = proj.m_[2][1];
+        //planes_[4].v_.z_ = proj.m_[2][2];
+        //planes_[4].v_.w_ = proj.m_[2][3];
+
+        //planes_[5].v_.x_ = -proj.m_[2][0] + proj.m_[3][0];
+        //planes_[5].v_.y_ = -proj.m_[2][1] + proj.m_[3][1];
+        //planes_[5].v_.z_ = -proj.m_[2][2] + proj.m_[3][2];
+        //planes_[5].v_.w_ = -proj.m_[2][3] + proj.m_[3][3];
+
         planes_[0].v_.x_ = -proj.m_[0][0] - proj.m_[3][0];
         planes_[0].v_.y_ = -proj.m_[0][1] - proj.m_[3][1];
         planes_[0].v_.z_ = -proj.m_[0][2] - proj.m_[3][2];
@@ -100,11 +123,22 @@ namespace lscene
         planes_[3].v_.y_ = proj.m_[1][1] - proj.m_[3][1];
         planes_[3].v_.z_ = proj.m_[1][2] - proj.m_[3][2];
         planes_[3].v_.w_ = proj.m_[1][3] - proj.m_[3][3];
+
+        //planes_[4].v_.x_ = -proj.m_[2][0];
+        //planes_[4].v_.y_ = -proj.m_[2][1];
+        //planes_[4].v_.z_ = -proj.m_[2][2];
+        //planes_[4].v_.w_ = -proj.m_[2][3];
+
+        //planes_[5].v_.x_ = proj.m_[2][0] - proj.m_[3][0];
+        //planes_[5].v_.y_ = proj.m_[2][1] - proj.m_[3][1];
+        //planes_[5].v_.z_ = proj.m_[2][2] - proj.m_[3][2];
+        //planes_[5].v_.w_ = proj.m_[2][3] - proj.m_[3][3];
 #endif
+
         planes_[4].v_.x_ = 0.0f;
         planes_[4].v_.y_ = 0.0f;
         planes_[4].v_.z_ = -1.0f;
-        planes_[4].v_.w_ = znear;//camera.getZNear();
+        planes_[4].v_.w_ = znear;
 
         planes_[5].v_.x_ = 0.0f;
         planes_[5].v_.y_ = 0.0f;
@@ -116,26 +150,194 @@ namespace lscene
         }
     }
 
+    //---------------------------------------------------
+    // ビュー空間の視錐台計算
+    void Frustum::calcInView(const Camera& camera)
+    {
+        calc(camera.getProjMatrix());
+    }
 
     //---------------------------------------------------
-    // ビュー空間の球が視錐台内にあるか
-    bool Frustum::contains(f32 x, f32 y, f32 z, f32 radius)
+    // ワールド空間の視錐台計算
+    void Frustum::calcInWorld(const Camera& camera)
+    {
+        calc(camera.getViewProjMatrix());
+    }
+
+    void Frustum::calc(const lmath::Matrix44& proj)
+    {
+#if defined(LMATH_USE_SSE)
+        //lm128 r0 = _mm_loadu_ps(&proj.m_[0][0]);
+        //lm128 r1 = _mm_loadu_ps(&proj.m_[1][0]);
+        //lm128 r2 = _mm_loadu_ps(&proj.m_[2][0]);
+        //lm128 r3 = _mm_loadu_ps(&proj.m_[3][0]);
+
+        //lm128 t0 = _mm_add_ps(r3, r0);
+        //_mm_storeu_ps(&planes_[0].v_.x_, t0);
+
+        //lm128 t1 = _mm_sub_ps(r3, r0);
+        //_mm_storeu_ps(&planes_[1].v_.x_, t1);
+
+        //lm128 t2 = _mm_add_ps(r3, r1);
+        //_mm_storeu_ps(&planes_[2].v_.x_, t2);
+
+        //lm128 t3 = _mm_sub_ps(r3, r1);
+        //_mm_storeu_ps(&planes_[3].v_.x_, t3);
+
+        //_mm_storeu_ps(&planes_[4].v_.x_, r2);
+
+        //lm128 t5 = _mm_sub_ps(r2, r3);
+        //_mm_storeu_ps(&planes_[5].v_.x_, t5);
+
+        lm128 r0 = _mm_loadu_ps(&proj.m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&proj.m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&proj.m_[2][0]);
+        lm128 r3 = _mm_loadu_ps(&proj.m_[3][0]);
+
+        f32 f;
+        *((u32*)&f) = 0x80000000U;
+        lm128 mask = _mm_load1_ps(&f);
+
+        lm128 t0 = _mm_xor_ps(r0, mask);
+        t0 = _mm_sub_ps(t0, r3);
+        _mm_storeu_ps(&planes_[0].v_.x_, t0);
+
+        lm128 t1 = _mm_sub_ps(r0, r3);
+        _mm_storeu_ps(&planes_[1].v_.x_, t1);
+
+        lm128 t2 = _mm_xor_ps(r1, mask);
+        t2 = _mm_sub_ps(t2, r3);
+        _mm_storeu_ps(&planes_[2].v_.x_, t2);
+
+        lm128 t3 = _mm_sub_ps(r1, r3);
+        _mm_storeu_ps(&planes_[3].v_.x_, t3);
+
+        lm128 t4 = _mm_xor_ps(r2, mask);
+        _mm_storeu_ps(&planes_[4].v_.x_, t4);
+
+        lm128 t5 = _mm_sub_ps(r2, r3);
+        _mm_storeu_ps(&planes_[5].v_.x_, t5);
+#else
+        //planes_[0].v_.x_ = proj.m_[3][0] + proj.m_[0][0];
+        //planes_[0].v_.y_ = proj.m_[3][1] + proj.m_[0][1];
+        //planes_[0].v_.z_ = proj.m_[3][2] + proj.m_[0][2];
+        //planes_[0].v_.w_ = proj.m_[3][3] + proj.m_[0][3];
+
+        //planes_[1].v_.x_ = proj.m_[3][0] - proj.m_[0][0];
+        //planes_[1].v_.y_ = proj.m_[3][1] - proj.m_[0][1];
+        //planes_[1].v_.z_ = proj.m_[3][2] - proj.m_[0][2];
+        //planes_[1].v_.w_ = proj.m_[3][3] - proj.m_[0][3];
+
+        //planes_[2].v_.x_ = proj.m_[3][0] + proj.m_[1][0];
+        //planes_[2].v_.y_ = proj.m_[3][1] + proj.m_[1][1];
+        //planes_[2].v_.z_ = proj.m_[3][2] + proj.m_[1][2];
+        //planes_[2].v_.w_ = proj.m_[3][3] + proj.m_[1][3];
+
+        //planes_[3].v_.x_ = proj.m_[3][0] - proj.m_[1][0];
+        //planes_[3].v_.y_ = proj.m_[3][1] - proj.m_[1][1];
+        //planes_[3].v_.z_ = proj.m_[3][2] - proj.m_[1][2];
+        //planes_[3].v_.w_ = proj.m_[3][3] - proj.m_[1][3];
+
+        //planes_[4].v_.x_ = proj.m_[2][0];
+        //planes_[4].v_.y_ = proj.m_[2][1];
+        //planes_[4].v_.z_ = proj.m_[2][2];
+        //planes_[4].v_.w_ = proj.m_[2][3];
+
+        //planes_[5].v_.x_ = -proj.m_[2][0] + proj.m_[3][0];
+        //planes_[5].v_.y_ = -proj.m_[2][1] + proj.m_[3][1];
+        //planes_[5].v_.z_ = -proj.m_[2][2] + proj.m_[3][2];
+        //planes_[5].v_.w_ = -proj.m_[2][3] + proj.m_[3][3];
+
+        planes_[0].v_.x_ = -proj.m_[0][0] - proj.m_[3][0];
+        planes_[0].v_.y_ = -proj.m_[0][1] - proj.m_[3][1];
+        planes_[0].v_.z_ = -proj.m_[0][2] - proj.m_[3][2];
+        planes_[0].v_.w_ = -proj.m_[0][3] - proj.m_[3][3];
+
+        planes_[1].v_.x_ = proj.m_[0][0] - proj.m_[3][0];
+        planes_[1].v_.y_ = proj.m_[0][1] - proj.m_[3][1];
+        planes_[1].v_.z_ = proj.m_[0][2] - proj.m_[3][2];
+        planes_[1].v_.w_ = proj.m_[0][3] - proj.m_[3][3];
+
+        planes_[2].v_.x_ = -proj.m_[1][0] - proj.m_[3][0];
+        planes_[2].v_.y_ = -proj.m_[1][1] - proj.m_[3][1];
+        planes_[2].v_.z_ = -proj.m_[1][2] - proj.m_[3][2];
+        planes_[2].v_.w_ = -proj.m_[1][3] - proj.m_[3][3];
+
+        planes_[3].v_.x_ = proj.m_[1][0] - proj.m_[3][0];
+        planes_[3].v_.y_ = proj.m_[1][1] - proj.m_[3][1];
+        planes_[3].v_.z_ = proj.m_[1][2] - proj.m_[3][2];
+        planes_[3].v_.w_ = proj.m_[1][3] - proj.m_[3][3];
+
+        planes_[4].v_.x_ = -proj.m_[2][0];
+        planes_[4].v_.y_ = -proj.m_[2][1];
+        planes_[4].v_.z_ = -proj.m_[2][2];
+        planes_[4].v_.w_ = -proj.m_[2][3];
+
+        planes_[5].v_.x_ = proj.m_[2][0] - proj.m_[3][0];
+        planes_[5].v_.y_ = proj.m_[2][1] - proj.m_[3][1];
+        planes_[5].v_.z_ = proj.m_[2][2] - proj.m_[3][2];
+        planes_[5].v_.w_ = proj.m_[2][3] - proj.m_[3][3];
+#endif
+
+        for(s32 i=0; i<6; ++i){
+            planes_[i].normalize();
+        }
+    }
+
+    //---------------------------------------------------
+    // 球が視錐台内にあるか
+    bool Frustum::contains(f32 x, f32 y, f32 z, f32 radius) const
     {
         lmath::Vector4 p(x, y, z, 1.0f);
-        float distance;
+        f32 distance;
         for(s32 i=0; i<6; ++i){
             distance = planes_[i].dot(p);
             if(radius < distance){
                 return false;
             }
+        }
+        return true;
+    }
 
+    //---------------------------------------------------
+    // AABBが視錐台内にあるか
+    bool Frustum::contains(const lmath::Vector3& bmin, const lmath::Vector3& bmax) const
+    {
+        lmath::Vector4 p;
+        p.one();
+        for(s32 i=0; i<6; ++i){
+            p.x_ = (0<=planes_[i].v_.x_)? bmin.x_ : bmax.x_;
+            p.y_ = (0<=planes_[i].v_.y_)? bmin.y_ : bmax.y_;
+            p.z_ = (0<=planes_[i].v_.z_)? bmin.z_ : bmax.z_;
+            if(0.0f<planes_[i].dot(p)){
+                return false;
+            }
+        }
+        return true;
+    }
+
+    //---------------------------------------------------
+    // AABBが視錐台内にあるか
+    bool Frustum::contains(const lmath::Vector4& bmin, const lmath::Vector4& bmax) const
+    {
+        lmath::Vector4 p;
+        p.one();
+
+        for(s32 i=0; i<6; ++i){
+            p.x_ = (0<=planes_[i].v_.x_)? bmin.x_ : bmax.x_;
+            p.y_ = (0<=planes_[i].v_.y_)? bmin.y_ : bmax.y_;
+            p.z_ = (0<=planes_[i].v_.z_)? bmin.z_ : bmax.z_;
+
+            if(0.0f<planes_[i].dot(p)){
+                return false;
+            }
         }
         return true;
     }
 
     //---------------------------------------------------
     // 視錐台の８頂点取得
-    void Frustum::getPoints(lmath::Vector4* points)
+    void Frustum::getPoints(lmath::Vector4* points) const
     {
         f32 slopeX = planes_[0].v_.z_ / planes_[0].v_.x_;
         f32 slopeY = planes_[2].v_.z_ / planes_[2].v_.y_;
@@ -161,7 +363,7 @@ namespace lscene
 
     //---------------------------------------------------
     // 視錐台の８頂点取得
-    void Frustum::getPoints(lmath::Vector4* points, f32 znear)
+    void Frustum::getPoints(lmath::Vector4* points, f32 znear) const
     {
         f32 slopeX = planes_[0].v_.z_ / planes_[0].v_.x_;
         f32 slopeY = planes_[2].v_.z_ / planes_[2].v_.y_;
@@ -200,7 +402,7 @@ namespace lscene
         //const lmath::Matrix44& proj = camera.getProjMatrix();
 
         Frustum frustum;
-        frustum.calc(camera, camera.getZNear(), camera.getZFar());
+        frustum.calcInView(camera, camera.getZNear(), camera.getZFar());
 
 
         f32 zfar = minz;
