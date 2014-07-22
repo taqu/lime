@@ -163,6 +163,7 @@
     <ClInclude Include="..\geometry\KDTree.h" />
     <ClInclude Include="..\geometry\Plane.h" />
     <ClInclude Include="..\geometry\PrimitiveTest.h" />
+    <ClInclude Include="..\geometry\QBVH.h" />
     <ClInclude Include="..\geometry\Ray.h" />
     <ClInclude Include="..\geometry\RayTest.h" />
     <ClInclude Include="..\geometry\Sphere.h" />
@@ -180,6 +181,7 @@
   <ItemGroup>
     <ClCompile Include="..\geometry\Plane.cpp" />
     <ClCompile Include="..\geometry\PrimitiveTest.cpp" />
+    <ClCompile Include="..\geometry\QBVH.cpp" />
     <ClCompile Include="..\geometry\Ray.cpp" />
     <ClCompile Include="..\geometry\RayTest.cpp" />
     <ClCompile Include="..\geometry\Sphere.cpp" />

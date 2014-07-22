@@ -7,17 +7,19 @@
 
 namespace lmath
 {
-    void Vector2::setLerp(const Vector2& v1, const Vector2& v2, f32 f)
+    Vector2& Vector2::lerp(const Vector2& v0, const Vector2& v1, f32 t)
     {
-        if( f <= 0.0f ){
-            *this = v1;
-        }else if( f >= 1.0f ){
-            *this = v2;
-        }else{
-            *this = v2;
-            *this -= v1;
-            *this *= f;
-            *this += v1;
-        }
+        Vector2 tmp;
+        tmp.sub(v1, v0);
+        tmp *= t;
+
+        muladd(t, tmp, v0);
+        return *this;
+    }
+
+    void Vector2::muladd(f32 t, const Vector2& v0, const Vector2& v1)
+    {
+        x_ = t*v0.x_ + v1.x_;
+        y_ = t*v0.y_ + v1.y_;
     }
 }

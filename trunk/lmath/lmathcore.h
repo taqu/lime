@@ -23,11 +23,12 @@
 #if defined(LMATH_USE_SSE)
 //#include <mmintrin.h>  //MMX命令セット
 #include <xmmintrin.h> //SSE命令セット
-//#include <emmintrin.h> //SSE2命令セット
+#include <emmintrin.h> //SSE2命令セット
 
 namespace lmath
 {
     typedef __m128 lm128; /// XMMレジスタに対応した単精度浮動小数点型
+    typedef __m128i lm128i;
     typedef __m64 lm64;
 }
 
@@ -43,6 +44,7 @@ namespace lmath
     using lcore::u32;
     using lcore::f32;
     using lcore::f64;
+    using lcore::Char;
 
     class Vector3;
     class Vector4;
@@ -459,6 +461,19 @@ namespace lmath
     f32 gain(f32 a, f32 b);
 
     /**
+    @brief 単位球内ランダム
+    @param vx ... 
+    @param vy ... 
+    @param vz ... 
+    @param x0 ... 乱数0
+    @param x1 ... 乱数1
+    */
+    void randomInSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1, f32 x2);
+    void randomInSphere(lmath::Vector3& dst, f32 x0, f32 x1, f32 x2);
+    void randomInSphere(lmath::Vector4& dst, f32 x0, f32 x1, f32 x2);
+
+
+    /**
     @brief 単位球面上ランダム
     @param vx ... 
     @param vy ... 
@@ -467,6 +482,8 @@ namespace lmath
     @param x1 ... 乱数1
     */
     void randomOnSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1);
+    void randomOnSphere(lmath::Vector3& dst, f32 x0, f32 x1);
+    void randomOnSphere(lmath::Vector4& dst, f32 x0, f32 x1);
 
     template<class T>
     void randomOnSphere(f32& vx, f32& vy, f32& vz, T& random)
@@ -541,9 +558,27 @@ namespace lmath
         const Vector3& n,
         f32 x0, f32 x1);
 
+    void randomCone(
+        f32& vx, f32& vy, f32& vz,
+        f32 angle,
+        f32 nx, f32 ny, f32 nz,
+        f32 x0,
+        f32 x1);
 
     void reflect(Vector3& dst, const Vector3& src, const Vector3& normal);
     void reflect(Vector4& dst, const Vector4& src, const Vector4& normal);
+
+    void getColor(u8& r, u8& g, u8& b, u8& a, const Vector4& rgba);
+
+    u32 getARGB(const Vector4& rgba);
+    u32 getABGR(const Vector4& rgba);
+    u32 getRGBA(const Vector4& rgba);
+
+    void cubeToSphere(f32& x, f32& y, f32& z);
+
+    void cubeToSphere(lmath::Vector3& inout);
+
+    void cubeToSphere(lmath::Vector4& inout);
 }
 
 #endif //INC_LMATHCORE_H__

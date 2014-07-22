@@ -226,7 +226,7 @@ namespace lmath
             d = (s0.s_.w_<s1.s_.w_)? s1.s_.w_ : s0.s_.w_;
             d = r - d;
 
-            s_.setLerp(s0.s_, s1.s_, d/distance);
+            s_.lerp(s0.s_, s1.s_, d/distance);
             s_.w_ = r + SphereRadiusEpsilon;
         }
     }
@@ -248,7 +248,7 @@ namespace lmath
             d = (s_.w_<s1.s_.w_)? s1.s_.w_ : s_.w_;
             d = r - d;
 
-            s_.setLerp(s_, s1.s_, d/distance);
+            s_.lerp(s_, s1.s_, d/distance);
             s_.w_ = r + SphereRadiusEpsilon;
         }
     }
