@@ -113,27 +113,25 @@ namespace io
 
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             png_set_gray_to_rgb(png_ptr); //グレースケールをRGBに変換
-            //png_set_bgr(png_ptr); //RGBをBGRに
-            format= (swap == Swap_BGR)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            format= (swap == Swap_RGB)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
             break;
 
         case PNG_COLOR_TYPE_PALETTE:
             png_set_palette_to_rgb(png_ptr);
             png_set_add_alpha(png_ptr, 0xFFU, PNG_FILLER_AFTER);
-            format= (swap == Swap_BGR)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
-            swapBytes = (swap == Swap_BGR);
+            format= (swap == Swap_RGB)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            swapBytes = (swap == Swap_RGB);
             break;
 
         case PNG_COLOR_TYPE_RGB:
             png_set_add_alpha(png_ptr, 0xFFU, PNG_FILLER_AFTER);
-            format= (swap == Swap_BGR)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
-            swapBytes = (swap == Swap_BGR);
+            format= (swap == Swap_RGB)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            swapBytes = (swap == Swap_RGB);
             break;
 
         case PNG_COLOR_TYPE_RGB_ALPHA:
-            //png_set_bgr(png_ptr); //RGBをBGRに
             format= (swap == Swap_BGR)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
-            swapBytes = (swap == Swap_BGR);
+            swapBytes = (swap == Swap_RGB);
             break;
 
         case PNG_COLOR_MASK_PALETTE:
@@ -164,6 +162,7 @@ namespace io
             for(u32 i=0; i<height; ++i){
                 for(u32 j=0; j<rowBytes; j+=4){
                     lcore::swap(rowPointers[i][j+0], rowPointers[i][j+2]);
+                    //lcore::swap(rowPointers[i][j+3], rowPointers[i][j+1]);
                 }
             }
         }

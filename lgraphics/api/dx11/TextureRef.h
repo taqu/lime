@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2012/07/24 create
 */
-#include "../../lgraphicscore.h"
+#include "../../lgraphics.h"
 #include "Enumerations.h"
 #include "SamplerStateRef.h"
 
@@ -479,9 +479,20 @@ namespace lgraphics
         inline void attachPS(u32 viewIndex);
 
         inline void copy(this_type& src);
+        inline void updateSubresource(u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch);
+
         inline bool map(void*& data, u32& rowPitch, u32& depthPitch, s32 type);
         inline void unmap();
 
+        inline bool operator==(const TextureRefBase& rhs) const
+        {
+            return (texture_ == rhs.texture_);
+        }
+
+        inline bool operator!=(const TextureRefBase& rhs) const
+        {
+            return (texture_ != rhs.texture_);
+        }
     protected:
 
         TextureRefBase()
@@ -756,6 +767,13 @@ namespace lgraphics
     {
         lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         device.copyResource(texture_, src.texture_);
+    }
+
+    template<class T>
+    inline void TextureRefBase<T>::updateSubresource(u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.updateSubresource(texture_, index, box, data, rowPitch, depthPitch);
     }
 
     template<class T>

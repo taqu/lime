@@ -138,10 +138,10 @@ namespace lgraphics
         ID3DBlob** blob)
     {
         LASSERT(blob != NULL);
-        LASSERT(numDefines<=Shader::MaxDefines);
+        LASSERT(numDefines<=MaxDefines);
 
         //ƒ}ƒNƒ”z—ñì¬
-        D3D10_SHADER_MACRO macro[Shader::MaxDefines+1];
+        D3D10_SHADER_MACRO macro[MaxDefines+1];
         for(s32 i=0; i<numDefines; ++i){
             macro[i].Name = defines[i];
             macro[i].Definition = NULL;
