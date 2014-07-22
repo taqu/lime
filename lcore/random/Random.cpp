@@ -126,7 +126,21 @@ namespace lcore
         static const u32 m0 = 0x3F800000U;
         static const u32 m1 = 0x007FFFFFU;
         t = m0|(w_&m1);
-        return (*(f32*)&t)- 0.9999999f;
+        return (*(f32*)&t) - 0.999999881f;
+    }
+
+    f32 RandomXorshift::frand2()
+    {
+        u32 t = x_^(x_<<11);
+        x_ = y_;
+        y_ = z_;
+        z_ = w_;
+        w_ = (w_^(w_>>19)) ^ (t^(t>>8));
+
+        static const u32 m0 = 0x3F800000U;
+        static const u32 m1 = 0x007FFFFFU;
+        t = m0|(w_&m1);
+        return (*(f32*)&t) - 1.000000000f;
     }
 
     f64 RandomXorshift::drand()
@@ -182,7 +196,17 @@ namespace lcore
         static const u32 m0 = 0x3F800000U;
         static const u32 m1 = 0x007FFFFFU;
         t = m0|(t&m1);
-        return (*(f32*)&t)- 0.9999999f;
+        return (*(f32*)&t)- 0.999999881f;
+    }
+
+    f32 RandomWELL::frand2()
+    {
+        u32 t = rand();
+
+        static const u32 m0 = 0x3F800000U;
+        static const u32 m1 = 0x007FFFFFU;
+        t = m0|(t&m1);
+        return (*(f32*)&t) - 1.000000000f;
     }
 
     f64 RandomWELL::drand()

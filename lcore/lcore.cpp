@@ -33,32 +33,75 @@
 #include "allocator/dlmalloc.h"
 #include "utility.h"
 #include "clibrary.h"
+#include "async/SyncObject.h"
 
 namespace
 {
 #ifdef _DEBUG
     static const lcore::s32 DebugInfoMemorySize = 1024*1024;
-    static const lcore::s32 DebugInfoFileNameLength = 63;
     lcore::MemorySpace debugInfoMemorySpace_;
 
-    struct MemoryInfo
+    class DebugMemory
     {
-        MemoryInfo* next_;
-        void* memory_;
-        lcore::s32 line_;
-        lcore::Char file_[DebugInfoFileNameLength+1];
+    public:
+        static const lcore::s32 DebugInfoFileNameLength = 63;
+
+        struct MemoryInfo
+        {
+            inline void reset()
+            {
+                prev_ = next_ = this;
+            }
+
+            inline void unlink()
+            {
+                next_->prev_ = prev_;
+                prev_->next_ = next_;
+                prev_ = next_ = this;
+            }
+
+            inline void link(MemoryInfo* info)
+            {
+                prev_ = info->prev_;
+                next_ = info;
+                prev_->next_ = info->prev_ = this;
+            }
+
+            MemoryInfo* prev_;
+            MemoryInfo* next_;
+            void* memory_;
+            lcore::s32 line_;
+            lcore::Char file_[DebugInfoFileNameLength+1];
+        };
+
+        DebugMemory()
+        {
+            memoryInfoTop_.reset();
+        }
+
+        ~DebugMemory()
+        {
+        }
+
+        void pushMemoryInfo(void* ptr, const lcore::Char* file, lcore::s32 line);
+        void popMemoryInfo(void* ptr);
+
+        void print();
+
+        lcore::CriticalSection debugCS_;
+
+        MemoryInfo memoryInfoTop_;
     };
 
-    MemoryInfo* memoryInfoTop_ = NULL;
-
-    void pushMemoryInfo(void* ptr, const lcore::Char* file, lcore::s32 line)
+    void DebugMemory::pushMemoryInfo(void* ptr, const lcore::Char* file, lcore::s32 line)
     {
+        lcore::CSLock lock(debugCS_);
         if(!debugInfoMemorySpace_.valid()){
             return;
         }
 
         MemoryInfo* info = (MemoryInfo*)debugInfoMemorySpace_.allocate(sizeof(MemoryInfo));
-
+        info->reset();
         info->memory_ = ptr;
         info->line_ = line;
         info->file_[0] = '\0';
@@ -80,42 +123,47 @@ namespace
         for(lcore::s32 i=0; i<=len; ++i){
             info->file_[i] = name[i];
         }
-        if(NULL == memoryInfoTop_){
-            memoryInfoTop_ = info;
-            return;
-        }
 
-        info->next_ = memoryInfoTop_;
-
-        memoryInfoTop_ = info;
+        info->link(memoryInfoTop_.next_);
     }
 
-    void popMemoryInfo(void* ptr)
+    void DebugMemory::popMemoryInfo(void* ptr)
     {
-        if(NULL == memoryInfoTop_){
-            return;
-        }
+        lcore::CSLock lock(debugCS_);
 
-        if(memoryInfoTop_->memory_ == ptr){
-            MemoryInfo* info = memoryInfoTop_;
-            memoryInfoTop_ = memoryInfoTop_->next_;
+        MemoryInfo* info = memoryInfoTop_.next_;
 
-            debugInfoMemorySpace_.deallocate(info);
-            return;
-        }
-
-        MemoryInfo* prev = memoryInfoTop_;
-        MemoryInfo* itr = memoryInfoTop_->next_;
-        while(NULL != itr){
-            if(itr->memory_ == ptr){
-                prev->next_ = itr->next_;
-                debugInfoMemorySpace_.deallocate(itr);
-                return;
+        while(info != &memoryInfoTop_){
+            if(info->memory_ == ptr){
+                info->unlink();
+                if(debugInfoMemorySpace_.valid()){
+                    debugInfoMemorySpace_.deallocate(info);
+                }
+                break;
             }
-            prev = itr;
-            itr = itr->next_;
+
+            info = info->next_;
         }
     }
+
+    void DebugMemory::print()
+    {
+        lcore::CSLock lock(debugCS_);
+
+        lcore::Log("-------------------");
+        lcore::Log("--- malloc info ---");
+        lcore::Log("-------------------");
+
+        MemoryInfo* info = memoryInfoTop_.next_;
+        while(info != &memoryInfoTop_){
+            lcore::Log("%s (%d)", info->file_, info->line_);
+            info = info->next_;
+        }
+
+        lcore::Log("-------------------");
+    }
+
+    DebugMemory* debugMemory_ = NULL;
 #endif
 }
 
@@ -132,7 +180,9 @@ void* lcore_malloc(std::size_t size, std::size_t alignment)
 void lcore_free(void* ptr)
 {
 #ifdef _DEBUG
-    popMemoryInfo(ptr);
+    if(NULL != debugMemory_){
+        debugMemory_->popMemoryInfo(ptr);
+    }
 #endif
     dlfree(ptr);
 }
@@ -140,7 +190,9 @@ void lcore_free(void* ptr)
 void lcore_free(void* ptr, std::size_t /*alignment*/)
 {
 #ifdef _DEBUG
-    popMemoryInfo(ptr);
+    if(NULL != debugMemory_){
+        debugMemory_->popMemoryInfo(ptr);
+    }
 #endif
     dlfree(ptr);
 }
@@ -150,7 +202,9 @@ void* lcore_malloc(std::size_t size, const char* file, int line)
 {
     void* ptr = dlmalloc(size);
 #ifdef _DEBUG
-    pushMemoryInfo(ptr, file, line);
+    if(NULL != debugMemory_){
+        debugMemory_->pushMemoryInfo(ptr, file, line);
+    }
 #endif
     return ptr;
 }
@@ -159,7 +213,9 @@ void* lcore_malloc(std::size_t size, std::size_t alignment, const char* file, in
 {
     void* ptr = dlmemalign(alignment, size);
 #ifdef _DEBUG
-    pushMemoryInfo(ptr, file, line);
+    if(NULL != debugMemory_){
+        debugMemory_->pushMemoryInfo(ptr, file, line);
+    }
 #endif
     return ptr;
 }
@@ -204,29 +260,22 @@ namespace
 #ifdef _DEBUG
     void beginMalloc()
     {
-        debugInfoMemorySpace_.create(DebugInfoMemorySize);
-
+        if(NULL == debugMemory_){
+            debugInfoMemorySpace_.create(DebugInfoMemorySize);
+            void* ptr = debugInfoMemorySpace_.allocate(sizeof(DebugMemory));
+            debugMemory_ = LIME_PLACEMENT_NEW(ptr) DebugMemory();
+        }
     }
 
     void endMalloc()
     {
-        lcore::Log("-------------------");
-        lcore::Log("--- malloc info ---");
-        lcore::Log("-------------------");
-
-        if(NULL != memoryInfoTop_){
-            lcore::Log("%s (%d)", memoryInfoTop_->file_, memoryInfoTop_->line_);
-            MemoryInfo* itr = memoryInfoTop_->next_;
-
-            while(NULL != itr){
-                lcore::Log("%s (%d)", itr->file_, itr->line_);
-                itr = itr->next_;
-            }
+        if(NULL != debugMemory_){
+            debugMemory_->print();
+            debugMemory_->~DebugMemory();
+            debugInfoMemorySpace_.deallocate(debugMemory_);
+            debugMemory_ = NULL;
+            debugInfoMemorySpace_.destroy();
         }
-
-        lcore::Log("-------------------");
-
-        debugInfoMemorySpace_.destroy();
     }
 
 #else
@@ -406,7 +455,7 @@ namespace
         //__android_log_vprint(ANDROID_LOG_ERROR, "LIME", format, ap);
 #else
 #ifdef _DEBUG
-        static const u32 MaxBuffer = 256;
+        static const u32 MaxBuffer = 1024;
 #else
         static const u32 MaxBuffer = 64;
 #endif
@@ -473,4 +522,97 @@ namespace
         LASSERT(NULL !=  mspace_);
         mspace_free(mspace_, mem);
     }
+
+#define LCORE_POPULATIONCOUNT(val)\
+    val = (val & 0x55555555U) + ((val>>1) & 0x55555555U);\
+    val = (val & 0x33333333U) + ((val>>2) & 0x33333333U);\
+    val = (val & 0x0F0F0F0FU) + ((val>>4) & 0x0F0F0F0FU);\
+    val = (val & 0x00FF00FFU) + ((val>>8) & 0x00FF00FFU);\
+    return (val & 0x0000FFFFU) + ((val>>16) & 0x0000FFFFU)
+
+    u32 populationCount(u32 val)
+    {
+        LCORE_POPULATIONCOUNT(val);
+    }
+
+    //u32 mostSignificantBit(u32 v)
+    //{
+    //    static const u32 shifttable[] =
+    //    {
+    //        0, 1, 2, 2, 3, 3, 3, 3,
+    //        4, 4, 4, 4, 4, 4, 4, 4,
+    //    };
+    //    u32 ret = 0;
+
+    //    if(v & 0xFFFF0000U){
+    //        ret += 16;
+    //        v >>= 16;
+    //    }
+
+    //    if(v & 0xFF00U){
+    //        ret += 8;
+    //        v >>= 8;
+    //    }
+
+    //    if(v & 0xF0U){
+    //        ret += 4;
+    //        v >>= 4;
+    //    }
+    //    return ret + shifttable[v];
+    //}
+
+    u32 mostSiginificantBit(u32 val)
+    {
+#if defined(_MSC_VER)
+        unsigned long index;
+#if defined(_WIN64)
+        return (_BitScanReverse64(&index, val))? (u32)index : 0;
+#else
+        return (_BitScanReverse(&index, val))? (u32)index : 0;
+#endif
+
+#elif defined(__GNUC__)
+        return (0!=val)? (__builtin_clzl(value) ^ 0x3FU) : 0;
+#else
+        val = (~val) & (val-1);
+        LCORE_POPULATIONCOUNT(val);
+#endif
+    }
+
+    u32 leastSignificantBit(u32 val)
+    {
+#if defined(_MSC_VER)
+        unsigned long index;
+#if defined(_WIN64)
+        return (_BitScanForward64(&index, val))? (u32)index : 0;
+#else
+        return (_BitScanForward(&index, val))? (u32)index : 0;
+#endif
+
+#elif defined(__GNUC__)
+        return (0!=val)? (__builtin_ctzl(value)) : 0;
+#else
+        if(0 == val){
+            return 32U;
+        }
+        u32 count = (val&0xAAAAAAAAU)? 0x01U:0;
+
+        if(val&0xCCCCCCCCU){
+            count |= 0x02U;
+        }
+
+        if(val&0xF0F0F0F0U){
+            count |= 0x04U;
+        }
+
+        if(val&0xFF00FF00U){
+            count |= 0x08U;
+        }
+
+        return 31U-((val&0xFFFF0000U)? count|0x10U:count);
+#endif
+    }
+
+#undef LCORE_POPULATIONCOUNT
+
 }

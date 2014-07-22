@@ -3,7 +3,7 @@
 @author t-sakai
 @date 2012/12/09 create
 */
-#include "lcore.h"
+#include "../lcore.h"
 
 namespace lcore
 {

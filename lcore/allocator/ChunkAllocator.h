@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2013/09/19 create
 */
-#include <lcore/lcore.h>
+#include "../lcore.h"
 
 namespace lcore
 {
@@ -32,9 +32,6 @@ namespace lcore
 
         /// 空きページ回収
         void collectEmptyPage();
-
-        /// 最上位ビット位置
-        static u32 mostSignificantBit(u32 v);
 
         /// 割り当てサイズ計算
         static u32 calcAllocSize(u32 size);

@@ -38,6 +38,8 @@ namespace lcore
         @param length ... パディング後のサイズ
         */
         static s32 getLengthFromPadded(u8* data, s32 length);
+
+        static bool checkLength(s32 length, u32 blockSize);
     };
 
     //----------------------------------------------------
@@ -131,6 +133,70 @@ namespace lcore
         s8 mode_;
         u8 dummy0_;
         u8 dummy1_;
+    };
+
+    //----------------------------------------------------
+    //---
+    //--- BlowFish
+    //---
+    //----------------------------------------------------
+    class BlowFishContext;
+
+    class BlowFish
+    {
+    public:
+        static const u32 MaxKeyBytes = 56;
+        static const s32 NPass = 16;
+        static const u32 BlockSizeInBytes = 8;
+
+        struct Bytes
+        {
+            u8 byte3_;
+            u8 byte2_;
+            u8 byte1_;
+            u8 byte0_;
+        };
+
+        union aword
+        {
+            u32 dword_;
+            u8 bytes_[4];
+            Bytes w_;
+        };
+
+        /**
+        @param context
+        @param cipher ... dataLength以上のサイズ
+        @param data ... 
+        @param dataLength ... dataのバイトサイズ。8の倍数
+        */
+        static void encrypt(const BlowFishContext& context, u8* cipher, const u8* data, s32 dataLength);
+
+        /**
+        @param context
+        @param data ... cipherLength以上のサイズ
+        @param cipher ... 
+        @param cipherLength ... cipherのバイトサイズ。8の倍数
+        */
+        static void decrypt(const BlowFishContext& context, u8* data, const u8* cipher, s32 cipherLength);
+
+    private:
+        friend class BlowFishContext;
+
+        static void encrypt(const BlowFishContext& context, u32* xl, u32* xr);
+        static void decrypt(const BlowFishContext& context, u32* xl, u32* xr);
+    };
+
+    class BlowFishContext
+    {
+    public:
+        void initialize(u8* key, s32 length);
+
+    private:
+        friend class BlowFish;
+
+        u32 parray_[18];
+        u32 sboxes_[4][256];
     };
 }
 #endif //INC_LCORE_CRYPTOGRAPHY_H__

@@ -10,10 +10,65 @@
 
 namespace lcore
 {
-    /**
-    @brief プロセッサ数取得
-    */
-    u32 getNumberOfProcessors();
+    //----------------------------------------------------
+    //---
+    //--- ThreadRaw
+    //---
+    //----------------------------------------------------
+    class ThreadRaw
+    {
+    public:
+        static const u32 Infinite = lcore::thread::Infinite;
+        typedef void (*Proc)(void* data);
+
+        ThreadRaw();
+        virtual ~ThreadRaw();
+
+        /**
+        @return 成否
+        */
+        bool create(Proc proc, void* data, bool suspend);
+
+        bool valid() const{return  NULL != handle_;}
+
+        /// スレッドID取得
+        u32 getID() const
+        {
+            return id_;
+        }
+
+        /// 開始
+        void start();
+
+        /// 再開
+        void resume();
+
+        /// 一時停止
+        void suspend();
+
+        /**
+        @brief 終了を待つ
+        @return 結果
+        @param timeout ... タイムアウト時間（ミリ秒）
+        */
+        thread::WaitStatus join(u32 timeout=Infinite);
+
+    private:
+        friend class MultipleWait;
+
+        void release();
+
+        static u32 __stdcall proc(void* args);
+
+        ThreadRaw(const ThreadRaw&);
+        ThreadRaw& operator=(const ThreadRaw&);
+
+        HANDLE handle_;
+        u32 id_;
+        Proc proc_;
+        void* data_;
+    };
+
 
     //----------------------------------------------------
     //---
@@ -23,15 +78,7 @@ namespace lcore
     class Thread
     {
     public:
-        enum WaitStatus
-        {
-            Wait_Abandoned = WAIT_ABANDONED, /// 所有していたオブジェクトが解放しないで終了した
-            Wait_Success = WAIT_OBJECT_0 , /// シグナル状態になった
-            Wait_Timeout = WAIT_TIMEOUT , /// タイムアウトした
-            Wait_Failed = WAIT_FAILED , /// 関数失敗
-        };
-
-        static const u32 Infinite = 0xFFFFFFFFU; /// タイムアウト時間に指定すると、シグナル状態になるまで待機
+        static const u32 Infinite = lcore::thread::Infinite;
 
         Thread();
         virtual ~Thread();
@@ -47,6 +94,8 @@ namespace lcore
         {
             return id_;
         }
+
+        bool valid() const{ return NULL != handle_;}
 
         /// 開始
         void start();
@@ -65,7 +114,7 @@ namespace lcore
         @return 結果
         @param timeout ... タイムアウト時間（ミリ秒）
         */
-        WaitStatus join(u32 timeout=Infinite);
+        thread::WaitStatus join(u32 timeout=Infinite);
 
     protected:
         /// スレッド終了すべきか
@@ -91,12 +140,16 @@ namespace lcore
         bool suspend_;
     };
 
-    //
+    //----------------------------------------------------
+    //---
+    //--- MultipleWait
+    //---
+    //----------------------------------------------------
     class MultipleWait
     {
     public:
         static const u32 NumMaxThreads = 32;
-        static const u32 Infinite = 0xFFFFFFFFU; /// タイムアウト時間に指定すると、シグナル状態になるまで待機
+        static const u32 Infinite = lcore::thread::Infinite;
 
         enum WaitStatus
         {
@@ -108,6 +161,14 @@ namespace lcore
 
         MultipleWait();
         ~MultipleWait();
+
+        /**
+        @brief スレッドセット
+        @param index ...
+        @param thread ...
+        @warn 0からjoinで指定する個数分埋めること
+        */
+        void set(u32 index, ThreadRaw* thread);
 
         /**
         @brief スレッドセット

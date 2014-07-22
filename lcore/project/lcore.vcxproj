@@ -94,13 +94,16 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="..\AES.h" />
+    <ClInclude Include="..\allocator\ChunkAllocator.h" />
     <ClInclude Include="..\allocator\dlmalloc.h" />
-    <ClInclude Include="..\ARCFOUR.h" />
-    <ClInclude Include="..\ChunkAllocator.h" />
+    <ClInclude Include="..\allocator\MemoryAllocator.h" />
+    <ClInclude Include="..\allocator\MemoryArena.h" />
+    <ClInclude Include="..\allocator\ObjectPool.h" />
+    <ClInclude Include="..\async\ThreadPool.h" />
+    <ClInclude Include="..\Cryptography.h" />
     <ClInclude Include="..\intrusive\AVLTree.h" />
     <ClInclude Include="..\intrusive\List.h" />
-    <ClInclude Include="..\intrusive\RedBlackTree.h" />
+    <ClInclude Include="..\Noise.h" />
     <ClInclude Include="..\smart_ptr\intrusive_ptr.h" />
     <ClInclude Include="..\smart_ptr\shared_ptr.h" />
     <ClInclude Include="..\random\Random.h" />
@@ -118,19 +121,21 @@
     <ClInclude Include="..\lcore.h" />
     <ClInclude Include="..\ldll.h" />
     <ClInclude Include="..\liostream.h" />
-    <ClInclude Include="..\MemoryArena.h" />
     <ClInclude Include="..\Nothing.h" />
     <ClInclude Include="..\Search.h" />
     <ClInclude Include="..\Sort.h" />
     <ClInclude Include="..\String.h" />
+    <ClInclude Include="..\Trie.h" />
     <ClInclude Include="..\utility.h" />
     <ClInclude Include="..\Vector.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\AES.cpp" />
+    <ClCompile Include="..\allocator\ChunkAllocator.cpp" />
     <ClCompile Include="..\allocator\dlmalloc.c" />
-    <ClCompile Include="..\ARCFOUR.cpp" />
-    <ClCompile Include="..\ChunkAllocator.cpp" />
+    <ClCompile Include="..\allocator\MemoryAllocator.cpp" />
+    <ClCompile Include="..\async\ThreadPool.cpp" />
+    <ClCompile Include="..\Cryptography.cpp" />
+    <ClCompile Include="..\Noise.cpp" />
     <ClCompile Include="..\random\Random.cpp" />
     <ClCompile Include="..\async\Socket.cpp" />
     <ClCompile Include="..\async\SyncObject.cpp" />

@@ -93,11 +93,11 @@ namespace lcore
     }
 
     // 秒単位の時間差分計算
-    f32 calcTime(ClockType prevTime, ClockType currentTime)
+    lcore::f64 calcTime64(lcore::ClockType prevTime, lcore::ClockType currentTime)
     {
-        ClockType d = (currentTime>=prevTime)? currentTime - prevTime : lcore::numeric_limits<ClockType>::maximum() - prevTime + currentTime;
-        f64 delta = static_cast<f64>(d)/getPerformanceFrequency();
-        return static_cast<f32>(delta);
+        lcore::ClockType d = (currentTime>=prevTime)? currentTime - prevTime : lcore::numeric_limits<lcore::ClockType>::maximum() - prevTime + currentTime;
+        lcore::f64 delta = static_cast<lcore::f64>(d)/lcore::getPerformanceFrequency();
+        return delta;
     }
 
     // ミリ秒単位の時間を取得

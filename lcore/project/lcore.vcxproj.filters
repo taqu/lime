@@ -53,7 +53,6 @@
     <ClInclude Include="..\lcore.h" />
     <ClInclude Include="..\ldll.h" />
     <ClInclude Include="..\liostream.h" />
-    <ClInclude Include="..\MemoryArena.h" />
     <ClInclude Include="..\Nothing.h" />
     <ClInclude Include="..\Search.h" />
     <ClInclude Include="..\Sort.h" />
@@ -63,12 +62,24 @@
     <ClInclude Include="..\allocator\dlmalloc.h">
       <Filter>allocator</Filter>
     </ClInclude>
-    <ClInclude Include="..\intrusive\RedBlackTree.h">
-      <Filter>intrusive</Filter>
+    <ClInclude Include="..\Cryptography.h" />
+    <ClInclude Include="..\allocator\ChunkAllocator.h">
+      <Filter>allocator</Filter>
     </ClInclude>
-    <ClInclude Include="..\AES.h" />
-    <ClInclude Include="..\ARCFOUR.h" />
-    <ClInclude Include="..\ChunkAllocator.h" />
+    <ClInclude Include="..\allocator\MemoryAllocator.h">
+      <Filter>allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\allocator\MemoryArena.h">
+      <Filter>allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\allocator\ObjectPool.h">
+      <Filter>allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\async\ThreadPool.h">
+      <Filter>async</Filter>
+    </ClInclude>
+    <ClInclude Include="..\Noise.h" />
+    <ClInclude Include="..\Trie.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\random\Random.cpp">
@@ -93,8 +104,16 @@
     <ClCompile Include="..\allocator\dlmalloc.c">
       <Filter>allocator</Filter>
     </ClCompile>
-    <ClCompile Include="..\AES.cpp" />
-    <ClCompile Include="..\ARCFOUR.cpp" />
-    <ClCompile Include="..\ChunkAllocator.cpp" />
+    <ClCompile Include="..\Cryptography.cpp" />
+    <ClCompile Include="..\allocator\ChunkAllocator.cpp">
+      <Filter>allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\allocator\MemoryAllocator.cpp">
+      <Filter>allocator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\async\ThreadPool.cpp">
+      <Filter>async</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Noise.cpp" />
   </ItemGroup>
 </Project>
