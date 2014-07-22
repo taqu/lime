@@ -36,7 +36,7 @@ namespace linput
     {
         LASSERT(hWnd != NULL);
         LASSERT(device_ != NULL);
-        HRESULT hr = device_->SetCooperativeLevel(hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE);
+        HRESULT hr = device_->SetCooperativeLevel(hWnd, DISCL_FOREGROUND | DISCL_NONEXCLUSIVE | DISCL_NOWINKEY);
         return SUCCEEDED(hr);
     }
 
@@ -46,6 +46,12 @@ namespace linput
         LASSERT(0<=type && type<DevType_Num);
         const DIDATAFORMAT* DataFormat[DevType_Num] = {&c_dfDIKeyboard, &c_dfDIMouse, &c_dfDIJoystick };
         HRESULT hr = device_->SetDataFormat(DataFormat[type]);
+        return SUCCEEDED(hr);
+    }
+
+    bool Device::setEventNotification(HANDLE handle)
+    {
+        HRESULT hr = device_->SetEventNotification(handle);
         return SUCCEEDED(hr);
     }
 }

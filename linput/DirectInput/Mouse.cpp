@@ -9,6 +9,8 @@ namespace linput
 {
     Mouse::Mouse()
         :hWnd_(NULL)
+        ,width_(0)
+        ,height_(0)
     {
     }
 
@@ -32,6 +34,7 @@ namespace linput
         }
 
         getMousePoint();
+        resize();
 
         if(false == device_.setDataFormat(DevType_Mouse)){
             return false;
@@ -95,9 +98,9 @@ namespace linput
             return;
         }
 
+        s32 prevX = mousePoint_.value_[0];
+        s32 prevY = mousePoint_.value_[1];
         getMousePoint();
-
-        //DIMOUSESTATE state;
 
         DWORD items = BufferSize;
         HRESULT hr = device_->GetDeviceData(
@@ -143,9 +146,42 @@ namespace linput
                 }
             }
 
+            if(mousePoint_.value_[0] < 0){
+                mousePoint_.value_[0] = 0;
+                onState_ = 0;
+                clickState_ = 0;
+                axisDuration_[MouseAxis_X] = mousePoint_.value_[0] - prevX;
+            }else if(width_<=mousePoint_.value_[0]){
+                mousePoint_.value_[0] = width_ - 1;
+                onState_ = 0;
+                clickState_ = 0;
+                axisDuration_[MouseAxis_X] = mousePoint_.value_[0] - prevX;
+            }
+
+            if(mousePoint_.value_[1] < 0){
+                mousePoint_.value_[1] = 0;
+                onState_ = 0;
+                clickState_ = 0;
+                axisDuration_[MouseAxis_Y] = mousePoint_.value_[1] - prevY;
+            }else if(height_<=mousePoint_.value_[1]){
+                mousePoint_.value_[1] = height_ - 1;
+                onState_ = 0;
+                clickState_ = 0;
+                axisDuration_[MouseAxis_Y] = mousePoint_.value_[1] - prevY;
+            }
         }else if(hr == DIERR_NOTACQUIRED || hr == DIERR_INPUTLOST){
             acquire(); //もう一度アクセス権取得
         }
+    }
+
+    void Mouse::resize()
+    {
+        RECT rect;
+        if(FALSE == GetClientRect(hWnd_, &rect)){
+            return;
+        }
+        width_ = rect.right - rect.left;
+        height_ = rect.bottom - rect.top;
     }
 
     inline void Mouse::setOn(u32 index)
