@@ -18,7 +18,7 @@ namespace font
         fontInfo_.height_ = 128;
         fontInfo_.width_ = 128;
         fontInfo_.outline_ = 0;
-        fontInfo_.asciiOnly_ = true;
+        fontInfo_.asciiOnly_ = false;
 
         fontInfo_.distanceField_ = false;
         fontInfo_.distanceScale_ = 4;
@@ -54,8 +54,8 @@ namespace font
         resolution_.addString(_T("512"));
         resolution_.addString(_T("1024"));
         resolution_.addString(_T("2048"));
-        resolution_.setCurSel(1);
-        resolution_.setTopIndex(1);
+        resolution_.setCurSel(4);
+        resolution_.setTopIndex(4);
 
         distanceScale_.set( GetDlgItem(hDlg, IDC_COMBO_DISTANCESCALE) );
         distanceScale_.resetContent();
@@ -67,8 +67,8 @@ namespace font
         distanceScale_.addString(_T("6"));
         distanceScale_.addString(_T("7"));
         distanceScale_.addString(_T("8"));
-        distanceScale_.setCurSel(7);
-        distanceScale_.setTopIndex(7);
+        distanceScale_.setCurSel(1);
+        distanceScale_.setTopIndex(1);
 
         distanceSpread_.set( GetDlgItem(hDlg, IDC_COMBO_DISTANCESPREAD) );
         distanceSpread_.resetContent();
@@ -80,11 +80,19 @@ namespace font
         distanceSpread_.addString(_T("6"));
         distanceSpread_.addString(_T("7"));
         distanceSpread_.addString(_T("8"));
+        distanceSpread_.addString(_T("9"));
+        distanceSpread_.addString(_T("10"));
+        distanceSpread_.addString(_T("11"));
+        distanceSpread_.addString(_T("12"));
+        distanceSpread_.addString(_T("13"));
+        distanceSpread_.addString(_T("14"));
+        distanceSpread_.addString(_T("15"));
+        distanceSpread_.addString(_T("16"));
         distanceSpread_.setCurSel(7);
         distanceSpread_.setTopIndex(7);
 
         checkDistanceField_.set( GetDlgItem(hDlg, IDC_CHECK_DISTANCE) );
-        checkDistanceField_.setUnCheck();
+        checkDistanceField_.setCheck();
 
         checkASCIIOnly_.set( GetDlgItem(hDlg, IDC_CHECK_ASCII_ONLY) );
 
@@ -207,8 +215,8 @@ namespace font
         curSel = distanceScale_.getCurSel();
         if(curSel<0){
             fontInfo_.distanceScale_ = 1;
-        }else if(curSel>5){
-            fontInfo_.distanceScale_ = 6;
+        }else if(curSel>=MaxDistanceScale){
+            fontInfo_.distanceScale_ = MaxDistanceScale;
         }else{
             fontInfo_.distanceScale_ = curSel+1;
         }
@@ -216,8 +224,8 @@ namespace font
         curSel = distanceSpread_.getCurSel();
         if(curSel<0){
             fontInfo_.distanceSpread_ = 1;
-        }else if(curSel>5){
-            fontInfo_.distanceSpread_ = 6;
+        }else if(curSel>=MaxDistanceSpread){
+            fontInfo_.distanceSpread_ = MaxDistanceSpread;
         }else{
             fontInfo_.distanceSpread_ = curSel+1;
         }

@@ -12,6 +12,8 @@ namespace font
     class FontDialog : public widget::DialogBase<FontDialog>
     {
     public:
+        static const int MaxDistanceScale = 8;
+        static const int MaxDistanceSpread = 16;
         FontDialog();
         ~FontDialog();
 
