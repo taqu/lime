@@ -11,6 +11,10 @@
 
 namespace lmath
 {
+    const Vector3 Vector3::Forward(0.0f, 0.0f, 1.0f);
+    const Vector3 Vector3::Up(0.0f, 1.0f, 0.0f);
+    const Vector3 Vector3::Right(1.0f, 0.0f, 0.0f);
+
     Vector3::Vector3(const lmath::Vector4& v)
         :x_(v.x_)
         ,y_(v.y_)
@@ -149,17 +153,11 @@ namespace lmath
 
     Vector3& Vector3::lerp(const Vector3& v0, const Vector3& v1, f32 t)
     {
-        if( t <= 0.0f ){
-            *this = v0;
-        }else if( t >= 1.0f ){
-            *this = v1;
-        }else{
-            Vector3 tmp = v0;
-            tmp -= v1;
-            tmp *= t;
-            tmp += v1;
-            *this = tmp;
-        }
+        Vector3 tmp;
+        tmp.sub(v1,v0);
+        tmp *= t;
+
+        muladd(t, tmp, v0);
         return *this;
     }
 

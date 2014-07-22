@@ -29,4 +29,14 @@ namespace lmath
         v_ *= l;
 #endif
     }
+
+    void Plane::translate(f32 x, f32 y, f32 z)
+    {
+        lmath::Vector4 offset(x, y, z, 0.0f);
+
+        lmath::Vector4 n = v_;
+        n.w_ = 0.0f;
+
+        v_.w_ -= n.dot(offset);
+    }
 }

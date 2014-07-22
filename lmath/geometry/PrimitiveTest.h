@@ -64,9 +64,29 @@ namespace lmath
 
     //---------------------------------------------------------------------------------
     f32 sqDistancePointAABB(
-        const lmath::Vector4& point,
-        const lmath::Vector4& bmin,
-        const lmath::Vector4& bmax);
+        const f32* point,
+        const f32* bmin,
+        const f32* bmax);
+
+    inline f32 sqDistancePointAABB(const lmath::Vector4& point, const lmath::Vector4& bmin, const lmath::Vector4& bmax)
+    {
+        return sqDistancePointAABB(&point.x_, &bmin.x_, &bmax.x_);
+    }
+
+    inline f32 sqDistancePointAABB(const lmath::Vector3& point, const lmath::Vector3& bmin, const lmath::Vector3& bmax)
+    {
+        return sqDistancePointAABB(&point.x_, &bmin.x_, &bmax.x_);
+    }
+
+    inline f32 sqDistancePointAABB(const lmath::Vector3& point, const lmath::Vector4& bmin, const lmath::Vector4& bmax)
+    {
+        return sqDistancePointAABB(&point.x_, &bmin.x_, &bmax.x_);
+    }
+
+    inline f32 sqDistancePointAABB(const lmath::Vector4& point, const lmath::Vector3& bmin, const lmath::Vector3& bmax)
+    {
+        return sqDistancePointAABB(&point.x_, &bmin.x_, &bmax.x_);
+    }
 
     //---------------------------------------------------------------------------------
     void closestPointPointVSAABB(
@@ -74,6 +94,12 @@ namespace lmath
         const lmath::Vector4& point,
         const lmath::Vector4& bmin,
         const lmath::Vector4& bmax);
+
+    void closestPointPointVSAABB(
+        lmath::Vector3& result,
+        const lmath::Vector3& point,
+        const lmath::Vector3& bmin,
+        const lmath::Vector3& bmax);
 
     //---------------------------------------------------------------------------------
     /**

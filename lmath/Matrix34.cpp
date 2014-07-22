@@ -5,6 +5,7 @@
 */
 #include "Matrix34.h"
 #include "Matrix44.h"
+#include "Quaternion.h"
 
 namespace lmath
 {
@@ -774,6 +775,62 @@ namespace lmath
         return false;
     }
 
+    void Matrix34::getRotation(Quaternion& rotation) const
+    {
+        f32 trace0 = m_[0][0] + m_[1][1] + m_[2][2];
+        f32 trace1 = m_[0][0] - m_[1][1] - m_[2][2];
+        f32 trace2 = m_[1][1] - m_[0][0] - m_[2][2];
+        f32 trace3 = m_[2][2] - m_[0][0] - m_[1][1];
+
+        s32 index = 0;
+        f32 trace = trace0;
+        if(trace1>trace){
+            index = 1;
+            trace = trace1;
+        }
+        if(trace2>trace){
+            index = 2;
+            trace = trace2;
+        }
+        if(trace3>trace){
+            index = 3;
+            trace = trace3;
+        }
+
+        f32 value = lmath::sqrt(trace + 1.0f) * 0.5f;
+        f32 m = 0.25f/value;
+
+        switch(index)
+        {
+        case 0:
+            rotation.w_ = value;
+            rotation.x_ = (m_[1][2] - m_[2][1]) * m;
+            rotation.y_ = (m_[2][0] - m_[0][2]) * m;
+            rotation.z_ = (m_[0][1] - m_[1][0]) * m;
+            break;
+
+        case 1:
+            rotation.x_ = value;
+            rotation.w_ = (m_[1][2] - m_[2][1]) * m;
+            rotation.y_ = (m_[0][1] + m_[0][1]) * m;
+            rotation.z_ = (m_[2][0] + m_[0][2]) * m;
+            break;
+
+        case 2:
+            rotation.y_ = value;
+            rotation.w_ = (m_[2][0] - m_[0][2]) * m;
+            rotation.x_ = (m_[0][1] + m_[1][0]) * m;
+            rotation.z_ = (m_[1][2] + m_[2][1]) * m;
+            break;
+
+        case 3:
+            rotation.z_ = value;
+            rotation.w_ = (m_[0][1] - m_[1][0]) * m;
+            rotation.x_ = (m_[2][0] + m_[0][2]) * m;
+            rotation.y_ = (m_[1][2] + m_[2][1]) * m;
+            break;
+        }
+    }
 
 #if defined(LMATH_USE_SSE)
     //SSEセット・ストア命令

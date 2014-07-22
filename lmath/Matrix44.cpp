@@ -7,6 +7,7 @@
 
 #include "Vector4.h"
 #include "Matrix34.h"
+#include "Quaternion.h"
 
 namespace lmath
 {
@@ -982,6 +983,42 @@ namespace lmath
 #endif
     }
 
+    // X軸回転
+    void Matrix44::setRotateX(f32 radian)
+    {
+        f32 cosA = lmath::cosf(radian);
+        f32 sinA = lmath::sinf(radian);
+
+        m_[0][0] = 1.0f; m_[0][1] = 0.0f; m_[0][2] = 0.0f; m_[0][3] = 0.0f;
+        m_[1][0] = 0.0f; m_[1][1] = cosA; m_[1][2] = sinA; m_[1][3] = 0.0f;
+        m_[2][0] = 0.0f; m_[2][1] = -sinA; m_[2][2] = cosA; m_[2][3] = 0.0f;
+        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
+    }
+
+    // Y軸回転
+    void Matrix44::setRotateY(f32 radian)
+    {
+        f32 cosA = lmath::cosf(radian);
+        f32 sinA = lmath::sinf(radian);
+
+        m_[0][0] = cosA; m_[0][1] = 0.0f; m_[0][2] = -sinA; m_[0][3] = 0.0f;
+        m_[1][0] = 0.0f; m_[1][1] = 1.0f; m_[1][2] = 0.0f; m_[1][3] = 0.0f;
+        m_[2][0] = sinA; m_[2][1] = 0.0f; m_[2][2] = cosA; m_[2][3] = 0.0f;
+        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
+    }
+
+    // Z軸回転
+    void Matrix44::setRotateZ(f32 radian)
+    {
+        f32 cosA = lmath::cosf(radian);
+        f32 sinA = lmath::sinf(radian);
+
+        m_[0][0] = cosA; m_[0][1] = sinA; m_[0][2] = 0.0f; m_[0][3] = 0.0f;
+        m_[1][0] = -sinA; m_[1][1] = cosA; m_[1][2] = 0.0f; m_[1][3] = 0.0f;
+        m_[2][0] = 0.0f; m_[2][1] = 0.0f; m_[2][2] = 1.0f; m_[2][3] = 0.0f;
+        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
+    }
+
     void Matrix44::setRotateAxis(f32 x, f32 y, f32 z, f32 radian)
     {
         f32 norm = lmath::sqrt(x*x + y*y + z*z);
@@ -1174,6 +1211,32 @@ namespace lmath
         m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
     }
 
+    void Matrix44::lookAt(const Vector4& at)
+    {
+        Vector4 xaxis, yaxis, zaxis = at;
+        zaxis.normalize();
+        
+        f32 d = zaxis.dot(Vector4::Up);
+        if(lmath::isEqual(d, -1.0f, 0.000001f)){
+            setRotateX(-PI_2);
+            return;
+        }
+        if(lmath::isEqual(d, 1.0f, 0.000001f)){
+            setRotateX(PI_2);
+            return;
+        }
+
+        xaxis.cross3(Vector4::Up, zaxis);
+        xaxis.normalize();
+
+        yaxis.cross3(zaxis, xaxis);
+
+        m_[0][0] = xaxis.x_; m_[0][1] = xaxis.y_; m_[0][2] = xaxis.z_; m_[0][3] = 0.0f;
+        m_[1][0] = yaxis.x_; m_[1][1] = yaxis.y_; m_[1][2] = yaxis.z_; m_[1][3] = 0.0f;
+        m_[2][0] = zaxis.x_; m_[2][1] = zaxis.y_; m_[2][2] = zaxis.z_; m_[2][3] = 0.0f;
+        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
+    }
+
     void Matrix44::viewPointAlign(const Matrix44& view, const Vector4& position)
     {
         Vector4 axis(position.x_-view(0,3), position.y_-view(1,3), position.z_-view(2,3), 0.0f);
@@ -1298,6 +1361,62 @@ namespace lmath
         return false;
     }
 
+    void Matrix44::getRotation(Quaternion& rotation) const
+    {
+        f32 trace0 = m_[0][0] + m_[1][1] + m_[2][2];
+        f32 trace1 = m_[0][0] - m_[1][1] - m_[2][2];
+        f32 trace2 = m_[1][1] - m_[0][0] - m_[2][2];
+        f32 trace3 = m_[2][2] - m_[0][0] - m_[1][1];
+
+        s32 index = 0;
+        f32 trace = trace0;
+        if(trace1>trace){
+            index = 1;
+            trace = trace1;
+        }
+        if(trace2>trace){
+            index = 2;
+            trace = trace2;
+        }
+        if(trace3>trace){
+            index = 3;
+            trace = trace3;
+        }
+
+        f32 value = lmath::sqrt(trace + 1.0f) * 0.5f;
+        f32 m = 0.25f/value;
+
+        switch(index)
+        {
+        case 0:
+            rotation.w_ = value;
+            rotation.x_ = (m_[2][1] - m_[1][2]) * m;
+            rotation.y_ = (m_[0][2] - m_[2][0]) * m;
+            rotation.z_ = (m_[1][0] - m_[0][1]) * m;
+            break;
+
+        case 1:
+            rotation.x_ = value;
+            rotation.w_ = (m_[2][1] - m_[1][2]) * m;
+            rotation.y_ = (m_[1][0] + m_[0][1]) * m;
+            rotation.z_ = (m_[0][2] + m_[2][0]) * m;
+            break;
+
+        case 2:
+            rotation.y_ = value;
+            rotation.w_ = (m_[0][2] - m_[2][0]) * m;
+            rotation.x_ = (m_[1][0] + m_[0][1]) * m;
+            rotation.z_ = (m_[2][1] + m_[1][2]) * m;
+            break;
+
+        case 3:
+            rotation.z_ = value;
+            rotation.w_ = (m_[1][0] - m_[0][1]) * m;
+            rotation.x_ = (m_[0][2] + m_[2][0]) * m;
+            rotation.y_ = (m_[2][1] + m_[1][2]) * m;
+            break;
+        }
+    }
 
 #if defined(LMATH_USE_SSE)
     //SSEセット・ストア命令

@@ -19,6 +19,24 @@ namespace lmath
         dq_[1] *= -invRot;
     }
 
+    DualQuaternion& DualQuaternion::mul(const DualQuaternion& d0, const DualQuaternion& d1)
+    {
+        lmath::Quaternion rot = d0.dq_[0];
+        rot *= d1.dq_[0];
+
+        lmath::Quaternion t0;
+        t0.mul(d0.dq_[0], d1.dq_[1]);
+
+        lmath::Quaternion t1;
+        t1.mul(d0.dq_[1], d1.dq_[0]);
+
+        dq_[0] = rot;
+        dq_[1] = t0;
+        dq_[1] += t1;
+
+        return *this;
+    }
+
     void DualQuaternion::getMatrix(lmath::Matrix34& mat) const
     {
         f32 length2 = dq_[0].lengthSqr();

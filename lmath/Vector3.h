@@ -23,6 +23,10 @@ namespace lmath
     class Vector3
     {
     public:
+        static const Vector3 Forward;
+        static const Vector3 Up;
+        static const Vector3 Right;
+
         Vector3()
         {}
 
@@ -110,8 +114,8 @@ namespace lmath
         inline void add(const Vector3& v0, const Vector3& v1);
         inline void sub(const Vector3& v0, const Vector3& v1);
 
-        inline void min(const Vector3& v0, const Vector3& v1);
-        inline void max(const Vector3& v0, const Vector3& v1);
+        inline void minimum(const Vector3& v0, const Vector3& v1);
+        inline void maximum(const Vector3& v0, const Vector3& v1);
 
         /**
         @brief v0*v1 + v2
@@ -299,14 +303,14 @@ namespace lmath
     }
 
 
-    inline void Vector3::min(const Vector3& v0, const Vector3& v1)
+    inline void Vector3::minimum(const Vector3& v0, const Vector3& v1)
     {
         x_ = lcore::minimum(v0.x_, v1.x_);
         y_ = lcore::minimum(v0.y_, v1.y_);
         z_ = lcore::minimum(v0.z_, v1.z_);
     }
 
-    inline void Vector3::max(const Vector3& v0, const Vector3& v1)
+    inline void Vector3::maximum(const Vector3& v0, const Vector3& v1)
     {
         x_ = lcore::maximum(v0.x_, v1.x_);
         y_ = lcore::maximum(v0.y_, v1.y_);

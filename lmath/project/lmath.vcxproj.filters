@@ -37,6 +37,9 @@
     <ClInclude Include="..\geometry\RayTest.h">
       <Filter>geometry</Filter>
     </ClInclude>
+    <ClInclude Include="..\geometry\QBVH.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\geometry\Plane.cpp">
@@ -62,6 +65,9 @@
       <Filter>geometry</Filter>
     </ClCompile>
     <ClCompile Include="..\geometry\Ray.cpp">
+      <Filter>geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\geometry\QBVH.cpp">
       <Filter>geometry</Filter>
     </ClCompile>
   </ItemGroup>

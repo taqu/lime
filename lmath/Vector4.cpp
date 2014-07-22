@@ -10,6 +10,13 @@
 
 namespace lmath
 {
+    const LIME_ALIGN16 f32 Vector4::One[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    const LIME_ALIGN16 f32 Vector4::Identity[4] = {0.0f, 0.0f, 0.0f, 1.0f};
+
+    const Vector4 Vector4::Forward(0.0f, 0.0f, 1.0f, 0.0f);
+    const Vector4 Vector4::Up(0.0f, 1.0f, 0.0f, 0.0f);
+    const Vector4 Vector4::Right(1.0f, 0.0f, 0.0f, 0.0f);
+
     bool Vector4::isEqual(const Vector4& v) const
     {
         return ( lmath::isEqual(x_, v.x_)
@@ -229,28 +236,6 @@ namespace lmath
         return lmath::sqrt( dx * dx + dy * dy + dz * dz );
     }
 
-    void Vector4::setLerp(const Vector4& v1, const Vector4& v2, f32 f)
-    {
-#if defined(LMATH_USE_SSE)
-        lm128 tmp0 = load(v1);
-        lm128 tmp1 = load(v2);
-        lm128 tmp2 = _mm_load1_ps(&f);
-
-        tmp1 = _mm_sub_ps(tmp1, tmp0);
-        tmp1 = _mm_mul_ps(tmp1, tmp2);
-        tmp1 = _mm_add_ps(tmp1, tmp0);
-
-        store(*this, tmp1);
-
-#else
-        Vector4 tmp = v2;
-        tmp -= v1;
-        tmp *= f;
-        tmp += v1;
-        *this = tmp;
-#endif
-    }
-
 
     void Vector4::mul(const Matrix34& m, const Vector4& v)
     {
@@ -464,5 +449,49 @@ namespace lmath
         x_ = rot.x_;
         y_ = rot.y_;
         z_ = rot.z_;
+    }
+
+    void Vector4::lerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 tv0 = load(v0);
+        lm128 tv1 = load(v1);
+        lm128 t0 = _mm_load1_ps(&t);
+
+        tv1 = _mm_sub_ps(tv1, tv0);
+        tv1 = _mm_mul_ps(tv1, t0);
+        tv1 = _mm_add_ps(tv1, tv0);
+
+        store(*this, tv1);
+
+#else
+        Vector4 tmp = v2;
+        tmp -= v1;
+        tmp *= f;
+        tmp += v1;
+        *this = tmp;
+#endif
+
+//#if defined(LMATH_USE_SSE)
+//        lm128 tv0 = load(v0);
+//        lm128 tv1 = load(v1);
+//        lm128 t0 = _mm_load_ps1(&t);
+//        t = 1.0f - t;
+//        lm128 t1 = _mm_load_ps1(&t);
+//
+//        tv0 = _mm_mul_ps(tv0, t0);
+//        tv1 = _mm_mul_ps(tv1, t1);
+//
+//        lm128 tmp;
+//        tmp = _mm_add_ps(tv0, tv1);
+//        store(*this, tmp);
+//#else
+//        Vector4 tmp0 = *this;
+//        tmp0 *= t;
+//
+//        Vector4 tmp1 = v1;
+//        tmp1 *= (1.0f-t);
+//        add(tmp0, tmp1);
+//#endif
     }
 }

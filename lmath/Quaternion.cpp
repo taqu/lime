@@ -178,6 +178,69 @@ namespace lmath
         z_ = z * sinOver2;
     }
 
+    void Quaternion::lookAt(const Vector3& eye, const Vector3& at)
+    {
+        LASSERT(!eye.isEqual(at));
+        Vector3 dir;
+        dir.sub(at, eye);
+        dir.normalize();
+        lookAt(dir);
+    }
+
+    void Quaternion::lookAt(const Vector3& dir)
+    {
+        LASSERT(!lmath::isZero(dir.length()));
+
+        f32 d = dir.dot(Vector3::Forward);
+        if(lmath::isEqual(d, -1.0f, 0.000001f)){
+            setRotateAxis(Vector3::Up.x_, Vector3::Up.y_, Vector3::Up.z_, PI);
+            return;
+        }
+
+        if(lmath::isEqual(d, 1.0f, 0.000001f)){
+            identity();
+            return;
+        }
+
+        f32 radian = lmath::acos(d);
+        lmath::Vector3 axis;
+        axis.cross(Vector3::Forward, dir);
+        axis.normalize();
+        setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
+    }
+
+    void Quaternion::lookAt(const Vector4& eye, const Vector4& at)
+    {
+        LASSERT(!eye.isEqual(at));
+        Vector4 dir;
+        dir.sub(at, eye);
+        dir.normalize();
+        lookAt(dir);
+    }
+
+    void Quaternion::lookAt(const Vector4& dir)
+    {
+        LASSERT(!lmath::isZero(dir.length()));
+
+        f32 d = dir.dot(Vector4::Forward);
+        if(lmath::isEqual(d, -1.0f, 0.000001f)){
+            setRotateAxis(Vector4::Up.x_, Vector4::Up.y_, Vector4::Up.z_, PI);
+            return;
+        }
+
+        if(lmath::isEqual(d, 1.0f, 0.000001f)){
+            identity();
+            return;
+        }
+
+        f32 radian = lmath::acos(d);
+        lmath::Vector4 axis;
+        //axis.cross3(Vector4::Forward, dir);
+        axis.cross3(dir, Vector4::Forward);
+        axis.normalize();
+        setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
+    }
+
     Quaternion& Quaternion::invert()
     {
         f32 lenSqr = lengthSqr();
@@ -535,7 +598,7 @@ namespace lmath
 
     void Quaternion::exp(f32 exponent)
     {
-        if(lmath::isEqual(w_, 1.0f)){
+        if(0.9999f < lcore::absolute(w_)){
             return;
         }
 
@@ -669,8 +732,8 @@ namespace lmath
 
     void Quaternion::mul(const Vector3& v, const Quaternion& q)
     {
-//#if defined(LMATH_USE_SSE)
-#if 0
+#if defined(LMATH_USE_SSE)
+//#if 0
         lm128 mask;
 
         lm128 tx = _mm_load1_ps(&v.x_);
@@ -865,9 +928,10 @@ namespace lmath
     Quaternion& Quaternion::lerp(const Quaternion& q0, const Quaternion& q1, f32 t)
     {
 #if defined(LMATH_USE_SSE)
+        f32 cosOmega = q0.dot(q1);
 
         lm128 tmp0 = load(q0);
-        lm128 tmp1 = load(q1);
+        lm128 tmp1 = (cosOmega<0.0f)? load(-q1) : load(q1);
         lm128 tmp2 = _mm_load1_ps(&t);
 
         tmp1 = _mm_sub_ps(tmp1, tmp0);
@@ -886,9 +950,12 @@ namespace lmath
 
         store(*this, tmp1);
 #else
+        f32 cosOmega = q0.dot(q1);
+        Quaternion q2 = (cosOmega<0.0f)? -q1 : q1;
+
         Quaternion ret = q0;
         ret *= 1.0f - t;
-        Quaternion q2 = q1;
+
         q2 *= t;
         ret += q2;
         *this = ret;
@@ -900,8 +967,7 @@ namespace lmath
     Quaternion& Quaternion::slerp(const Quaternion& q0, const Quaternion& q1, f32 t)
     {
 #if defined(LMATH_USE_SSE)
-        LASSERT(0.0f<=t);
-        LASSERT(t<=1.0f);
+        LASSERT(0.0f<=t && t<=1.0f);
 
         //if(t <= 0.0f){
         //    *this = q0;

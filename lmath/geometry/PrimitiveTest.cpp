@@ -95,17 +95,17 @@ namespace lmath
 
     //---------------------------------------------------------------------------------
     f32 sqDistancePointAABB(
-        const lmath::Vector4& point,
-        const lmath::Vector4& bmin,
-        const lmath::Vector4& bmax)
+        const f32* point,
+        const f32* bmin,
+        const f32* bmax)
     {
         f32 distance = 0.0f;
         for(s32 i=0; i<3; ++i){
             if(point[i]<bmin[i]){
                 f32 t = bmin[i] - point[i];
                 distance += t*t;
-            }
-            if(bmax[i]<point[i]){
+
+            } else if(bmax[i]<point[i]){
                 f32 t = point[i] - bmax[i];
                 distance += t*t;
             }
@@ -125,8 +125,27 @@ namespace lmath
             f32 v = point[i];
             if(v<bmin[i]){
                 v = bmin[i];
+
+            }else if(bmax[i]<v){
+                v = bmax[i];
             }
-            if(bmax[i]<v){
+            result[i] = v;
+        }
+    }
+
+    //---------------------------------------------------------------------------------
+    void closestPointPointVSAABB(
+        lmath::Vector3& result,
+        const lmath::Vector3& point,
+        const lmath::Vector3& bmin,
+        const lmath::Vector3& bmax)
+    {
+        for(s32 i=0; i<3; ++i){
+            f32 v = point[i];
+            if(v<bmin[i]){
+                v = bmin[i];
+
+            }else if(bmax[i]<v){
                 v = bmax[i];
             }
             result[i] = v;
@@ -235,11 +254,11 @@ namespace lmath
                 f32 t;
                 t = d[0] / (d[0] - d[2]);
                 Vector4 new0;
-                new0.setLerp(p0, p1, t);
+                new0.lerp(p0, p1, t);
 
                 t = d[0] / (d[0] - d[1]);
                 Vector4 new1;
-                new1.setLerp(p0, p2, t);
+                new1.lerp(p0, p2, t);
 
                 triangle.v_[0] = p0;
                 triangle.v_[1] = new0;
@@ -259,11 +278,11 @@ namespace lmath
                 f32 t;
                 t = d[2] / (d[2] - d[0]);
                 Vector4 new0;
-                new0.setLerp(p0, p1, t);
+                new0.lerp(p0, p1, t);
 
                 t = d[2] / (d[2] - d[1]);
                 Vector4 new1;
-                new1.setLerp(p0, p2, t);
+                new1.lerp(p0, p2, t);
 
                 triangle.v_[0] = p1;
                 triangle.v_[1] = new0;
