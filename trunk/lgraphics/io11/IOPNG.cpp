@@ -25,6 +25,19 @@ namespace io
         }
     }
 
+    bool IOPNG::checkSignature(lcore::istream& is)
+    {
+        s32 pos = is.tellg();
+        static const u32 SigSize = 8;
+        u8 data[SigSize];
+        u32 count = lcore::io::read(is, data, SigSize);
+        is.seekg(pos, lcore::ios::beg);
+        if(count<1){
+            return false;
+        }
+        return (0 == png_sig_cmp(data, 0, SigSize));
+    }
+
     bool IOPNG::read(lcore::istream& is, u8* buffer, u32& width, u32& height, u32& rowBytes, DataFormat& format, SwapRGB swap)
     {
         s32 startPos = is.tellg();
@@ -153,7 +166,7 @@ namespace io
         rowPointers = LIME_NEW u8*[height];
 
         for(u32 i=0; i<height; ++i){
-            rowPointers[height-i-1] = buffer + rowBytes * i;
+            rowPointers[i] = buffer + rowBytes * i;
         }
 
         png_read_image(png_ptr, rowPointers);
@@ -170,6 +183,64 @@ namespace io
         LIME_DELETE_ARRAY(rowPointers);
         png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
         return true;
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    bool IOPNG::read(Texture2DRef& texture,
+        lcore::istream& is,
+        Usage usage,
+        BindFlag bindFlag,
+        CPUAccessFlag access,
+        ResourceMisc misc,
+        TextureFilterType filter,
+        TextureAddress adress,
+        CmpFunc compFunc,
+        f32 borderColor,
+        SwapRGB swap)
+    {
+        u32 width, height, rowBytes;
+        DataFormat format;
+        if(false == read(is, NULL, width, height, rowBytes, format, swap)){
+            return false;
+        }
+
+        u32 size = rowBytes * height;
+        u8* buffer = LIME_NEW u8[size];
+
+        if(false == read(is, buffer, width, height, rowBytes, format, swap)){
+            LIME_DELETE_ARRAY(buffer);
+            return false;
+        }
+
+        SubResourceData initData;
+        initData.pitch_ = rowBytes;
+        initData.slicePitch_ = 0;
+        initData.mem_ = buffer;
+        SRVDesc desc;
+        desc.dimension_ = lgraphics::ViewSRVDimension_Texture2D;
+        desc.format_ = format;
+        desc.tex2D_.mipLevels_ = 1;
+        desc.tex2D_.mostDetailedMip_ = 0;
+
+        texture = lgraphics::Texture::create2D(
+                width,
+                height,
+                1,
+                1,
+                format,
+                usage,
+                bindFlag,
+                access,
+                misc,
+                filter,
+                adress,
+                compFunc,
+                borderColor,
+                &initData,
+                &desc);
+
+        LIME_DELETE_ARRAY(buffer);
+        return texture.valid();
     }
 }
 }

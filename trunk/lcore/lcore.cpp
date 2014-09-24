@@ -480,6 +480,18 @@ namespace
 #endif
     }
 
+    void Print(const Char* format, ...)
+    {
+        if(format == NULL){
+            return;
+        }
+
+        va_list ap;
+        va_start(ap, format);
+        vprintf_s(format, ap);
+        va_end(ap);
+    }
+
     MemorySpace::MemorySpace()
         :mspace_(NULL)
     {

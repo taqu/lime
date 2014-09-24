@@ -14,7 +14,7 @@ namespace lcore
     {
     public:
         static const s32 InvalidJobId = -1;
-        typedef void (*JobProc)(s32 jobId, void* data);
+        typedef void (*JobProc)(u32 threadId, s32 jobId, void* data);
 
         enum WaitStatus
         {
@@ -42,6 +42,8 @@ namespace lcore
 
         bool removePendingJob(s32 jobId);
         void clearPendingJobs();
+
+        u32 getThreadId(s32 index) const;
     private:
         ThreadPool(const ThreadPool&);
         ThreadPool& operator=(const ThreadPool&);

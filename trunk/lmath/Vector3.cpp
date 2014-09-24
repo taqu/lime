@@ -155,7 +155,6 @@ namespace lmath
     {
         Vector3 tmp;
         tmp.sub(v1,v0);
-        tmp *= t;
 
         muladd(t, tmp, v0);
         return *this;

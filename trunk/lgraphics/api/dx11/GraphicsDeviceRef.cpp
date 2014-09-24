@@ -66,20 +66,28 @@ namespace lgraphics
     static const Char* GSModels[] =
     {
         "gs_4_0",
+        "gs_4_1",
         "gs_5_0",
     };
 
     static const Char* VSModels[] =
     {
         "vs_4_0",
+        "vs_4_1",
         "vs_5_0",
     };
 
     static const Char* PSModels[] =
     {
         "ps_4_0",
+        "ps_4_1",
         "ps_5_0",
     };
+
+    const f32 GraphicsDeviceRef::Zero[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    const f32 GraphicsDeviceRef::One[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+    const u32 GraphicsDeviceRef::UIZero[4] = {0, 0, 0, 0};
 
     ID3D11ShaderResourceView* const GraphicsDeviceRef::NULLResources[GraphicsDeviceRef::MaxShaderResources] =
     { NULL, };
@@ -237,8 +245,24 @@ namespace lgraphics
         device_->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debug_));
 #endif
 
-        VSModel = (supportedLevel >= D3D_FEATURE_LEVEL_11_0)? VSModels[1] : VSModels[0];
-        PSModel = (supportedLevel >= D3D_FEATURE_LEVEL_11_0)? PSModels[1] : PSModels[0];
+        switch(supportedLevel)
+        {
+        case D3D_FEATURE_LEVEL_10_0:
+            VSModel = VSModels[0];
+            PSModel = PSModels[0];
+            break;
+
+        case D3D_FEATURE_LEVEL_10_1:
+            VSModel = VSModels[1];
+            PSModel = PSModels[1];
+            break;
+
+        case D3D_FEATURE_LEVEL_11_0:
+        default:
+            VSModel = VSModels[2];
+            PSModel = PSModels[2];
+            break;
+        }
 
         createBackBuffer(width, height, initParam.depthStencilFormat_, flags_);
 
@@ -287,8 +311,8 @@ namespace lgraphics
             rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 
             //デプスバッファのフォーマットによってDepthBiasの扱いが異なる
-            const f32 depthBias = 0.001f;
-            switch(initParam.depthStencilFormat_)
+            const f32 depthBias = 0.0001f;
+            switch(initParam.shadowMapFormat_)
             {
             case lgraphics::Data_D16_UNorm:
                 rasterizerDesc.DepthBias = static_cast<INT>(depthBias * 0xFFFF);
@@ -304,7 +328,7 @@ namespace lgraphics
                 break;
             };
 
-            rasterizerDesc.SlopeScaledDepthBias = 2.0f;
+            rasterizerDesc.SlopeScaledDepthBias = 1.0f;
             rasterizerDesc.DepthBiasClamp = 0.02f;
 
             hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_DepthMap]);
@@ -692,5 +716,17 @@ namespace lgraphics
         LASSERT(state.valid());
 
         context_->OMSetDepthStencilState(state.state_, stencilRef);
+    }
+
+    //---------------------------------------------------------
+    bool GraphicsDeviceRef::checkMultisampleQualityLevels(
+            lgraphics::DataFormat format,
+            u32 sampleCount,
+            u32* qualityLevels)
+    {
+        LASSERT(sampleCount<=MaxMultiSampleCount);
+        LASSERT(NULL != qualityLevels);
+        HRESULT hr = device_->CheckMultisampleQualityLevels((DXGI_FORMAT)format, sampleCount, qualityLevels);
+        return SUCCEEDED(hr);
     }
 }

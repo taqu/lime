@@ -32,7 +32,7 @@ namespace lcore
             Job* job = threadPool->popPendingJob();
             while(NULL != job){
                 LASSERT(NULL != job->proc_);
-                job->proc_(job->jobId_, job->data_);
+                job->proc_(thread->getID(), job->jobId_, job->data_);
 
                 threadPool->pushJob(job);
                 job = threadPool->popPendingJob();
@@ -89,6 +89,7 @@ namespace lcore
         }
 
         for(s32 i=0; i<maxThreads_; ++i){
+            threads_[i]->terminate();
             LIME_DELETE(threads_[i]);
         }
 
@@ -217,6 +218,11 @@ namespace lcore
             freeJobs_ = job;
         }
         numPendigJobs_ = 0;
+    }
+
+    u32 ThreadPool::getThreadId(s32 index) const
+    {
+        return threads_[index]->getID();
     }
 
     bool ThreadPool::canRun()

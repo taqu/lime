@@ -331,6 +331,42 @@ namespace lgraphics
         }
     }
 
+    Texture2DRef Texture::create2D(
+            u32 width,
+            u32 height,
+            u32 mipLevels,
+            u32 arraySize,
+            DataFormat format,
+            Usage usage,
+            u32 bind,
+            CPUAccessFlag access,
+            ResourceMisc misc,
+            TextureFilterType filter,
+            TextureAddress adress,
+            CmpFunc compFunc,
+            f32 borderColor,
+            const SubResourceData* initData,
+            const SRVDesc* resourceViewDesc)
+    {
+        return Texture::create2D(
+            width,
+            height,
+            mipLevels,
+            arraySize,
+            format,
+            1, //MSAAサンプル数
+            0, //MSAA品質
+            usage,
+            bind,
+            access,
+            misc,
+            filter,
+            adress,
+            compFunc,
+            borderColor,
+            initData,
+            resourceViewDesc);
+    }
 
     Texture2DRef Texture::create2D(
         u32 width,
@@ -338,6 +374,8 @@ namespace lgraphics
         u32 mipLevels,
         u32 arraySize,
         DataFormat format,
+        u32 samleCount,
+        u32 sampleQuality,
         Usage usage,
         u32 bind,
         CPUAccessFlag access,
@@ -367,8 +405,8 @@ namespace lgraphics
         desc.MipLevels = mipLevels;
         desc.ArraySize = arraySize;
         desc.Format = static_cast<DXGI_FORMAT>(format);
-        desc.SampleDesc.Count = 1;
-        desc.SampleDesc.Quality = 0;
+        desc.SampleDesc.Count = samleCount;
+        desc.SampleDesc.Quality = sampleQuality;
         desc.Usage = static_cast<D3D11_USAGE>(usage);
         desc.BindFlags = bind;
         desc.CPUAccessFlags = access;

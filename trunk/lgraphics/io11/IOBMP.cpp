@@ -6,6 +6,7 @@
 */
 #include "../lgraphicsAPIInclude.h"
 #include "../lgraphicscore.h"
+#include "../api/TextureRef.h"
 
 #include "IOBMP.h"
 
@@ -231,6 +232,65 @@ namespace io
         };
 
         return true;
+    }
+
+    //---------------------------------------------------------------------------------------------------
+    bool IOBMP::read(Texture2DRef& texture,
+        lcore::istream& is,
+        Usage usage,
+        BindFlag bindFlag,
+        CPUAccessFlag access,
+        ResourceMisc misc,
+        TextureFilterType filter,
+        TextureAddress adress,
+        CmpFunc compFunc,
+        f32 borderColor,
+        bool transpose)
+    {
+        u32 width, height;
+        DataFormat format;
+        if(false == read(is, NULL, width, height, format, transpose)){
+            return false;
+        }
+
+        u32 rowBytes = getBitsPerPixel(format) * width;
+        u32 size = rowBytes * height;
+        u8* buffer = LIME_NEW u8[size];
+
+        if(false == read(is, buffer, width, height, format, transpose)){
+            LIME_DELETE_ARRAY(buffer);
+            return false;
+        }
+
+        SubResourceData initData;
+        initData.pitch_ = rowBytes;
+        initData.slicePitch_ = 0;
+        initData.mem_ = buffer;
+        SRVDesc desc;
+        desc.dimension_ = lgraphics::ViewSRVDimension_Texture2D;
+        desc.format_ = format;
+        desc.tex2D_.mipLevels_ = 1;
+        desc.tex2D_.mostDetailedMip_ = 0;
+
+        texture = lgraphics::Texture::create2D(
+                width,
+                height,
+                1,
+                1,
+                format,
+                usage,
+                bindFlag,
+                access,
+                misc,
+                filter,
+                adress,
+                compFunc,
+                borderColor,
+                &initData,
+                &desc);
+
+        LIME_DELETE_ARRAY(buffer);
+        return texture.valid();
     }
 
     //---------------------------------------------------------------------------------------------------
