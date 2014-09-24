@@ -60,6 +60,12 @@
     <ClCompile Include="..\pack\PackWriter.cpp">
       <Filter>pack</Filter>
     </ClCompile>
+    <ClCompile Include="..\scene\ShadowMap.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\scene\ReflectiveShadowMap.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\scene\Camera.h">
@@ -126,6 +132,12 @@
     </ClInclude>
     <ClInclude Include="..\pack\PackWriter.h">
       <Filter>pack</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scene\ShadowMap.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scene\ReflectiveShadowMap.h">
+      <Filter>scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -7,6 +7,7 @@
 #include "Vector3.h"
 #include "Vector4.h"
 #include "Quaternion.h"
+#include "Matrix44.h"
 
 namespace lmath
 {
@@ -647,5 +648,61 @@ namespace lmath
     {
         cubeToSphere(inout.x_, inout.y_, inout.z_);
     }
-}
 
+    void calcNormalFromSphericalCoordinate(f32& x, f32& y, f32& z, f32 theta, f32 phi)
+    {
+        f32 sn = lmath::sin(phi);
+        x = lmath::cos(theta) * sn;
+        y = lmath::sin(theta) * sn;
+        z = lmath::cos(phi);
+    }
+
+    void calcNormalFromSphericalCoordinate(lmath::Vector3& normal, f32 theta, f32 phi)
+    {
+        calcNormalFromSphericalCoordinate(normal.x_, normal.y_, normal.z_, theta, phi);
+    }
+
+    void calcNormalFromSphericalCoordinate(lmath::Vector4& normal, f32 theta, f32 phi)
+    {
+        calcNormalFromSphericalCoordinate(normal.x_, normal.y_, normal.z_, theta, phi);
+    }
+
+    void normalToSphericalCoordinate(f32& theta, f32& phi, f32 x, f32 y, f32 z)
+    {
+        phi = lmath::acos(z);
+        theta = lmath::atan2(y, x);
+    }
+
+    void normalToSphericalCoordinate(f32& theta, f32& phi, const lmath::Vector3& normal)
+    {
+        normalToSphericalCoordinate(theta, phi, normal.x_, normal.y_, normal.z_);
+    }
+
+    void normalToSphericalCoordinate(f32& theta, f32& phi, const lmath::Vector4& normal)
+    {
+        normalToSphericalCoordinate(theta, phi, normal.x_, normal.y_, normal.z_);
+    }
+
+    //from Jeppe Revall Frisvad, "Building an Orthonormal Basis from a 3D Unit Vector Without Normalization"
+    void orthonormalBasis(lmath::Vector4& binormal0, lmath::Vector4& binormal1, const lmath::Vector4& normal)
+    {
+        if(normal.z_<-0.9999999f){
+            binormal0.set(0.0f, -1.0f, 0.0f, 0.0f);
+            binormal1.set(-1.0f,  0.0f, 0.0f, 0.0f);
+            return;
+        }
+
+        const f32 a = 1.0f/(1.0f + normal.z_);
+        const f32 b = -normal.x_*normal.y_*a;
+        binormal0.set(1.0f - normal.x_*normal.x_*a, b, -normal.x_, 0.0f);
+        binormal1.set(b, 1.0f - normal.y_*normal.y_*a, -normal.y_, 0.0f);
+    }
+
+    void rotationMatrixFromOrthonormalBasis(lmath::Matrix44& mat, const lmath::Vector4& normal, const lmath::Vector4& binormal0, const lmath::Vector4& binormal1)
+    {
+        mat.identity();
+        mat.m_[0][0] = binormal0.x_; mat.m_[0][1] = binormal1.x_; mat.m_[0][2] = normal.x_;
+        mat.m_[1][0] = binormal0.y_; mat.m_[1][1] = binormal1.y_; mat.m_[1][2] = normal.y_;
+        mat.m_[2][0] = binormal0.z_; mat.m_[2][1] = binormal1.z_; mat.m_[2][2] = normal.z_;
+    }
+}

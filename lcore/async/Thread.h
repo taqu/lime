@@ -46,6 +46,9 @@ namespace lcore
         /// 一時停止
         void suspend();
 
+        /// 強制終了
+        void terminate();
+
         /**
         @brief 終了を待つ
         @return 結果
@@ -108,6 +111,9 @@ namespace lcore
 
         /// 終了
         void stop();
+
+        /// 強制終了
+        void terminate();
 
         /**
         @brief 終了を待つ

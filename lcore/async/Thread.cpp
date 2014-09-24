@@ -57,6 +57,10 @@ namespace lcore
         SuspendThread(handle_);
     }
 
+    void ThreadRaw::terminate()
+    {
+        TerminateThread(handle_, 0);
+    }
 
     thread::WaitStatus ThreadRaw::join(u32 timeout)
     {
@@ -147,6 +151,11 @@ namespace lcore
         CSLock lock(cs_);
         canRun_ = false;
         resume();
+    }
+
+    void Thread::terminate()
+    {
+        TerminateThread(handle_, 0);
     }
 
     thread::WaitStatus Thread::join(u32 timeout)

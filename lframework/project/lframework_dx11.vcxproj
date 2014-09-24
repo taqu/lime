@@ -179,9 +179,11 @@
     <ClCompile Include="..\pack\PackWriter.cpp" />
     <ClCompile Include="..\scene\Camera.cpp" />
     <ClCompile Include="..\scene\Frustum.cpp" />
+    <ClCompile Include="..\scene\ReflectiveShadowMap.cpp" />
     <ClCompile Include="..\scene\Scene.cpp" />
     <ClCompile Include="..\Application.cpp" />
     <ClCompile Include="..\MessageDriven.cpp" />
+    <ClCompile Include="..\scene\ShadowMap.cpp" />
     <ClCompile Include="..\Static.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -204,11 +206,13 @@
     <ClInclude Include="..\scene\Frustum.h" />
     <ClInclude Include="..\scene\LightEnvironment.h" />
     <ClInclude Include="..\scene\lscene.h" />
+    <ClInclude Include="..\scene\ReflectiveShadowMap.h" />
     <ClInclude Include="..\scene\Scene.h" />
     <ClInclude Include="..\Application.h" />
     <ClInclude Include="..\Flags.h" />
     <ClInclude Include="..\lframework.h" />
     <ClInclude Include="..\MessageDriven.h" />
+    <ClInclude Include="..\scene\ShadowMap.h" />
     <ClInclude Include="..\Static.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

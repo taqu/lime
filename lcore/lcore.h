@@ -354,6 +354,8 @@ namespace lcore
 
     f32 fromBinary16Float(u16 s);
 
+#define LIME_COLO8_TO_FLOAT_RATIO (1.0f/255.0f);
+
     inline u32 getARGB(u8 a, u8 r, u8 g, u8 b)
     {
         return (a << 24) | (r << 16) | (g << 8) | b;
@@ -512,9 +514,9 @@ namespace lcore
         LeakCheck leakCheck_;
     };
 
-
-//#define LIME_ENABLE_LOG (1)
     void Log(const Char* format, ...);
+
+    void Print(const Char* format, ...);
 
     class MemorySpace
     {

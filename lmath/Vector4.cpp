@@ -465,11 +465,10 @@ namespace lmath
         store(*this, tv1);
 
 #else
-        Vector4 tmp = v2;
-        tmp -= v1;
-        tmp *= f;
-        tmp += v1;
-        *this = tmp;
+        Vector4 tmp;
+        tmp.sub(v1,v0);
+
+        muladd(t, tmp, v0);
 #endif
 
 //#if defined(LMATH_USE_SSE)

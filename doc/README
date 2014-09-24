@@ -9,7 +9,6 @@ zlib 1.2.5 <http://www.zlib.net/>
 libpng 1.6.7 <http://www.libpng.org/pub/png/libpng.html>
 libjpeg 9
 Bullet 2.78
-FLAC 1.3.0
 
 以下のコードはgoogle-sparsehashを改変しています。
 lime/lcore/Hash.h
@@ -20,7 +19,6 @@ google-sparsehash google-sparsehash/COPYING
 libjpeg           libjpeg/README
 libpng            libpng/README
 zlib              zlib/README
-FLAC              FLAC/COPYING.Xiph
 
 =================================================
 === Copyright

@@ -146,6 +146,8 @@ namespace lcore
             seekg(afterOffset, lcore::ios::beg);
             return size;
         }
+
+        inline bool flush();
     protected:
         fstream_base();
         fstream_base(const Char* filepath, int mode);
@@ -248,6 +250,12 @@ namespace lcore
         return fwrite((void*)src, count, 1, file_);
     }
 
+    template<class Base>
+    inline bool fstream_base<Base>::flush()
+    {
+        LASSERT(file_ != NULL);
+        return 0 == fflush(file_);
+    }
 
     //----------------------------------------------------------
     //---

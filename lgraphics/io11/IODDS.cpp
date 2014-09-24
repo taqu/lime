@@ -294,12 +294,24 @@ namespace io
 
     }
 
-    bool IODDS::read(Texture2DRef& texture, const s8* data, u32 size, Usage usage, TextureFilterType filter, TextureAddress adress)
+    bool IODDS::checkSignature(lcore::istream& is)
+    {
+        s32 pos = is.tellg();
+        u32 magic;
+        u32 count = lcore::io::read(is, magic);
+        is.seekg(pos, lcore::ios::beg);
+        if(count<1){
+            return false;
+        }
+        return (magic == DDS_MAGIC);
+    }
+
+    bool IODDS::read(Texture2DRef& texture, const u8* data, u32 size, Usage usage, TextureFilterType filter, TextureAddress adress)
     {
         static const u32 MaxNumSubResourceData = 256;
         SubResourceData initData[MaxNumSubResourceData];
 
-        MemoryStream memStream(data, size);
+        MemoryStream memStream(reinterpret_cast<const s8*>(data), size);
 
         u32 magic = 0;
         memStream.read(magic);

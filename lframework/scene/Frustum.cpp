@@ -16,6 +16,7 @@ using namespace lmath;
 
 namespace lscene
 {
+#if 1
     //---------------------------------------------------
     // ビュー空間の視錐台計算
     void Frustum::calcInView(const Camera& camera, f32 znear, f32 zfar)
@@ -149,22 +150,10 @@ namespace lscene
             planes_[i].normalize();
         }
     }
+#endif
 
     //---------------------------------------------------
-    // ビュー空間の視錐台計算
-    void Frustum::calcInView(const Camera& camera)
-    {
-        calc(camera.getProjMatrix());
-    }
-
-    //---------------------------------------------------
-    // ワールド空間の視錐台計算
-    void Frustum::calcInWorld(const Camera& camera)
-    {
-        calc(camera.getViewProjMatrix());
-    }
-
-    void Frustum::calc(const lmath::Matrix44& proj)
+    void Frustum::calcFromProjection(const lmath::Matrix44& proj, f32 znear, f32 zfar)
     {
 #if defined(LMATH_USE_SSE)
         //lm128 r0 = _mm_loadu_ps(&proj.m_[0][0]);
@@ -191,7 +180,7 @@ namespace lscene
 
         lm128 r0 = _mm_loadu_ps(&proj.m_[0][0]);
         lm128 r1 = _mm_loadu_ps(&proj.m_[1][0]);
-        lm128 r2 = _mm_loadu_ps(&proj.m_[2][0]);
+        //lm128 r2 = _mm_loadu_ps(&proj.m_[2][0]);
         lm128 r3 = _mm_loadu_ps(&proj.m_[3][0]);
 
         f32 f;
@@ -212,11 +201,11 @@ namespace lscene
         lm128 t3 = _mm_sub_ps(r1, r3);
         _mm_storeu_ps(&planes_[3].v_.x_, t3);
 
-        lm128 t4 = _mm_xor_ps(r2, mask);
-        _mm_storeu_ps(&planes_[4].v_.x_, t4);
+        //lm128 t4 = _mm_xor_ps(r2, _mm_set1_ps(-0.0f));
+        //_mm_storeu_ps(&planes_[4].v_.x_, t4);
 
-        lm128 t5 = _mm_sub_ps(r2, r3);
-        _mm_storeu_ps(&planes_[5].v_.x_, t5);
+        //lm128 t5 = _mm_sub_ps(r2, r3);
+        //_mm_storeu_ps(&planes_[5].v_.x_, t5);
 #else
         //planes_[0].v_.x_ = proj.m_[3][0] + proj.m_[0][0];
         //planes_[0].v_.y_ = proj.m_[3][1] + proj.m_[0][1];
@@ -268,18 +257,28 @@ namespace lscene
         planes_[3].v_.z_ = proj.m_[1][2] - proj.m_[3][2];
         planes_[3].v_.w_ = proj.m_[1][3] - proj.m_[3][3];
 
-        planes_[4].v_.x_ = -proj.m_[2][0];
-        planes_[4].v_.y_ = -proj.m_[2][1];
-        planes_[4].v_.z_ = -proj.m_[2][2];
-        planes_[4].v_.w_ = -proj.m_[2][3];
+        //planes_[4].v_.x_ = -proj.m_[2][0];
+        //planes_[4].v_.y_ = -proj.m_[2][1];
+        //planes_[4].v_.z_ = -proj.m_[2][2];
+        //planes_[4].v_.w_ = -proj.m_[2][3];
 
-        planes_[5].v_.x_ = proj.m_[2][0] - proj.m_[3][0];
-        planes_[5].v_.y_ = proj.m_[2][1] - proj.m_[3][1];
-        planes_[5].v_.z_ = proj.m_[2][2] - proj.m_[3][2];
-        planes_[5].v_.w_ = proj.m_[2][3] - proj.m_[3][3];
+        //planes_[5].v_.x_ = proj.m_[2][0] - proj.m_[3][0];
+        //planes_[5].v_.y_ = proj.m_[2][1] - proj.m_[3][1];
+        //planes_[5].v_.z_ = proj.m_[2][2] - proj.m_[3][2];
+        //planes_[5].v_.w_ = proj.m_[2][3] - proj.m_[3][3];
 #endif
 
-        for(s32 i=0; i<6; ++i){
+        planes_[4].v_.x_ = 0.0f;
+        planes_[4].v_.y_ = 0.0f;
+        planes_[4].v_.z_ = -1.0f;
+        planes_[4].v_.w_ = znear;
+
+        planes_[5].v_.x_ = 0.0f;
+        planes_[5].v_.y_ = 0.0f;
+        planes_[5].v_.z_ = 1.0f;
+        planes_[5].v_.w_ = -zfar;
+
+        for(s32 i=0; i<4; ++i){
             planes_[i].normalize();
         }
     }
@@ -363,7 +362,7 @@ namespace lscene
 
     //---------------------------------------------------
     // 視錐台の８頂点取得
-    void Frustum::getPoints(lmath::Vector4* points, f32 znear) const
+    void Frustum::getPoints(lmath::Vector4* points, f32 znear, f32 zfar) const
     {
         f32 slopeX = planes_[0].v_.z_ / planes_[0].v_.x_;
         f32 slopeY = planes_[2].v_.z_ / planes_[2].v_.y_;
@@ -376,18 +375,16 @@ namespace lscene
         points[2].set(-halfWidth,  -halfHeight, znear, 1.0f); //左下
         points[3].set( halfWidth,  -halfHeight, znear, 1.0f); //右下
 
+        halfWidth = zfar * slopeX;
+        halfHeight = zfar * slopeY;
 
-        f32 far = -planes_[5].v_.w_;
-        halfWidth = far * slopeX;
-        halfHeight = far * slopeY;
-
-        points[4].set( halfWidth,   halfHeight, far, 1.0f); //右上
-        points[5].set(-halfWidth,   halfHeight, far, 1.0f); //左上
-        points[6].set(-halfWidth,  -halfHeight, far, 1.0f); //左下
-        points[7].set( halfWidth,  -halfHeight, far, 1.0f); //右下
+        points[4].set( halfWidth,   halfHeight, zfar, 1.0f); //右上
+        points[5].set(-halfWidth,   halfHeight, zfar, 1.0f); //左上
+        points[6].set(-halfWidth,  -halfHeight, zfar, 1.0f); //左下
+        points[7].set( halfWidth,  -halfHeight, zfar, 1.0f); //右下
     }
 
-    f32 Frustum::calcFitZFar(const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax, const Camera& camera, f32 minz, f32 maxz)
+    void Frustum::calcFitNearFar(f32& znear, f32& zfar, const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax, const Camera& camera)
     {
         static const s32 AABBTriIndices[] = 
         {
@@ -399,13 +396,11 @@ namespace lscene
             2,3,6,  3,6,7 
         };
 
-        //const lmath::Matrix44& proj = camera.getProjMatrix();
-
         Frustum frustum;
-        frustum.calcInView(camera, camera.getZNear(), camera.getZFar());
+        frustum.calcFromProjection(camera.getProjMatrix(), camera.getZNear(), camera.getZFar());
 
-
-        f32 zfar = minz;
+        znear = FLT_MAX;
+        zfar = -FLT_MIN;
 
         lmath::Vector4 points[8];
         lmath::calcAABBPoints(points, aabbMin, aabbMax);
@@ -434,12 +429,15 @@ namespace lscene
 
             for(s32 j=0; j<numTriangles; ++j){
                 for(s32 k=0; k<3; ++k){
-                    if(zfar<triangles[j].v_[k].z_){
+                    if(zfar < triangles[j].v_[k].z_){
                         zfar = triangles[j].v_[k].z_;
+                    }
+                    if(triangles[j].v_[k].z_ < znear){
+                        znear = triangles[j].v_[k].z_;
                     }
                 }
             }
         }
-        return (maxz < zfar)? maxz : zfar;
     }
+
 }
