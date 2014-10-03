@@ -125,6 +125,9 @@
     <ClInclude Include="..\api\dx11\ShaderCompiler.h">
       <Filter>api\dx11</Filter>
     </ClInclude>
+    <ClInclude Include="..\api\dx11\ViewRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\api\dx11\BlendStateRef.cpp">
@@ -182,6 +185,9 @@
     </ClCompile>
     <ClCompile Include="..\io11\IOPNG.cpp">
       <Filter>io11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\ViewRef.cpp">
+      <Filter>api\dx11</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -328,11 +328,11 @@ namespace lmath
         f64 x2 = x*x;
 
         if(isSin){
-            dsn = (sign)? sin_series_x2(x, x2) : -sin_series_x2(x, x2);
-            dcs = (sign2)? cos_series_x2(x2) : -cos_series_x2(x2);
+            dsn = static_cast<f32>( (sign)? sin_series_x2(x, x2) : -sin_series_x2(x, x2) );
+            dcs = static_cast<f32>( (sign2)? cos_series_x2(x2) : -cos_series_x2(x2) );
         }else{
-            dsn = (sign)? cos_series_x2(x2) : -cos_series_x2(x2);
-            dcs = (sign2)? sin_series_x2(x, x2) : -sin_series_x2(x, x2);
+            dsn = static_cast<f32>( (sign)? cos_series_x2(x2) : -cos_series_x2(x2) );
+            dcs = static_cast<f32>( (sign2)? sin_series_x2(x, x2) : -sin_series_x2(x, x2) );
         }
     }
 
@@ -651,10 +651,10 @@ namespace lmath
 
     void calcNormalFromSphericalCoordinate(f32& x, f32& y, f32& z, f32 theta, f32 phi)
     {
-        f32 sn = lmath::sin(phi);
-        x = lmath::cos(theta) * sn;
-        y = lmath::sin(theta) * sn;
-        z = lmath::cos(phi);
+        f32 sn = lmath::sinf(phi);
+        x = lmath::cosf(theta) * sn;
+        y = lmath::sinf(theta) * sn;
+        z = lmath::cosf(phi);
     }
 
     void calcNormalFromSphericalCoordinate(lmath::Vector3& normal, f32 theta, f32 phi)

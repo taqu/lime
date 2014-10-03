@@ -118,7 +118,7 @@ namespace lpack
                 lcore::strncpy(buffer, MaxFileNameLength*2, itr->name_, len);
             }
             for(Char* c = buffer; *c != '\0'; ++c){
-                *c = toupper(*c);
+                *c = static_cast<Char>(toupper(*c));
             }
             stream_.print("%s,\n", buffer);
         }

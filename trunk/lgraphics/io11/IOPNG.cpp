@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file IOPNG.cpp
 @author t-sakai
 @date 2013/07/24 create
@@ -126,24 +126,24 @@ namespace io
 
         case PNG_COLOR_TYPE_GRAY_ALPHA:
             png_set_gray_to_rgb(png_ptr); //グレースケールをRGBに変換
-            format= (swap == Swap_RGB)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            format= (swap == Swap_RGB)? Data_B8G8R8A8_UNorm_SRGB : Data_R8G8B8A8_UNorm_SRGB;
             break;
 
         case PNG_COLOR_TYPE_PALETTE:
             png_set_palette_to_rgb(png_ptr);
             png_set_add_alpha(png_ptr, 0xFFU, PNG_FILLER_AFTER);
-            format= (swap == Swap_RGB)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            format= (swap == Swap_RGB)? Data_B8G8R8A8_UNorm_SRGB : Data_R8G8B8A8_UNorm_SRGB;
             swapBytes = (swap == Swap_RGB);
             break;
 
         case PNG_COLOR_TYPE_RGB:
             png_set_add_alpha(png_ptr, 0xFFU, PNG_FILLER_AFTER);
-            format= (swap == Swap_RGB)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            format= (swap == Swap_RGB)? Data_B8G8R8A8_UNorm_SRGB : Data_R8G8B8A8_UNorm_SRGB;
             swapBytes = (swap == Swap_RGB);
             break;
 
         case PNG_COLOR_TYPE_RGB_ALPHA:
-            format= (swap == Swap_BGR)? Data_R8G8B8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm_SRGB;
+            format= (swap == Swap_BGR)? Data_B8G8R8A8_UNorm_SRGB : Data_R8G8B8A8_UNorm_SRGB;
             swapBytes = (swap == Swap_RGB);
             break;
 

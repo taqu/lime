@@ -94,7 +94,6 @@ namespace lmath
         }else if(discr < -F32_EPSILON){
             Vector3 tvec = ray.origin_;
             tvec -= v0;
-
             u = tvec.dot(c);
             if(u>0.0f || u<discr){
                 return false;

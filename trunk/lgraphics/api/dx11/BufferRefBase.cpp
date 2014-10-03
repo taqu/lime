@@ -38,6 +38,12 @@ namespace lgraphics
         return SUCCEEDED(hr);
     }
 
+    bool BufferRefBase::map(void*& data, u32& rowPitch, u32& depthPitch, u32 subresource, s32 type)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        return device.map(data, rowPitch, depthPitch, buffer_, subresource, type);
+    }
+
     void BufferRefBase::unmap(u32 subresource)
     {
         lgraphics::Graphics::getDevice().getContext()->Unmap(buffer_, subresource);
@@ -46,6 +52,12 @@ namespace lgraphics
     void BufferRefBase::updateSubresource(u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch)
     {
         lgraphics::Graphics::getDevice().updateSubresource(buffer_, index, box, data, rowPitch, depthPitch);
+    }
+
+    void BufferRefBase::copy(BufferRefBase& src)
+    {
+        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
+        device.copyResource(buffer_, src.buffer_);
     }
 
     //------------------------------------------------------------

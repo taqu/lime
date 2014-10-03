@@ -84,6 +84,13 @@ namespace lgraphics
         "ps_5_0",
     };
 
+    static const Char* CSModels[] =
+    {
+        "cs_4_0",
+        "cs_4_1",
+        "cs_5_0",
+    };
+
     const f32 GraphicsDeviceRef::Zero[4] = {0.0f, 0.0f, 0.0f, 0.0f};
     const f32 GraphicsDeviceRef::One[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -98,6 +105,7 @@ namespace lgraphics
     const Char* GraphicsDeviceRef::GSModel = GSModels[0];
     const Char* GraphicsDeviceRef::VSModel = VSModels[0];
     const Char* GraphicsDeviceRef::PSModel = PSModels[0];
+    const Char* GraphicsDeviceRef::CSModel = CSModels[0];
 
     GraphicsDeviceRef::GraphicsDeviceRef()
         :flags_(0)
@@ -249,18 +257,24 @@ namespace lgraphics
         {
         case D3D_FEATURE_LEVEL_10_0:
             VSModel = VSModels[0];
+            GSModel = GSModels[0];
             PSModel = PSModels[0];
+            CSModel = CSModels[0];
             break;
 
         case D3D_FEATURE_LEVEL_10_1:
             VSModel = VSModels[1];
+            GSModel = GSModels[1];
             PSModel = PSModels[1];
+            CSModel = CSModels[1];
             break;
 
         case D3D_FEATURE_LEVEL_11_0:
         default:
             VSModel = VSModels[2];
+            GSModel = GSModels[2];
             PSModel = PSModels[2];
+            CSModel = CSModels[2];
             break;
         }
 

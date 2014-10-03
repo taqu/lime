@@ -732,7 +732,7 @@ namespace lmath
 
     void Quaternion::mul(const Vector3& v, const Quaternion& q)
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
 //#if 0
         lm128 mask;
 
@@ -780,8 +780,7 @@ namespace lmath
 
     void Quaternion::mul(const Quaternion& q, const Vector3& v)
     {
-#if defined(LMATH_USE_SSE)
-//#if 0
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
         lm128 mask;
 
         lm128 tw = _mm_load1_ps(&q.w_);
@@ -836,7 +835,7 @@ namespace lmath
 
     void Quaternion::mul(const Vector4& v, const Quaternion& q)
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
 //#if 0
         lm128 mask;
 
@@ -878,7 +877,7 @@ namespace lmath
 
     void Quaternion::mul(const Quaternion& q, const Vector4& v)
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
 //#if 0
         lm128 mask;
 
@@ -966,7 +965,7 @@ namespace lmath
 
     Quaternion& Quaternion::slerp(const Quaternion& q0, const Quaternion& q1, f32 t)
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
         LASSERT(0.0f<=t && t<=1.0f);
 
         //if(t <= 0.0f){

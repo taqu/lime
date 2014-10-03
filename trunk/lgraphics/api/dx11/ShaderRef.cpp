@@ -140,6 +140,29 @@ namespace lgraphics
 
 
     //------------------------------------------------------------
+    // メモリからコンピュートシェーダ作成
+    ComputeShaderRef Shader::createComputeShaderFromBinary(const u8* memory, u32 size)
+    {
+        LASSERT(memory != NULL);
+
+        ID3D11ComputeShader *shader = NULL;
+
+        ID3D11Device *d3ddevice = Graphics::getDevice().getD3DDevice();
+
+        HRESULT hr = d3ddevice->CreateComputeShader(
+            memory,
+            size,
+            NULL,
+            &shader);
+
+        if(FAILED(hr)){
+            return ComputeShaderRef();
+        }
+
+        return ComputeShaderRef(shader);
+    }
+
+    //------------------------------------------------------------
     //---
     //--- PixelShaderRef
     //---
@@ -216,6 +239,30 @@ namespace lgraphics
         Graphics::getDevice().setGeometryShader(shader_);
     }
 
+    //------------------------------------------------------------
+    //---
+    //--- ComputeShaderRef
+    //---
+    //------------------------------------------------------------
+    ComputeShaderRef::ComputeShaderRef(const ComputeShaderRef& rhs)
+        :ShaderRefBase(rhs)
+        ,shader_(rhs.shader_)
+    {
+        if(shader_){
+            shader_->AddRef();
+        }
+    }
+
+    void ComputeShaderRef::destroy()
+    {
+        SAFE_RELEASE(shader_);
+    }
+
+
+    void ComputeShaderRef::attach() const
+    {
+        Graphics::getDevice().setComputeShader(shader_);
+    }
 
     //------------------------------------------------------------
     //---

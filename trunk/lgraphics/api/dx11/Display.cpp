@@ -111,7 +111,7 @@ namespace
         dst = request;
         dst.backBufferWidth_ = width;
         dst.backBufferHeight_ = height;
-        dst.refreshRate_ = refreshRate;
+        dst.refreshRate_ = static_cast<u32>(refreshRate);
         return true;
     }
 

@@ -311,7 +311,7 @@ namespace
             if(fraction == 0){
                 return sign | 0x7C00U; //符号付きInf
             }else{
-                return (fraction>>13) | 0x7C00U; //NaN
+                return static_cast<u16>((fraction>>13) | 0x7C00U); //NaN
             }
         }else {
             exponent += (-127 + 15);
@@ -323,7 +323,7 @@ namespace
                     return sign;
                 }else{
                     fraction |= 0x800000U; //隠れた整数ビット足す
-                    u16 frac = fraction >> shift;
+                    u16 frac = static_cast<u16>(fraction >> shift);
                     if((fraction>>(shift-1)) & 0x01U){ //１ビット下位を丸める
                         frac += 1;
                     }
@@ -332,7 +332,7 @@ namespace
             }
         }
 
-        u16 ret = sign | ((exponent<<10) & 0x7C00U) | (fraction>>13);
+        u16 ret = static_cast<u16>(sign | ((exponent<<10) & 0x7C00U) | (fraction>>13));
         if((fraction>>12) & 0x01U){ //１ビット下位を丸める
             ret += 1;
         }
@@ -460,7 +460,7 @@ namespace
         static const u32 MaxBuffer = 64;
 #endif
         Char buffer[MaxBuffer+2];
-        int count=vsnprintf(buffer, MaxBuffer, format, ap);
+        int count=vsnprintf_s(buffer, MaxBuffer, format, ap);
         if(count<0){
             count = MaxBuffer;
         }

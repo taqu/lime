@@ -24,6 +24,10 @@ namespace lgraphics
         Graphics::getDevice().setPSConstantBuffers(start, 1, &buffer_);
     }
 
+    void ConstantBufferRef::setCS(u32 start)
+    {
+        Graphics::getDevice().setCSConstantBuffers(start, 1, &buffer_);
+    }
 
     void ConstantBufferRef::update(
         u32 dstSubresource,

@@ -127,4 +127,60 @@ namespace lcore
 #endif
         }
     }
+
+    //---------------------------------------------------------
+    //---
+    //--- Character Code
+    //---
+    //---------------------------------------------------------
+    // UTF8 to UTF16
+    s32 UTF8toUTF16(u16& utf16, const Char* utf8)
+    {
+        LASSERT(NULL != utf8);
+        u8 firstByte = ~(*((u8*)utf8));
+        if(firstByte & 0x80U){
+            utf16 = utf8[0];
+            return 1;
+
+        }else if(firstByte & 0x40U){
+
+        }else if(firstByte & 0x20U){
+            u8 c0 = (utf8[0] & 0x1FU);
+            u8 c1 = (utf8[1] & 0x3FU);
+            utf16 = (c0<<6) | c1;
+            return 2;
+        }else if(firstByte & 0x10U){
+            u8 c0 = (utf8[0] & 0x0FU);
+            u8 c1 = (utf8[1] & 0x3FU);
+            u8 c2 = (utf8[2] & 0x3FU);
+            utf16 = (c0<<12) | (c1<<6) | c2;
+            return 3;
+        }
+        utf16 = 0;
+        return 0;
+    }
+
+    // UTF16 to UTF8
+    s32 UTF16toUTF8(Char* utf8, u16 utf16)
+    {
+        LASSERT(NULL != utf8);
+        if(utf16 < 0x80U){
+            utf8[0] = static_cast<u8>(utf16);
+            return 1;
+        }else if(utf16 < 0x800U){
+            u8 c0 = static_cast<u8>((utf16>>6) | 0xC0U);
+            u8 c1 = static_cast<u8>((utf16&0x3FU) | 0x80U);
+            *((u8*)(utf8+0)) = c0;
+            *((u8*)(utf8+1)) = c1;
+            return 2;
+        }else{
+            u8 c0 = (utf16>>12) | 0xE0U;
+            u8 c1 = ((utf16>>6)&0x3FU) | 0x80U;
+            u8 c2 = ((utf16>>0)&0x3FU) | 0x80U;
+            *((u8*)(utf8+0)) = c0;
+            *((u8*)(utf8+1)) = c1;
+            *((u8*)(utf8+2)) = c2;
+            return 3;
+        }
+    }
 }

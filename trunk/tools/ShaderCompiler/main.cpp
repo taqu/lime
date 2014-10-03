@@ -18,6 +18,7 @@ enum ShaderType
     Shader_VS,
     Shader_GS,
     Shader_PS,
+    Shader_CS,
     Shader_None,
 };
 
@@ -45,6 +46,12 @@ const lcore::Char* ProfileGSName[] =
     "gs_5_0",
 };
 
+const lcore::Char* ProfileCSName[] =
+{
+    "cs_4_0",
+    "cs_5_0",
+};
+
 int main(int argc, char** argv)
 {
     if(argc < 3){
@@ -64,6 +71,8 @@ int main(int argc, char** argv)
             type = Shader_GS;
         }else if(lcore::strncmp(argv[i], "-vs", 3) == 0){
             type = Shader_VS;
+        }else if(lcore::strncmp(argv[i], "-cs", 3) == 0){
+            type = Shader_CS;
         }else if(lcore::strncmp(argv[i], "-p4", 3) == 0){
             profile = Profile_4_0;
         }else if(lcore::strncmp(argv[i], "-p5", 3) == 0){
@@ -159,6 +168,15 @@ int main(int argc, char** argv)
                 buff.get(),
                 size,
                 ProfilePSName[profile],
+                0, NULL,
+                &error);
+            break;
+
+        case Shader_CS:
+            blob = ConcreteShaderCompiler::createComputeShaderBlobFromMemory(
+                buff.get(),
+                size,
+                ProfileCSName[profile],
                 0, NULL,
                 &error);
             break;

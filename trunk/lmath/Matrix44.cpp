@@ -65,10 +65,10 @@ namespace lmath
         _mm_storeu_ps(&m_[2][0], r2);
         _mm_storeu_ps(&m_[3][0], r3);
 #else
-        lcore::memcpy(&m_[0][0], &r0, sizeof(Vector4));
-        lcore::memcpy(&m_[1][0], &r1, sizeof(Vector4));
-        lcore::memcpy(&m_[2][0], &r2, sizeof(Vector4));
-        lcore::memcpy(&m_[3][0], &r3, sizeof(Vector4));
+        lcore::memcpy(&m_[0][0], &row0, sizeof(Vector4));
+        lcore::memcpy(&m_[1][0], &row1, sizeof(Vector4));
+        lcore::memcpy(&m_[2][0], &row2, sizeof(Vector4));
+        lcore::memcpy(&m_[3][0], &row3, sizeof(Vector4));
 #endif
     }
 

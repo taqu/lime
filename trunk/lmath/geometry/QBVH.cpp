@@ -93,11 +93,16 @@ namespace
         u32 mask = 0xFFFFFFFFU;
         f32 fmask = *((f32*)&mask);
 
+        lmath::lm128 tbbox[2][3];
+        for(s32 i=0; i<3; ++i){
+            tbbox[0][i] = _mm_sub_ps(bbox[0][i], radius);
+            tbbox[1][i] = _mm_add_ps(bbox[1][i], radius);
+        }
         lmath::lm128 t = _mm_set1_ps(fmask);
-        //for(s32 i=0; i<3; ++i){
-        //    t = _mm_and_ps(t, _mm_cmple_ps(bbox0[0][i], bbox1[1][i]));
-        //    t = _mm_and_ps(t, _mm_cmple_ps(bbox1[0][i], bbox0[1][i]));
-        //}
+        for(s32 i=0; i<3; ++i){
+            t = _mm_and_ps(t, _mm_cmple_ps(position[i], tbbox[1][i]));
+            t = _mm_and_ps(t, _mm_cmple_ps(tbbox[0][i], position[i]));
+        }
         return _mm_movemask_ps(t);
     }
 }
@@ -550,18 +555,7 @@ namespace
         if(numNodes_<=0){
             return false;
         }
-
-        lmath::lm128 bbox[2][3];
-        
-        bbox[0][0] = _mm_load1_ps(&bmin.x_);
-        bbox[0][1] = _mm_load1_ps(&bmin.y_);
-        bbox[0][2] = _mm_load1_ps(&bmin.z_);
-
-        bbox[1][0] = _mm_load1_ps(&bmax.x_);
-        bbox[1][1] = _mm_load1_ps(&bmax.y_);
-        bbox[1][2] = _mm_load1_ps(&bmax.z_);
-
-        return innerTest(hitRecord, bbox);
+        return innerTest(hitRecord, bmin, bmax);
     }
 
     //bool QBVH::test(HitRecord& hitRecord, const lmath::Sphere& sphere)
@@ -640,8 +634,19 @@ namespace
         return ret;
     }
 
-    bool QBVH::innerTest(HitRecord& hitRecord, lmath::lm128 bbox[2][3])
+    bool QBVH::innerTest(HitRecord& hitRecord, const lmath::Vector3& bmin, const lmath::Vector3& bmax)
     {
+        lmath::lm128 bbox[2][3];
+        
+        bbox[0][0] = _mm_load1_ps(&bmin.x_);
+        bbox[0][1] = _mm_load1_ps(&bmin.y_);
+        bbox[0][2] = _mm_load1_ps(&bmin.z_);
+
+        bbox[1][0] = _mm_load1_ps(&bmax.x_);
+        bbox[1][1] = _mm_load1_ps(&bmax.y_);
+        bbox[1][2] = _mm_load1_ps(&bmax.z_);
+
+
         bool ret = false;
         s32 stack = 0;
         u32 nodeStack[TestStackSize];
@@ -657,7 +662,7 @@ namespace
                 u32 faceIndex = Node::getFaceIndex(index);
                 u32 numFaces = Node::getFaceNum(index);
 
-                f32 u, v;
+                //TODO:
                 for(u32 i=faceIndex; i<faceIndex+numFaces; ++i){
                 }
                 numTestFaces_ += numFaces;
