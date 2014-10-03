@@ -35,8 +35,7 @@ namespace lmath
 
     void Vector3::cross(const Vector3& v0, const Vector3& v1)
     {
-//#if defined(LMATH_USE_SSE)
-#if 0
+#if defined(LMATH_USE_SSE)  && defined(LMATH_FORCE_SSE)
         static const u32 RotMaskR = 201;
         static const u32 RotMaskL = 210;
 
@@ -173,7 +172,7 @@ namespace lmath
 
     void Vector3::mul(const Matrix34& m, const Vector3& v)
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
         lm128 tv1 = Vector3::load(v.y_);
         lm128 tv2 = Vector3::load(v.z_);
@@ -204,7 +203,7 @@ namespace lmath
 
     void Vector3::mul(const Vector3& v, const Matrix34& m)
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
         lm128 tv1 = Vector3::load(v.y_);
         lm128 tv2 = Vector3::load(v.z_);
@@ -235,7 +234,7 @@ namespace lmath
 
     void Vector3::mul33(const Matrix34& m, const Vector3& v)
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
         lm128 tv1 = Vector3::load(v.y_);
         lm128 tv2 = Vector3::load(v.z_);
@@ -293,7 +292,7 @@ namespace lmath
 
     void Vector3::mul33(const Matrix44& m, const Vector3& v)
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
         lm128 tv1 = Vector3::load(v.y_);
         lm128 tv2 = Vector3::load(v.z_);

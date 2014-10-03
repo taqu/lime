@@ -58,11 +58,17 @@ namespace io
             DDSCAPS2_VOLUME = 0x00200000,
         };
 
-        enum DXFORCC
+        enum DXFOURCC
         {
-            DXFORCC_DXT1 = LIME_MAKE_FOURCC('D', 'X', 'T', '1'),
-            DXFORCC_DXT3 = LIME_MAKE_FOURCC('D', 'X', 'T', '3'),
-            DXFORCC_DXT5 = LIME_MAKE_FOURCC('D', 'X', 'T', '5'),
+            DXFOURCC_DXT1 = LIME_MAKE_FOURCC('D', 'X', 'T', '1'),
+            DXFOURCC_DXT3 = LIME_MAKE_FOURCC('D', 'X', 'T', '3'),
+            DXFOURCC_DXT5 = LIME_MAKE_FOURCC('D', 'X', 'T', '5'),
+
+            DXFOURCC_BC4U = LIME_MAKE_FOURCC('B', 'C', '4', 'U'),
+            DXFOURCC_BC4S = LIME_MAKE_FOURCC('B', 'C', '4', 'S'),
+
+            DXFOURCC_BC5U = LIME_MAKE_FOURCC('A', 'T', 'I', '2'),
+            DXFOURCC_BC5S = LIME_MAKE_FOURCC('B', 'C', '5', 'S'),
         };
 
         struct DDS_HEADER_DXT10
@@ -207,14 +213,26 @@ namespace io
                 //圧縮形式
                 switch(ddpf.fourCC_)
                 {
-                case DXFORCC_DXT1:
+                case DXFOURCC_DXT1:
                     return Data_BC1_UNorm_SRGB;
 
-                case DXFORCC_DXT3:
+                case DXFOURCC_DXT3:
                     return Data_BC2_UNorm_SRGB;
 
-                case DXFORCC_DXT5:
+                case DXFOURCC_DXT5:
                     return Data_BC3_UNorm_SRGB;
+
+                case DXFOURCC_BC4U:
+                    return Data_BC4_UNorm;
+
+                case DXFOURCC_BC4S:
+                    return Data_BC4_SNorm;
+
+                case DXFOURCC_BC5U:
+                    return Data_BC5_UNorm;
+
+                case DXFOURCC_BC5S:
+                    return Data_BC5_SNorm;
 
                 case D3DFMT_A16B16G16R16:
                     return Data_R16G16B16A16_UNorm;

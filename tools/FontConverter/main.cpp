@@ -291,7 +291,7 @@ namespace
             return false;
         }
         int x = parseParamInt(word);
-        glyph.u0_ = toBinary16Float(invW * x - halfPixelW);
+        glyph.u0_ = toBinary16Float(invW * x + halfPixelW);
 
         skipSpace(input);
         getWord(word, input);
@@ -299,7 +299,7 @@ namespace
             return false;
         }
         int y = parseParamInt(word);
-        glyph.v0_ = toBinary16Float(invH * y - halfPixelH);
+        glyph.v0_ = toBinary16Float(invH * y + halfPixelH);
 
         skipSpace(input);
         getWord(word, input);
@@ -307,7 +307,7 @@ namespace
             return false;
         }
         glyph.width_ = parseParamInt(word);
-        glyph.u1_ = toBinary16Float(invW * (x + glyph.width_) - halfPixelW);
+        glyph.u1_ = toBinary16Float(invW * (x + glyph.width_-1) + halfPixelW);
 
         skipSpace(input);
         getWord(word, input);
@@ -315,7 +315,7 @@ namespace
             return false;
         }
         glyph.height_ = parseParamInt(word);
-        glyph.v1_ = toBinary16Float(invH * (y + glyph.height_) - halfPixelH);
+        glyph.v1_ = toBinary16Float(invH * (y + glyph.height_-1) + halfPixelH);
 
         skipSpace(input);
         getWord(word, input);
@@ -367,6 +367,8 @@ int main(int argc, char** argv)
 
     f32 invW = (1.0f/(header.width_ - 1));
     f32 invH = (1.0f/(header.height_ - 1));
+    //f32 invW = (1.0f/(header.width_));
+    //f32 invH = (1.0f/(header.height_));
     f32 halfPixelW = 0.5f * invW;
     f32 halfPixelH = 0.5f * invH;
     font::Glyph* glyphs = new font::Glyph[header.numGlyphs_];

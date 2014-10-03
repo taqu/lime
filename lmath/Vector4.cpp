@@ -138,7 +138,7 @@ namespace lmath
 
     f32 Vector4::dot(const Vector4& v) const
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
         lm128 r0 = load(*this);
         lm128 r1 = load(v);
         r0 = _mm_mul_ps(r0, r1);
@@ -343,7 +343,7 @@ namespace lmath
 
     void Vector4::mul(const Matrix44& m, const Vector4& v)
     {
-#if defined(LMATH_USE_SSE)
+#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
         lm128 tm0 = _mm_loadu_ps(&m.m_[0][0]);
         lm128 tm1 = _mm_loadu_ps(&m.m_[1][0]);
         lm128 tm2 = _mm_loadu_ps(&m.m_[2][0]);
@@ -370,7 +370,6 @@ namespace lmath
         tm0 = _mm_add_ps(tm0, tm3);
 
         store(*this, tm0);
-
 #else
         f32 x, y, z, w;
         x = v.x_ * m.m_[0][0] + v.y_ * m.m_[0][1] + v.z_ * m.m_[0][2] + v.w_ * m.m_[0][3];

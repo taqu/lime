@@ -26,18 +26,17 @@ namespace lscene
     {
     }
 
-    void ShadowMap::initialize(s32 cascadeLevels, s32 resolution, f32 znear, f32 zfar)
+    void ShadowMap::initialize(s32 cascadeLevels, s32 resolution, f32 znear, f32 zfar, f32 logRatio)
     {
         cascadeLevels_ = cascadeLevels;
         resolution_ = resolution;
         znear_ = znear;
         zfar_ = zfar;
-        calcCascadePartitions();
+        calcCascadePartitions(logRatio);
     }
 
     void ShadowMap::update(const Scene& scene)
     {
-        const lmath::Matrix44& projection = scene.getProjMatrix();
         const lmath::Matrix44& view = scene.getViewMatrix();
         const lmath::Matrix44& lightView = scene.getLightEnv().getDirectionalLight().getLightView();
 
@@ -166,10 +165,10 @@ namespace lscene
         }
     }
 
-    void ShadowMap::calcCascadePartitions()
+    void ShadowMap::calcCascadePartitions(f32 logRatio)
     {
         f32 zextent = zfar_ - znear_;
-        f32 invZFar = 1.0f/zfar_;
+        //f32 invZFar = 1.0f/zfar_;
 
         f32 farOverNear = zfar_ / znear_;
         f32 invNumCascades = 1.0f/cascadeLevels_;
@@ -181,7 +180,7 @@ namespace lscene
             f32 logZ = znear_ * lmath::pow(farOverNear, step);
             f32 uniformZ = zextent * step;
 
-            f32 zfar = lcore::lerp(logZ, uniformZ, 0.5f);
+            f32 zfar = lcore::lerp(uniformZ, logZ, logRatio);
 
             cascadePartitions_[i] = zfar;
         }

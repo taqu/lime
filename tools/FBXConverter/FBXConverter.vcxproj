@@ -101,6 +101,7 @@
   <ItemGroup>
     <ClCompile Include="converter.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="ObjConverter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="converter.h" />
@@ -111,6 +112,7 @@
     <ClInclude Include="load_mesh.h" />
     <ClInclude Include="load_node.h" />
     <ClInclude Include="load_texture.h" />
+    <ClInclude Include="ObjConverter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

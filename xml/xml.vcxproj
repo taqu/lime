@@ -61,6 +61,7 @@
       <ProgramDataBaseFileName>$(OutDir)xml_vc110_d.pdb</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Lib>
       <OutputFile>$(OutDir)$(ProjectName)_vc110_d.lib</OutputFile>

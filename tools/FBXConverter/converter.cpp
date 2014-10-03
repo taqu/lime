@@ -313,19 +313,32 @@ namespace
     bool Converter::process(FbxScene* scene)
     {
         {//テクスチャ保存
-            for(s32 i=0; i<scene->GetTextureCount(); ++i){
+            s32 count = scene->GetTextureCount();
+            for(s32 i=0; i<count; ++i){
                 FbxTexture* texture = scene->GetTexture(i);
                 if(false == texture->GetClassId().Is(FbxFileTexture::ClassId)){
                     continue;
                 }
-                fbxTextures_.push_back(texture);
                 FbxFileTexture* fileTexture = (FbxFileTexture*)texture;
-
                 Texture tex;
+                if(fileTexture->GetTextureUse() == FbxFileTexture::eStandard){
+                    tex.type_ = TexType_Albedo;
+
+                }else if(fileTexture->GetTextureUse() == FbxFileTexture::eShadowMap){
+                    continue;
+                }else if(fileTexture->GetTextureUse() == FbxFileTexture::eLightMap){
+                    continue;
+                }else if(fileTexture->GetTextureUse() == FbxFileTexture::eSphericalReflectionMap){
+                    continue;
+                }else if(fileTexture->GetTextureUse() == FbxFileTexture::eSphereReflectionMap){
+                    continue;
+                }else if(fileTexture->GetTextureUse() == FbxFileTexture::eBumpNormalMap){
+                    tex.type_ = TexType_Normal;
+                }
+
                 extractFileName(tex.name_, MaxFileNameSize, fileTexture->GetFileName());
-                tex.type_ = (fileTexture->GetTextureUse() == FbxFileTexture::eBumpNormalMap)
-                    ? TexType_Normal
-                    : TexType_Albedo;
+  
+                fbxTextures_.push_back(texture);
                 textures_.push_back(tex);
             }
         }

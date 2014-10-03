@@ -13,7 +13,6 @@
 
 namespace lmath
 {
-#if defined(LMATH_USE_SSE)
 namespace
 {
     inline void store(Vector3& v, const lm128& r)
@@ -56,7 +55,6 @@ namespace
         dst = p0 * tmp.x_ + p1 * tmp.y_ + p2 * tmp.z_ + p3 * tmp.w_;
     }
 }
-#endif
 
     void calcBBox(Vector3& bmin, Vector3& bmax, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {

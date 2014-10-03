@@ -54,7 +54,7 @@ namespace lanim
     // 名前からジョイント検索
     const Joint* Skeleton::findJoint(const Name& name) const
     {
-        for(u32 i=0; i<numJoints_; ++i){
+        for(s32 i=0; i<numJoints_; ++i){
             if(jointNames_[i] == name){
                 return &joints_[i];
             }
@@ -68,7 +68,7 @@ namespace lanim
         LASSERT(name != NULL);
         u32 hash = lcore::calc_hash_string(reinterpret_cast<const u8*>(name));
 
-        for(u32 i=0; i<numJoints_; ++i){
+        for(s32 i=0; i<numJoints_; ++i){
             if(hash == jointNames_[i].getHash()
                 && jointNames_[i] == name)
             {

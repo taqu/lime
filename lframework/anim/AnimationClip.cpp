@@ -48,7 +48,7 @@ namespace lanim
             const JointAnimation& jointAnim = anim->getJointAnimation(i);
             lcore::io::write(os, jointAnim.getNumPoses());
             
-            for(u32 j=0; j<jointAnim.getNumPoses(); ++j){
+            for(s32 j=0; j<jointAnim.getNumPoses(); ++j){
                 const JointPoseWithFrame& frame = jointAnim.getPose(j);
                 lcore::io::write(os, frame.frameNo_);
                 lcore::io::write(os, frame.translation_);
@@ -88,7 +88,7 @@ namespace lanim
             
             jointAnim.setNumPoses(numPoses);
 
-            for(u32 j=0; j<jointAnim.getNumPoses(); ++j){
+            for(s32 j=0; j<jointAnim.getNumPoses(); ++j){
                 JointPoseWithFrame& frame = jointAnim.getPose(j);
                 lcore::io::read(is, frame.frameNo_);
                 lcore::io::read(is, frame.translation_);
