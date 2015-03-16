@@ -40,12 +40,10 @@ namespace smart_ptr
         {
         }
 
-        explicit intrusive_ptr(T* pointer, bool add_ref = true)
+        explicit intrusive_ptr(T* pointer)
             :pointer_(pointer)
         {
-            if(pointer_ != NULL
-                && add_ref)
-            {
+            if(NULL != pointer_){
                 intrusive_ptr_addref(pointer_);
             }
         }
@@ -53,7 +51,7 @@ namespace smart_ptr
         intrusive_ptr(const intrusive_ptr& rhs)
             :pointer_(rhs.pointer_)
         {
-            if(pointer_ != NULL){
+            if(NULL != pointer_){
                 intrusive_ptr_addref(pointer_);
             }
         }
@@ -62,7 +60,7 @@ namespace smart_ptr
         explicit intrusive_ptr(U* ptr)
             :pointer_(ptr)
         {
-            if(pointer_ != NULL){
+            if(NULL != pointer_){
                 intrusive_ptr_addref(pointer_);
             }
         }
@@ -71,14 +69,14 @@ namespace smart_ptr
         intrusive_ptr(const intrusive_ptr<U>& rhs)
             :pointer_(rhs.get())
         {
-            if(pointer_ != NULL){
+            if(NULL != pointer_){
                 intrusive_ptr_addref(pointer_);
             }
         }
 
         ~intrusive_ptr()
         {
-            if(pointer_ != NULL){
+            if(NULL != pointer_){
                 intrusive_ptr_release(pointer_);
             }
         }
@@ -110,12 +108,12 @@ namespace smart_ptr
 
         operator bool() const
         {
-            return (pointer_ != NULL);
+            return (NULL != pointer_);
         }
 
         bool operator!() const
         {
-            return (pointer_ == NULL);
+            return (NULL == pointer_);
         }
 
         intrusive_ptr& operator=(const intrusive_ptr& rhs)

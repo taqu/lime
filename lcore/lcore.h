@@ -110,7 +110,9 @@ inline void operator delete[](void* ptr, const char* /*file*/, int /*line*/)
 
 
 /// 16バイトアライメント変数指定
-#define LIME_ALIGN16 _declspec(align(16))
+#define LIME_ALIGN16 __declspec(align(16))
+#define LIME_ALIGN(x) __declspec(align(x))
+static const uintptr_t LIME_ALIGN16_MASK = (0xFU);
 
 #if defined(_DEBUG)
 
@@ -123,10 +125,12 @@ inline void operator delete[](void* ptr, const char* /*file*/, int /*line*/)
 #define LIME_DELETE_ARRAY(p) {delete[] (p); (p) = NULL;}
 
 #define LIME_MALLOC(size) (lcore_malloc(size, __FILE__, __LINE__))
+#define LIME_MALLOC_DEBUG(size, file, line) (lcore_malloc(size, file, line))
 #define LIME_FREE(mem) {lcore_free(mem); mem = NULL;}
 
 /// アライメント指定malloc
 #define LIME_ALIGNED_MALLOC(size, align) (lcore_malloc(size, align, __FILE__, __LINE__))
+#define LIME_ALIGNED_MALLOC_DEBUG(size, align, file, line) (lcore_malloc(size, align, file, line))
 /// アライメント指定free
 #define LIME_ALIGNED_FREE(mem, align) (lcore_free(mem, align))
 
@@ -141,6 +145,7 @@ inline void operator delete[](void* ptr, const char* /*file*/, int /*line*/)
 #define LIME_DELETE_ARRAY(p) {delete[] (p); (p) = NULL;}
 
 #define LIME_MALLOC(size) (lcore_malloc(size))
+#define LIME_MALLOC_DEBUG(size, file, line) (lcore_malloc(size))
 #define LIME_FREE(mem) {lcore_free(mem); mem = NULL;}
 
 /// アライメント指定malloc
@@ -183,6 +188,7 @@ namespace lcore
 
 #if defined(_MSC_VER)
     typedef char Char;
+    typedef wchar_t WChar;
     typedef __int8 s8;
     typedef __int16 s16;
     typedef __int32 s32;
@@ -205,6 +211,7 @@ namespace lcore
 
 #elif defined(ANDROID) || defined(__GNUC__)
     typedef char Char;
+    typedef wchar_t WChar;
     typedef int8_t s8;
     typedef int16_t s16;
     typedef int32_t s32;
@@ -227,6 +234,7 @@ namespace lcore
 
 #else
     typedef char Char;
+    typedef wchar_t WChar;
     typedef char s8;
     typedef short s16;
     typedef long s32;
@@ -254,6 +262,68 @@ namespace lcore
     typedef u64 ClockType;
 #endif
 
+    template<class T>
+    inline T* align16(T* ptr)
+    {
+        return (T*)(((lcore::uintptr_t)(ptr)+LIME_ALIGN16_MASK) & ~LIME_ALIGN16_MASK);
+    }
+
+    //---------------------------------------------------------
+    //---
+    //--- Allocator Function
+    //---
+    //---------------------------------------------------------
+    typedef void*(*AllocFunc)(u32 size);
+    typedef void*(*AllocFuncDebug)(u32 size, const char* file, int line);
+    typedef void(*FreeFunc)(void* mem);
+
+    typedef void*(*AlignedAllocFunc)(u32 size, u32 alignment);
+    typedef void*(*AlignedAllocFuncDebug)(u32 size, u32 alignment, const char* file, int line);
+    typedef void(*AlignedFreeFunc)(void* mem, u32 alignment);
+
+    struct DefaultAllocator
+    {
+        static inline void* malloc(u32 size)
+        {
+            return LIME_MALLOC(size);
+        }
+
+#if defined(_DEBUG)
+        static inline void* malloc(u32 size, const char* file, int line)
+        {
+            return LIME_MALLOC_DEBUG(size, file, line);
+        }
+
+        static inline void* malloc(u32 size, u32 alignment, const char* file, int line)
+        {
+            return LIME_ALIGNED_MALLOC_DEBUG(size, alignment, file, line);
+        }
+#else
+        static inline void* malloc(u32 size, const char* /*file*/, int /*line*/)
+        {
+            return LIME_MALLOC(size);
+        }
+
+        static inline void* malloc(u32 size, u32 alignment, const char* /*file*/, int /*line*/)
+        {
+            return LIME_ALIGNED_MALLOC(size, alignment);
+        }
+#endif
+        static inline void free(void* mem)
+        {
+            LIME_FREE(mem);
+        }
+
+        static inline void* malloc(u32 size, u32 alignment)
+        {
+            return LIME_ALIGNED_MALLOC(size, alignment);
+        }
+
+        static inline void free(void* mem, u32 alignment)
+        {
+            LIME_ALIGNED_FREE(mem, alignment);
+        }
+    };
 
     //---------------------------------------------------------
     //---
@@ -338,8 +408,90 @@ namespace lcore
         return v;
     }
 
+    f32 clampRotate0(f32 val, f32 total);
+    s32 clampRotate0(s32 val, s32 total);
+
+
+    template<class Itr>
+    struct iterator_traits
+    {
+        typedef typename Itr::iterator_category iterator_category;
+        typedef typename Itr::value_type value_type;
+        typedef typename Itr::difference_type difference_type;
+        typedef typename Itr::difference_type distance_type;
+        typedef typename Itr::pointer pointer;
+        typedef typename Itr::reference reference;
+    };
+
+    template<class T>
+    struct iterator_traits<T*>
+    {
+        //typedef random_access_iterator_tag iterator_category;
+        typedef T value_type;
+        typedef ptrdiff_t difference_type;
+        typedef ptrdiff_t distance_type;	// retained
+        typedef T *pointer;
+        typedef T& reference;
+    };
+
+    template<class FwdIt, class T>
+    inline FwdIt lower_bound(FwdIt first, FwdIt last, const T& val)
+    {
+        typename iterator_traits<FwdIt>::difference_type count = last - first;
+        while(0<count){
+            typename iterator_traits<FwdIt>::difference_type d = count/2;
+            FwdIt m = first + d;
+            if(*m<val){
+                first = ++m;
+                count -= d+1;
+            } else{
+                count = d;
+            }
+        }
+        return first;
+    }
+
+
+    template<class FwdIt, class T>
+    inline FwdIt upper_bound(FwdIt first, FwdIt last, const T& val)
+    {
+        typename iterator_traits<FwdIt>::difference_type count = last - first;
+        while(0<count){
+            typename iterator_traits<FwdIt>::difference_type d = count/2;
+            FwdIt m = first + d;
+            if(*m<=val){
+                first = ++m;
+                count -= d+1;
+            } else{
+                count = d;
+            }
+        }
+        return first;
+    }
 
     bool isLittleEndian();
+
+    template<class T>
+    struct DefaultComparator
+    {
+        /**
+        v0<v1 : <0
+        v0==v1 : 0
+        v0>v1 : >0
+        */
+        s32 operator()(const T& v0, const T& v1) const
+        {
+            return (v0==v1)? 0 : ((v0<v1)? -1 : 1);
+        }
+    };
+
+    template<class T>
+    struct DefaultTraversal
+    {
+        void operator()(T& v0)
+        {
+        }
+    };
 
     struct U32F32Union
     {
@@ -551,6 +703,23 @@ namespace lcore
     _BitScanForward
     */
     u32 leastSignificantBit(u32 val);
+
+    //u16 mostSignificantBit(u16 v);
+    //u8 mostSignificantBit(u8 v);
+
+    void setLocale(const Char* locale);
+
+    /**
+    @brief SJIS -> UTF16変換
+    @return 成功なら変換した文字数、失敗なら-1
+    */
+    s32 MBSToWCS(WChar* dst, u32 sizeInWords, const Char* src, u32 srcSize);
+
+    /**
+    @brief SJIS -> UTF16変換
+    @return 成功なら変換した文字数、失敗なら-1
+    */
+    s32 MBSToWCS(WChar* dst, u32 sizeInWords, const Char* src);
 }
 
 #endif //INC_LCORE_H__

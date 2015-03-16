@@ -1,43 +1,12 @@
-Ôªø#ifndef INC_LCORE_HASH_H__
+#ifndef INC_LCORE_HASH_H__
 #define INC_LCORE_HASH_H__
-/*
-Copyright (c) 2005, Google Inc.
-All rights reserved.
-
-Redistribution and use in source and binary forms, with or without
-modification, are permitted provided that the following conditions are
-met:
-
-    * Redistributions of source code must retain the above copyright
-notice, this list of conditions and the following disclaimer.
-    * Redistributions in binary form must reproduce the above
-copyright notice, this list of conditions and the following disclaimer
-in the documentation and/or other materials provided with the
-distribution.
-    * Neither the name of Google Inc. nor the names of its
-contributors may be used to endorse or promote products derived from
-this software without specific prior written permission.
-
-THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
-"AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
-LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
-A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
-OWNER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
-SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
-LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
-DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
-THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
-(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-*/
-
 /**
 @file Hash.h
 @author t-sakai
-@date 2009/06/28 modified
+@date 2015/03/13 create
 */
-#include "utility.h"
+#include "lcore.h"
+//#include <string>
 
 namespace lcore
 {
@@ -47,7 +16,8 @@ namespace lcore
         u32 val = 5381U;
 
         for(u32 i=0; i<count; ++i){
-            val = 33*val + v[i]; //((val<<5)+val) + v[i];
+            //val = 33*val + v[i];
+            val = ((val<<5)+val) + v[i];
         }
         return val;
     }
@@ -59,7 +29,8 @@ namespace lcore
 
         u8 c = *v;
         while(c != '\0'){
-            val = 33*val + c; //((val<<5)+val) + c;
+            //val = 33*val + c;
+            val = ((val<<5)+val) + c;
             ++v;
             c = *v;
         }
@@ -71,7 +42,7 @@ namespace lcore
     {
         static u32 count(const T& /*t*/)
         {
-            return sizeof(T); //sizeof„Åå0„Å´„Å™„Çã„Åì„Å®„ÅØ„Å™„ÅÑ
+            return sizeof(T); //sizeofÇ™0Ç…Ç»ÇÈÇ±Ç∆ÇÕÇ»Ç¢
         }
     };
 
@@ -98,8 +69,8 @@ namespace lcore
         }\
     };\
 
-HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(char)
-HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(unsigned char)
+//HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(char)
+//HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(unsigned char)
 HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(short)
 HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(unsigned short)
 HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(int)
@@ -113,50 +84,11 @@ HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(double)
 
 #undef HASH_TYPE_TRAITS_PRIMITIVE_CREATOR
 
-
-#define HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(type) \
-    template<>\
-    struct hasher<type*>\
-    {\
-        inline static u32 calc(const type* t)\
-        {\
-            const u8* v = reinterpret_cast<const u8*>(t);\
-            u32 count = hash_type_traits<type>::count(*t);\
-            return calc_hash(v, count);\
-        }\
-    };\
-
-//HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(char)
-//HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(unsigned char)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(short)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(unsigned short)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(int)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(unsigned int)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(long)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(unsigned long)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(long long)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(unsigned long long)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(float)
-HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(double)
-
-#undef HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR
-
-    //template<>
-    //struct hasher<std::string>
-    //{
-    //    inline static std::size_t calc(const std::string& t)
-    //    {
-    //        const unsigned char* v = reinterpret_cast<const unsigned char*>(t.c_str());
-    //        std::size_t count = t.size();
-    //        return calc_hash(v, count);
-    //    }
-    //};
-
-    // char*, unsigned char* „ÅØÊñáÂ≠óÂàó„Å®Ë¶ã„Å™„Åó„Å¶ÁâπÊÆäÂåñ
+    // char*, unsigned char* ÇÕï∂éöóÒÇ∆å©Ç»ÇµÇƒì¡éÍâª
     template<>
-    struct hasher<char*>
+    struct hasher<s8*>
     {
-        inline static size_t calc(const char* t)
+        inline static size_t calc(const s8* t)
         {
             return calc_hash_string(reinterpret_cast<const u8*>(t));
         }
@@ -171,7 +103,32 @@ HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(double)
         }
     };
 
+    template<>
+    struct hasher<const s8*>
+    {
+        inline static size_t calc(const s8* t)
+        {
+            return calc_hash_string(reinterpret_cast<const u8*>(t));
+        }
+    };
 
+    template<>
+    struct hasher<const u8*>
+    {
+        inline static size_t calc(const u8* t)
+        {
+            return calc_hash_string(t);
+        }
+    };
+
+    //template<>
+    //struct hasher<std::string>
+    //{
+    //    inline static size_t calc(const std::string& t)
+    //    {
+    //        return calc_hash_string(reinterpret_cast<const u8*>(t.c_str()));
+    //    }
+    //};
 
     namespace hash_detail
     {
@@ -207,57 +164,55 @@ HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(double)
             }
         };
 
-        template<typename T> struct PrimeList
-        {
-            static size_t const value_[];
-            static ptrdiff_t const length_;
-        };
+        //template<typename T> struct PrimeList
+        //{
+        //    static size_t const value_[];
+        //    static ptrdiff_t const length_;
+        //};
 
 
-        template<typename T>
-        size_t const PrimeList<T>::value_[] =
-        {
-            5ul, 11ul, 17ul, 29ul, 37ul, 53ul, 67ul, 79ul,
-            97ul, 131ul, 193ul, 257ul, 389ul, 521ul, 769ul,
-            1031ul, 1543ul, 2053ul, 3079ul, 6151ul, 12289ul, 24593ul,
-            49157ul, 98317ul, 196613ul, 393241ul, 786433ul,
-            1572869ul, 3145739ul, 6291469ul, 12582917ul, 25165843ul,
-            50331653ul, 100663319ul, 201326611ul, 402653189ul, 805306457ul,
-            1610612741ul, 3221225473ul, 4294967291ul,
-        };
+        //template<typename T>
+        //size_t const PrimeList<T>::value_[] =
+        //{
+        //    5ul, 11ul, 17ul, 29ul, 37ul, 53ul, 67ul, 79ul,
+        //    97ul, 131ul, 193ul, 257ul, 389ul, 521ul, 769ul,
+        //    1031ul, 1543ul, 2053ul, 3079ul, 6151ul, 12289ul, 24593ul,
+        //    49157ul, 98317ul, 196613ul, 393241ul, 786433ul,
+        //    1572869ul, 3145739ul, 6291469ul, 12582917ul, 25165843ul,
+        //    50331653ul, 100663319ul, 201326611ul, 402653189ul, 805306457ul,
+        //    1610612741ul, 3221225473ul, 4294967291ul,
+        //};
 
-        template<typename T>
-        ptrdiff_t const PrimeList<T>::length_ = 40;
+        //template<typename T>
+        //ptrdiff_t const PrimeList<T>::length_ = 40;
 
-        typedef PrimeList<size_t> prime_list;
-
-
-        inline size_t next_prime(size_t n)
-        {
-            const size_t * const prime_list_begin = prime_list::value_;
-            const size_t * const prime_list_end = prime_list_begin + prime_list::length_;
-            const size_t *bound = lower_bound(prime_list_begin, prime_list_end, n);
-            if(bound == prime_list_end){
-                --bound;
-            }
-            return *bound;
-        }
-
-        inline size_t prev_prime(size_t n)
-        {
-            const size_t * const prime_list_begin = prime_list::value_;
-            const size_t * const prime_list_end = prime_list_begin + prime_list::length_;
-            const size_t *bound = upper_bound(prime_list_begin, prime_list_end, n);
-            if(bound == prime_list_begin){
-                --bound;
-            }
-            return *bound;
-        }
+        //typedef PrimeList<size_t> prime_list;
 
 
+        //inline size_t next_prime(size_t n)
+        //{
+        //    const size_t * const prime_list_begin = prime_list::value_;
+        //    const size_t * const prime_list_end = prime_list_begin + prime_list::length_;
+        //    const size_t *bound = lower_bound(prime_list_begin, prime_list_end, n);
+        //    if(bound == prime_list_end){
+        //        --bound;
+        //    }
+        //    return *bound;
+        //}
+
+        //inline size_t prev_prime(size_t n)
+        //{
+        //    const size_t * const prime_list_begin = prime_list::value_;
+        //    const size_t * const prime_list_end = prime_list_begin + prime_list::length_;
+        //    const size_t *bound = upper_bound(prime_list_begin, prime_list_end, n);
+        //    if(bound == prime_list_begin){
+        //        --bound;
+        //    }
+        //    return *bound;
+        //}
 
         //------------------------------------------------------
-        /// new„Å´„Çà„Çã„É°„É¢„É™„Ç¢„É≠„Ç±„Éº„Çø
+        /// newÇ…ÇÊÇÈÉÅÉÇÉäÉAÉçÉPÅ[É^
         template<class T>
         class AllocatorNew
         {
@@ -270,84 +225,55 @@ HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(double)
             typedef const T& const_reference;
             typedef T value_type;
 
-
-            /// Constructor
-            AllocatorNew() throw()
-            {
-            }
-
-            /// Copy constructor
-            AllocatorNew(const AllocatorNew& ) throw()
-            {
-            }
-
-            /// Copy constructor
-            template<class OtherType>
-            AllocatorNew(const AllocatorNew<OtherType>& ) throw()
-            {
-            }
-
-            /// Destructor
-            ~AllocatorNew() throw()
-            {
-            }
-
-
-            pointer address(reference ref) const
+            inline static pointer address(reference ref)
             {
                 return &ref;
             }
 
-            const_pointer address(const_reference ref) const
+            inline static const_pointer address(const_reference ref)
             {
                 return &ref;
             }
 
-            size_type max_size() const throw()
+            inline static size_type max_size()
             {
                 size_type count = (size_type)(-1)/sizeof(value_type);
                 return ((0<count)? count : 1);
             }
 
-            pointer allocate(size_type size) const
+            inline static pointer allocate()
             {
-                return allocate(size, (pointer)NULL);
+                return pointer(LIME_MALLOC(sizeof(value_type)));
             }
 
-            pointer allocate(size_type size, const void*) const
+            inline static pointer allocate(size_type count)
             {
-                return pointer( LIME_MALLOC(size * sizeof(value_type)) );
+                return pointer(LIME_MALLOC(count*sizeof(value_type)));
             }
 
-            void deallocate(pointer ptr, size_type = 0) const
+            inline static void deallocate(pointer ptr)
             {
                 LIME_FREE(ptr);
             }
 
-            void construct(pointer ptr) const
+            inline static void construct(pointer ptr)
             {
                 LIME_PLACEMENT_NEW(reinterpret_cast<void*>(ptr)) value_type;
             }
 
-            void construct(pointer ptr, const_reference ref) const
+            inline static void construct(pointer ptr, const_reference ref)
             {
                 LIME_PLACEMENT_NEW(reinterpret_cast<void*>(ptr)) value_type(ref);
             }
 
-            void destroy(pointer ptr) const
+            inline static void destruct(pointer ptr)
             {
-                if(ptr) ptr->~T();
+                LASSERT(NULL != ptr);
+                ptr->~T();
             }
-
-            template<class OtherType>
-            struct rebind
-            {
-                typedef AllocatorNew<OtherType> other;
-            };
-
         };
 
-        /// new„Å´„Çà„Çã„É°„É¢„É™„Ç¢„É≠„Ç±„Éº„Çø
+        /// newÇ…ÇÊÇÈÉÅÉÇÉäÉAÉçÉPÅ[É^
         template<class T>
         class AllocatorNew<T*>
         {
@@ -360,131 +286,87 @@ HASH_TYPE_TRAITS_PRIMITIVE_POINTER_CREATOR(double)
             typedef const T* const_reference;
             typedef T* value_type;
 
-
-            /// Constructor
-            AllocatorNew() throw()
-            {
-            }
-
-            /// Copy constructor
-            AllocatorNew(const AllocatorNew& ) throw()
-            {
-            }
-
-            /// Copy constructor
-            template<class OtherType>
-            AllocatorNew(const AllocatorNew<OtherType>& ) throw()
-            {
-            }
-
-            /// Destructor
-            ~AllocatorNew() throw()
-            {
-            }
-
-
-            pointer address(reference ref) const
+            inline static pointer address(reference ref)
             {
                 return &ref;
             }
 
-            const_pointer address(const_reference ref) const
+            inline static const_pointer address(const_reference ref)
             {
                 return &ref;
             }
 
-            size_type max_size() const throw()
+            inline static size_type max_size()
             {
                 size_type count = (size_type)(-1)/sizeof(value_type);
                 return ((0<count)? count : 1);
             }
 
-            pointer allocate(size_type size) const
+            inline static pointer allocate()
             {
-                return allocate(size, (pointer)0);
+                return pointer(LIME_MALLOC(sizeof(value_type)));
             }
 
-            pointer allocate(size_type size, const void*) const
+            inline static pointer allocate(size_type count)
             {
-                return pointer( LIME_MALLOC(size * sizeof(value_type)) );
+                return pointer(LIME_MALLOC(count*sizeof(value_type)));
             }
 
-            void deallocate(pointer ptr, size_type = 0) const
+            inline static void deallocate(pointer ptr)
             {
                 LIME_FREE(ptr);
             }
 
-            void construct(pointer ptr) const
+            inline static void construct(pointer ptr)
             {
                 LIME_PLACEMENT_NEW(reinterpret_cast<void*>(ptr)) value_type;
             }
 
-            void construct(pointer ptr, const_reference ref) const
+            inline static void construct(pointer ptr, const_reference ref)
             {
                 LIME_PLACEMENT_NEW(reinterpret_cast<void*>(ptr)) value_type(const_cast<reference>(ref));
             }
 
-            void destroy(pointer) const
+            inline static void destruct(pointer)
             {
-                //ptr->~T();
             }
-
-            template<class OtherType>
-            struct rebind
-            {
-                typedef AllocatorNew<OtherType> other;
-            };
-
         };
 
 
         template<class Allocator>
-        class AllocatorArrayConstructor
+        class ArrayAllocator
         {
         public:
+            typedef Allocator allocator_type;
             typedef typename Allocator::pointer pointer;
             typedef typename Allocator::size_type size_type;
             typedef typename Allocator::value_type value_type;
 
-
-            AllocatorArrayConstructor(Allocator& allocator)
-                :allocator_(allocator),
-                ptr_(NULL)
+            inline static pointer allocate(size_type count)
             {
+                return allocator_type::allocate(count);
             }
 
-            ~AllocatorArrayConstructor()
+            inline static void deallocate(pointer ptr)
             {
-                allocator_.deallocate(ptr_);
+                allocator_type::deallocate(ptr);
             }
 
-            void construct(size_type count)
+            inline static pointer construct(size_type count, pointer ptr)
             {
-                pointer ptr = allocator_.allocate(count * sizeof(value_type));
+                pointer ptr = allocator_type::allocate(count);
                 for(size_type i=0; i<count; ++i){
-                    allocator_.construct(&(ptr[i]));
+                    allocator_type::construct(&(ptr[i]));
                 }
-                ptr_ = ptr;
+                return ptr;
             }
 
-            pointer get()
+            inline static void destruct(size_type count, pointer ptr)
             {
-                return ptr_;
+                for(size_type i=0; i<count; ++i){
+                    allocator_type::destruct(&(ptr[i]));
+                }
             }
-
-            pointer release()
-            {
-                pointer ret = ptr_;
-                ptr_ = NULL;
-                return ret;
-            }
-
-        private:
-            AllocatorArrayConstructor(const AllocatorArrayConstructor&);
-            AllocatorArrayConstructor& operator=(const AllocatorArrayConstructor&);
-
-            Allocator& allocator_;
-            pointer ptr_;
         };
     }
 }

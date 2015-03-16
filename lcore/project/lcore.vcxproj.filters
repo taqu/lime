@@ -47,8 +47,6 @@
     <ClInclude Include="..\CLibrary.h" />
     <ClInclude Include="..\CPU.h" />
     <ClInclude Include="..\FixedArray.h" />
-    <ClInclude Include="..\Hash.h" />
-    <ClInclude Include="..\HashMap.h" />
     <ClInclude Include="..\LangSpec.h" />
     <ClInclude Include="..\lcore.h" />
     <ClInclude Include="..\ldll.h" />
@@ -79,7 +77,16 @@
       <Filter>async</Filter>
     </ClInclude>
     <ClInclude Include="..\Noise.h" />
-    <ClInclude Include="..\Trie.h" />
+    <ClInclude Include="..\intrusive\RedBlackTree.h">
+      <Filter>intrusive</Filter>
+    </ClInclude>
+    <ClInclude Include="..\allocator\StackAllocator.h">
+      <Filter>allocator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\BitFlag.h" />
+    <ClInclude Include="..\Coroutine.h" />
+    <ClInclude Include="..\Hash.h" />
+    <ClInclude Include="..\HashMap.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\random\Random.cpp">
@@ -96,7 +103,6 @@
     </ClCompile>
     <ClCompile Include="..\Buffer.cpp" />
     <ClCompile Include="..\CPU.cpp" />
-    <ClCompile Include="..\HashMap.cpp" />
     <ClCompile Include="..\lcore.cpp" />
     <ClCompile Include="..\ldll.cpp" />
     <ClCompile Include="..\liostream.cpp" />
@@ -115,5 +121,7 @@
       <Filter>async</Filter>
     </ClCompile>
     <ClCompile Include="..\Noise.cpp" />
+    <ClCompile Include="..\Coroutine.cpp" />
+    <ClCompile Include="..\HashMap.cpp" />
   </ItemGroup>
 </Project>

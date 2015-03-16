@@ -29,6 +29,8 @@ namespace lcore
     */
     u32 extractDirectoryPath(Char* dst, const Char* path, u32 length);
 
+    // パスからファイル名抽出
+    u32 extractFileName(Char* dst, u32 size, const Char* path);
 
     template<class T>
     class ScopedPtr
@@ -212,69 +214,6 @@ namespace lcore
         f64 getAverage() const{return 0.0;}
         void reset(){}
     };
-
-    //---------------------------------------------------------
-    //---
-    //--- Utility
-    //---
-    //---------------------------------------------------------
-
-    template<class Itr>
-    struct iterator_traits
-    {
-        typedef typename Itr::iterator_category iterator_category;
-        typedef typename Itr::value_type value_type;
-        typedef typename Itr::difference_type difference_type;
-        typedef typename Itr::difference_type distance_type;
-        typedef typename Itr::pointer pointer;
-        typedef typename Itr::reference reference;
-    };
-
-    template<class T>
-    struct iterator_traits<T*>
-    {
-        //typedef random_access_iterator_tag iterator_category;
-        typedef T value_type;
-        typedef ptrdiff_t difference_type;
-        typedef ptrdiff_t distance_type;	// retained
-        typedef T *pointer;
-        typedef T& reference;
-    };
-
-    template<class FwdIt, class T>
-    inline FwdIt lower_bound(FwdIt first, FwdIt last, const T& val)
-    {
-        typename iterator_traits<FwdIt>::difference_type count = last - first;
-        while(0<count){
-            typename iterator_traits<FwdIt>::difference_type d = count/2;
-            FwdIt m = first + d;
-            if(*m<val){
-                first = ++m;
-                count -= d+1;
-            }else{
-                count = d;
-            }
-        }
-        return first;
-    }
-
-
-    template<class FwdIt, class T>
-    inline FwdIt upper_bound(FwdIt first, FwdIt last, const T& val)
-    {
-        typename iterator_traits<FwdIt>::difference_type count = last - first;
-        while(0<count){
-            typename iterator_traits<FwdIt>::difference_type d = count/2;
-            FwdIt m = first + d;
-            if(*m<=val){
-                first = ++m;
-                count -= d+1;
-            }else{
-                count = d;
-            }
-        }
-        return first;
-    }
 
     //---------------------------------------------------------
     //---

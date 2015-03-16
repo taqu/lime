@@ -6,6 +6,7 @@
 @date 2008/12/14 create
 
 */
+#include "../lcore.h"
 
 namespace smart_ptr
 {
@@ -45,7 +46,7 @@ namespace smart_ptr
 
         void operator()(void* p) const
         {
-            LIME_DELETE_NONULL static_cast<T*>(p);
+            LIME_DELETE_NONULL(static_cast<T*>(p));
         }
     };
 
@@ -71,7 +72,7 @@ namespace smart_ptr
         {
             if(--_use_count == 0){
                 dispose();
-                LIME_DELETE_NONULL this;
+                LIME_DELETE_NONULL(this);
             }
         }
 
@@ -105,7 +106,7 @@ namespace smart_ptr
 
         void dispose()
         {
-            LIME_DELETE_NONULL _pointer;
+            LIME_DELETE_NONULL(_pointer);
         }
     private:
         T *_pointer;

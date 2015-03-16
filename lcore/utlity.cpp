@@ -5,6 +5,7 @@
 */
 #include "lcore.h"
 #include "utility.h"
+#include "clibrary.h"
 
 #ifdef _WIN32
 
@@ -52,14 +53,53 @@ namespace lcore
                 break;
             }
         }
-        u32 dstSize = i+1;
-        for(u32 j=0; j<dstSize; ++j){
+        u32 dstLen = i+1;
+        for(u32 j=0; j<dstLen; ++j){
             dst[j] = path[j];
         }
-        dst[dstSize] = '\0';
-        return dstSize;
+        dst[dstLen] = '\0';
+        return dstLen;
     }
 
+    //-------------------------------------------------------------
+    // パスからファイル名抽出
+    u32 extractFileName(Char* dst, u32 size, const Char* path)
+    {
+        if(size<=1){
+            if(0<size){
+                dst[0] = '\0';
+            }
+            return 0;
+        }
+
+        if(NULL == path){
+            return 0;
+        }
+
+        s32 length = lcore::strlen(path);
+        s32 i=length;
+        for(; 0<=i; --i){
+            if(path[i] == '/' || path[i] == '\\'){
+                break;
+            }
+        }
+        ++i;
+        if(length<i){
+            dst[0] = '\0';
+            return 0;
+        }
+        u32 dstLen = lcore::minimum(static_cast<u32>(length-i), size-1);
+        for(s32 j=i; j<=length; ++j){
+            s32 index = j-i;
+            if(dst[index] == '.'){
+                dstLen = j-i;
+                break;
+            }
+            dst[j-i] = path[j];
+        }
+        dst[dstLen]='\0';
+        return dstLen;
+    }
 
     //---------------------------------------------------------
     //---

@@ -10,6 +10,7 @@
 #include <string.h>
 #include <math.h>
 #include <stdlib.h>
+#include "lcore.h"
 
 namespace lcore
 {
@@ -134,7 +135,7 @@ namespace lcore
         return 0;
     }
 
-    inline int strncmp(const Char* str1, const Char* str2, int maxCount)
+    inline int strncmp(const Char* str1, const Char* str2, size_t maxCount)
     {
         return ::strncmp(str1, str2, maxCount);
     }
@@ -154,11 +155,20 @@ namespace lcore
         return ::strlen(str);
     }
 
+    inline size_t strnlen(const Char* str, lsize_t size)
+    {
+        return ::strnlen(str, size);
+    }
+
     inline const Char* strstr(const Char* str, const Char* key)
     {
         return ::strstr(str, key);
     }
 
+    inline void strcat(Char* dst, u32 dstSize, const Char* str)
+    {
+        ::strcat_s(dst, dstSize, str);
+    }
 
     //-----------------------------------------------------
     //

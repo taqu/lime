@@ -10,21 +10,13 @@ libpng 1.6.7 <http://www.libpng.org/pub/png/libpng.html>
 libjpeg 9
 Bullet 2.78
 
-以下のコードはgoogle-sparsehashを改変しています。
-lime/lcore/Hash.h
-lime/lcore/HashMap.h
-
 各ソフトウェアのライセンスは以下を確認してください。
-google-sparsehash google-sparsehash/COPYING
 libjpeg           libjpeg/README
 libpng            libpng/README
 zlib              zlib/README
 
 =================================================
 === Copyright
-
-google-sparsehash:
-Copyright (c) 2005, Google Inc. All rights reserved.
 
 libpng:
 libpng version 1.6.7 - November 14, 2013
