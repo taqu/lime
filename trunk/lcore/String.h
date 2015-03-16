@@ -9,6 +9,7 @@
 #include "lcore.h"
 #include "Hash.h"
 #include "liostream.h"
+#include "clibrary.h"
 
 namespace lcore
 {
@@ -73,8 +74,7 @@ namespace lcore
         }
 
         void assign(const Char* str, u32 length);
-
-        void assignMemory(const Char* str, u32 size);
+        void assign(const Char* str);
 
         void swap(this_type& rhs);
 
@@ -123,8 +123,8 @@ namespace lcore
     template<u32 SIZE>
     void String<SIZE>::assign(const Char* str, u32 length)
     {
-        LASSERT(str != NULL);
-        u32 count = (length>=SIZE)? MAX_LENGTH : length;
+        LASSERT(NULL != str);
+        u32 count = (SIZE<=length)? MAX_LENGTH : length;
         u32 i=0;
         for(; i<count; ++i){
             buffer_[i] = str[i];
@@ -138,12 +138,11 @@ namespace lcore
 
     //----------------------------------------------------------
     template<u32 SIZE>
-    void String<SIZE>::assignMemory(const Char* str, u32 size)
+    void String<SIZE>::assign(const Char* str)
     {
-        LASSERT(str != NULL);
-        u32 count = (size>=SIZE)? MAX_LENGTH : size;
+        LASSERT(NULL != str);
         u32 i=0;
-        for(; i<count; ++i){
+        for(; i<MAX_LENGTH; ++i){
             buffer_[i] = str[i];
             if(str[i] == '\0'){
                 break;
@@ -158,9 +157,9 @@ namespace lcore
     void String<SIZE>::swap(this_type& rhs)
     {
         Char buffer[SIZE];
-        memcpy(buffer, rhs.buffer_, rhs.size_ + 1);
-        memcpy(rhs.buffer_, buffer_, size_ + 1);
-        memcpy(buffer_, buffer, rhs.size_ + 1);
+        lcore::memcpy(buffer, rhs.buffer_, rhs.size_ + 1);
+        lcore::memcpy(rhs.buffer_, buffer_, size_ + 1);
+        lcore::memcpy(buffer_, buffer, rhs.size_ + 1);
 
         lcore::swap(size_, rhs.size_);
     }
@@ -172,7 +171,7 @@ namespace lcore
         if(size_ != rhs.size()){
             return false;
         }
-        return (strncmp(buffer_, rhs.buffer_, size_) == 0);
+        return (lcore::strncmp(buffer_, rhs.buffer_, size_) == 0);
     }
 
     //----------------------------------------------------------
@@ -180,6 +179,10 @@ namespace lcore
     bool String<SIZE>::operator==(const Char* str) const
     {
         LASSERT(str != NULL);
+        lsize_t size = lcore::strlen(str);
+        if(size != size_){
+            return false;
+        }
         return (0 == lcore::strncmp(buffer_, str, size_));
     }
 
@@ -206,7 +209,7 @@ namespace lcore
     String<SIZE>& String<SIZE>::operator=(const String<SIZE>& rhs)
     {
         if(this != &rhs){
-            memcpy(buffer_, rhs.buffer_, SIZE);
+            lcore::memcpy(buffer_, rhs.buffer_, SIZE);
             size_ = rhs.size_;
         }
         return *this;
@@ -353,8 +356,7 @@ namespace lcore
         }
 
         void assign(const Char* str, u32 length);
-
-        void assignMemory(const Char* str, u32 size);
+        void assign(const Char* str);
 
         void swap(this_type& rhs);
 
@@ -407,7 +409,7 @@ namespace lcore
     void StringWithHash<SIZE>::assign(const Char* str, u32 length)
     {
         LASSERT(str != NULL);
-        u32 count = (length>=SIZE)? MAX_LENGTH : length;
+        u32 count = (SIZE<=length)? MAX_LENGTH : length;
         u32 i=0;
         for(; i<count; ++i){
             buffer_[i] = str[i];
@@ -422,12 +424,11 @@ namespace lcore
 
     //----------------------------------------------------------
     template<u32 SIZE>
-    void StringWithHash<SIZE>::assignMemory(const Char* str, u32 size)
+    void StringWithHash<SIZE>::assign(const Char* str)
     {
-        LASSERT(str != NULL);
-        u32 count = (size>=SIZE)? MAX_LENGTH : size;
+        LASSERT(NULL != str);
         u32 i=0;
-        for(; i<count; ++i){
+        for(; i<MAX_LENGTH; ++i){
             buffer_[i] = str[i];
             if(str[i] == '\0'){
                 break;
@@ -443,9 +444,9 @@ namespace lcore
     void StringWithHash<SIZE>::swap(this_type& rhs)
     {
         Char buffer[SIZE];
-        memcpy(buffer, rhs.buffer_, rhs.size_ + 1);
-        memcpy(rhs.buffer_, buffer_, size_ + 1);
-        memcpy(buffer_, buffer, rhs.size_ + 1);
+        lcore::memcpy(buffer, rhs.buffer_, rhs.size_ + 1);
+        lcore::memcpy(rhs.buffer_, buffer_, size_ + 1);
+        lcore::memcpy(buffer_, buffer, rhs.size_ + 1);
 
         lcore::swap(hash_, rhs.hash_);
         lcore::swap(size_, rhs.size_);
@@ -458,7 +459,11 @@ namespace lcore
         if(hash_ != rhs.getHash()){
             return false;
         }
-        return (strncmp(buffer_, rhs.buffer_, size_) == 0);
+
+        if(size_ != rhs.size()){
+            return false;
+        }
+        return (0 == lcore::strncmp(buffer_, rhs.buffer_, size_));
     }
 
     //----------------------------------------------------------
@@ -466,6 +471,10 @@ namespace lcore
     bool StringWithHash<SIZE>::operator==(const Char* str) const
     {
         LASSERT(str != NULL);
+        lsize_t size = lcore::strlen(str);
+        if(size != size_){
+            return false;
+        }
         return (0 == lcore::strncmp(buffer_, str, size_));
     }
 
@@ -494,7 +503,7 @@ namespace lcore
     StringWithHash<SIZE>& StringWithHash<SIZE>::operator=(const StringWithHash<SIZE>& rhs)
     {
         if(this != &rhs){
-            memcpy(buffer_, rhs.buffer_, SIZE);
+            lcore::memcpy(buffer_, rhs.buffer_, SIZE);
             size_ = rhs.size_;
             calcHash();
         }

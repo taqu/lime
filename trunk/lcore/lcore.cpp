@@ -197,17 +197,24 @@ void lcore_free(void* ptr, std::size_t /*alignment*/)
     dlfree(ptr);
 }
 
-
+#ifdef _DEBUG
 void* lcore_malloc(std::size_t size, const char* file, int line)
 {
     void* ptr = dlmalloc(size);
-#ifdef _DEBUG
+    //lcore::Log("[0x%X] size:%d, file:%s (%d)",(uintptr_t)ptr, size, file, line);
     if(NULL != debugMemory_){
         debugMemory_->pushMemoryInfo(ptr, file, line);
     }
-#endif
     return ptr;
 }
+
+#else
+void* lcore_malloc(std::size_t size, const char* /*file*/, int /*line*/)
+{
+    void* ptr = dlmalloc(size);
+    return ptr;
+}
+#endif
 
 void* lcore_malloc(std::size_t size, std::size_t alignment, const char* file, int line)
 {
@@ -288,6 +295,28 @@ namespace
     }
 #endif
 }
+
+    f32 clampRotate0(f32 val, f32 total)
+    {
+        while(val<0.0f){
+            val += total;
+        }
+        while(total<val){
+            val -= total;
+        }
+        return val;
+    }
+
+    s32 clampRotate0(s32 val, s32 total)
+    {
+        while(val<0){
+            val += total;
+        }
+        while(total<val){
+            val -= total;
+        }
+        return val;
+    }
 
     bool isLittleEndian()
     {
@@ -397,9 +426,9 @@ namespace
 #if defined(_WIN32)
     LeakCheck::LeakCheck()
     {
-//#ifdef _DEBUG
-//        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
-//#endif
+#ifdef _DEBUG
+        _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
+#endif
         beginMalloc();
     }
 
@@ -625,6 +654,67 @@ namespace
 #endif
     }
 
+    //u16 mostSignificantBit(u16 v)
+    //{
+    //    static const u16 shifttable[] =
+    //    {
+    //        0, 1, 2, 2, 3, 3, 3, 3,
+    //        4, 4, 4, 4, 4, 4, 4, 4,
+    //    };
+    //    u16 ret = 0;
+
+    //    if(v & 0xFF00U){
+    //        ret += 8;
+    //        v >>= 8;
+    //    }
+
+    //    if(v & 0xF0U){
+    //        ret += 4;
+    //        v >>= 4;
+    //    }
+    //    return ret + shifttable[v];
+    //}
+
+    //u8 mostSignificantBit(u8 v)
+    //{
+    //    static const u8 shifttable[] =
+    //    {
+    //        0, 1, 2, 2, 3, 3, 3, 3,
+    //    };
+    //    u8 ret = 0;
+    //    if(v & 0xF0U){
+    //        ret += 4;
+    //        v >>= 4;
+    //    }
+
+    //    if(v & 0xCU){
+    //        ret += 2;
+    //        v >>= 2;
+    //    }
+    //    return ret + shifttable[v];
+    //}
+
 #undef LCORE_POPULATIONCOUNT
 
+
+    void setLocale(const Char* locale)
+    {
+        setlocale(LC_ALL, locale);
+    }
+
+    // SJIS -> UTF16変換
+    s32 MBSToWCS(WChar* dst, u32 sizeInWords, const Char* src, u32 srcSize)
+    {
+        size_t converted = 0;
+        s32 ret = mbstowcs_s(&converted, dst, sizeInWords, src, srcSize);
+        return (0==ret)? converted : -1;
+    }
+
+    // SJIS -> UTF16変換
+    s32 MBSToWCS(WChar* dst, u32 sizeInWords, const Char* src)
+    {
+        size_t converted = 0;
+        s32 ret = mbstowcs_s(&converted, dst, sizeInWords, src, _TRUNCATE);
+        return (0==ret)? converted : -1;
+    }
 }

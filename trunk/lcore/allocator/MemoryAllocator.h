@@ -103,7 +103,7 @@ namespace lcore
         struct ChunkBase
         {
             static const flag_type Flag_InUse = 0x01U;
-            static const flag_type Flags = (Flag_InUse);
+            static const flag_type Flag_All = (Flag_InUse);
 
             inline ChunkBase()
                 :prevSize_(0)
@@ -122,7 +122,7 @@ namespace lcore
 
             inline size_type getSize() const
             {
-                return size_ & ~Flags;
+                return size_ & ~Flag_All;
             }
 
             inline void setSize(size_type size)
@@ -132,7 +132,7 @@ namespace lcore
 
             inline void setSizeWithFlag(size_type size)
             {
-                size_ = size | (size_&Flags);
+                size_ = size | (size_&Flag_All);
             }
 
             inline void setSizeInUse(size_type size)
@@ -142,7 +142,7 @@ namespace lcore
 
             inline void clearFlags()
             {
-                size_ &= ~Flags;
+                size_ &= ~Flag_All;
             }
 
             inline bool isInUse() const

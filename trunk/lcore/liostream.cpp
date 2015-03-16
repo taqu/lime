@@ -4,6 +4,7 @@
 @date 2010/07/26 create
 */
 #include <stdarg.h>
+#include <stdio.h>
 #include "lcore.h"
 #include "liostream.h"
 
@@ -24,8 +25,8 @@ namespace lcore
         (ios::in | ios::out| ios::trunc),
         (ios::in | ios::out| ios::app),
         (ios::in | ios::out| ios::binary),
-        (ios::in | ios::out| ios::trunc|ios::binary),
-        (ios::in | ios::out| ios::app|ios::binary),
+        (ios::in | ios::out| ios::trunc | ios::binary),
+        (ios::in | ios::out| ios::app | ios::binary),
     };
 
     const Char* ios::ModeString[] =
@@ -55,15 +56,93 @@ namespace lcore
         return NULL;
     }
 
+#ifdef _WIN32
+    u32 ios::getDesiredAccess(s32 mode)
+    {
+        u32 access = 0;
+        if(mode & ios::in){
+            access |= GENERIC_READ;
+        }
+        if(mode & ios::out){
+            access |= GENERIC_WRITE;
+        }
+        return access;
+    }
+
+    u32 ios::getCreationDisposition(s32 mode)
+    {
+        u32 disposition = CREATE_ALWAYS;
+        if(mode == ModeInt[Mode_R]){
+            disposition = OPEN_EXISTING;
+
+        }else if(mode == ModeInt[Mode_W]){
+            disposition = CREATE_ALWAYS;
+
+        }else if(mode == ModeInt[Mode_A]){
+            disposition = OPEN_ALWAYS;
+
+        }else if(mode == ModeInt[Mode_RP]){
+            disposition = CREATE_ALWAYS;
+
+        }else if(mode == ModeInt[Mode_WP]){
+            disposition = CREATE_ALWAYS;
+
+        }else if(mode == ModeInt[Mode_AP]){
+            disposition = OPEN_ALWAYS;
+        }
+        return disposition;
+    }
+#endif
+
+    //----------------------------------------------------------
+    //---
+    //--- ifstream
+    //---
+    //----------------------------------------------------------
+#ifdef _WIN32
+    s32 ifstream::get()
+    {
+        Char c = 0;
+        ReadFile(file_, &c, 1, NULL, NULL);
+        return c;
+    }
+
+#else
+    s32 ifstream::get()
+    {
+        return fgetc(file_);
+    }
+#endif
+
     //----------------------------------------------------------
     //---
     //--- ofstream
     //---
     //----------------------------------------------------------
+#ifdef _WIN32
     int ofstream::print(const Char* format, ... )
     {
-        LASSERT(file_ != NULL);
-        LASSERT(format != NULL);
+        LASSERT(NULL != file_);
+        LASSERT(NULL != format);
+
+        va_list ap;
+        va_start(ap, format);
+
+        s32 size = _vscprintf(format, ap) + 1;
+        Char* buffer = (Char*)LIME_MALLOC(size*sizeof(Char));
+        vsprintf_s(buffer, size, format, ap);
+        DWORD written = 0;
+        s32 ret = WriteFile(file_, buffer, size-1, &written, NULL);
+        LIME_FREE(buffer);
+
+        va_end(ap);
+        return ret;
+    }
+#else
+    int ofstream::print(const Char* format, ... )
+    {
+        LASSERT(NULL != file_);
+        LASSERT(NULL != format);
 
         va_list ap;
         va_start(ap, format);
@@ -73,6 +152,7 @@ namespace lcore
         va_end(ap);
         return ret;
     }
+#endif
 
     //----------------------------------------------------------
     //---
@@ -153,15 +233,17 @@ namespace lcore
         return current_;
     }
 
-    lsize_t sstream_base<istream>::read(Char* dst, u32 count)
+    lsize_t sstream_base<istream>::read(void* dst, u32 count)
     {
         s32 end = current_ + count;
         end = (end>capacity_)? capacity_ : end;
         count = end - current_;
         
+        Char* d = reinterpret_cast<Char*>(dst);
+
         while(current_<end){
-            *dst = buffer_[current_];
-            ++dst;
+            *d = buffer_[current_];
+            ++d;
             ++current_;
         }
         return count;

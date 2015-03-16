@@ -5,9 +5,17 @@
 @author t-sakai
 @date 2010/05/25 create
 */
+#ifdef _WIN32
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>
+#else
+#include <unistd.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <stdio.h>
+#endif
+
 #include "lcore.h"
-#include "clibrary.h"
 
 namespace lcore
 {
@@ -31,10 +39,16 @@ namespace lcore
 	    {
 	        SeekDir_ForceByte = 0xFFU,
 	    };
-	    static const int beg = 0x00;
-	    static const int cur = 0x01;
-	    static const int end = 0x02;
-	    
+
+#ifdef _WIN32
+        static const int beg = FILE_BEGIN;
+	    static const int cur = FILE_CURRENT;
+	    static const int end = FILE_END;
+#else
+	    static const int beg = SEEK_SET;
+	    static const int cur = SEEK_CUR;
+	    static const int end = SEEK_END;
+#endif	    
 	    
 	    enum Mode
         {
@@ -58,6 +72,11 @@ namespace lcore
         static const Char* ModeString[Mode_Num];
         
         static const Char* getModeString(int mode);
+
+#ifdef _WIN32
+        static u32 getDesiredAccess(s32 mode);
+        static u32 getCreationDisposition(s32 mode);
+#endif
     };
     
     //----------------------------------------------------------
@@ -74,8 +93,11 @@ namespace lcore
         virtual bool seekg(s32 offset, int dir) =0;
         virtual s32 tellg() =0;
         
-        virtual lsize_t read(Char* dst, u32 count) =0;
+        virtual lsize_t read(void* dst, u32 count) =0;
         
+        virtual u32 getSize() =0;
+        virtual u32 getSize(s32 afterOffset) =0;
+
     protected:
         istream(){}
         ~istream(){}
@@ -107,7 +129,10 @@ namespace lcore
         virtual bool seekg(s32 offset, int dir) =0;
         virtual s32 tellg() =0;
         
-        virtual lsize_t write(const Char* src, u32 count) =0;
+        virtual lsize_t write(const void* src, u32 count) =0;
+
+        virtual u32 getSize() =0;
+        virtual u32 getSize(s32 afterOffset) =0;
     protected:
         ostream(){}
         ~ostream(){}
@@ -121,6 +146,7 @@ namespace lcore
     //--- fstream_base
     //---
     //----------------------------------------------------------
+#ifdef _WIN32
     template<class Base>
     class fstream_base : public Base
     {
@@ -134,20 +160,17 @@ namespace lcore
         virtual bool seekg(s32 offset, int dir);
         virtual s32 tellg();
         
+        virtual u32 getSize();
+        virtual u32 getSize(s32 afterOffset);
+
         void swap(fstream_base& rhs)
         {
             lcore::swap(file_, rhs.file_);
         }
 
-        u32 getSize(s32 afterOffset)
-        {
-            seekg(0, lcore::ios::end);
-            u32 size = tellg();
-            seekg(afterOffset, lcore::ios::beg);
-            return size;
-        }
-
         inline bool flush();
+
+        u64 getID();
     protected:
         fstream_base();
         fstream_base(const Char* filepath, int mode);
@@ -155,10 +178,199 @@ namespace lcore
 
         bool open(const Char* filepath, int mode);
         
-        virtual lsize_t read(Char* dst, u32 count);
-        virtual lsize_t write(const Char* src, u32 count);
+        virtual lsize_t read(void* dst, u32 count);
+        virtual lsize_t write(const void* src, u32 count);
         
-        FILE *file_;
+        HANDLE file_;
+    };
+    
+    template<class Base>
+    fstream_base<Base>::fstream_base()
+        :file_(NULL)
+    {
+    }
+
+    template<class Base>
+    fstream_base<Base>::fstream_base(const Char* filepath, int mode)
+        :file_(NULL)
+    {
+        open(filepath, mode);
+    }
+
+    template<class Base>
+    fstream_base<Base>::~fstream_base()
+    {
+        close();
+    }
+
+    template<class Base>
+    bool fstream_base<Base>::open(const Char* filepath, int mode)
+    {
+        LASSERT(NULL != filepath);
+        close();
+        mode &= ~ios::binary;
+
+        HANDLE file = CreateFile(
+            filepath,
+            ios::getDesiredAccess(mode),
+            FILE_SHARE_READ,
+            NULL,
+            ios::getCreationDisposition(mode),
+            FILE_ATTRIBUTE_NORMAL,
+            NULL);
+
+        if(INVALID_HANDLE_VALUE != file){
+            file_ = file;
+            return true;
+        }else{
+            return false;
+        }
+    }
+
+    template<class Base>
+    void fstream_base<Base>::close()
+    {
+        if(file_){
+            CloseHandle(file_);
+            file_ = NULL;
+        }
+    }
+
+    template<class Base>
+    bool fstream_base<Base>::eof()
+    {
+        LASSERT(NULL != file_);
+        u32 pos = SetFilePointer(file_, 0, NULL, FILE_CURRENT);
+        u32 size = GetFileSize(file_, NULL);
+        return (size<=pos);
+    }
+
+    template<class Base>
+    bool fstream_base<Base>::good()
+    {
+        if(NULL == file_){
+            return false;
+        }
+        return true;
+    }
+
+    template<class Base>
+    inline bool fstream_base<Base>::seekg(s32 offset, int dir)
+    {
+        LASSERT(NULL != file_);
+        LASSERT(0<=ios::beg && dir<=ios::end);
+        return (INVALID_SET_FILE_POINTER != SetFilePointer(file_, offset, NULL, dir));
+
+    }
+
+    template<class Base>
+    inline s32 fstream_base<Base>::tellg()
+    {
+        LASSERT(NULL != file_);
+        return SetFilePointer(file_, 0, NULL, FILE_CURRENT);
+    }
+
+    template<class Base>
+    u32 fstream_base<Base>::getSize()
+    {
+        LASSERT(NULL != file_);
+        return GetFileSize(file_, NULL);
+    }
+
+    template<class Base>
+    u32 fstream_base<Base>::getSize(s32 afterOffset)
+    {
+        LASSERT(NULL != file_);
+        u32 size = GetFileSize(file_, NULL);
+        SetFilePointer(file_, afterOffset, NULL, FILE_BEGIN);
+        return size;
+    }
+
+    template<class Base>
+    inline lsize_t fstream_base<Base>::read(void* dst, u32 count)
+    {
+        LASSERT(NULL != file_);
+        DWORD numBytesRead;
+        return ReadFile(file_, dst, count, &numBytesRead, NULL);
+    }
+
+    template<class Base>
+    inline lsize_t fstream_base<Base>::write(const void* src, u32 count)
+    {
+        LASSERT(NULL != file_);
+        DWORD numBytesWritten;
+        return WriteFile(file_, src, count, &numBytesWritten, NULL);
+    }
+
+    template<class Base>
+    inline bool fstream_base<Base>::flush()
+    {
+        LASSERT(NULL != file_);
+        return TRUE == FlushFileBuffers(file_);
+    }
+
+    template<class Base>
+    u64 fstream_base<Base>::getID()
+    {
+        LASSERT(NULL != file_);
+        BY_HANDLE_FILE_INFORMATION fileInfo;
+        if(GetFileInformationByHandle(file_, &fileInfo)){
+            u64 ret = fileInfo.nFileIndexHigh;
+            return (ret<<32) | fileInfo.nFileIndexLow;
+        }else{
+            return 0;
+        }
+    }
+
+#else
+    template<class Base>
+    class fstream_base : public Base
+    {
+    public:
+        bool is_open() const{ return (file_ != NULL);}
+        void close();
+        
+        virtual bool eof();
+        virtual bool good();
+        
+        virtual bool seekg(s32 offset, int dir);
+        virtual s32 tellg();
+        
+        virtual u32 getSize()
+        {
+            seekg(0, lcore::ios::end);
+            u32 size = tellg();
+            seekg(0, lcore::ios::beg);
+            return size;
+        }
+
+        virtual u32 getSize(s32 afterOffset)
+        {
+            seekg(0, lcore::ios::end);
+            u32 size = tellg();
+            seekg(afterOffset, lcore::ios::beg);
+            return size;
+        }
+
+        void swap(fstream_base& rhs)
+        {
+            lcore::swap(file_, rhs.file_);
+        }
+
+        inline bool flush();
+
+        u64 getID();
+    protected:
+        fstream_base();
+        fstream_base(const Char* filepath, int mode);
+        ~fstream_base();
+
+        bool open(const Char* filepath, int mode);
+        
+        virtual lsize_t read(void* dst, u32 count);
+        virtual lsize_t write(const void* src, u32 count);
+        
+        FILE* file_;
     };
     
     template<class Base>
@@ -187,13 +399,9 @@ namespace lcore
         close();
         const Char* modeStr = ios::getModeString(mode);
         LASSERT(modeStr != NULL);
-#if defined(_WIN32)
-        errno_t e = fopen_s(&file_, filepath, modeStr);
-        return (e==0);
-#else
+
         file_ = fopen(filepath, modeStr);
         return (file_ != NULL);
-#endif
     }
 
     template<class Base>
@@ -208,23 +416,23 @@ namespace lcore
     template<class Base>
     bool fstream_base<Base>::eof()
     {
-        LASSERT(file_ != NULL);
-        return (ferror(file_) == 0) && (feof(file_) != 0);
+        LASSERT(NULL != file_);
+        return (0 == ferror(file_)) && (0 != feof(file_));
     }
 
     template<class Base>
     bool fstream_base<Base>::good()
     {
-        if(file_ == NULL){
+        if(NULL == file_){
             return false;
         }
-        return (ferror(file_) == 0);
+        return (0 == ferror(file_));
     }
 
     template<class Base>
     inline bool fstream_base<Base>::seekg(s32 offset, int dir)
     {
-        LASSERT(file_ != NULL);
+        LASSERT(NULL != file_);
         LASSERT(0<=ios::beg && dir<=ios::end);
         return (0 == fseek(file_, offset, dir));
 
@@ -233,29 +441,41 @@ namespace lcore
     template<class Base>
     inline s32 fstream_base<Base>::tellg()
     {
-        LASSERT(file_ != NULL);
+        LASSERT(NULL != file_);
         return ftell(file_);
     }
 
     template<class Base>
-    inline lsize_t fstream_base<Base>::read(Char* dst, u32 count)
+    inline lsize_t fstream_base<Base>::read(void* dst, u32 count)
     {
-        LASSERT(file_ != NULL);
-        return fread((void*)dst, count, 1, file_);
+        LASSERT(NULL != file_);
+        return fread(dst, count, 1, file_);
     }
 
     template<class Base>
-    inline lsize_t fstream_base<Base>::write(const Char* src, u32 count)
+    inline lsize_t fstream_base<Base>::write(const void* src, u32 count)
     {
-        return fwrite((void*)src, count, 1, file_);
+        return fwrite(src, count, 1, file_);
     }
 
     template<class Base>
     inline bool fstream_base<Base>::flush()
     {
-        LASSERT(file_ != NULL);
+        LASSERT(NULL != file_);
         return 0 == fflush(file_);
     }
+
+    template<class Base>
+    u64 fstream_base<Base>::getID()
+    {
+        s32 fd = fileno(file_);
+        struct stat fileStat;
+        if(fstat(fd, &fileStart)<0){
+            return 0;
+        }
+        return fileStat.st_ino;
+    }
+#endif
 
     //----------------------------------------------------------
     //---
@@ -278,15 +498,14 @@ namespace lcore
             return super_type::open(filepath, mode|ios::in);
         }
         
-        virtual lsize_t read(Char* dst, u32 count){ return super_type::read(dst, count);}
+        virtual lsize_t read(void* dst, u32 count){ return super_type::read(dst, count);}
 
-        s32 get(){ return fgetc(file_);}
+        s32 get();
     private:
         ifstream(const ifstream&);
         ifstream& operator=(const ifstream&);
     };
-    
-    
+
     //----------------------------------------------------------
     //---
     //--- ofstream
@@ -308,7 +527,7 @@ namespace lcore
             return super_type::open(filepath, mode|ios::out);
         }
         
-        virtual lsize_t write(const Char* src, u32 count){ return super_type::write(src, count);}
+        virtual lsize_t write(const void* src, u32 count){ return super_type::write(src, count);}
 
         int print(const Char* format, ... );
     private:
@@ -332,14 +551,15 @@ namespace lcore
         
         virtual bool seekg(s32 offset, int dir);
         virtual s32 tellg();
-        
+        virtual u32 getSize();
+        virtual u32 getSize(s32 afterOffset);
     protected:
         sstream_base();
         sstream_base(Char* buffer, u32 size);
         ~sstream_base(){}
         
-        virtual lsize_t read(Char* dst, u32 count);
-        virtual lsize_t write(const Char* src, u32 count);
+        virtual lsize_t read(void* dst, u32 count);
+        virtual lsize_t write(const void* src, u32 count);
 
         void expand();
         
@@ -385,11 +605,7 @@ namespace lcore
         switch(dir)
         {
         case ios::beg:
-            if(capacity_<=offset){
-                current_ = capacity_;
-            }else{
-                current_ += offset;
-            }
+            current_ = (capacity_<=offset)? capacity_ : offset;
             break;
             
         case ios::cur:
@@ -429,31 +645,46 @@ namespace lcore
     }
 
     template<class Base>
-    lsize_t sstream_base<Base>::read(Char* dst, u32 count)
+    u32 sstream_base<Base>::getSize()
+    {
+        return capacity_;
+    }
+
+    template<class Base>
+    u32 sstream_base<Base>::getSize(s32 afterOffset)
+    {
+        current_ = (capacity_<=afterOffset)? capacity_ : afterOffset;
+        return capacity_;
+    }
+
+    template<class Base>
+    lsize_t sstream_base<Base>::read(void* dst, u32 count)
     {
         s32 end = current_ + count;
         end = (end>capacity_)? capacity_ : end;
         count = end - current_;
 
+        Char* d = reinterpret_cast<Char*>(dst);
         while(current_<end){
-            *dst = buffer_[current_];
-            ++dst;
+            *d = buffer_[current_];
+            ++d;
             ++current_;
         }
         return count;
     }
 
     template<class Base>
-    lsize_t sstream_base<Base>::write(const Char* src, u32 count)
+    lsize_t sstream_base<Base>::write(const void* src, u32 count)
     {
         s32 end = current_ + count;
         if(end > capacity_){
             expand();
         }
         
+        const Char* s = reinterpret_cast<const Char*>(src);
         while(current_<end){
-            buffer_[current_] = *src;
-            ++src;
+            buffer_[current_] = *s;
+            ++s;
             ++current_;
         }
         return count;
@@ -462,13 +693,15 @@ namespace lcore
     template<class Base>
     void sstream_base<Base>::expand()
     {
-        u32 newSize = capacity_ << 1;
+        s32 newSize = capacity_ << 1;
         //printf("size %d => %d\n", capacity_, newSize);
         
         Char* newBuffer = LIME_NEW Char[newSize];
         
         if(buffer_ != NULL){
-            lcore::memcpy(newBuffer, buffer_, capacity_);
+            for(s32 i=0; i<capacity_; ++i){
+                newBuffer[i] = buffer_[i];
+            }
         }
         LIME_DELETE_ARRAY(buffer_);
         
@@ -496,8 +729,8 @@ namespace lcore
         sstream_base(const Char* buffer, u32 size);
         ~sstream_base(){}
         
-        virtual lsize_t read(Char* dst, u32 count);
-        virtual lsize_t write(const Char* /*src*/, u32 /*count*/){return 0;}; //何もしない
+        virtual lsize_t read(void* dst, u32 count);
+        virtual lsize_t write(const void* /*src*/, u32 /*count*/){return 0;}; //何もしない
         
         const Char* buffer_;
         s32 current_;
@@ -528,7 +761,7 @@ namespace lcore
             capacity_ = 0;
         }
         
-        virtual lsize_t read(Char* dst, u32 count){ return super_type::read(dst, count);}
+        virtual lsize_t read(void* dst, u32 count){ return super_type::read(dst, count);}
     private:
         isstream(const isstream&);
         isstream& operator=(const isstream&);
@@ -561,7 +794,7 @@ namespace lcore
             capacity_ = 0;
         }
         
-        virtual lsize_t write(const Char* src, u32 count){ return super_type::write(src, count);}
+        virtual lsize_t write(const void* src, u32 count){ return super_type::write(src, count);}
         
         const Char* c_str() const{ return buffer_;}
     private:
@@ -680,7 +913,7 @@ namespace lcore
         ~range_istream()
         {}
 
-        virtual lsize_t read(Char* dst, u32 count)
+        virtual lsize_t read(void* dst, u32 count)
         {
             if(!stream_->seekg(begin_+pos_, lcore::ios::beg)){
                 return 0;
@@ -710,7 +943,7 @@ namespace lcore
         ~range_ostream()
         {}
 
-        virtual lsize_t write(const Char* src, u32 count)
+        virtual lsize_t write(const void* src, u32 count)
         {
             if(!stream_->seekg(begin_+pos_, lcore::ios::beg)){
                 return 0;
@@ -727,25 +960,25 @@ namespace io
     template<class T>
     inline lsize_t write(lcore::ostream& of, const T& value)
     {
-        return of.write(reinterpret_cast<const Char*>(&value), sizeof(T));
+        return of.write(reinterpret_cast<const void*>(&value), sizeof(T));
     }
 
     template<class T>
     inline lsize_t write(lcore::ostream& of, const T* value, u32 size)
     {
-        return of.write(reinterpret_cast<const Char*>(value), size);
+        return of.write(reinterpret_cast<const void*>(value), size);
     }
 
     template<class T>
     inline lsize_t read(lcore::istream& in, T& value)
     {
-        return in.read(reinterpret_cast<Char*>(&value), sizeof(T));
+        return in.read(reinterpret_cast<void*>(&value), sizeof(T));
     }
 
     template<class T>
     inline lsize_t read(lcore::istream& in, T* value, u32 size)
     {
-        return in.read(reinterpret_cast<Char*>(value), size);
+        return in.read(reinterpret_cast<void*>(value), size);
     }
 }
 }

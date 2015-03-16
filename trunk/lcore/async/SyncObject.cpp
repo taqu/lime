@@ -141,7 +141,7 @@ namespace lcore
 
         externalLock.leave();
 
-        u32 result = WaitForMultipleObjects(2, events_, FALSE, timeout);
+        WaitForMultipleObjects(2, events_, FALSE, timeout);
 
         waitCounterLock_.enter();
         --waitCounter_;
