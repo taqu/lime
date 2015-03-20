@@ -602,6 +602,8 @@ namespace lcore
 
         explicit HopscotchHashMap(size_type capacity)
             :size_(0)
+            ,hopinfoes_(NULL)
+            ,keyvalues_(NULL)
         {
             capacity = powerOfTwo(capacity);
             create(capacity);
