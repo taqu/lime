@@ -13,19 +13,21 @@ namespace lgraphics
     class BlobRef
     {
     public:
+        typedef ID3D10Blob element_type;
+        typedef ID3D10Blob* pointer_type;
+
         BlobRef();
         BlobRef(const BlobRef& rhs);
-        explicit BlobRef(ID3D10Blob* blob);
+        explicit BlobRef(pointer_type blob);
         ~BlobRef();
 
-        ID3D10Blob* get(){ return blob_;}
+        pointer_type get(){ return blob_;}
         void* getPointer();
         u32 getSize();
 
         BlobRef& operator=(const BlobRef& rhs)
         {
-            BlobRef tmp(rhs);
-            tmp.swap(*this);
+            BlobRef(rhs).swap(*this);
             return *this;
         }
 
@@ -36,7 +38,7 @@ namespace lgraphics
             lcore::swap(blob_, rhs.blob_);
         }
     private:
-        ID3D10Blob* blob_;
+        pointer_type blob_;
     };
 }
 #endif //INC_LGRAPHICS_DX11_BLOBREF_H__

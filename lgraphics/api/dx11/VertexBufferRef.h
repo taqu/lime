@@ -39,13 +39,13 @@ namespace lgraphics
             BufferRefBase::swap(rhs);
         }
 
-        void attach(u32 startSlot, u32 stride, u32 offsetInBytes);
+        void attach(ContextRef& context, u32 startSlot, u32 stride, u32 offsetInBytes);
 
-        void attachStreamOut(u32 offsetInBytes);
+        void attachStreamOut(ContextRef& context, u32 offsetInBytes);
     private:
         friend class VertexBuffer;
 
-        VertexBufferRef(ID3D11Buffer* buffer)
+        VertexBufferRef(BufferRefBase::pointer_type buffer)
             :BufferRefBase(buffer)
         {}
     };

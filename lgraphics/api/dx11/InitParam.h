@@ -30,7 +30,7 @@ namespace lgraphics
             ,backBufferHeight_(1)
             ,format_(Data_R8G8B8A8_UNorm_SRGB)
             ,depthStencilFormat_(Data_D24_UNorm_S8_UInt)
-            ,shadowMapFormat_(Data_D16_UNorm)
+            ,shadowMapFormat_(Data_D32_Float)
             ,refreshRate_(60)
             ,windowHandle_(NULL)
             ,windowed_(1)
@@ -38,7 +38,12 @@ namespace lgraphics
             ,interval_(PresentInterval_One)
             ,swapEffect_(DXGISwapEffect_Discard)
             ,supportHardwareLevel_(HardwareLevel_10)
+            ,deviceFlags_(0)
             ,flags_(0)
+            ,maximumFrameLatency_(0)
+            ,depthBias_(0.0008f)
+            ,slopeScaledDepthBias_(1.0f)
+            ,depthBiasClamp_(0.005f)
         {
         }
 
@@ -53,8 +58,12 @@ namespace lgraphics
         s16 windowed_;
         s16 allowSoftwareDevice_;
         s32 supportHardwareLevel_;
+        u32 deviceFlags_;
         u32 flags_;
-
+        u32 maximumFrameLatency_;
+        f32 depthBias_;
+        f32 slopeScaledDepthBias_;
+        f32 depthBiasClamp_;
         PresentInterval interval_;
         DXGISwapEffect swapEffect_;
     };

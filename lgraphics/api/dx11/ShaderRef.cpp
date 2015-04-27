@@ -163,6 +163,52 @@ namespace lgraphics
     }
 
     //------------------------------------------------------------
+    // メモリからドメインシェーダ作成
+    DomainShaderRef Shader::createDomainShaderFromBinary(const u8* memory, u32 size)
+    {
+        LASSERT(memory != NULL);
+
+        ID3D11DomainShader *shader = NULL;
+
+        ID3D11Device *d3ddevice = Graphics::getDevice().getD3DDevice();
+
+        HRESULT hr = d3ddevice->CreateDomainShader(
+            memory,
+            size,
+            NULL,
+            &shader);
+
+        if(FAILED(hr)){
+            return DomainShaderRef();
+        }
+
+        return DomainShaderRef(shader);
+    }
+
+    //------------------------------------------------------------
+    // メモリからハルシェーダ作成
+    HullShaderRef Shader::createHullShaderFromBinary(const u8* memory, u32 size)
+    {
+        LASSERT(memory != NULL);
+
+        ID3D11HullShader *shader = NULL;
+
+        ID3D11Device *d3ddevice = Graphics::getDevice().getD3DDevice();
+
+        HRESULT hr = d3ddevice->CreateHullShader(
+            memory,
+            size,
+            NULL,
+            &shader);
+
+        if(FAILED(hr)){
+            return HullShaderRef();
+        }
+
+        return HullShaderRef(shader);
+    }
+
+    //------------------------------------------------------------
     //---
     //--- PixelShaderRef
     //---
@@ -182,9 +228,9 @@ namespace lgraphics
     }
 
     
-    void PixelShaderRef::attach() const
+    void PixelShaderRef::attach(ContextRef& context) const
     {
-        Graphics::getDevice().setPixelShader(shader_);
+        context.setPixelShader(shader_);
     }
 
 
@@ -208,9 +254,9 @@ namespace lgraphics
     }
 
 
-    void VertexShaderRef::attach() const
+    void VertexShaderRef::attach(ContextRef& context) const
     {
-        Graphics::getDevice().setVertexShader(shader_);
+        context.setVertexShader(shader_);
     }
 
 
@@ -234,9 +280,9 @@ namespace lgraphics
     }
 
 
-    void GeometryShaderRef::attach() const
+    void GeometryShaderRef::attach(ContextRef& context) const
     {
-        Graphics::getDevice().setGeometryShader(shader_);
+        context.setGeometryShader(shader_);
     }
 
     //------------------------------------------------------------
@@ -259,9 +305,59 @@ namespace lgraphics
     }
 
 
-    void ComputeShaderRef::attach() const
+    void ComputeShaderRef::attach(ContextRef& context) const
     {
-        Graphics::getDevice().setComputeShader(shader_);
+        context.setComputeShader(shader_);
+    }
+
+    //------------------------------------------------------------
+    //---
+    //--- DomainShaderRef
+    //---
+    //------------------------------------------------------------
+    DomainShaderRef::DomainShaderRef(const DomainShaderRef& rhs)
+        :ShaderRefBase(rhs)
+        , shader_(rhs.shader_)
+    {
+        if(shader_){
+            shader_->AddRef();
+        }
+    }
+
+    void DomainShaderRef::destroy()
+    {
+        SAFE_RELEASE(shader_);
+    }
+
+
+    void DomainShaderRef::attach(ContextRef& context) const
+    {
+        context.setDomainShader(shader_);
+    }
+
+    //------------------------------------------------------------
+    //---
+    //--- HullShaderRef
+    //---
+    //------------------------------------------------------------
+    HullShaderRef::HullShaderRef(const HullShaderRef& rhs)
+        :ShaderRefBase(rhs)
+        , shader_(rhs.shader_)
+    {
+        if(shader_){
+            shader_->AddRef();
+        }
+    }
+
+    void HullShaderRef::destroy()
+    {
+        SAFE_RELEASE(shader_);
+    }
+
+
+    void HullShaderRef::attach(ContextRef& context) const
+    {
+        context.setHullShader(shader_);
     }
 
     //------------------------------------------------------------

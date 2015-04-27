@@ -27,37 +27,24 @@ namespace lgraphics
         SAFE_RELEASE(buffer_);
     }
 
-    bool BufferRefBase::map(u32 subresource, MapType type, MappedSubresource& mapped)
+    bool BufferRefBase::map(ContextRef& context, u32 subresource, MapType type, MappedSubresource& mapped)
     {
-        HRESULT hr = lgraphics::Graphics::getDevice().getContext()->Map(
-            buffer_,
-            subresource,
-            (D3D11_MAP)type,
-            0,
-            reinterpret_cast<D3D11_MAPPED_SUBRESOURCE*>(&mapped));
-        return SUCCEEDED(hr);
+        return context.map(buffer_, subresource, type, mapped);
     }
 
-    bool BufferRefBase::map(void*& data, u32& rowPitch, u32& depthPitch, u32 subresource, s32 type)
+    void BufferRefBase::unmap(ContextRef& context, u32 subresource)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        return device.map(data, rowPitch, depthPitch, buffer_, subresource, type);
+        context.unmap(buffer_, subresource);
     }
 
-    void BufferRefBase::unmap(u32 subresource)
+    void BufferRefBase::updateSubresource(ContextRef& context, u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch)
     {
-        lgraphics::Graphics::getDevice().getContext()->Unmap(buffer_, subresource);
+        context.updateSubresource(buffer_, index, box, data, rowPitch, depthPitch);
     }
 
-    void BufferRefBase::updateSubresource(u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch)
+    void BufferRefBase::copy(ContextRef& context, BufferRefBase& src)
     {
-        lgraphics::Graphics::getDevice().updateSubresource(buffer_, index, box, data, rowPitch, depthPitch);
-    }
-
-    void BufferRefBase::copy(BufferRefBase& src)
-    {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.copyResource(buffer_, src.buffer_);
+        context.copyResource(buffer_, src.buffer_);
     }
 
     //------------------------------------------------------------

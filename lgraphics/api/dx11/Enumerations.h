@@ -45,6 +45,15 @@ namespace lgraphics
         FutureLevel_11_0 = D3D_FEATURE_LEVEL_11_0,
     };
 
+    enum CreateDeviceFlag
+    {
+        CreateDevice_SingleThreaded = D3D11_CREATE_DEVICE_SINGLETHREADED,
+        CreateDevice_Debug = D3D11_CREATE_DEVICE_DEBUG,
+        CreateDevice_SwitchToRef = D3D11_CREATE_DEVICE_SWITCH_TO_REF,
+        CreateDevice_PreventInternalThreadingOptimizations = D3D11_CREATE_DEVICE_PREVENT_INTERNAL_THREADING_OPTIMIZATIONS,
+        CreateDevice_BGRA_Support = D3D11_CREATE_DEVICE_BGRA_SUPPORT,
+    };
+
     //--------------------------------------------------------
     enum ClearFlag
     {
@@ -508,6 +517,43 @@ namespace lgraphics
         UAVFlag_Counter = D3D11_BUFFER_UAV_FLAG_COUNTER,
     };
 
+    enum QueryType
+    {
+        QueryType_Event = D3D11_QUERY_EVENT,
+        QueryType_Occlusion = D3D11_QUERY_OCCLUSION,
+        QueryType_TimeStamp = D3D11_QUERY_TIMESTAMP,
+        QueryType_TimeStampDisjoint = D3D11_QUERY_TIMESTAMP_DISJOINT,
+        QueryType_PipelineStatistics = D3D11_QUERY_PIPELINE_STATISTICS,
+        QueryType_OcclusionPredicate = D3D11_QUERY_OCCLUSION_PREDICATE,
+        QueryType_SOStatistics = D3D11_QUERY_SO_STATISTICS,
+        QueryType_SOOverflowPredicate = D3D11_QUERY_SO_OVERFLOW_PREDICATE,
+        QueryType_SOStatisticsStream0 = D3D11_QUERY_SO_STATISTICS_STREAM0,
+        QueryType_SOOverflowPredicateStream0 = D3D11_QUERY_SO_OVERFLOW_PREDICATE_STREAM0,
+        QueryType_SOStatisticsStream1 = D3D11_QUERY_SO_STATISTICS_STREAM1,
+        QueryType_SOOverflowPredicateStream1 = D3D11_QUERY_SO_OVERFLOW_PREDICATE_STREAM1,
+        QueryType_SOStatisticsStream2 = D3D11_QUERY_SO_STATISTICS_STREAM2,
+        QueryType_SOOverflowPredicateStream2 = D3D11_QUERY_SO_OVERFLOW_PREDICATE_STREAM2,
+        QueryType_SOStatisticsStream3 = D3D11_QUERY_SO_STATISTICS_STREAM3,
+        QueryType_SOOverflowPredicateStream3 = D3D11_QUERY_SO_OVERFLOW_PREDICATE_STREAM3,
+    };
+
+    enum QueryMiscFlag
+    {
+        QueryMiscFlag_None = 0,
+        QueryMiscFlag_PredicateHint = D3D11_QUERY_MISC_PREDICATEHINT,
+    };
+
+    enum CounterType
+    {
+        CounterType_None = 0,
+        CounterType_DeviceDependent0 = D3D11_COUNTER_DEVICE_DEPENDENT_0, 
+    };
+
+    enum AsyncGetDataFlag
+    {
+        AsyncGetDataFlag_None = 0,
+        AsyncGetDataFlag_DoNotFlush = D3D11_ASYNC_GETDATA_DONOTFLUSH,
+    };
 
     /**
     @brief bits per pixel取得

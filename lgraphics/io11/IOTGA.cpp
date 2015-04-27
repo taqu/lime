@@ -4,6 +4,7 @@
 @date 2010/05/20 create
 */
 #include "../lgraphicsAPIInclude.h"
+#include <lcore/clibrary.h>
 
 #include "IOTGA.h"
 #include "../api/Enumerations.h"

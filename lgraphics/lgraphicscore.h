@@ -81,6 +81,9 @@ namespace lgraphics
         void* data_;
         u32 rowPitch_;
         u32 depthPitch_;
+
+        template<class T>
+        T* getData(){ return reinterpret_cast<T*>(data_);}
     };
 
     template<class T>
@@ -131,7 +134,7 @@ static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (64);
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (255);
+static const lgraphics::u8 LIME_MAX_SKINNING_MATRICES = (240);
 static const u32 MaxRenderTargets = 8;
 
 #elif defined(LIME_GLES1)

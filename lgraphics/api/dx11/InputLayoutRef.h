@@ -12,14 +12,13 @@ struct ID3D11InputLayout;
 
 namespace lgraphics
 {
+    class ContextRef;
+
     class InputLayoutRef
     {
     public:
-        static InputLayoutRef create(
-            D3D11_INPUT_ELEMENT_DESC* elements,
-            u32 numElements,
-            const void* data,
-            u32 size);
+        typedef ID3D11InputLayout element_type;
+        typedef ID3D11InputLayout* pointer_type;
 
         InputLayoutRef()
             :layout_(NULL)
@@ -31,6 +30,8 @@ namespace lgraphics
         {
             destroy();
         }
+
+        pointer_type get(){ return layout_;}
 
         void destroy();
 
@@ -48,15 +49,15 @@ namespace lgraphics
             lcore::swap(layout_, rhs.layout_);
         }
 
-        void attach();
+        void attach(ContextRef& context);
     private:
         friend class InputLayout;
 
-        InputLayoutRef(ID3D11InputLayout* layout)
+        explicit InputLayoutRef(pointer_type layout)
             :layout_(layout)
         {}
 
-        ID3D11InputLayout* layout_;
+        pointer_type layout_;
     };
 
     class InputLayout

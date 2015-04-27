@@ -16,6 +16,10 @@ struct ID3D11Texture3D;
 
 namespace lgraphics
 {
+    class ContextRef;
+
+    typedef D3D11_TEXTURE2D_DESC Texture2DDesc;
+
     //--------------------------------------------------------
     //---
     //--- TextureRefBase
@@ -27,14 +31,18 @@ namespace lgraphics
     public:
         typedef TextureRefBase<T> this_type;
         typedef T element_type;
+        typedef T* pointer_type;
 
-        element_type* get() { return texture_;}
+        pointer_type get() { return texture_;}
         bool hasSampler() const{ return sampler_.valid();}
         bool hasResourceView() const{ return shaderResourceView_.valid();}
         bool valid() const{ return (NULL != texture_);}
 
-        ID3D11SamplerState* const* getSampler(){ return sampler_.get();}
-        ID3D11ShaderResourceView* const* getView(){ return shaderResourceView_.get();}
+        SamplerStateRef::pointer_type const* getSamplerGet(){ return sampler_.get();}
+        ShaderResourceViewRef::pointer_type const* getShaderResourceViewGet(){ return shaderResourceView_.get();}
+
+        SamplerStateRef::pointer_type getSampler(){ return sampler_.getSampler(); }
+        ShaderResourceViewRef::pointer_type getShaderResourceView(){ return shaderResourceView_.getView(); }
 
         ShaderResourceViewRef createSRView(const SRVDesc& desc)
         {
@@ -61,22 +69,22 @@ namespace lgraphics
             sampler_ = SamplerState::create(filter, adress, adress, adress);
         }
 
-        inline void attachVS(u32 viewIndex, u32 samplerIndex);
-        inline void attachGS(u32 viewIndex, u32 samplerIndex);
-        inline void attachPS(u32 viewIndex, u32 samplerIndex);
-        inline void attachCS(u32 viewIndex, u32 samplerIndex);
+        inline void attachVS(ContextRef& context, u32 viewIndex, u32 samplerIndex);
+        inline void attachGS(ContextRef& context, u32 viewIndex, u32 samplerIndex);
+        inline void attachPS(ContextRef& context, u32 viewIndex, u32 samplerIndex);
+        inline void attachCS(ContextRef& context, u32 viewIndex, u32 samplerIndex);
 
-        inline void attachVS(u32 viewIndex);
-        inline void attachGS(u32 viewIndex);
-        inline void attachPS(u32 viewIndex);
-        inline void attachCS(u32 viewIndex);
+        inline void attachVS(ContextRef& context, u32 viewIndex);
+        inline void attachGS(ContextRef& context, u32 viewIndex);
+        inline void attachPS(ContextRef& context, u32 viewIndex);
+        inline void attachCS(ContextRef& context, u32 viewIndex);
 
-        inline void copy(this_type& src);
-        inline void updateSubresource(u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch);
+        inline void copy(ContextRef& context, this_type& src);
+        inline void updateSubresource(ContextRef& context, u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch);
 
-        inline bool map(u32 subresource, MapType type, MappedSubresource& mapped);
-        inline bool map(void*& data, u32& rowPitch, u32& depthPitch, u32 subresource, s32 type);
-        inline void unmap(u32 subresource);
+        inline bool map(ContextRef& context, u32 subresource, MapType type, MappedSubresource& mapped);
+        inline bool map(ContextRef& context, void*& data, u32& rowPitch, u32& depthPitch, u32 subresource, s32 type);
+        inline void unmap(ContextRef& context, u32 subresource);
 
         inline bool operator==(const TextureRefBase& rhs) const
         {
@@ -103,7 +111,7 @@ namespace lgraphics
             }
         }
 
-        explicit TextureRefBase(const SamplerStateRef& sampler, ID3D11ShaderResourceView* view, element_type* texture)
+        TextureRefBase(const SamplerStateRef& sampler, ShaderResourceViewRef::pointer_type view, pointer_type texture)
             :sampler_(sampler)
             ,shaderResourceView_(view)
             ,texture_(texture)
@@ -135,7 +143,7 @@ namespace lgraphics
 
         SamplerStateRef sampler_;
         ShaderResourceViewRef shaderResourceView_;
-        element_type* texture_;
+        pointer_type texture_;
     };
 
     template<class T>
@@ -248,111 +256,98 @@ namespace lgraphics
     }
 
     template<class T>
-    inline void TextureRefBase<T>::attachVS(u32 viewIndex, u32 samplerIndex)
+    inline void TextureRefBase<T>::attachVS(ContextRef& context, u32 viewIndex, u32 samplerIndex)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        device.setVSResources(viewIndex, 1, &view);
-        device.setVSSamplers(samplerIndex, 1, sampler_.get());
+        context.setVSResources(viewIndex, 1, &view);
+        context.setVSSamplers(samplerIndex, 1, sampler_.get());
     }
 
     template<class T>
-    inline void TextureRefBase<T>::attachGS(u32 viewIndex, u32 samplerIndex)
+    inline void TextureRefBase<T>::attachGS(ContextRef& context, u32 viewIndex, u32 samplerIndex)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        device.setGSResources(viewIndex, 1, &view);
-        device.setGSSamplers(samplerIndex, 1, sampler_.get());
+        context.setGSResources(viewIndex, 1, &view);
+        context.setGSSamplers(samplerIndex, 1, sampler_.get());
     }
 
     template<class T>
-    inline void TextureRefBase<T>::attachPS(u32 viewIndex, u32 samplerIndex)
+    inline void TextureRefBase<T>::attachPS(ContextRef& context, u32 viewIndex, u32 samplerIndex)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        device.setPSResources(viewIndex, 1, &view);
-        device.setPSSamplers(samplerIndex, 1, sampler_.get());
+        context.setPSResources(viewIndex, 1, &view);
+        context.setPSSamplers(samplerIndex, 1, sampler_.get());
     }
 
     template<class T>
-    inline void TextureRefBase<T>::attachCS(u32 viewIndex, u32 samplerIndex)
+    inline void TextureRefBase<T>::attachCS(ContextRef& context, u32 viewIndex, u32 samplerIndex)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        device.setCSResources(viewIndex, 1, &view);
-        device.setCSSamplers(samplerIndex, 1, sampler_.get());
+        context.setCSResources(viewIndex, 1, &view);
+        context.setCSSamplers(samplerIndex, 1, sampler_.get());
     }
 
     template<class T>
-    inline void TextureRefBase<T>::attachVS(u32 viewIndex)
+    inline void TextureRefBase<T>::attachVS(ContextRef& context, u32 viewIndex)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        device.setVSResources(viewIndex, 1, &view);
+        context.setVSResources(viewIndex, 1, &view);
     }
 
     template<class T>
-    inline void TextureRefBase<T>::attachGS(u32 viewIndex)
+    inline void TextureRefBase<T>::attachGS(ContextRef& context, u32 viewIndex)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        device.setGSResources(viewIndex, 1, &view);
+        context.setGSResources(viewIndex, 1, &view);
     }
 
     template<class T>
-    inline void TextureRefBase<T>::attachPS(u32 viewIndex)
+    inline void TextureRefBase<T>::attachPS(ContextRef& context, u32 viewIndex)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        device.setPSResources(viewIndex, 1, &view);
+        context.setPSResources(viewIndex, 1, &view);
     }
 
     template<class T>
-    inline void TextureRefBase<T>::attachCS(u32 viewIndex)
+    inline void TextureRefBase<T>::attachCS(ContextRef& context, u32 viewIndex)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
         ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        device.setCSResources(viewIndex, 1, &view);
+        context.setCSResources(viewIndex, 1, &view);
     }
 
     template<class T>
-    inline void TextureRefBase<T>::copy(this_type& src)
+    inline void TextureRefBase<T>::copy(ContextRef& context, this_type& src)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.copyResource(texture_, src.texture_);
+        context.copyResource(texture_, src.texture_);
     }
 
     template<class T>
-    inline void TextureRefBase<T>::updateSubresource(u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch)
+    inline void TextureRefBase<T>::updateSubresource(ContextRef& context, u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.updateSubresource(texture_, index, box, data, rowPitch, depthPitch);
+        context.updateSubresource(texture_, index, box, data, rowPitch, depthPitch);
     }
 
     template<class T>
-    inline bool TextureRefBase<T>::map(u32 subresource, MapType type, MappedSubresource& mapped)
+    inline bool TextureRefBase<T>::map(ContextRef& context, u32 subresource, MapType type, MappedSubresource& mapped)
     {
-        HRESULT hr = lgraphics::Graphics::getDevice().getContext()->Map(
+        return context.map(
             texture_,
             subresource,
             (D3D11_MAP)type,
-            0,
             reinterpret_cast<D3D11_MAPPED_SUBRESOURCE*>(&mapped));
-        return SUCCEEDED(hr);
+
     }
 
     template<class T>
-    inline bool TextureRefBase<T>::map(void*& data, u32& rowPitch, u32& depthPitch, u32 subresource, s32 type)
+    inline bool TextureRefBase<T>::map(ContextRef& context, void*& data, u32& rowPitch, u32& depthPitch, u32 subresource, s32 type)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        return device.map(data, rowPitch, depthPitch, texture_, subresource, type);
+        return context.map(data, rowPitch, depthPitch, texture_, subresource, type);
     }
 
     template<class T>
-    inline void TextureRefBase<T>::unmap(u32 subresource)
+    inline void TextureRefBase<T>::unmap(ContextRef& context, u32 subresource)
     {
-        lgraphics::GraphicsDeviceRef& device = Graphics::getDevice();
-        device.unmap(texture_, subresource);
+        context.unmap(texture_, subresource);
     }
 
     //--------------------------------------------------------
@@ -418,6 +413,8 @@ namespace lgraphics
 
         void destroy();
 
+        inline void getDesc(Texture2DDesc& desc);
+
         Texture2DRef& operator=(const Texture2DRef& rhs)
         {
             Texture2DRef tmp(rhs);
@@ -437,6 +434,11 @@ namespace lgraphics
         {}
     };
 
+    inline void Texture2DRef::getDesc(Texture2DDesc& desc)
+    {
+        LASSERT(valid());
+        texture_->GetDesc(&desc);
+    }
 
     //--------------------------------------------------------
     //---
@@ -504,8 +506,7 @@ namespace lgraphics
 
         BufferRef& operator=(const BufferRef& rhs)
         {
-            BufferRef tmp(rhs);
-            tmp.swap(*this);
+            BufferRef(rhs).swap(*this);
             return *this;
         }
 

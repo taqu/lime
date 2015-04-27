@@ -13,6 +13,7 @@ struct ID3D11Buffer;
 
 namespace lgraphics
 {
+    class ContextRef;
     struct Box;
     //------------------------------------------------------------
     //---
@@ -22,12 +23,19 @@ namespace lgraphics
     class BufferRefBase
     {
     public:
+        typedef ID3D11Buffer element_type;
+        typedef ID3D11Buffer* pointer_type;
+
         void destroy();
 
-        bool map(u32 subresource, MapType type, MappedSubresource& mapped);
-        bool map(void*& data, u32& rowPitch, u32& depthPitch, u32 subresource, s32 type);
-        void unmap(u32 subresource);
-        void updateSubresource(u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch);
+        pointer_type getBuffer(){ return buffer_;}
+        pointer_type const* get(){ return &buffer_;}
+
+        bool map(ContextRef& context, u32 subresource, MapType type, MappedSubresource& mapped);
+        void unmap(ContextRef& context, u32 subresource);
+        void updateSubresource(ContextRef& context, u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch);
+
+        void copy(ContextRef& context, BufferRefBase& src);
 
         UnorderedAccessViewRef createUAView(const UAVDesc& desc)
         {
@@ -35,8 +43,6 @@ namespace lgraphics
         }
 
         bool valid() const{ return buffer_ != NULL;}
-
-        void copy(BufferRefBase& src);
     protected:
         BufferRefBase()
             :buffer_(NULL)
@@ -44,7 +50,7 @@ namespace lgraphics
 
         BufferRefBase(const BufferRefBase& rhs);
 
-        explicit BufferRefBase(ID3D11Buffer* buffer)
+        explicit BufferRefBase(pointer_type buffer)
             :buffer_(buffer)
         {}
 
@@ -58,7 +64,7 @@ namespace lgraphics
             lcore::swap(buffer_, rhs.buffer_);
         }
 
-        ID3D11Buffer* buffer_;
+        pointer_type buffer_;
     };
 
     //------------------------------------------------------------

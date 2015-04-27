@@ -13,6 +13,8 @@ struct ID3D11DepthStencilView;
 
 namespace lgraphics
 {
+    class ContextRef;
+
     struct Texture1DRTV
     {
         u32 mipSlice_;
@@ -248,13 +250,16 @@ namespace lgraphics
     class ShaderResourceViewRef
     {
     public:
+        typedef ID3D11ShaderResourceView element_type;
+        typedef ID3D11ShaderResourceView* pointer_type;
+
         ShaderResourceViewRef()
             :view_(NULL)
         {}
 
         ShaderResourceViewRef(const ShaderResourceViewRef& rhs);
 
-        explicit ShaderResourceViewRef(ID3D11ShaderResourceView* view)
+        explicit ShaderResourceViewRef(pointer_type view)
             :view_(view)
         {}
 
@@ -265,8 +270,7 @@ namespace lgraphics
 
         ShaderResourceViewRef& operator=(const ShaderResourceViewRef& rhs)
         {
-            ShaderResourceViewRef tmp(rhs);
-            tmp.swap(*this);
+            ShaderResourceViewRef(rhs).swap(*this);
             return *this;
         }
 
@@ -279,10 +283,10 @@ namespace lgraphics
             lcore::swap(view_, rhs.view_);
         }
 
-        ID3D11ShaderResourceView* getView(){ return view_;}
-        ID3D11ShaderResourceView* const* get(){ return &view_;}
+        pointer_type getView(){ return view_;}
+        pointer_type const* get(){ return &view_;}
     private:
-        ID3D11ShaderResourceView* view_;
+        pointer_type view_;
     };
 
     //--------------------------------------------------------
@@ -293,13 +297,16 @@ namespace lgraphics
     class RenderTargetViewRef
     {
     public:
+        typedef ID3D11RenderTargetView element_type;
+        typedef ID3D11RenderTargetView* pointer_type;
+
         RenderTargetViewRef()
             :view_(NULL)
         {}
 
         RenderTargetViewRef(const RenderTargetViewRef& rhs);
 
-        explicit RenderTargetViewRef(ID3D11RenderTargetView* view)
+        explicit RenderTargetViewRef(pointer_type view)
             :view_(view)
         {}
 
@@ -310,8 +317,7 @@ namespace lgraphics
 
         RenderTargetViewRef& operator=(const RenderTargetViewRef& rhs)
         {
-            RenderTargetViewRef tmp(rhs);
-            tmp.swap(*this);
+            RenderTargetViewRef(rhs).swap(*this);
             return *this;
         }
 
@@ -324,12 +330,12 @@ namespace lgraphics
             lcore::swap(view_, rhs.view_);
         }
 
-        ID3D11RenderTargetView* getView(){ return view_;}
-        ID3D11RenderTargetView* const* get(){ return &view_;}
+        pointer_type getView(){ return view_;}
+        pointer_type const* get(){ return &view_;}
 
         ShaderResourceViewRef createSRView(const SRVDesc& desc);
     private:
-        ID3D11RenderTargetView* view_;
+        pointer_type view_;
     };
 
     //--------------------------------------------------------
@@ -340,13 +346,16 @@ namespace lgraphics
     class DepthStencilViewRef
     {
     public:
+        typedef ID3D11DepthStencilView element_type;
+        typedef ID3D11DepthStencilView* pointer_type;
+
         DepthStencilViewRef()
             :view_(NULL)
         {}
 
         DepthStencilViewRef(const DepthStencilViewRef& rhs);
 
-        explicit DepthStencilViewRef(ID3D11DepthStencilView* view)
+        explicit DepthStencilViewRef(pointer_type view)
             :view_(view)
         {}
 
@@ -357,8 +366,7 @@ namespace lgraphics
 
         DepthStencilViewRef& operator=(const DepthStencilViewRef& rhs)
         {
-            DepthStencilViewRef tmp(rhs);
-            tmp.swap(*this);
+            DepthStencilViewRef(rhs).swap(*this);
             return *this;
         }
 
@@ -371,10 +379,10 @@ namespace lgraphics
             lcore::swap(view_, rhs.view_);
         }
 
-        ID3D11DepthStencilView* getView(){ return view_;}
-        ID3D11DepthStencilView* const* get(){ return &view_;}
+        pointer_type getView(){ return view_;}
+        pointer_type const* get(){ return &view_;}
     private:
-        ID3D11DepthStencilView* view_;
+        pointer_type view_;
     };
 
     //--------------------------------------------------------
@@ -385,13 +393,16 @@ namespace lgraphics
     class UnorderedAccessViewRef
     {
     public:
+        typedef ID3D11UnorderedAccessView element_type;
+        typedef ID3D11UnorderedAccessView* pointer_type;
+
         UnorderedAccessViewRef()
             :view_(NULL)
         {}
 
         UnorderedAccessViewRef(const UnorderedAccessViewRef& rhs);
 
-        explicit UnorderedAccessViewRef(ID3D11UnorderedAccessView* view)
+        explicit UnorderedAccessViewRef(pointer_type view)
             :view_(view)
         {}
 
@@ -402,8 +413,7 @@ namespace lgraphics
 
         UnorderedAccessViewRef& operator=(const UnorderedAccessViewRef& rhs)
         {
-            UnorderedAccessViewRef tmp(rhs);
-            tmp.swap(*this);
+            UnorderedAccessViewRef(rhs).swap(*this);
             return *this;
         }
 
@@ -416,9 +426,10 @@ namespace lgraphics
             lcore::swap(view_, rhs.view_);
         }
 
-        ID3D11UnorderedAccessView* getView(){ return view_;}
+        pointer_type getView(){ return view_;}
+        pointer_type const* get(){ return &view_; }
     private:
-        ID3D11UnorderedAccessView* view_;
+        pointer_type view_;
     };
 
     class View

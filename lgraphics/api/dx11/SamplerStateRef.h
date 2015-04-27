@@ -12,6 +12,8 @@ struct ID3D11SamplerState;
 
 namespace lgraphics
 {
+    class ContextRef;
+
     //------------------------------------------------------------
     //---
     //--- SamplerStateRef
@@ -20,6 +22,9 @@ namespace lgraphics
     class SamplerStateRef
     {
     public:
+        typedef ID3D11SamplerState element_type;
+        typedef ID3D11SamplerState* pointer_type;
+
         SamplerStateRef()
             :state_(NULL)
         {}
@@ -33,8 +38,14 @@ namespace lgraphics
 
         void destroy();
 
-        ID3D11SamplerState* const* get(){ return &state_;}
+        pointer_type getSampler(){ return state_;}
+        pointer_type const* get(){ return &state_;}
         bool valid() const{ return (NULL != state_);}
+
+        void setVS(ContextRef& context, u32 start);
+        void setGS(ContextRef& context, u32 start);
+        void setPS(ContextRef& context, u32 start);
+        void setCS(ContextRef& context, u32 start);
 
         void swap(SamplerStateRef& rhs)
         {
@@ -43,19 +54,18 @@ namespace lgraphics
 
         SamplerStateRef& operator=(const SamplerStateRef& rhs)
         {
-            SamplerStateRef tmp(rhs);
-            tmp.swap(*this);
+            SamplerStateRef(rhs).swap(*this);
             return *this;
         }
 
     private:
         friend class SamplerState;
 
-        explicit SamplerStateRef(ID3D11SamplerState* state)
+        explicit SamplerStateRef(pointer_type state)
             :state_(state)
         {}
 
-        ID3D11SamplerState* state_;
+        pointer_type state_;
     };
 
     //------------------------------------------------------------
