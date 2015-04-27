@@ -10,7 +10,7 @@
 
 namespace lscene
 {
-    class DirectionalLight
+    class LIME_ALIGN16 DirectionalLight
     {
     public:
         DirectionalLight()

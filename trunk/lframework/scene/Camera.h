@@ -13,6 +13,7 @@ namespace lscene
     class Camera
     {
     public:
+
         Camera();
 
         inline f32 getWidth() const{ return width_;}
@@ -20,6 +21,7 @@ namespace lscene
         inline f32 getZNear() const{ return znear_;}
         inline f32 getZFar() const{ return zfar_;}
         inline f32 getAspect() const{ return aspect_;}
+        inline f32 getFovy() const{ return fovy_;}
 
         const lmath::Matrix44& getViewMatrix() const
         {
@@ -53,6 +55,7 @@ namespace lscene
             return viewProjMatrix_;
         }
 
+        
         /**
         @brief 透視投影
         */
@@ -63,6 +66,7 @@ namespace lscene
             width_ = width;
             height_ = height;
             aspect_ = width/height;
+            fovy_ = lmath::calcFOVY(height, znear);
             projMatrix_.perspective(width, height, znear, zfar);
         }
 
@@ -76,6 +80,7 @@ namespace lscene
             height_ = 2.0f*znear*lmath::tan(0.5f*fovy);
             width_ = height_*aspect;
             aspect_ = aspect;
+            fovy_ = fovy;
             projMatrix_.perspectiveFov(fovy, aspect, znear, zfar);
         }
 
@@ -89,6 +94,7 @@ namespace lscene
             width_ = width;
             height_ = height;
             aspect_ = width/height;
+            fovy_ = 0.0f;
             projMatrix_.ortho(width, height, znear, zfar);
         }
 
@@ -102,6 +108,7 @@ namespace lscene
             width_ = width;
             height_ = height;
             aspect_ = width/height;
+            fovy_ = lmath::calcFOVY(height, znear);
             projMatrix_.perspectiveLinearZ(width, height, znear, zfar);
         }
 
@@ -115,24 +122,75 @@ namespace lscene
             height_ = 2.0f*znear*lmath::tan(0.5f*fovy);
             width_ = height_/aspect;
             aspect_ = aspect;
+            fovy_ = fovy;
             projMatrix_.perspectiveFovLinearZ(fovy, aspect, znear, zfar);
         }
 
         void updateMatrix();
 
-        void getEyePosition(lmath::Vector4& eye) const;
+        const lmath::Matrix44& getPrevViewProjMatrix() const
+        {
+            return prevVewProjMatrix_;
+        }
 
-    protected:
-        f32 znear_;
-        f32 zfar_;
-        f32 width_;
-        f32 height_;
-        f32 aspect_;
+        const lmath::Vector4& getEyePosition() const
+        {
+            return eyePosition_;
+        }
+
+        void pushMatrix()
+        {
+            prevVewProjMatrix_ = viewProjMatrix_;
+        }
+
+        inline void setJitter(bool enable);
+        inline bool isJitter() const;
+
+        inline void setJitterSize(f32 width, f32 height);
+    private:
+        static const s32 JitterPrime0 = 2;
+        static const s32 JitterPrime1 = 3;
+
+        void getEyePosition(lmath::Vector4& eye) const;
+        static f32 halton_next(f32 prev, s32 prime);
 
         lmath::Matrix44 viewMatrix_;
         lmath::Matrix44 projMatrix_;
         lmath::Matrix44 viewProjMatrix_;
+        lmath::Matrix44 prevVewProjMatrix_;
+        lmath::Vector4 eyePosition_;
+
+        f32 znear_;
+        f32 zfar_;
+        f32 width_;
+        f32 height_;
+
+        f32 aspect_;
+        f32 fovy_;
+        s32 isJitter_;
+        f32 reserved0_;
+
+        f32 jitterWidth_;
+        f32 jitterHeight_;
+        f32 haltonX_;
+        f32 haltonY_;
     };
+
+    inline void Camera::setJitter(bool enable)
+    {
+        isJitter_ = (enable)? 1 : 0;
+    }
+
+    inline bool Camera::isJitter() const
+    {
+        return 0 != isJitter_;
+    }
+
+    inline void Camera::setJitterSize(f32 width, f32 height)
+    {
+        jitterWidth_ = width;
+        jitterHeight_ = height;
+    }
 }
 
 #endif //INC_LSCENE_CAMERA_H__

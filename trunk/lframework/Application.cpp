@@ -4,6 +4,7 @@
 @date 2010/02/14 create
 */
 #include "Application.h"
+#include <lcore/clibrary.h>
 #include <lgraphics/lgraphics.h>
 #include <lgraphics/api/InitParam.h>
 

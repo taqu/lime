@@ -16,59 +16,72 @@ namespace lscene
     class Scene
     {
     public:
-        static const s32 NumMinCascades = 1;
-        static const s32 NumMaxCascades = 4;
-
         Scene();
         ~Scene();
 
         const lmath::Matrix44& getViewMatrix() const
         {
-            return camera_.getViewMatrix();
+            return camera_->getViewMatrix();
         }
 
         void setViewMatrix(const lmath::Matrix44& view)
         {
-            camera_.setViewMatrix(view);
+            camera_->setViewMatrix(view);
         }
 
         const lmath::Matrix44& getProjMatrix() const
         {
-            return camera_.getProjMatrix();
+            return camera_->getProjMatrix();
         }
 
         void setProjMatrix(const lmath::Matrix44& proj)
         {
-            camera_.setProjMatrix(proj);
+            camera_->setProjMatrix(proj);
         }
 
         const lmath::Matrix44& getViewProjMatrix() const
         {
-            return camera_.getViewProjMatrix();
+            return camera_->getViewProjMatrix();
+        }
+
+        const lmath::Matrix44& getPrevViewProjMatrix() const
+        {
+            return camera_->getPrevViewProjMatrix();
         }
 
         const Camera& getCamera() const
         {
-            return camera_;
+            return *camera_;
         }
 
         Camera& getCamera()
         {
-            return camera_;
+            return *camera_;
         }
 
         LightEnvironment& getLightEnv()
         {
-            return lightEnv_;
+            return *lightEnv_;
         }
 
         const LightEnvironment& getLightEnv() const
         {
-            return lightEnv_;
+            return *lightEnv_;
+        }
+
+        void updateSceneMatrix()
+        {
+            camera_->updateMatrix();
+        }
+
+        void pushSceneMatrix()
+        {
+            camera_->pushMatrix();
         }
     private:
-        Camera camera_;
-        LightEnvironment lightEnv_;
+        Camera* camera_;
+        LightEnvironment* lightEnv_;
+        u8 buffer_[sizeof(Camera) + sizeof(LightEnvironment) + 16];
     };
 }
 

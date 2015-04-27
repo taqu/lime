@@ -7,6 +7,7 @@
 
 #include "PackWriter.h"
 #include <lcore/utility.h>
+#include <lcore/clibrary.h>
 
 namespace lpack
 {

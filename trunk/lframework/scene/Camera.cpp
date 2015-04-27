@@ -14,10 +14,18 @@ namespace lscene
         ,width_(1.0f)
         ,height_(1.0f)
         ,aspect_(1.0f)
+        ,fovy_(45.0f/180.0f*PI)
+        ,isJitter_(0)
+        ,jitterWidth_(0.0f)
+        ,jitterHeight_(0.0f)
+        ,haltonX_(0.0f)
+        ,haltonY_(0.0f)
     {
         viewMatrix_.identity();
         projMatrix_.identity();
         viewProjMatrix_.identity();
+        prevVewProjMatrix_.identity();
+        eyePosition_.zero();
     }
 
     void Camera::setProjMatrix(const lmath::Matrix44& proj)
@@ -50,7 +58,19 @@ namespace lscene
     void Camera::updateMatrix()
     {
         viewProjMatrix_ = projMatrix_;
+
+        if(isJitter()){
+            haltonX_ = halton_next(haltonX_, JitterPrime0);
+            haltonY_ = halton_next(haltonY_, JitterPrime1);
+
+            f32 jitterX = (2.0f*haltonX_ - 1.0f)*jitterWidth_;
+            f32 jitterY = (2.0f*haltonY_ - 1.0f)*jitterHeight_;
+            viewProjMatrix_.m_[0][3] += jitterX;
+            viewProjMatrix_.m_[1][3] += jitterY;
+        }
         viewProjMatrix_ *= viewMatrix_;
+
+        getEyePosition(eyePosition_);
     }
 
     void Camera::getEyePosition(lmath::Vector4& eye) const
@@ -61,5 +81,22 @@ namespace lscene
         eye.y_ = -(view.m_[0][1] * view.m_[0][3] + view.m_[1][1] * view.m_[1][3] + view.m_[2][1] * view.m_[2][3]);
         eye.z_ = -(view.m_[0][2] * view.m_[0][3] + view.m_[1][2] * view.m_[1][3] + view.m_[2][2] * view.m_[2][3]);
         eye.w_ = 0.0f;
+    }
+
+    f32 Camera::halton_next(f32 prev, s32 prime)
+    {
+        float r = 1.0f - prev - 0.000001f;
+        float f = 1.0f/prime;
+        if(f < r) {
+            return prev + f;
+        } else {
+            float h = f;
+            float hh;
+            do {
+                hh = h;
+                h *= f;
+            } while(h >= r);
+            return prev + hh + h - 1.0f;
+        }
     }
 }

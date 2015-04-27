@@ -473,14 +473,14 @@ namespace lscene
         points[3].set( halfWidth,  -halfHeight, planes_[4].v_.w_, 1.0f); //右下
 
 
-        f32 far = -planes_[5].v_.w_;
-        halfWidth = far * slopeX;
-        halfHeight = far * slopeY;
+        f32 zfar = -planes_[5].v_.w_;
+        halfWidth = zfar * slopeX;
+        halfHeight = zfar * slopeY;
 
-        points[4].set( halfWidth,   halfHeight, far, 1.0f); //右上
-        points[5].set(-halfWidth,   halfHeight, far, 1.0f); //左上
-        points[6].set(-halfWidth,  -halfHeight, far, 1.0f); //左下
-        points[7].set( halfWidth,  -halfHeight, far, 1.0f); //右下
+        points[4].set( halfWidth,   halfHeight, zfar, 1.0f); //右上
+        points[5].set(-halfWidth,   halfHeight, zfar, 1.0f); //左上
+        points[6].set(-halfWidth,  -halfHeight, zfar, 1.0f); //左下
+        points[7].set( halfWidth,  -halfHeight, zfar, 1.0f); //右下
     }
 
     //---------------------------------------------------

@@ -1,5 +1,5 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="DebugSSE|Win32">
       <Configuration>DebugSSE</Configuration>
@@ -19,12 +19,12 @@
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugSSE|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseSSE|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v120</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
     <WholeProgramOptimization>true</WholeProgramOptimization>
   </PropertyGroup>
@@ -44,10 +44,12 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseSSE|Win32'">
     <OutDir>$(SolutionDir)\lib\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_dx11_sse_vc120</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='DebugSSE|Win32'">
     <OutDir>$(SolutionDir)\lib\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
+    <TargetName>$(ProjectName)_dx11_sse_vc120_d</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='ReleaseSSE|Win32'">
     <ClCompile>
@@ -65,8 +67,8 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Lib>
-      <AdditionalDependencies>lcore_vc110.lib;lmath_sse_vc110.lib;lgraphics_dx11_sse_vc110.lib;imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)$(ProjectName)_dx11_sse_vc110.lib</OutputFile>
+      <AdditionalDependencies>lcore_vc120.lib;lmath_sse_vc120.lib;lgraphics_dx11_sse_vc120.lib;imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
@@ -79,68 +81,154 @@
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <PrecompiledHeader />
-      <ProgramDataBaseFileName>$(OutDir)$(ProjectName)_dx11_sse_vc110_d.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>$(OutDir)$(TargetName).pdb</ProgramDataBaseFileName>
       <WarningLevel>Level4</WarningLevel>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <DisableSpecificWarnings>4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Lib>
-      <AdditionalDependencies>lcore_vc110_d.lib;lmath_sse_vc110_d.lib;lgraphics_dx11_sse_vc110_d.lib;imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <OutputFile>$(OutDir)$(ProjectName)_dx11_sse_vc110_d.lib</OutputFile>
+      <AdditionalDependencies>lcore_vc120_d.lib;lmath_sse_vc120_d.lib;lgraphics_dx11_sse_vc120_d.lib;imm32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <OutputFile>$(OutDir)$(TargetName)$(TargetExt)</OutputFile>
       <AdditionalLibraryDirectories>..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\anim\AnimationClip.cpp" />
-    <ClCompile Include="..\anim\AnimationControler.cpp" />
-    <ClCompile Include="..\anim\AnimationControlerPartial.cpp" />
-    <ClCompile Include="..\anim\AnimationSystem.cpp" />
-    <ClCompile Include="..\anim\IKPack.cpp" />
-    <ClCompile Include="..\anim\JointAnimation.cpp" />
-    <ClCompile Include="..\anim\lanim.cpp" />
-    <ClCompile Include="..\anim\Skeleton.cpp" />
-    <ClCompile Include="..\anim\SkeletonPose.cpp" />
     <ClCompile Include="..\pack\lpack.cpp" />
     <ClCompile Include="..\pack\PackReader.cpp" />
     <ClCompile Include="..\pack\PackWriter.cpp" />
+    <ClCompile Include="..\scene\anim\Animation.cpp" />
+    <ClCompile Include="..\scene\anim\AnimationClip.cpp" />
+    <ClCompile Include="..\scene\anim\AnimationState.cpp" />
+    <ClCompile Include="..\scene\anim\IKPack.cpp" />
+    <ClCompile Include="..\scene\anim\JointAnimation.cpp" />
+    <ClCompile Include="..\scene\anim\lanim.cpp" />
+    <ClCompile Include="..\scene\anim\Skeleton.cpp" />
+    <ClCompile Include="..\scene\anim\SkeletonPose.cpp" />
     <ClCompile Include="..\scene\Camera.cpp" />
+    <ClCompile Include="..\scene\collide\CollideManager.cpp" />
+    <ClCompile Include="..\scene\collide\Collider.cpp" />
+    <ClCompile Include="..\scene\collide\Octree.cpp" />
+    <ClCompile Include="..\scene\collide\Quadtree.cpp" />
+    <ClCompile Include="..\scene\ConstantBuffer.cpp" />
+    <ClCompile Include="..\scene\ConstantBufferTable.cpp" />
+    <ClCompile Include="..\scene\file\File.cpp" />
+    <ClCompile Include="..\scene\file\FileSystem.cpp" />
     <ClCompile Include="..\scene\Frustum.cpp" />
+    <ClCompile Include="..\scene\load\load.cpp" />
+    <ClCompile Include="..\scene\load\ModelLoader.cpp" />
+    <ClCompile Include="..\scene\lscene.cpp" />
+    <ClCompile Include="..\scene\NodeAnimObject.cpp" />
+    <ClCompile Include="..\scene\NodeAnimObjectMotion.cpp" />
+    <ClCompile Include="..\scene\NodeBase.cpp" />
+    <ClCompile Include="..\scene\NodeObject.cpp" />
+    <ClCompile Include="..\scene\NodeObjectMotion.cpp" />
+    <ClCompile Include="..\scene\NodeTransform.cpp" />
+    <ClCompile Include="..\scene\ObjectFactory.cpp" />
     <ClCompile Include="..\scene\ReflectiveShadowMap.cpp" />
+    <ClCompile Include="..\scene\RenderContext.cpp" />
+    <ClCompile Include="..\scene\RenderQueue.cpp" />
+    <ClCompile Include="..\scene\render\AnimObject.cpp" />
+    <ClCompile Include="..\scene\render\Geometry.cpp" />
+    <ClCompile Include="..\scene\render\InputLayoutManager.cpp" />
+    <ClCompile Include="..\scene\render\Material.cpp" />
+    <ClCompile Include="..\scene\render\Mesh.cpp" />
+    <ClCompile Include="..\scene\render\Node.cpp" />
+    <ClCompile Include="..\scene\render\Object.cpp" />
+    <ClCompile Include="..\scene\render\ObjectContent.cpp" />
+    <ClCompile Include="..\scene\render\render.cpp" />
+    <ClCompile Include="..\scene\render\ShaderManager.cpp" />
+    <ClCompile Include="..\scene\Resources.cpp" />
+    <ClCompile Include="..\scene\RingBuffer.cpp" />
     <ClCompile Include="..\scene\Scene.cpp" />
     <ClCompile Include="..\Application.cpp" />
     <ClCompile Include="..\MessageDriven.cpp" />
+    <ClCompile Include="..\scene\SceneManager.cpp" />
+    <ClCompile Include="..\scene\ShaderCompiler.cpp" />
+    <ClCompile Include="..\scene\ShaderConstant.cpp" />
     <ClCompile Include="..\scene\ShadowMap.cpp" />
-    <ClCompile Include="..\Static.cpp" />
+    <ClCompile Include="..\scene\SystemBase.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\anim\AnimationClip.h" />
-    <ClInclude Include="..\anim\AnimationControler.h" />
-    <ClInclude Include="..\anim\AnimationControlerPartial.h" />
-    <ClInclude Include="..\anim\AnimationSystem.h" />
-    <ClInclude Include="..\anim\IKPack.h" />
-    <ClInclude Include="..\anim\Joint.h" />
-    <ClInclude Include="..\anim\JointAnimation.h" />
-    <ClInclude Include="..\anim\JointPose.h" />
-    <ClInclude Include="..\anim\lanim.h" />
-    <ClInclude Include="..\anim\Skeleton.h" />
-    <ClInclude Include="..\anim\SkeletonPose.h" />
     <ClInclude Include="..\pack\lpack.h" />
     <ClInclude Include="..\pack\PackReader.h" />
     <ClInclude Include="..\pack\PackWriter.h" />
+    <ClInclude Include="..\scene\anim\Animation.h" />
+    <ClInclude Include="..\scene\anim\AnimationClip.h" />
+    <ClInclude Include="..\scene\anim\AnimationState.h" />
+    <ClInclude Include="..\scene\anim\Flags.h" />
+    <ClInclude Include="..\scene\anim\IKPack.h" />
+    <ClInclude Include="..\scene\anim\Joint.h" />
+    <ClInclude Include="..\scene\anim\JointAnimation.h" />
+    <ClInclude Include="..\scene\anim\JointPose.h" />
+    <ClInclude Include="..\scene\anim\lanim.h" />
+    <ClInclude Include="..\scene\anim\Skeleton.h" />
+    <ClInclude Include="..\scene\anim\SkeletonPose.h" />
+    <ClInclude Include="..\scene\BufferCreator.h" />
     <ClInclude Include="..\scene\Camera.h" />
+    <ClInclude Include="..\scene\collide\CollideManager.h" />
+    <ClInclude Include="..\scene\collide\Collider.h" />
+    <ClInclude Include="..\scene\collide\lcollide.h" />
+    <ClInclude Include="..\scene\collide\Octree.h" />
+    <ClInclude Include="..\scene\collide\Quadtree.h" />
+    <ClInclude Include="..\scene\ConstantBuffer.h" />
+    <ClInclude Include="..\scene\ConstantBufferTable.h" />
     <ClInclude Include="..\scene\DirectionalLight.h" />
+    <ClInclude Include="..\scene\DynamicBuffer.h" />
+    <ClInclude Include="..\scene\file\File.h" />
+    <ClInclude Include="..\scene\file\FileSystem.h" />
+    <ClInclude Include="..\scene\FrameSyncQuery.h" />
     <ClInclude Include="..\scene\Frustum.h" />
     <ClInclude Include="..\scene\LightEnvironment.h" />
+    <ClInclude Include="..\scene\load\load.h" />
+    <ClInclude Include="..\scene\load\load_geometry.h" />
+    <ClInclude Include="..\scene\load\load_joint.h" />
+    <ClInclude Include="..\scene\load\load_material.h" />
+    <ClInclude Include="..\scene\load\load_mesh.h" />
+    <ClInclude Include="..\scene\load\load_node.h" />
+    <ClInclude Include="..\scene\load\load_texture.h" />
+    <ClInclude Include="..\scene\load\ModelLoader.h" />
     <ClInclude Include="..\scene\lscene.h" />
+    <ClInclude Include="..\scene\mixin\Module.h" />
+    <ClInclude Include="..\scene\mixin\ReferenceCounted.h" />
+    <ClInclude Include="..\scene\mixin\Renderable.h" />
+    <ClInclude Include="..\scene\NodeAnimObject.h" />
+    <ClInclude Include="..\scene\NodeAnimObjectMotion.h" />
+    <ClInclude Include="..\scene\NodeBase.h" />
+    <ClInclude Include="..\scene\NodeObject.h" />
+    <ClInclude Include="..\scene\NodeObjectMotion.h" />
+    <ClInclude Include="..\scene\NodeTransform.h" />
+    <ClInclude Include="..\scene\ObjectFactory.h" />
+    <ClInclude Include="..\scene\ObjectFactoryBase.h" />
     <ClInclude Include="..\scene\ReflectiveShadowMap.h" />
+    <ClInclude Include="..\scene\RenderContext.h" />
+    <ClInclude Include="..\scene\RenderQueue.h" />
+    <ClInclude Include="..\scene\render\AnimObject.h" />
+    <ClInclude Include="..\scene\render\Geometry.h" />
+    <ClInclude Include="..\scene\render\InputLayoutManager.h" />
+    <ClInclude Include="..\scene\render\Material.h" />
+    <ClInclude Include="..\scene\render\Mesh.h" />
+    <ClInclude Include="..\scene\render\Node.h" />
+    <ClInclude Include="..\scene\render\Object.h" />
+    <ClInclude Include="..\scene\render\ObjectContent.h" />
+    <ClInclude Include="..\scene\render\render.h" />
+    <ClInclude Include="..\scene\render\ShaderID.h" />
+    <ClInclude Include="..\scene\render\ShaderManager.h" />
+    <ClInclude Include="..\scene\render\ShaderSet.h" />
+    <ClInclude Include="..\scene\Resource.h" />
+    <ClInclude Include="..\scene\Resources.h" />
+    <ClInclude Include="..\scene\RingBuffer.h" />
     <ClInclude Include="..\scene\Scene.h" />
     <ClInclude Include="..\Application.h" />
-    <ClInclude Include="..\Flags.h" />
     <ClInclude Include="..\lframework.h" />
     <ClInclude Include="..\MessageDriven.h" />
+    <ClInclude Include="..\scene\SceneManager.h" />
+    <ClInclude Include="..\scene\SceneRenderable.h" />
+    <ClInclude Include="..\scene\ShaderCompiler.h" />
+    <ClInclude Include="..\scene\ShaderConstant.h" />
     <ClInclude Include="..\scene\ShadowMap.h" />
-    <ClInclude Include="..\Static.h" />
+    <ClInclude Include="..\scene\SystemBase.h" />
+    <ClInclude Include="..\scene\TransientBuffer.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

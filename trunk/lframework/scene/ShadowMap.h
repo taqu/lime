@@ -15,7 +15,7 @@ namespace lscene
     class ShadowMap
     {
     public:
-        static const s32 MaxCascades = 4;
+        static const s32 MaxCascades = lscene::MaxCascades;
         static const u8 FitType_ToCascades = 0;
         static const u8 FitType_ToScene = 1;
 
@@ -39,13 +39,19 @@ namespace lscene
             return resolution_;
         }
 
-        s32 getPCFBlurSize() const
+        f32 getInvResolution() const
+        {
+            return invResolution_;
+        }
+
+        f32 getPCFBlurSize() const
         {
             return pcfBlurSize_;
         }
 
-        void setPCFBlurSize(s32 size)
+        void setPCFBlurSize(f32 size)
         {
+            LASSERT(0.0f<=size);
             pcfBlurSize_ = size;
         }
 
@@ -91,34 +97,58 @@ namespace lscene
             return lightProjection_[cascade];
         }
 
+        const lmath::Matrix44& getLightViewProjection(s32 cascade) const
+        {
+            LASSERT(0<=cascade && cascade<cascadeLevels_);
+            return lightViewProjection_[cascade];
+        }
+
         f32 getCascadePartition(s32 cascade) const
         {
             LASSERT(0<=cascade && cascade<cascadeLevels_);
-            return cascadePartitionsFrustum_[cascade];
+            //return cascadePartitionsFrustum_[cascade];
+            return cascadePartitions_[cascade+1];
         }
 
         void calcCascadePartitions(f32 logRatio);
+
+        inline void getLightProjectionAlign16(lmath::Matrix44* dstAligned) const;
+        inline void getLightViewProjectionAlign16(lmath::Matrix44* dstAligned) const;
     private:
+        lmath::Vector4 sceneAABBMin_;
+        lmath::Vector4 sceneAABBMax_;
+
+        lmath::Matrix44* lightProjection_;
+        lmath::Matrix44* lightViewProjection_;
+        u8 bufferMatrices_[sizeof(lmath::Matrix44)*MaxCascades*2 + 16];
+
         s32 cascadeLevels_;
         s32 resolution_;
+        f32 invResolution_;
+        f32 pcfBlurSize_;
         f32 znear_;
         f32 zfar_;
-        s32 pcfBlurSize_;
         u8 fitType_;
         u8 moveLightTexelSize_;
         u8 fitNearFar_;
         u8 reserved3_;
 
-        lmath::Vector4 sceneAABBMin_;
-        lmath::Vector4 sceneAABBMax_;
-
         void createSceneAABBPoints(lmath::Vector4 dst[8]);
         void getNearFar(f32& nearPlane, f32& farPlane, lmath::Vector4& lightViewOrthoMin, lmath::Vector4& lightViewOrthoMax, lmath::Vector4* viewPoints);
 
         f32 cascadePartitions_[MaxCascades+1];
-        f32 cascadePartitionsFrustum_[MaxCascades+1];
-        lmath::Matrix44 lightProjection_[MaxCascades];
+        //f32 cascadePartitionsFrustum_[MaxCascades+1];
     };
+
+    inline void ShadowMap::getLightProjectionAlign16(lmath::Matrix44* dstAligned) const
+    {
+        lscene::copyAlign16Size16Times(dstAligned, lightProjection_, sizeof(lmath::Matrix44)*MaxCascades);
+    }
+
+    inline void ShadowMap::getLightViewProjectionAlign16(lmath::Matrix44* dstAligned) const
+    {
+        lscene::copyAlign16Size16Times(dstAligned, lightViewProjection_, sizeof(lmath::Matrix44)*MaxCascades);
+    }
 }
 
 #endif //INC_LFRAMEWORK_SHADOWMAP_H__
