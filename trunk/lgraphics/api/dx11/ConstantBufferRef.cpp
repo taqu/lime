@@ -9,34 +9,35 @@
 
 namespace lgraphics
 {
-    void ConstantBufferRef::setVS(u32 start)
+    void ConstantBufferRef::setVS(ContextRef& context, u32 start)
     {
-        Graphics::getDevice().setVSConstantBuffers(start, 1, &buffer_);
+        context.setVSConstantBuffers(start, 1, &buffer_);
     }
 
-    void ConstantBufferRef::setGS(u32 start)
+    void ConstantBufferRef::setGS(ContextRef& context, u32 start)
     {
-        Graphics::getDevice().setGSConstantBuffers(start, 1, &buffer_);
+        context.setGSConstantBuffers(start, 1, &buffer_);
     }
 
-    void ConstantBufferRef::setPS(u32 start)
+    void ConstantBufferRef::setPS(ContextRef& context, u32 start)
     {
-        Graphics::getDevice().setPSConstantBuffers(start, 1, &buffer_);
+        context.setPSConstantBuffers(start, 1, &buffer_);
     }
 
-    void ConstantBufferRef::setCS(u32 start)
+    void ConstantBufferRef::setCS(ContextRef& context, u32 start)
     {
-        Graphics::getDevice().setCSConstantBuffers(start, 1, &buffer_);
+        context.setCSConstantBuffers(start, 1, &buffer_);
     }
 
     void ConstantBufferRef::update(
+        ContextRef& context,
         u32 dstSubresource,
         const Box* dstBox,
         const void* srcData,
         u32 srcRowPitch,
         u32 srcDepthPitch)
     {
-        Graphics::getDevice().updateSubresource(
+        context.updateSubresource(
             buffer_,
             dstSubresource,
             dstBox,

@@ -25,9 +25,9 @@ namespace lgraphics
         SAFE_RELEASE(layout_);
     }
 
-    void InputLayoutRef::attach()
+    void InputLayoutRef::attach(ContextRef& context)
     {
-        lgraphics::Graphics::getDevice().setInputLayout(layout_);
+        context.setInputLayout(layout_);
     }
 
     InputLayoutRef InputLayout::create(

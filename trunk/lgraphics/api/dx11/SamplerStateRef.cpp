@@ -26,6 +26,27 @@ namespace lgraphics
         SAFE_RELEASE(state_);
     }
 
+    void SamplerStateRef::setVS(ContextRef& context, u32 start)
+    {
+        context.setVSSamplerStates(start, 1, &state_);
+    }
+
+    void SamplerStateRef::setGS(ContextRef& context, u32 start)
+    {
+        context.setGSSamplerStates(start, 1, &state_);
+    }
+
+    void SamplerStateRef::setPS(ContextRef& context, u32 start)
+    {
+        context.setPSSamplerStates(start, 1, &state_);
+    }
+
+    void SamplerStateRef::setCS(ContextRef& context, u32 start)
+    {
+        context.setCSSamplerStates(start, 1, &state_);
+    }
+
+
     //------------------------------------------------------------
     //---
     //--- SamplerState

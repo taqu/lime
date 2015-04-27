@@ -39,11 +39,11 @@ namespace lgraphics
             BufferRefBase::swap(rhs);
         }
 
-        void attach(DataFormat format, u32 offsetInBytes);
+        void attach(ContextRef& context, DataFormat format, u32 offsetInBytes);
     private:
         friend class IndexBuffer;
 
-        IndexBufferRef(ID3D11Buffer* buffer)
+        IndexBufferRef(BufferRefBase::pointer_type buffer)
             :BufferRefBase(buffer)
         {}
     };

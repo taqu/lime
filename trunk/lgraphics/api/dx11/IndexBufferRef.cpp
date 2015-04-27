@@ -10,8 +10,8 @@
 
 namespace lgraphics
 {
-    void IndexBufferRef::attach(DataFormat format, u32 offsetInBytes)
+    void IndexBufferRef::attach(ContextRef& context, DataFormat format, u32 offsetInBytes)
     {
-        lgraphics::Graphics::getDevice().setIndexBuffer(buffer_, format, offsetInBytes);
+        context.setIndexBuffer(buffer_, format, offsetInBytes);
     }
 }

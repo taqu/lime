@@ -9,6 +9,8 @@
 
 namespace lgraphics
 {
+    class ContextRef;
+
     struct Box;
 
     //------------------------------------------------------------
@@ -41,12 +43,13 @@ namespace lgraphics
             BufferRefBase::swap(rhs);
         }
 
-        void setVS(u32 start);
-        void setGS(u32 start);
-        void setPS(u32 start);
-        void setCS(u32 start);
+        void setVS(ContextRef& context, u32 start);
+        void setGS(ContextRef& context, u32 start);
+        void setPS(ContextRef& context, u32 start);
+        void setCS(ContextRef& context, u32 start);
 
         void update(
+            ContextRef& context,
             u32 dstSubresource,
             const Box* dstBox,
             const void* srcData,

@@ -4,6 +4,7 @@
 @date 2013/07/24 create
 */
 #include <png.h>
+#include <lcore/clibrary.h>
 #include <lcore/vector.h>
 
 #include "../lgraphicsAPIInclude.h"

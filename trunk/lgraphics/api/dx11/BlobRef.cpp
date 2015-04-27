@@ -21,7 +21,7 @@ namespace lgraphics
         }
     }
 
-    BlobRef::BlobRef(ID3D10Blob* blob)
+    BlobRef::BlobRef(pointer_type blob)
         :blob_(blob)
     {
     }

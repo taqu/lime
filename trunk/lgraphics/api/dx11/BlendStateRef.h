@@ -12,6 +12,8 @@ struct ID3D11BlendState;
 
 namespace lgraphics
 {
+    class ContextRef;
+
     //------------------------------------------------------------
     //---
     //--- BlendStateRef
@@ -20,6 +22,9 @@ namespace lgraphics
     class BlendStateRef
     {
     public:
+        typedef ID3D11BlendState element_type;
+        typedef ID3D11BlendState* pointer_type;
+
         BlendStateRef()
             :state_(NULL)
         {}
@@ -35,13 +40,15 @@ namespace lgraphics
 
         BlendStateRef& operator=(const BlendStateRef& rhs)
         {
-            BlendStateRef tmp(rhs);
-            tmp.swap(*this);
+            BlendStateRef(rhs).swap(*this);
             return *this;
         }
 
-        ID3D11BlendState* get(){ return state_;}
+        pointer_type getBlendState(){ return state_;}
+        pointer_type const* get(){ return &state_;}
         bool valid() const{ return (NULL != state_);}
+
+        void attach(ContextRef& context);
 
         void swap(BlendStateRef& rhs)
         {
@@ -51,11 +58,11 @@ namespace lgraphics
     private:
         friend class BlendState;
 
-        explicit BlendStateRef(ID3D11BlendState* state)
+        explicit BlendStateRef(pointer_type state)
             :state_(state)
         {}
 
-        ID3D11BlendState* state_;
+        pointer_type state_;
     };
 
     //------------------------------------------------------------

@@ -15,9 +15,9 @@ namespace lgraphics
     //--- VertexBufferRef
     //---
     //------------------------------------------------------------
-    void VertexBufferRef::attach(u32 startSlot, u32 stride, u32 offsetInBytes)
+    void VertexBufferRef::attach(ContextRef& context, u32 startSlot, u32 stride, u32 offsetInBytes)
     {
-        lgraphics::Graphics::getDevice().setVertexBuffers(
+        context.setVertexBuffers(
             startSlot,
             1,
             &buffer_,
@@ -25,9 +25,9 @@ namespace lgraphics
             &offsetInBytes);
     }
 
-    void VertexBufferRef::attachStreamOut(u32 offsetInBytes)
+    void VertexBufferRef::attachStreamOut(ContextRef& context, u32 offsetInBytes)
     {
-        lgraphics::Graphics::getDevice().setStreamOutTargets(
+        context.setStreamOutTargets(
             1,
             &buffer_,
             &offsetInBytes);

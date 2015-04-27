@@ -4,8 +4,13 @@
 @date 2010/03/23 create
 */
 #include "GraphicsDeviceRef.h"
+
+#include <lcore/clibrary.h>
+
 #include "InitParam.h"
 #include "BlendStateRef.h"
+#include "AsynchronousRef.h"
+#include "PredicateRef.h"
 
 namespace lgraphics
 {
@@ -36,7 +41,7 @@ namespace lgraphics
         SAFE_RELEASE(state_);
     }
 
-    DepthStencilStateRef::DepthStencilStateRef(ID3D11DepthStencilState* state)
+    DepthStencilStateRef::DepthStencilStateRef(pointer_type state)
         :state_(state)
     {}
 
@@ -45,10 +50,14 @@ namespace lgraphics
         return (NULL != state_);
     }
 
+    void DepthStencilStateRef::attach(ContextRef& context, u32 stencilRef)
+    {
+        context.setDepthStencilState(state_, stencilRef);
+    }
+
     DepthStencilStateRef& DepthStencilStateRef::operator=(const DepthStencilStateRef& rhs)
     {
-        DepthStencilStateRef tmp(rhs);
-        tmp.swap(*this);
+        DepthStencilStateRef(rhs).swap(*this);
         return *this;
     }
 
@@ -59,10 +68,48 @@ namespace lgraphics
 
     //--------------------------------------
     //---
-    //--- GraphicsDeviceRef
+    //--- CommandListRef
     //---
     //--------------------------------------
+    CommandListRef::CommandListRef()
+        :commandList_(NULL)
+    {
+    }
 
+    CommandListRef::CommandListRef(const CommandListRef& rhs)
+        :commandList_(rhs.commandList_)
+    {
+        if(NULL != commandList_){
+            commandList_->AddRef();
+        }
+    }
+
+    CommandListRef::CommandListRef(pointer_type commandList)
+        :commandList_(commandList)
+    {
+    }
+
+    CommandListRef::~CommandListRef()
+    {
+        SAFE_RELEASE(commandList_);
+    }
+
+    CommandListRef& CommandListRef::operator=(const CommandListRef& rhs)
+    {
+        CommandListRef(rhs).swap(*this);
+        return *this;
+    }
+
+    void CommandListRef::swap(CommandListRef& rhs)
+    {
+        lcore::swap(commandList_, rhs.commandList_);
+    }
+
+    //--------------------------------------
+    //---
+    //--- ContextRef
+    //---
+    //--------------------------------------
     static const Char* GSModels[] =
     {
         "gs_4_0",
@@ -91,40 +138,50 @@ namespace lgraphics
         "cs_5_0",
     };
 
-    const f32 GraphicsDeviceRef::Zero[4] = {0.0f, 0.0f, 0.0f, 0.0f};
-    const f32 GraphicsDeviceRef::One[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+    static const Char* DSModels[] =
+    {
+        "",
+        "",
+        "ds_5_0",
+    };
 
-    const u32 GraphicsDeviceRef::UIZero[4] = {0, 0, 0, 0};
+    static const Char* HSModels[] =
+    {
+        "",
+        "",
+        "hs_5_0",
+    };
 
-    ID3D11ShaderResourceView* const GraphicsDeviceRef::NULLResources[GraphicsDeviceRef::MaxShaderResources] =
+    const f32 ContextRef::Zero[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+    const f32 ContextRef::One[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+    const u32 ContextRef::UIZero[4] = {0, 0, 0, 0};
+
+    ID3D11ShaderResourceView* const ContextRef::NULLResources[GraphicsDeviceRef::MaxShaderResources] =
     { NULL, };
 
-    ID3D11RenderTargetView* const GraphicsDeviceRef::NullTargets[MaxRenderTargets] =
+    ID3D11RenderTargetView* const ContextRef::NullTargets[MaxRenderTargets] =
     { NULL, };
 
-    const Char* GraphicsDeviceRef::GSModel = GSModels[0];
-    const Char* GraphicsDeviceRef::VSModel = VSModels[0];
-    const Char* GraphicsDeviceRef::PSModel = PSModels[0];
-    const Char* GraphicsDeviceRef::CSModel = CSModels[0];
+    const Char* ContextRef::GSModel = GSModels[0];
+    const Char* ContextRef::VSModel = VSModels[0];
+    const Char* ContextRef::PSModel = PSModels[0];
+    const Char* ContextRef::CSModel = CSModels[0];
+    const Char* ContextRef::DSModel = DSModels[0];
+    const Char* ContextRef::HSModel = HSModels[0];
 
-    GraphicsDeviceRef::GraphicsDeviceRef()
-        :flags_(0)
-        ,clearDepth_(1.0f)
-        ,clearStencil_(0)
-        ,clearDepthStencilFlag_(ClearDepth)
-        ,syncInterval_(0)
-        ,featureLevel_(0)
-        ,device_(NULL)
+    ContextRef::ContextRef()
+        :featureFlags_(FeatureFlag_None)
+        ,viewportX_(0)
+        ,viewportY_(0)
+        ,viewportWidth_(0)
+        ,viewportHeight_(0)
         ,context_(NULL)
-        ,swapChain_(NULL)
         ,backBuffer_(NULL)
         ,renderTargetView_(NULL)
         ,depthStencil_(NULL)
         ,depthStencilView_(NULL)
         ,depthStencilShaderResourceView_(NULL)
-#ifdef _DEBUG
-        ,debug_(NULL)
-#endif
     {
         for(u32 i=0; i<MaxRenderTargets; ++i){
             blendFactors_[i] = 1.0f;
@@ -143,6 +200,347 @@ namespace lgraphics
         }
     }
 
+    ContextRef::ContextRef(const ContextRef& rhs)
+        :featureFlags_(rhs.featureFlags_)
+        ,viewportX_(rhs.viewportX_)
+        ,viewportY_(rhs.viewportY_)
+        ,viewportWidth_(rhs.viewportWidth_)
+        ,viewportHeight_(rhs.viewportHeight_)
+        ,context_(rhs.context_)
+        ,backBuffer_(rhs.backBuffer_)
+        ,renderTargetView_(rhs.renderTargetView_)
+        ,depthStencil_(rhs.depthStencil_)
+        ,depthStencilView_(rhs.depthStencilView_)
+        ,depthStencilShaderResourceView_(rhs.depthStencilShaderResourceView_)
+    {
+        for(s32 i=0; i<Rasterizer_Num; ++i){
+            rasterizerStates_[i] = rhs.rasterizerStates_[i];
+        }
+
+        for(u32 i=0; i<MaxRenderTargets; ++i){
+            blendFactors_[i] = rhs.blendFactors_[i];
+        }
+
+        for(s32 i=0; i<DepthStencil_Num; ++i){
+            depthStencilStates_[i] = rhs.depthStencilStates_[i];
+        }
+
+        for(s32 i=0; i<BlendState_Num; ++i){
+            blendStates_[i] = rhs.blendStates_[i];
+        }
+        if(context_){
+            context_->AddRef();
+        }
+        addRef();
+    }
+
+    ContextRef::ContextRef(ID3D11Device* device, ID3D11DeviceContext* context, const ContextRef& rhs)
+        :featureFlags_(FeatureFlag_None)
+        ,viewportX_(rhs.viewportX_)
+        ,viewportY_(rhs.viewportY_)
+        ,viewportWidth_(rhs.viewportWidth_)
+        ,viewportHeight_(rhs.viewportHeight_)
+        ,context_(context)
+        ,backBuffer_(rhs.backBuffer_)
+        ,renderTargetView_(rhs.renderTargetView_)
+        ,depthStencil_(rhs.depthStencil_)
+        ,depthStencilView_(rhs.depthStencilView_)
+        ,depthStencilShaderResourceView_(rhs.depthStencilShaderResourceView_)
+    {
+        for(s32 i=0; i<Rasterizer_Num; ++i){
+            rasterizerStates_[i] = rhs.rasterizerStates_[i];
+        }
+
+        for(u32 i=0; i<MaxRenderTargets; ++i){
+            blendFactors_[i] = rhs.blendFactors_[i];
+        }
+
+        for(s32 i=0; i<DepthStencil_Num; ++i){
+            depthStencilStates_[i] = rhs.depthStencilStates_[i];
+        }
+
+        for(s32 i=0; i<BlendState_Num; ++i){
+            blendStates_[i] = rhs.blendStates_[i];
+        }
+        addRef();
+        setFeatureFlags(device);
+    }
+
+    ContextRef::~ContextRef()
+    {
+        terminate();
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::addRef()
+    {
+        for(s32 i=0; i<Rasterizer_Num; ++i){
+            if(rasterizerStates_[i]){
+                rasterizerStates_[i]->AddRef();
+            }
+        }
+
+        for(s32 i=0; i<DepthStencil_Num; ++i){
+            if(depthStencilStates_[i]){
+                depthStencilStates_[i]->AddRef();
+            }
+        }
+
+        for(s32 i=0; i<BlendState_Num; ++i){
+            if(blendStates_[i]){
+                blendStates_[i]->AddRef();
+            }
+        }
+
+        if(backBuffer_){
+            backBuffer_->AddRef();
+        }
+
+        if(renderTargetView_){
+            renderTargetView_->AddRef();
+        }
+
+        if(depthStencil_){
+            depthStencil_->AddRef();
+        }
+
+        if(depthStencilView_){
+            depthStencilView_->AddRef();
+        }
+
+        if(depthStencilShaderResourceView_){
+            depthStencilShaderResourceView_->AddRef();
+        }
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::terminate()
+    {
+        if(NULL != context_){
+            context_->OMSetRenderTargets(0, NULL, NULL);
+            context_->ClearState();
+            context_->Flush();
+        }
+
+        SAFE_RELEASE(depthStencilShaderResourceView_);
+        SAFE_RELEASE(renderTargetView_);
+        SAFE_RELEASE(depthStencilView_);
+        SAFE_RELEASE(backBuffer_);
+        SAFE_RELEASE(depthStencil_);
+
+        for(s32 i=0; i<BlendState_Num; ++i){
+            SAFE_RELEASE(blendStates_[i]);
+        }
+
+        for(s32 i=0; i<DepthStencil_Num; ++i){
+            SAFE_RELEASE(depthStencilStates_[i]);
+        }
+
+        for(s32 i=0; i<Rasterizer_Num; ++i){
+            SAFE_RELEASE(rasterizerStates_[i]);
+        }
+
+        SAFE_RELEASE(context_);
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::setViewport(u32 x, u32 y, u32 width, u32 height)
+    {
+        D3D11_VIEWPORT vp;
+        vp.Width = static_cast<f32>(width);
+        vp.Height = static_cast<f32>(height);
+        vp.MinDepth = 0.0f;
+        vp.MaxDepth = 1.0f;
+        vp.TopLeftX = static_cast<f32>(x);
+        vp.TopLeftY = static_cast<f32>(y);
+        context_->RSSetViewports(1, &vp );
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::setDefaultViewport(u32 x, u32 y, u32 width, u32 height)
+    {
+        viewportX_ = x;
+        viewportY_ = y;
+        viewportWidth_ = width;
+        viewportHeight_ = height;
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::restoreDefaultViewport()
+    {
+        setViewport(viewportX_, viewportY_, viewportWidth_, viewportHeight_);
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::restoreDefaultRenderTargets()
+    {
+        context_->OMSetRenderTargets(1, &renderTargetView_, depthStencilView_);
+        restoreDefaultViewport();
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::getRenderTargetDesc(u32& width, u32& height)
+    {
+        width = 1;
+        height = 1;
+
+        D3D11_TEXTURE2D_DESC desc;
+        backBuffer_->GetDesc(&desc);
+
+        width = desc.Width;
+        height = desc.Height;
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::begin(AsynchronousRef& asynchronous)
+    {
+        context_->Begin(asynchronous.asynchronous_);
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::end(AsynchronousRef& asynchronous)
+    {
+        context_->End(asynchronous.asynchronous_);
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::setPredicate(PredicateRef& predicate, BOOL predicateValue)
+    {
+        context_->SetPredication((ID3D11Predicate*)predicate.asynchronous_, predicateValue);
+    }
+
+    //---------------------------------------------------------
+    s32 ContextRef::getData(AsynchronousRef& asynchronous, void* data, u32 size, u32 flag)
+    {
+        HRESULT hr = context_->GetData(asynchronous.asynchronous_, data, size, flag);
+        return hr;
+    }
+
+    //---------------------------------------------------------
+    CommandListRef ContextRef::finishCommandList(s32 restoreState)
+    {
+        CommandListRef tmp;
+        context_->FinishCommandList(restoreState, &tmp.commandList_);
+        return tmp;
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::executeCommandList(CommandListRef& commandList, s32 restoreState)
+    {
+        LASSERT(commandList.valid());
+        context_->ExecuteCommandList(commandList.commandList_, restoreState);
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::swap(ContextRef& rhs)
+    {
+        lcore::swap(featureFlags_, rhs.featureFlags_);
+        lcore::swap(viewportX_, rhs.viewportX_);
+        lcore::swap(viewportY_, rhs.viewportY_);
+        lcore::swap(viewportWidth_, rhs.viewportWidth_);
+        lcore::swap(viewportHeight_, rhs.viewportHeight_);
+
+        lcore::swap(context_, rhs.context_);
+
+        for(s32 i=0; i<Rasterizer_Num; ++i){
+            lcore::swap(rasterizerStates_[i], rhs.rasterizerStates_[i]);
+        }
+
+        for(u32 i=0; i<MaxRenderTargets; ++i){
+            lcore::swap(blendFactors_[i], rhs.blendFactors_[i]);
+        }
+
+        for(s32 i=0; i<DepthStencil_Num; ++i){
+            lcore::swap(depthStencilStates_[i], rhs.depthStencilStates_[i]);
+        }
+
+        for(s32 i=0; i<BlendState_Num; ++i){
+            lcore::swap(blendStates_[i], rhs.blendStates_[i]);
+        }
+
+        lcore::swap(backBuffer_, rhs.backBuffer_);
+        lcore::swap(renderTargetView_, rhs.renderTargetView_);
+        lcore::swap(depthStencil_, rhs.depthStencil_);
+        lcore::swap(depthStencilView_, rhs.depthStencilView_);
+        lcore::swap(depthStencilShaderResourceView_, rhs.depthStencilShaderResourceView_);
+    }
+
+    void ContextRef::setFeatureFlags(ID3D11Device* device)
+    {
+        featureFlags_ = FeatureFlag_None;
+
+        D3D11_DEVICE_CONTEXT_TYPE contextType = context_->GetType();
+
+        if(D3D11_DEVICE_CONTEXT_DEFERRED == contextType){
+            featureFlags_ |= FeatureFlag_Deffered;
+            D3D11_FEATURE_DATA_THREADING threadingCaps = { FALSE, FALSE };
+            HRESULT hr = device->CheckFeatureSupport( D3D11_FEATURE_THREADING, &threadingCaps, sizeof(threadingCaps) );
+            if(SUCCEEDED(hr)){
+                if(threadingCaps.DriverCommandLists){
+                    featureFlags_ |= FeatureFlag_CommandList;
+                }
+            }
+        }else{
+            featureFlags_ |= FeatureFlag_Immediate;
+        }
+    }
+
+    //--------------------------------------
+    //---
+    //--- DefferedContextRef
+    //---
+    //--------------------------------------
+    DefferedContextRef::DefferedContextRef()
+    {
+    }
+
+    DefferedContextRef::DefferedContextRef(const DefferedContextRef& rhs)
+        :ContextRef(rhs)
+    {
+    }
+
+    DefferedContextRef::DefferedContextRef(ID3D11Device* device, ID3D11DeviceContext* context, const ContextRef& rhs)
+        :ContextRef(device, context, rhs)
+    {
+    }
+
+    DefferedContextRef::~DefferedContextRef()
+    {
+        ContextRef::terminate();
+    }
+
+    DefferedContextRef& DefferedContextRef::operator=(const DefferedContextRef& rhs)
+    {
+        DefferedContextRef tmp(rhs);
+        tmp.swap(*this);
+        return *this;
+    }
+
+    void DefferedContextRef::swap(DefferedContextRef& rhs)
+    {
+        ContextRef::swap(rhs);
+    }
+
+    void DefferedContextRef::terminate()
+    {
+        ContextRef::terminate();
+    }
+
+    //--------------------------------------
+    //---
+    //--- GraphicsDeviceRef
+    //---
+    //--------------------------------------
+    GraphicsDeviceRef::GraphicsDeviceRef()
+        :flags_(0)
+        ,syncInterval_(0)
+        ,featureLevel_(0)
+        ,maximumFrameLatency_(0)
+        ,device_(NULL)
+        ,swapChain_(NULL)
+    {
+    }
+
     GraphicsDeviceRef::~GraphicsDeviceRef()
     {
     }
@@ -153,9 +551,9 @@ namespace lgraphics
         LASSERT(0<initParam.supportHardwareLevel_);
 
         flags_ = initParam.flags_;
-        u32 deviceFlags = 0;
+        u32 deviceFlags = initParam.deviceFlags_;
 #ifdef _DEBUG
-        deviceFlags |= D3D11_CREATE_DEVICE_DEBUG;
+        deviceFlags |= CreateDevice_Debug;
 #endif
 
         // スワップ設定
@@ -247,11 +645,11 @@ namespace lgraphics
                 return false;
             }
         }
-        featureLevel_ = supportedLevel;
+        LIME_DEBUGNAME(swapChain_, "System SwapCain");
+        LIME_DEBUGNAME(device_, "System Device");
+        LIME_DEBUGNAME(context_, "System Context");
 
-#ifdef _DEBUG
-        device_->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debug_));
-#endif
+        featureLevel_ = supportedLevel;
 
         switch(supportedLevel)
         {
@@ -260,6 +658,8 @@ namespace lgraphics
             GSModel = GSModels[0];
             PSModel = PSModels[0];
             CSModel = CSModels[0];
+            DSModel = DSModels[0];
+            HSModel = HSModels[0];
             break;
 
         case D3D_FEATURE_LEVEL_10_1:
@@ -267,6 +667,8 @@ namespace lgraphics
             GSModel = GSModels[1];
             PSModel = PSModels[1];
             CSModel = CSModels[1];
+            DSModel = DSModels[1];
+            HSModel = HSModels[1];
             break;
 
         case D3D_FEATURE_LEVEL_11_0:
@@ -275,14 +677,29 @@ namespace lgraphics
             GSModel = GSModels[2];
             PSModel = PSModels[2];
             CSModel = CSModels[2];
+            DSModel = DSModels[2];
+            HSModel = HSModels[2];
             break;
+        }
+
+        {
+            IDXGIDevice1* dxgiDevice = NULL;
+            hr = device_->QueryInterface(__uuidof(IDXGIDevice1), (void**)&dxgiDevice);
+            if(SUCCEEDED(hr)){
+                UINT maximumFrameLatency = lcore::minimum(16U, initParam.maximumFrameLatency_);
+                dxgiDevice->SetMaximumFrameLatency(maximumFrameLatency);
+                hr = dxgiDevice->GetMaximumFrameLatency(&maximumFrameLatency);
+                maximumFrameLatency_ = (SUCCEEDED(hr))? maximumFrameLatency : 3U;
+                dxgiDevice->Release();
+            } else{
+                maximumFrameLatency_ = 3U;
+            }
         }
 
         createBackBuffer(width, height, initParam.depthStencilFormat_, flags_);
 
         syncInterval_ = initParam.interval_;
         refreshRate_ = lcore::clamp(initParam.refreshRate_, MinRefreshRate, MaxRefreshRate);
-        clearColor_[0] = clearColor_[1] = clearColor_[2] = clearColor_[3] = 1.0f;
 
         {//ラスタライザステート
             D3D11_RASTERIZER_DESC rasterizerDesc;
@@ -325,7 +742,7 @@ namespace lgraphics
             rasterizerDesc.FillMode = D3D11_FILL_SOLID;
 
             //デプスバッファのフォーマットによってDepthBiasの扱いが異なる
-            const f32 depthBias = 0.0001f;
+            const f32 depthBias = initParam.depthBias_;
             switch(initParam.shadowMapFormat_)
             {
             case lgraphics::Data_D16_UNorm:
@@ -342,8 +759,8 @@ namespace lgraphics
                 break;
             };
 
-            rasterizerDesc.SlopeScaledDepthBias = 1.0f;
-            rasterizerDesc.DepthBiasClamp = 0.02f;
+            rasterizerDesc.SlopeScaledDepthBias = initParam.slopeScaledDepthBias_;
+            rasterizerDesc.DepthBiasClamp = initParam.depthBiasClamp_;
 
             hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_DepthMap]);
             if(FAILED(hr)){
@@ -351,6 +768,12 @@ namespace lgraphics
             }
 
             setRasterizerState(lgraphics::GraphicsDeviceRef::Rasterizer_FillSolid);
+
+#ifdef _DEBUG
+            for(s32 i=0; i<Rasterizer_Num; ++i){
+                LIME_DEBUGNAME(rasterizerStates_[i], "System Rasterize State");
+            }
+#endif
         }
 
         {//DepthStencilステート
@@ -375,7 +798,18 @@ namespace lgraphics
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DDisableWDisable]);
 
+            desc.DepthEnable = TRUE;
+            desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+            desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_LessEqual);
+            device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWDisableLessEqual]);
+
             setDepthStencilState(DepthStencil_DEnableWEnable);
+
+#ifdef _DEBUG
+            for(s32 i=0; i<DepthStencil_Num; ++i){
+                LIME_DEBUGNAME(depthStencilStates_[i], "System Depth Stencil State");
+            }
+#endif
         }
 
         {//ブレンドステート
@@ -411,7 +845,25 @@ namespace lgraphics
                 lgraphics::Blend_One,
                 lgraphics::BlendOp_Add,
                 lgraphics::ColorWrite_All);
+
+            blendStates_[BlendState_Add] = lgraphics::BlendState::createRaw(
+                FALSE,
+                TRUE,
+                lgraphics::Blend_One,
+                lgraphics::Blend_One,
+                lgraphics::BlendOp_Add,
+                lgraphics::Blend_One,
+                lgraphics::Blend_One,
+                lgraphics::BlendOp_Add,
+                lgraphics::ColorWrite_All);
+#ifdef _DEBUG
+            for(s32 i=0; i<BlendState_Num; ++i){
+                LIME_DEBUGNAME(blendStates_[i], "System Blend State");
+            }
+#endif
         }
+
+        setFeatureFlags(device_);
 
         if(0 == initParam.windowed_){
             ShowCursor(FALSE);
@@ -423,30 +875,7 @@ namespace lgraphics
     //---------------------------------------------------------
     void GraphicsDeviceRef::terminate()
     {
-        if(NULL != context_){
-            context_->ClearState();
-            context_->Flush();
-        }
-
-        context_->OMSetRenderTargets(0, NULL, NULL);
-
-        for(s32 i=0; i<BlendState_Num; ++i){
-            SAFE_RELEASE(blendStates_[i]);
-        }
-
-        for(s32 i=0; i<DepthStencil_Num; ++i){
-            SAFE_RELEASE(depthStencilStates_[i]);
-        }
-
-        for(s32 i=0; i<Rasterizer_Num; ++i){
-            SAFE_RELEASE(rasterizerStates_[i]);
-        }
-
-        SAFE_RELEASE(depthStencilShaderResourceView_);
-        SAFE_RELEASE(renderTargetView_);
-        SAFE_RELEASE(depthStencilView_);
-        SAFE_RELEASE(backBuffer_);
-        SAFE_RELEASE(depthStencil_);
+        ContextRef::terminate();
 
         if(NULL != swapChain_){
             BOOL fullscreen = FALSE;
@@ -460,15 +889,13 @@ namespace lgraphics
             swapChain_->Release();
             swapChain_ = NULL;
         }
-
-
-        SAFE_RELEASE(context_);
-
 #ifdef _DEBUG
-        if(NULL != debug_){
-            debug_->ReportLiveDeviceObjects(D3D11_RLDO_DETAIL);
+        ID3D11Debug* debug = NULL;
+        device_->QueryInterface(__uuidof(ID3D11Debug), reinterpret_cast<void**>(&debug));
+        if(NULL != debug){
+            debug->ReportLiveDeviceObjects(D3D11_RLDO_SUMMARY|D3D11_RLDO_DETAIL);
+            SAFE_RELEASE(debug);
         }
-        SAFE_RELEASE(debug_);
 #endif
         SAFE_RELEASE(device_);
     }
@@ -480,11 +907,14 @@ namespace lgraphics
         if(FAILED(hr)){
             return false;
         }
+        LIME_DEBUGNAME(backBuffer_, "System Back Buffer");
 
         hr = device_->CreateRenderTargetView(backBuffer_, NULL, &renderTargetView_);
         if(FAILED(hr)){
             return false;
         }
+        LIME_DEBUGNAME(renderTargetView_, "System Render Target View");
+        lcore::Log("create render target view for backbuffer");
 
         if(depthStencilFormat != 0){
             DXGI_FORMAT depthFormat = (DXGI_FORMAT)depthStencilFormat;
@@ -524,6 +954,7 @@ namespace lgraphics
             if(FAILED(hr)){
                 return false;
             }
+            LIME_DEBUGNAME(depthStencil_, "System Depth Stencil Texture");
 
             D3D11_DEPTH_STENCIL_VIEW_DESC viewDesc;
             lcore::memset(&viewDesc, 0, sizeof(D3D11_DEPTH_STENCIL_VIEW_DESC));
@@ -568,6 +999,7 @@ namespace lgraphics
                 if(FAILED(hr)){
                     return false;
                 }
+                LIME_DEBUGNAME(depthStencilShaderResourceView_, "System Depth Stencil View");
             }
         }
 
@@ -578,52 +1010,7 @@ namespace lgraphics
         return true;
     }
 
-    //---------------------------------------------------------
-    void GraphicsDeviceRef::setBlendState(BlendStateRef& state)
-    {
-        context_->OMSetBlendState(state.get(), blendFactors_, 0xFFFFFFFFU);
-    }
-
-    //---------------------------------------------------------
-    void GraphicsDeviceRef::getRenderTargetDesc(u32& width, u32& height)
-    {
-        width = 1;
-        height = 1;
-
-        D3D11_TEXTURE2D_DESC desc;
-        backBuffer_->GetDesc(&desc);
-
-        width = desc.Width;
-        height = desc.Height;
-    }
-
-    //---------------------------------------------------------
-    void GraphicsDeviceRef::setViewport(u32 x, u32 y, u32 width, u32 height)
-    {
-        D3D11_VIEWPORT vp;
-        vp.Width = static_cast<f32>(width);
-        vp.Height = static_cast<f32>(height);
-        vp.MinDepth = 0.0f;
-        vp.MaxDepth = 1.0f;
-        vp.TopLeftX = static_cast<f32>(x);
-        vp.TopLeftY = static_cast<f32>(y);
-        context_->RSSetViewports(1, &vp );
-    }
-
-    //---------------------------------------------------------
-    void GraphicsDeviceRef::setDefaultViewport(u32 x, u32 y, u32 width, u32 height)
-    {
-        viewportX_ = x;
-        viewportY_ = y;
-        viewportWidth_ = width;
-        viewportHeight_ = height;
-    }
-
-    //---------------------------------------------------------
-    void GraphicsDeviceRef::restoreDefaultViewport()
-    {
-        setViewport(viewportX_, viewportY_, viewportWidth_, viewportHeight_);
-    }
+    
 
     //---------------------------------------------------------
     void GraphicsDeviceRef::onSize(u32 /*width*/, u32 /*height*/)
@@ -683,13 +1070,6 @@ namespace lgraphics
     }
 
     //---------------------------------------------------------
-    void GraphicsDeviceRef::restoreDefaultRenderTargets()
-    {
-        context_->OMSetRenderTargets(1, &renderTargetView_, depthStencilView_);
-        restoreDefaultViewport();
-    }
-
-    //---------------------------------------------------------
     DepthStencilStateRef GraphicsDeviceRef::createDepthStencilState(
         bool depthEnable,
         DepthWriteMask depthWriteMask,
@@ -724,13 +1104,6 @@ namespace lgraphics
         return DepthStencilStateRef(state);
     }
 
-    //---------------------------------------------------------
-    void GraphicsDeviceRef::setDepthStencilState(DepthStencilStateRef& state, u32 stencilRef)
-    {
-        LASSERT(state.valid());
-
-        context_->OMSetDepthStencilState(state.state_, stencilRef);
-    }
 
     //---------------------------------------------------------
     bool GraphicsDeviceRef::checkMultisampleQualityLevels(
@@ -743,4 +1116,30 @@ namespace lgraphics
         HRESULT hr = device_->CheckMultisampleQualityLevels((DXGI_FORMAT)format, sampleCount, qualityLevels);
         return SUCCEEDED(hr);
     }
+
+    //---------------------------------------------------------
+    DefferedContextRef GraphicsDeviceRef::createDefferedContext()
+    {
+        ID3D11DeviceContext* deffered;
+        HRESULT hr = device_->CreateDeferredContext(0, &deffered);
+        if(FAILED(hr)){
+            return DefferedContextRef();
+        }
+        return DefferedContextRef(device_, deffered, *this);
+    }
+
+
+    //--------------------------------------
+    //---
+    //--- ShaderResourceView
+    //---
+    //--------------------------------------
+    ID3D11ShaderResourceView* ShaderResourceView::resources_[6];
+
+    //--------------------------------------
+    //---
+    //--- ShaderSamplerState
+    //---
+    //--------------------------------------
+    ID3D11SamplerState* ShaderSamplerState::states_[6];
 }

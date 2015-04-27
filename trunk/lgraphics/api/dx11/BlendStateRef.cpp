@@ -26,6 +26,11 @@ namespace lgraphics
         SAFE_RELEASE(state_);
     }
 
+    void BlendStateRef::attach(ContextRef& context)
+    {
+        context.setBlendState(state_);
+    }
+
     //------------------------------------------------------------
     //---
     //--- BlendState

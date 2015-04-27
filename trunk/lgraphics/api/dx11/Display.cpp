@@ -4,6 +4,9 @@
 @date 2013/05/16 create
 */
 #include "Display.h"
+
+#include <lcore/clibrary.h>
+
 #include "../../lgraphicscore.h"
 #include "../../lgraphicsAPIInclude.h"
 #include "InitParam.h"
