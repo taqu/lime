@@ -11,8 +11,6 @@
 
 namespace lmath
 {
-    const f32 SphereRadiusEpsilon =1.0e-5f;
-
 #if defined(LMATH_USE_SSE)
     namespace
     {
@@ -344,6 +342,95 @@ namespace lmath
         }
         x /= width;
         return 1.0f - x*x*(3.0f-2.0f*x);
+    }
+
+    f32 criticallyDampedSpring(f32 target, f32 current, f32& velocity, f32 timeStep, f32 maxVelocity)
+    {
+        f32 difference = target - current;
+        f32 springForce = difference;
+        f32 dampingForce = velocity * -2.0f;
+        f32 force = springForce + dampingForce;
+        velocity += force * timeStep;
+        velocity = lcore::clamp(velocity, -maxVelocity, maxVelocity);
+        return current + velocity * timeStep;
+    }
+
+    f32 criticallyDampedSpring(f32 target, f32 current, f32& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity)
+    {
+        f32 difference = target - current;
+        f32 springForce = difference * dampingRatio;
+        f32 dampingForce = velocity * -2.0f * sqrtf(dampingRatio);
+        f32 force = springForce + dampingForce;
+        velocity += force * timeStep;
+        velocity = lcore::clamp(velocity, -maxVelocity, maxVelocity);
+        return current + velocity * timeStep;
+    }
+
+    f32 criticallyDampedSpring2(f32 target, f32 current, f32& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity)
+    {
+        f32 difference = target - current;
+        f32 springForce = difference * sqrtDampingRatio * sqrtDampingRatio;
+        f32 dampingForce = velocity * -2.0f * sqrtDampingRatio;
+        f32 force = springForce + dampingForce;
+        velocity += force * timeStep;
+        velocity = lcore::clamp(velocity, -maxVelocity, maxVelocity);
+        return current + velocity * timeStep;
+    }
+
+    void criticallyDampedSpring(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 timeStep, f32 maxVelocity)
+    {
+        lmath::Vector4 difference;
+        difference.sub(target, current);
+        const lmath::Vector4& springForce = difference;
+        lmath::Vector4 dampingForce;
+        dampingForce.mul(-2.0f, velocity);
+
+        lmath::Vector4 force;
+        force.add(springForce, dampingForce);
+        velocity.muladd(timeStep, force, velocity);
+        f32 velocityMaginitude = velocity.length();
+        if(maxVelocity<velocityMaginitude){
+            velocity *= maxVelocity/velocityMaginitude;
+        }
+        current.muladd(timeStep, velocity, current);
+    }
+
+    void criticallyDampedSpring(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity)
+    {
+        lmath::Vector4 difference;
+        difference.sub(target, current);
+        lmath::Vector4 sprintForce;
+        sprintForce.mul(dampingRatio, difference);
+        lmath::Vector4 dampingForce;
+        dampingForce.mul(-2.0f*sqrtf(dampingRatio), velocity);
+
+        lmath::Vector4 force;
+        force.add(sprintForce, dampingForce);
+        velocity.muladd(timeStep, force, velocity);
+        f32 velocityMaginitude = velocity.length();
+        if(maxVelocity<velocityMaginitude){
+            velocity *= maxVelocity/velocityMaginitude;
+        }
+        current.muladd(timeStep, velocity, current);
+    }
+
+    void criticallyDampedSpring2(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity)
+    {
+        lmath::Vector4 difference;
+        difference.sub(target, current);
+        lmath::Vector4 sprintForce;
+        sprintForce.mul(sqrtDampingRatio*sqrtDampingRatio, difference);
+        lmath::Vector4 dampingForce;
+        dampingForce.mul(-2.0f*sqrtDampingRatio, velocity);
+
+        lmath::Vector4 force;
+        force.add(sprintForce, dampingForce);
+        velocity.muladd(timeStep, force, velocity);
+        f32 velocityMaginitude = velocity.length();
+        if(maxVelocity<velocityMaginitude){
+            velocity *= maxVelocity/velocityMaginitude;
+        }
+        current.muladd(timeStep, velocity, current);
     }
 
     f32 gain(f32 a, f32 b)
@@ -704,5 +791,36 @@ namespace lmath
         mat.m_[0][0] = binormal0.x_; mat.m_[0][1] = binormal1.x_; mat.m_[0][2] = normal.x_;
         mat.m_[1][0] = binormal0.y_; mat.m_[1][1] = binormal1.y_; mat.m_[1][2] = normal.y_;
         mat.m_[2][0] = binormal0.z_; mat.m_[2][1] = binormal1.z_; mat.m_[2][2] = normal.z_;
+    }
+
+    void smoothTranslate(Vector4& dst, const Vector4& current, const Vector4& target, f32 maxDistance)
+    {
+        LASSERT(F32_EPSILON<maxDistance);
+
+        f32 distance = current.distance(target);
+        f32 t = lcore::clamp01(distance/maxDistance);
+        t = lmath::smooth(t);
+        dst.lerp(current, target, t);
+    }
+
+    void smoothRotate(Vector4& dst, const Vector4& current, const Vector4& target, f32 maxRotate)
+    {
+        LASSERT(F32_EPSILON<maxRotate);
+        f32 cosine = current.dot(target);
+        f32 omega = lmath::acos(cosine);
+
+        f32 t = lcore::clamp01(omega/maxRotate);
+        t = lmath::smooth(t);
+
+        if(F32_ANGLE_LIMIT1<=lcore::absolute(cosine)){
+            dst.lerp(current, target, t);
+        }else{
+            dst.slerp(current, target, t, cosine);
+        }
+    }
+
+    f32 calcFOVY(f32 height, f32 znear)
+    {
+        return 2.0f*lmath::atan2(0.5f*height, znear);
     }
 }

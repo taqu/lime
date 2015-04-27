@@ -12,6 +12,7 @@ namespace lmath
 {
     class Matrix44;
     class Quaternion;
+    class Vector4;
 
     //--------------------------------------------
     //---
@@ -87,6 +88,9 @@ namespace lmath
 
         /// 後から平行移動
         void translate(const Vector3& v);
+
+        /// 後から平行移動
+        void translate(const Vector4& v);
 
         /// 後から平行移動
         void translate(f32 x, f32 y, f32 z);

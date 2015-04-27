@@ -35,10 +35,10 @@ namespace lmath
             switch(numSos)
             {
             case 0:
-                sphere_ = Sphere(0.0f, 0.0f, 0.0f, SphereRadiusEpsilon);
+                sphere_ = Sphere(0.0f, 0.0f, 0.0f, 0.0f);
                 break;
             case 1:
-                sphere_ = Sphere(*points_[index-1], SphereRadiusEpsilon);
+                sphere_ = Sphere(*points_[index-1], 0.0f);
                 break;
             case 2:
                 sphere_ = Sphere::circumscribed(*points_[index-1], *points_[index-2]);
@@ -80,7 +80,7 @@ namespace lmath
         d.sub(p1, p0);
         d *= 0.5f;
 
-        f32 radius = d.length() + SphereRadiusEpsilon;
+        f32 radius = d.length();
 
         Vector3 center;
         center.add(p0, d);
@@ -142,7 +142,7 @@ namespace lmath
 
         float denom = (n0 + n1 + n2) * (-n0 + n1 + n2) * (n0 - n1 + n2) * (n0 + n1 - n2);
         denom = lmath::sqrt(denom);
-        r = n0 * n1 * n2 / denom + SphereRadiusEpsilon;
+        r = n0 * n1 * n2 / denom;
 
         return Sphere(center, r);
     }
@@ -164,7 +164,7 @@ namespace lmath
             center += p3;
             center *= 0.25f;
 
-            r = p0.distance(center) + SphereRadiusEpsilon;
+            r = p0.distance(center);
             return Sphere(center, r);
         }
 
@@ -189,7 +189,7 @@ namespace lmath
 
         center += p0;
 
-        r = p0.distance(center) + SphereRadiusEpsilon;
+        r = p0.distance(center);
         return Sphere(center, r);
     }
 
@@ -211,45 +211,24 @@ namespace lmath
 
     void Sphere::combine(const Sphere& s0, const Sphere& s1)
     {
-        f32 distance = s0.s_.distance3(s1.s_);
+        lmath::Vector4 dv;
+        dv.sub(s0.s_, s1.s_);
 
-        f32 d = (s0.s_.w_<s1.s_.w_)? s1.s_.w_ - s0.s_.w_ : s0.s_.w_ - s1.s_.w_;
-        if(distance<=d){
+        f32 distance = lmath::sqrt(dv.x_*dv.x_ + dv.y_*dv.y_ + dv.z_*dv.z_);
+
+        f32 d = (s0.s_.w_<s1.s_.w_)? -dv.w_ : dv.w_;
+        if(distance<=(d+F32_EPSILON)){
             s_ = (s0.s_.w_<s1.s_.w_)? s1.s_ : s0.s_;
 
         }else{
 
-            f32 r = s0.s_.w_ + s1.s_.w_;
-            r += distance;
-            r *= 0.5f;
+            f32 r = (s0.s_.w_ + s1.s_.w_ + distance) * 0.5f;
 
             d = (s0.s_.w_<s1.s_.w_)? s1.s_.w_ : s0.s_.w_;
             d = r - d;
 
             s_.lerp(s0.s_, s1.s_, d/distance);
-            s_.w_ = r + SphereRadiusEpsilon;
-        }
-    }
-
-    void Sphere::add(const Sphere& s1)
-    {
-        f32 distance = s_.distance3(s1.s_);
-
-        f32 d = (s_.w_<s1.s_.w_)? s1.s_.w_ - s_.w_ : s_.w_ - s1.s_.w_;
-        if(distance<=d){
-            s_ = (s_.w_<s1.s_.w_)? s1.s_ : s_;
-
-        }else{
-
-            f32 r = s_.w_ + s1.s_.w_;
-            r += distance;
-            r *= 0.5f;
-
-            d = (s_.w_<s1.s_.w_)? s1.s_.w_ : s_.w_;
-            d = r - d;
-
-            s_.lerp(s_, s1.s_, d/distance);
-            s_.w_ = r + SphereRadiusEpsilon;
+            s_.w_ = r;
         }
     }
 
