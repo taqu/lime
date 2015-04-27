@@ -7,18 +7,56 @@
 
 */
 #include "DirectionalLight.h"
+//#include <lgraphics/api/TextureRef.h>
 
 namespace lscene
 {
     class LightEnvironment
     {
     public:
-        const DirectionalLight& getDirectionalLight() const{ return directional_;}
-        DirectionalLight& getDirectionalLight(){ return directional_;}
+        inline const DirectionalLight& getDirectionalLight() const;
+        inline DirectionalLight& getDirectionalLight();
 
+        //inline lgraphics::Texture2DRef& getIrradianceMap();
+        //inline void setIrradianceMap(lgraphics::Texture2DRef& irradianceMap);
+
+        //inline lgraphics::Texture2DRef& getSpecularMap();
+        //inline void setSpecularMap(lgraphics::Texture2DRef& specularMap);
     private:
         DirectionalLight directional_;
+        //lgraphics::Texture2DRef irradianceMap_;
+        //lgraphics::Texture2DRef specularMap_;
     };
+
+    inline const DirectionalLight& LightEnvironment::getDirectionalLight() const
+    {
+        return directional_;
+    }
+
+    inline DirectionalLight& LightEnvironment::getDirectionalLight()
+    {
+        return directional_;
+    }
+
+    //inline lgraphics::Texture2DRef& LightEnvironment::getIrradianceMap()
+    //{
+    //    return irradianceMap_;
+    //}
+
+    //inline void LightEnvironment::setIrradianceMap(lgraphics::Texture2DRef& irradianceMap)
+    //{
+    //    irradianceMap_ = irradianceMap;
+    //}
+
+    //inline lgraphics::Texture2DRef& LightEnvironment::getSpecularMap()
+    //{
+    //    return specularMap_;
+    //}
+
+    //inline void LightEnvironment::setSpecularMap(lgraphics::Texture2DRef& specularMap)
+    //{
+    //    specularMap_ = specularMap;
+    //}
 }
 
 #endif //INC_LSCENE_LIGHTENVIRONMENT_H__

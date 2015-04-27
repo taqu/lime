@@ -14,6 +14,9 @@ namespace lscene
 {
     Scene::Scene()
     {
+        u8* p = lcore::align16(buffer_);
+        camera_ = reinterpret_cast<Camera*>(p);
+        lightEnv_ = reinterpret_cast<LightEnvironment*>(p + sizeof(Camera));
     }
 
     Scene::~Scene()

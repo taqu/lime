@@ -43,14 +43,13 @@ namespace lscene
         }
 
     private:
-        s32 resolution_;
-
+        lmath::Matrix44 lightProjection_;
         lmath::Vector4 sceneAABBMin_;
         lmath::Vector4 sceneAABBMax_;
 
-        void createSceneAABBPoints(lmath::Vector4 dst[8]);
+        s32 resolution_;
 
-        lmath::Matrix44 lightProjection_;
+        void createSceneAABBPoints(lmath::Vector4 dst[8]);
     };
 }
 

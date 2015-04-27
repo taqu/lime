@@ -42,7 +42,15 @@ namespace lscene
         */
         bool contains(const lmath::Vector3& position, f32 radius) const
         {
-            contains(position.x_, position.y_, position.z_, radius);
+            return contains(position.x_, position.y_, position.z_, radius);
+        }
+
+        /**
+        @brief 球が視錐台内にあるか
+        */
+        bool contains(const lmath::Vector4& position, f32 radius) const
+        {
+            return contains(position.x_, position.y_, position.z_, radius);
         }
 
         /**

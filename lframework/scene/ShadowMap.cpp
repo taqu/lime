@@ -12,6 +12,8 @@ namespace lscene
     ShadowMap::ShadowMap()
         :cascadeLevels_(1)
         ,resolution_(1)
+        ,invResolution_(1.0f)
+        ,pcfBlurSize_(0.0f)
         ,znear_(0.0f)
         ,zfar_(1.0f)
         ,fitType_(FitType_ToCascades)
@@ -20,6 +22,10 @@ namespace lscene
     {
         sceneAABBMin_.zero();
         sceneAABBMax_.zero();
+
+        u8* p = lcore::align16(bufferMatrices_);
+        lightProjection_ = reinterpret_cast<lmath::Matrix44*>(p);
+        lightViewProjection_ = reinterpret_cast<lmath::Matrix44*>(p + sizeof(lmath::Matrix44)*MaxCascades);
     }
 
     ShadowMap::~ShadowMap()
@@ -29,7 +35,8 @@ namespace lscene
     void ShadowMap::initialize(s32 cascadeLevels, s32 resolution, f32 znear, f32 zfar, f32 logRatio)
     {
         cascadeLevels_ = cascadeLevels;
-        resolution_ = resolution;
+        resolution_ = lcore::maximum(1, resolution);
+        invResolution_ = 1.0f/resolution_;
         znear_ = znear;
         zfar_ = zfar;
         calcCascadePartitions(logRatio);
@@ -42,7 +49,6 @@ namespace lscene
 
         lmath::Matrix44 invView(view);
         invView.invert();
-
 
         lmath::Vector4 sceneAABBPointsInLightView[8];
         createSceneAABBPoints(sceneAABBPointsInLightView);
@@ -161,7 +167,9 @@ namespace lscene
                 nearPlane,
                 farPlane);
 
-            cascadePartitionsFrustum_[cascade] = frustumIntervalEnd;
+            lightViewProjection_[cascade].mul(lightProjection_[cascade], lightView);
+
+            //cascadePartitionsFrustum_[cascade] = frustumIntervalEnd;
         }
     }
 

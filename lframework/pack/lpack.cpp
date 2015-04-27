@@ -5,6 +5,7 @@
 
 */
 #include "lpack.h"
+#include <lcore/clibrary.h>
 
 namespace lpack
 {
