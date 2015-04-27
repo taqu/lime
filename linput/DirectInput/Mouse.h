@@ -30,6 +30,7 @@ namespace linput
 
         inline s32 getX() const;
         inline s32 getY() const;
+        inline s32 getZ() const;
         inline s32 get(MouseAxis axis) const;
 
         void resize();
@@ -82,6 +83,11 @@ namespace linput
     inline s32 Mouse::getY() const
     {
         return mousePoint_.value_[MouseAxis_Y];
+    }
+
+    inline s32 Mouse::getZ() const
+    {
+        return mousePoint_.value_[MouseAxis_Z];
     }
 
     inline s32 Mouse::get(MouseAxis axis) const
