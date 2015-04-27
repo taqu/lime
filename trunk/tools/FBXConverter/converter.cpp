@@ -6,10 +6,12 @@
 */
 #include "converter.h"
 #include <fstream>
-
+#include <lcore/utility.h>
 #include <lmath/lmath.h>
 
-namespace load
+namespace lscene
+{
+namespace lload
 {
 namespace
 {
@@ -145,15 +147,38 @@ namespace
         }
         filename[len] = '\0';
     }
+
+    void convertExtension(Char* filename, s32 size, const Char* ext)
+    {
+        s32 len = lcore::strlen(filename);
+        s32 extLen = lcore::strlen(ext);
+
+        s32 s = len;
+        for(s32 i=len-1; 0<=i; --i){
+            if(filename[i] == '.'){
+                s = i+1;
+                break;
+            }
+        }
+
+        s32 e = s+extLen;
+        if(size<=e){
+            e = size-1;
+        }
+        for(s32 i=s; i<e; ++i){
+            filename[i]=ext[i-s];
+        }
+        filename[e] = '\0';
+    }
 }
 
 
     //-----------------------------------------------------------------------------
-    void JointAnimationCVT::add(u32 frame, const lmath::Vector3& translation, const lmath::Quaternion& rotation)
+    void JointAnimationCVT::add(f32 time, const lmath::Vector3& translation, const lmath::Quaternion& rotation)
     {
         if(poses_.size()<=0){
-            JointPoseWithFrame pose;
-            pose.frameNo_ = frame;
+            JointPoseWithTime pose;
+            pose.time_ = time;
             pose.translation_ = translation;
             pose.rotation_ = rotation;
             poses_.push_back(pose);
@@ -162,42 +187,42 @@ namespace
 
         u32 index = poses_.size();
         for(u32 i=0; i<poses_.size(); ++i){
-            if(poses_[i].frameNo_ == frame){
+            if(lmath::isEqual(poses_[i].time_, time, LANIM_ANIMATION_TIME_EPSILON)){
                 poses_[i].translation_ = translation;
                 poses_[i].rotation_ = rotation;
                 return;
             }
 
-            if(frame<poses_[i].frameNo_){
+            if(time<poses_[i].time_){
                 index = i+1;
                 break;
             }
         }
-        JointPoseWithFrame pose;
+        JointPoseWithTime pose;
         poses_.push_back(pose);
 
         for(u32 i=index+1; i<poses_.size(); ++i){
             poses_[i] = poses_[i-1];
         }
 
-        poses_[index].frameNo_ = frame;
+        poses_[index].time_ = time;
         poses_[index].translation_ = translation;
         poses_[index].rotation_ = rotation;
     }
 
     //-----------------------------------------------------------------------------
-    void AnimationClipCVT::calcLastFrame()
+    void AnimationClipCVT::calcLastTime()
     {
-        u32 lastFrame = 0;
+        f32 lastTime = 0;
         for(u32 i=0; i<jointAnims_.size(); ++i){
             for(u32 j=0; j<jointAnims_[i].poses_.size(); ++j){
-                u32 t = jointAnims_[i].poses_[j].frameNo_;
-                if(lastFrame<t){
-                    lastFrame = t;
+                f32 t = jointAnims_[i].poses_[j].time_;
+                if(lastTime<t){
+                    lastTime = t;
                 }
             }
         }
-        lastFrame_ = static_cast<f32>(lastFrame);
+        lastTime_ = lastTime;
     }
 
     //-----------------------------------------------------------------------------
@@ -211,10 +236,11 @@ namespace
 
             ios->SetBoolProp(IMP_FBX_MATERIAL, true);
             ios->SetBoolProp(IMP_FBX_TEXTURE, true);
-            ios->SetBoolProp(IMP_FBX_LINK, false);
-            ios->SetBoolProp(IMP_FBX_SHAPE, false);
-            ios->SetBoolProp(IMP_FBX_GOBO, false);
+            ios->SetBoolProp(IMP_FBX_LINK, true);
+            ios->SetBoolProp(IMP_FBX_SHAPE, true);
+            ios->SetBoolProp(IMP_FBX_GOBO, true);
             ios->SetBoolProp(IMP_FBX_ANIMATION, true);
+            ios->SetBoolProp(IMP_FBX_MODEL, true);
             ios->SetBoolProp(IMP_FBX_GLOBAL_SETTINGS, true);
         }
 
@@ -257,6 +283,18 @@ namespace
             sc->Destroy();
             return false;
         }
+
+        //FbxAxisSystem axisSystem(FbxAxisSystem::eYAxis, (FbxAxisSystem::EFrontVector)-FbxAxisSystem::eParityOdd, FbxAxisSystem::eLeftHanded);
+        FbxAxisSystem axisSystem = FbxAxisSystem::OpenGL;
+        //FbxAxisSystem axisSystem = FbxAxisSystem::DirectX;
+        if(sc->GetGlobalSettings().GetAxisSystem() != axisSystem){
+            axisSystem.ConvertScene(sc);
+        }
+
+        //FbxSystemUnit sceneSystemUnit = sc->GetGlobalSettings().GetSystemUnit();
+        //if(sceneSystemUnit != FbxSystemUnit::cm){
+        //    FbxSystemUnit::cm.ConvertScene(sc);
+        //}
 
         Scene tmp(sc);
         scene.swap(tmp);
@@ -303,6 +341,8 @@ namespace
 
 
     Converter::Converter()
+        :forceDDS_(false)
+        ,boneRootNode_(NULL)
     {
     }
 
@@ -312,6 +352,8 @@ namespace
 
     bool Converter::process(FbxScene* scene)
     {
+        scene_ = scene;
+
         {//テクスチャ保存
             s32 count = scene->GetTextureCount();
             for(s32 i=0; i<count; ++i){
@@ -337,7 +379,9 @@ namespace
                 }
 
                 extractFileName(tex.name_, MaxFileNameSize, fileTexture->GetFileName());
-  
+                if(forceDDS_){
+                    convertExtension(tex.name_, MaxFileNameSize, "dds");
+                }
                 fbxTextures_.push_back(texture);
                 textures_.push_back(tex);
             }
@@ -349,26 +393,16 @@ namespace
 
         {//スケルトン生成
             traverseSkeletonNode(root);
-            for(u32 i=0; i<skeletonNodes_.size(); ++i){
-                Joint joint;
-                s32 index = findSkeletonNode(skeletonNodes_[i]->GetParent());
-                joint.parent_ = (index<0)? InvalidNode : static_cast<u8>(index);
-                joint.subjectTo_ = 0;
-                joint.type_ = 0;
-                joint.flag_ = 0;
-
-                const FbxAMatrix& transform = skeletonNodes_[i]->EvaluateGlobalTransform();
-                const FbxDouble4 translation = transform.GetT();
-                //const FbxDouble3 local = skeletonNodes_[i]->LclTranslation;
-                joint.position_.set(
-                    static_cast<f32>(translation[0]),
-                    static_cast<f32>(translation[1]),
-                    static_cast<f32>(translation[2]));
-                
-                copyName(joint.name_, skeletonNodes_[i]->GetName());
-
-                joints_.push_back(joint);
+            joints_.resize(skeletonNodes_.size());
+            for(u32 i=0; i<joints_.size(); ++i){
+                joints_[i].parent_ = InvalidNode;
+                joints_[i].subjectTo_ = InvalidNode;
+                joints_[i].type_ = 0;
+                joints_[i].flag_ = 0;
+                joints_[i].initialMatrix_.identity();
+                joints_[i].name_[0] = '\0';
             }
+            traverseJoint(root);
         }
 
         for(s32 i=0; i<root->GetChildCount(); ++i){
@@ -388,7 +422,7 @@ namespace
             ++count;
         }
 
-        traverseAnimation(scene);
+        traverseAnimation();
         return true;
     }
 
@@ -421,20 +455,74 @@ namespace
                 continue;
             }
             skeletonNodes_.push_back(child);
-            traverseSkeletonNode(child);
+            traverseSkeletonNode(root->GetChild(i));
+        }
+    }
+
+    void Converter::pushJoint(FbxNode* node)
+    {
+        const FbxNodeAttribute* attr = node->GetNodeAttribute();
+        if(NULL == attr){
+            return;
+        }
+        if(FbxNodeAttribute::eMesh != attr->GetAttributeType()){
+            return;
         }
 
+        FbxMesh* mesh = node->GetMesh();
+        s32 skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
+
+        for(s32 j=0; j<skinCount; ++j){
+            FbxSkin* skin = (FbxSkin*)mesh->GetDeformer(j, FbxDeformer::eSkin);
+            for(s32 k=0; k<skin->GetClusterCount(); ++k){
+                FbxCluster* cluster = skin->GetCluster(k);
+                FbxNode* skeletonNode = cluster->GetLink();
+                s32 boneIndex = findSkeletonNode(skeletonNode);
+                if(boneIndex<0){
+                    continue;
+                }
+                Joint& joint = joints_[boneIndex];
+                s32 parentIndex = findSkeletonNode(skeletonNode->GetParent());
+                joint.parent_ = (parentIndex<0)? InvalidNode : static_cast<u8>(parentIndex);
+                joint.subjectTo_ = 0;
+                joint.type_ = 0;
+                joint.flag_ = 0;
+
+                copyName(joint.name_, skeletonNode->GetName());
+                if(NULL != cluster){
+                    FbxAMatrix boneBindPose;
+                    cluster->GetTransformLinkMatrix(boneBindPose);
+                    //const FbxDouble4 translation = boneBindPose.GetT();
+                    //const FbxQuaternion rotation = boneBindPose.GetQ();
+                    //joint.translation_.set(
+                    //    static_cast<f32>(translation[0]),
+                    //    static_cast<f32>(translation[1]),
+                    //    static_cast<f32>(translation[2]));
+                    //joint.rotation_.set(
+                    //    static_cast<f32>(rotation[3]),
+                    //    static_cast<f32>(rotation[0]),
+                    //    static_cast<f32>(rotation[1]),
+                    //    static_cast<f32>(rotation[2]));
+                    //joint.rotation_.normalize();
+                    for(s32 l=0; l<3; ++l){
+                        for(s32 m=0; m<4; ++m){
+                            joint.initialMatrix_.m_[l][m] = boneBindPose[m][l];
+                        }
+                    }
+                }else{
+                    joint.initialMatrix_.identity();
+                }
+            }
+        } //for(s32 j=0;
+    }
+
+    void Converter::traverseJoint(FbxNode* root)
+    {
         for(s32 i=0; i<root->GetChildCount(); ++i){
             FbxNode* child = root->GetChild(i);
-            const FbxNodeAttribute* attr = child->GetNodeAttribute();
-            if(NULL == attr){
-                continue;
-            }
-            if(FbxNodeAttribute::eSkeleton == attr->GetAttributeType()){
-                continue;
-            }
-            traverseSkeletonNode(child);
-        }
+            pushJoint(child);
+            traverseJoint(child);
+        } //for(s32 i=0;
     }
 
     void Converter::traverseNode(FbxNode* node, s32 index)
@@ -691,16 +779,15 @@ namespace
 
         //スキン
         if(0<mesh->GetDeformerCount(FbxDeformer::eSkin)){
-            geometry.bones_.resize(geometry.numVertices_*DimBone);
-            geometry.weights_.resize(geometry.numVertices_*DimBoneWeight);
+            geometry.bones_.resize(geometry.numVertices_);
 
             //無効値で埋める
-            lcore::memset(&geometry.bones_[0], 0xFF, sizeof(u16)*geometry.numVertices_*DimBone);
-            lcore::memset(&geometry.weights_[0], 0, sizeof(u16)*geometry.numVertices_*DimBoneWeight);
+            for(u32 i=0; i<geometry.bones_.size(); ++i){
+                geometry.bones_[i].setInvalid();
+            }
 
             u32 count = 0;
             s32 skinCount = mesh->GetDeformerCount(FbxDeformer::eSkin);
-
             for(s32 i=0; i<skinCount; ++i){
                 FbxSkin* skin = (FbxSkin*)mesh->GetDeformer(i, FbxDeformer::eSkin);
                 count += getSkinInfo(geometry, skin);
@@ -708,11 +795,26 @@ namespace
 
             //無効なボーンは0に
             for(u32 i=0; i<geometry.bones_.size(); ++i){
-                if(0xFFFFU == geometry.bones_[i]){
-                    geometry.bones_[i] = 0;
-                }
+                geometry.bones_[i].setZero();
+                geometry.bones_[i].correct();
             }
             //LASSERT(count == geometry.numVertices_);
+#if 0
+            {
+                log_.open("bones.txt");
+                for(u32 i=0; i<geometry.bones_.size(); ++i){
+                    Bone& bone = geometry.bones_[i];
+
+                    log_.print("[%d] ", bone.count_);
+                    for(s32 j=0; j<bone.count_; ++j){
+                        log_.print("%d:%f, ", bone.indices_[j], bone.weights_[j]);
+                    }
+                    log_.print("\n");
+                }
+
+                log_.close();
+            }
+#endif
         }
 
 
@@ -813,7 +915,7 @@ namespace
             f32 z = geometry.normals_[index + 2];
             f32 l = x*x + y*y + z*z;
             if(false == lmath::isZeroPositive(l)){
-                l = -1.0f/lmath::sqrt(l);
+                l = 1.0f/lmath::sqrt(l);
                 geometry.normals_[index + 0] *= l;
                 geometry.normals_[index + 1] *= l;
                 geometry.normals_[index + 2] *= l;
@@ -915,7 +1017,7 @@ namespace
             f32 z = geometry.tangents_[index + 2];
             f32 l = x*x + y*y + z*z;
             if(false == lmath::isZeroPositive(l)){
-                l = -1.0f/lmath::sqrt(l);
+                l = 1.0f/lmath::sqrt(l);
                 geometry.tangents_[index + 0] *= l;
                 geometry.tangents_[index + 1] *= l;
                 geometry.tangents_[index + 2] *= l;
@@ -1017,7 +1119,7 @@ namespace
             f32 z = geometry.binormals_[index + 2];
             f32 l = x*x + y*y + z*z;
             if(false == lmath::isZeroPositive(l)){
-                l = -1.0f/lmath::sqrt(l);
+                l = 1.0f/lmath::sqrt(l);
                 geometry.binormals_[index + 0] *= l;
                 geometry.binormals_[index + 1] *= l;
                 geometry.binormals_[index + 2] *= l;
@@ -1191,20 +1293,24 @@ namespace
         u32 count = 0;
         for(s32 i=0; i<skin->GetClusterCount(); ++i){
             FbxCluster* cluster = skin->GetCluster(i);
-
+            s32 boneIndex = findSkeletonNode(cluster->GetLink());
+            if(boneIndex<0){
+                continue;
+            }
             s32* indices = cluster->GetControlPointIndices();
             f64* weights = cluster->GetControlPointWeights();
             for(s32 j=0; j<cluster->GetControlPointIndicesCount(); ++j){
-                s32 index = indices[j] * DimBone;
+                s32 index = indices[j];
 
-                if(geometry.bones_[index] != 0xFFFFU){
-                    ++index;
-                    if(geometry.bones_[index] != 0xFFFFU){
-                        continue;
-                    }
+                Bone& bone = geometry.bones_[index];
+
+                if(!bone.hasEmpty()){
+                    continue;
                 }
-                geometry.bones_[index] = static_cast<u16>(i);
-                geometry.weights_[index] = lcore::toBinary16Float( static_cast<f32>(weights[j]) );
+
+                bone.indices_[bone.count_] = static_cast<u16>(boneIndex);
+                bone.weights_[bone.count_] = static_cast<f32>(weights[j]);
+                ++bone.count_;
                 ++count;
             }
         }
@@ -1222,14 +1328,15 @@ namespace
         int numMeshes = 0;
 
         int numMaterialLayers = 0;
-        for(int i=0; i<mesh->GetLayerCount(); ++i){
+        int layerCount = mesh->GetLayerCount();
+        for(int i=0; i<layerCount; ++i){
             FbxLayer* layer = mesh->GetLayer(i);
             if(NULL != layer->GetMaterials()){
                 ++numMaterialLayers;
             }
         }
 
-        if(0<numMaterialLayers){
+        if(1<numMaterialLayers){
             //マテリアル毎にインデックス配列をリマップ
             U16Vector* indexVectors = LIME_NEW U16Vector[materials_.size()];
 
@@ -1316,10 +1423,21 @@ namespace
             LIME_DELETE_ARRAY(indexVectors);
 
         }else{
+            int materialIndex = 0;
+            if(0<src->GetMaterialCount()){
+                FbxSurfaceMaterial* material = src->GetMaterial(0);
+
+                for(int i=0; i<scene_->GetMaterialCount(); ++i){
+                    if(material == scene_->GetMaterial(i)){
+                        materialIndex = i;
+                        break;
+                    }
+                }
+            }
             numMeshes = 1;
             Mesh meshCVT;
             meshCVT.geometry_ = geometryIndex;
-            meshCVT.material_ = 0;
+            meshCVT.material_ = materialIndex;
             meshCVT.indexOffset_ = 0;
             meshCVT.numIndices_ = geometry.indices_.size();
             calcSphere(meshCVT);
@@ -1372,12 +1490,19 @@ namespace
                 //    static_cast<f32>(phong->TransparentColor.Get()[2]),
                 //    static_cast<f32>(phong->SpecularFactor.Get()));
 
+                material.ambient_.set(
+                    static_cast<f32>(phong->Ambient.Get()[0]),
+                    static_cast<f32>(phong->Ambient.Get()[1]),
+                    static_cast<f32>(phong->Ambient.Get()[2]),
+                    1.0f);
+
                 material.shadow_.set(
                     0.0f,
                     0.0f,
                     0.0f,
-                    static_cast<f32>(phong->SpecularFactor.Get()));
+                    0.1f);
 
+                material.flags_ |= Material::Flag_RefractiveIndex;
 
             }else if( surface->GetClassId().Is(FbxSurfaceLambert::ClassId) ){
                 FbxSurfaceLambert* lambert = (FbxSurfaceLambert*)surface;
@@ -1395,18 +1520,24 @@ namespace
                 //    static_cast<f32>(lambert->TransparentColor.Get()[1]),
                 //    static_cast<f32>(lambert->TransparentColor.Get()[2]),
                 //    1.0f);
+                material.ambient_.set(
+                    static_cast<f32>(lambert->Ambient.Get()[0]),
+                    static_cast<f32>(lambert->Ambient.Get()[1]),
+                    static_cast<f32>(lambert->Ambient.Get()[2]),
+                    1.0f);
 
                 material.shadow_.set(
                     0.0f,
                     0.0f,
                     0.0f,
-                    1.0f);
+                    0.1f);
 
             }else{
                 material.diffuse_.set(0.0f, 0.0f, 0.0f, 1.0f);
                 material.specular_.set(0.0f, 0.0f, 0.0f, 0.0f);
                 //material.transparent_.set(0.0f, 0.0f, 0.0f, 1.0f);
-                material.shadow_.set(0.0f, 0.0f, 0.0f, 1.0f);
+                material.ambient_.set(0.0f, 0.0f, 0.0f, 1.0f);
+                material.shadow_.set(0.0f, 0.0f, 0.0f, 0.1f);
             }
 
             {
@@ -1434,7 +1565,8 @@ namespace
 
             material.diffuse_.one();
             material.specular_.one();
-            material.shadow_.set(0.0f, 0.0f, 0.0f, 1.0f);
+            material.ambient_.set(0.0f, 0.0f, 0.0f, lcore::calcFresnelTerm(1.0f));
+            material.shadow_.set(0.0f, 0.0f, 0.0f, 0.1f);
             material.flags_ = 0;
             material.texColor_ = -1;
             material.texNormal_ = -1;
@@ -1451,6 +1583,18 @@ namespace
         }
         return -1;
     }
+
+    //s32 Converter::findSkeletonLink(const FbxSkin* skin, const FbxNode* node) const
+    //{
+    //    for(s32 i=0; i<skin->GetClusterCount(); ++i){
+    //        const FbxCluster* cluster = skin->GetCluster(i);
+    //        const FbxNode* link = cluster->GetLink();
+    //        if(link == node){
+    //            return i;
+    //        }
+    //    }
+    //    return -1;
+    //}
 
     s16 Converter::findTexture(const FbxTexture* texture) const
     {
@@ -1490,7 +1634,7 @@ namespace
         vflag |= (0<geometry.colors_.size())? VElem_Color : 0;
         vflag |= (0<geometry.texcoords_.size())? VElem_Texcoord : 0;
         vflag |= (0<geometry.bones_.size())? VElem_Bone : 0;
-        vflag |= (0<geometry.weights_.size())? VElem_BoneWeight : 0;
+        vflag |= (0<geometry.bones_.size())? VElem_BoneWeight : 0;
 
         u32 vsize = 0;
         vsize += (0<geometry.positions_.size())? VSize_Position : 0;
@@ -1500,7 +1644,7 @@ namespace
         vsize += (0<geometry.colors_.size())? VSize_Color : 0;
         vsize += (0<geometry.texcoords_.size())? VSize_Texcoord : 0;
         vsize += (0<geometry.bones_.size())? VSize_Bone : 0;
-        vsize += (0<geometry.weights_.size())? VSize_BoneWeight : 0;
+        vsize += (0<geometry.bones_.size())? VSize_BoneWeight : 0;
 
         geometry.vflag_ = vflag;
         geometry.vsize_ = vsize;
@@ -1605,13 +1749,17 @@ namespace
                 }
 
                 if(0 < geometries_[i].bones_.size()){
-                    u16* bone = &(geometries_[i].bones_[DimBone*j]);
+                    u16* bone = geometries_[i].bones_[j].indices_;
                     writeBuffer(file, bone, VSize_Bone);
                 }
 
-                if(0 < geometries_[i].weights_.size()){
-                    u16* weight = &(geometries_[i].weights_[DimBoneWeight*j]);
-                    writeBuffer(file, weight, VSize_BoneWeight);
+                if(0 < geometries_[i].bones_.size()){
+                    f32* weight = geometries_[i].bones_[j].weights_;
+                    u16 work[DimBone];
+                    for(s32 k=0; k<DimBone; ++k){
+                        work[k] = lcore::toBinary16Float(weight[k]);
+                    }
+                    writeBuffer(file, work, VSize_BoneWeight);
                 }
             }
             u16* indices = &(geometries_[i].indices_[0]);
@@ -1657,12 +1805,12 @@ namespace
 
         
         Char name[MaxNameSize];
-        //lcore::extractFileName(name, MaxNameSize, path);
-        copyName(animationClip_.name_, name);
+        lcore::extractFileName(name, MaxNameSize, path);
+        //copyName(name, animationClip_.name_);
 
-        writeName(file, animationClip_.name_);
+        writeName(file, name);
 
-        write(file, animationClip_.lastFrame_);
+        write(file, animationClip_.lastTime_);
         u32 numClips = animationClip_.jointAnims_.size();
         write(file, numClips);
 
@@ -1677,10 +1825,10 @@ namespace
             write(file, size);
 
             for(u32 j=0; j<jointAnim.poses_.size(); ++j){
-                const JointPoseWithFrame& frame = jointAnim.poses_[j];
-                write(file, frame.frameNo_);
-                write(file, frame.translation_);
-                write(file, frame.rotation_);
+                const JointPoseWithTime& pose = jointAnim.poses_[j];
+                write(file, pose.time_);
+                write(file, pose.translation_);
+                write(file, pose.rotation_);
             }
         }
 
@@ -1688,25 +1836,45 @@ namespace
         return true;
     }
 
-    void Converter::traverseAnimation(FbxScene* scene)
+    void Converter::traverseAnimation()
     {
-        s32 animStackCount = scene->GetSrcObjectCount<FbxAnimStack>();
+        log_.open("log_animation.txt");
+
+        s32 animStackCount = scene_->GetSrcObjectCount<FbxAnimStack>();
         for(s32 i=0; i<animStackCount; ++i){
-            FbxAnimStack* animStack = scene->GetSrcObject<FbxAnimStack>(i);
-            s32 numAnimLayers = animStack->GetMemberCount<FbxAnimLayer>();
-            for(s32 j=0; j<numAnimLayers; ++j){
-                FbxAnimLayer* animLayer = animStack->GetMember<FbxAnimLayer>(i);
-                traverseAnimation(animLayer, scene->GetRootNode());
-            }
-            break;
+            FbxAnimStack* animStack = scene_->GetSrcObject<FbxAnimStack>(i);
+            //FbxTimeSpan timeSpan = animStack->GetLocalTimeSpan();
+            scene_->SetCurrentAnimationStack(animStack);
+            traverseAnimation(animStack, scene_->GetRootNode());
         }
-        animationClip_.calcLastFrame();
+        animationClip_.calcLastTime();
+        log_.close();
+
+        print(scene_);
+    }
+
+    void Converter::traverseAnimation(FbxAnimStack* animStack, FbxNode* node)
+    {
+        s32 numAnimLayers = animStack->GetMemberCount<FbxAnimLayer>();
+
+        for(s32 i=0; i<numAnimLayers; ++i){
+
+            FbxAnimLayer* animLayer = animStack->GetMember<FbxAnimLayer>(i);
+            traverseAnimation(animLayer, node);
+        }
     }
 
     void Converter::traverseAnimation(FbxAnimLayer* animLayer, FbxNode* node)
     {
-        FbxNodeAttribute* attr = node->GetNodeAttribute();
-        if(NULL != attr && attr->GetAttributeType() == FbxNodeAttribute::eSkeleton){
+        const FbxNodeAttribute* attr = node->GetNodeAttribute();
+
+        if(NULL != attr
+            && attr->GetAttributeType() == FbxNodeAttribute::eSkeleton)
+        {
+            if(NULL == boneRootNode_){
+                boneRootNode_ = node;
+            }
+
             u32 index = animationClip_.jointAnims_.size();
             JointAnimationCVT jointAnimation;
             animationClip_.jointAnims_.push_back(jointAnimation);
@@ -1714,9 +1882,10 @@ namespace
 
             if(animationClip_.jointAnims_[index].poses_.size() <= 0){
                 animationClip_.jointAnims_.pop_back();
-            }else if(animationClip_.jointAnims_[index].poses_.size() == 1){
+            }
+            else if(animationClip_.jointAnims_[index].poses_.size() == 1){
 
-                JointPoseWithFrame& pose = animationClip_.jointAnims_[index].poses_[0];
+                JointPoseWithTime& pose = animationClip_.jointAnims_[index].poses_[0];
                 if(lmath::isZero(pose.translation_.x_)
                     && lmath::isZero(pose.translation_.y_)
                     && lmath::isZero(pose.translation_.z_)
@@ -1740,25 +1909,57 @@ namespace
     {
         copyName(jointAnimation.name_, node->GetName());
 
+        FbxAnimCurve* animTransXCurve = node->LclTranslation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_X);
+
+        FbxAnimCurve* animTransYCurve = node->LclTranslation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_Y);
+
+        FbxAnimCurve* animTransZCurve = node->LclTranslation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_Z);
+
+        FbxAnimCurve* animRotXCurve = node->LclRotation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_X);
+
+        FbxAnimCurve* animRotYCurve = node->LclRotation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_Y);
+
+        FbxAnimCurve* animRotZCurve = node->LclRotation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_Z);
+
         FbxAnimCurve* animCurve = NULL;
-
-        animCurve = node->LclTranslation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_X);
-        pushAnimation(jointAnimation, animCurve, node);
-
-        animCurve = node->LclTranslation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_Y);
-        pushAnimation(jointAnimation, animCurve, node);
-
-        animCurve = node->LclTranslation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_Z);
-        pushAnimation(jointAnimation, animCurve, node);
-
-        animCurve = node->LclRotation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_X);
-        pushAnimation(jointAnimation, animCurve, node);
-
-        animCurve = node->LclRotation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_Y);
-        pushAnimation(jointAnimation, animCurve, node);
-
-        animCurve = node->LclRotation.GetCurve(animLayer, FBXSDK_CURVENODE_COMPONENT_Z);
-        pushAnimation(jointAnimation, animCurve, node);
+        s32 keyCount = 0;
+        if(NULL != animTransXCurve && keyCount<animTransXCurve->KeyGetCount()){
+            keyCount = animTransXCurve->KeyGetCount();
+            animCurve = animTransXCurve;
+        }
+        if(NULL != animTransYCurve && keyCount<animTransYCurve->KeyGetCount()){
+            keyCount = animTransYCurve->KeyGetCount();
+            animCurve = animTransYCurve;
+        }
+        if(NULL != animTransZCurve && keyCount<animTransZCurve->KeyGetCount()){
+            keyCount = animTransZCurve->KeyGetCount();
+            animCurve = animTransZCurve;
+        }
+        if(NULL != animRotXCurve && keyCount<animRotXCurve->KeyGetCount()){
+            keyCount = animRotXCurve->KeyGetCount();
+            animCurve = animRotXCurve;
+        }
+        if(NULL != animRotYCurve && keyCount<animRotYCurve->KeyGetCount()){
+            keyCount = animRotYCurve->KeyGetCount();
+            animCurve = animRotYCurve;
+        }
+        if(NULL != animRotZCurve && keyCount<animRotZCurve->KeyGetCount()){
+            keyCount = animRotZCurve->KeyGetCount();
+            animCurve = animRotZCurve;
+        }
+        log_.print("%s:[%d]\n", jointAnimation.name_, keyCount);
+        //pushAnimation(jointAnimation, animCurve, node);
+        //pushAnimation2(jointAnimation, animCurve, node);
+        pushAnimation3(
+            jointAnimation,
+            animCurve,
+            node,
+            animTransXCurve,
+            animTransYCurve,
+            animTransZCurve,
+            animRotXCurve,
+            animRotYCurve,
+            animRotZCurve);
     }
 
     void Converter::pushAnimation(JointAnimationCVT& jointAnimation, FbxAnimCurve* animCurve, FbxNode* node)
@@ -1767,47 +1968,22 @@ namespace
             return;
         }
 
-        ////  今の時間のモデル基準姿勢を貰う
-        //FbxAMatrix currentFbxMat = pNode->EvaluateGlobalTransform( fbxTime );
+        FbxAnimEvaluator* evaluator = scene_->GetAnimationEvaluator();
+        FbxAMatrix invBoneRootMatrix;
+        if(node == boneRootNode_){
+            invBoneRootMatrix = boneRootNode_->EvaluateGlobalTransform().Inverse();
+        }else{
+            invBoneRootMatrix.SetIdentity();
+        }
 
-        ////  骨の親を貰う
-        //FbxNode* pParent = GetParentSkeltonNode( pNode->GetParent() );
-        //if( pParent ){
-        //    //  親がいるなら、親の今の時間のモデル基準姿勢を貰い、その逆行列を乗算して親から見た姿勢にする
-        //    const FbxAMatrix& parentMat = pParent->EvaluateGlobalTransform( fbxTime );
-        //    const FbxAMatrix  parentInvMat = parentMat.Inverse();
-        //    currentFbxMat.operator*=( parentInvMat );
-        //}
-
-        ////  Matrix4x3に変換
-        //LOOP( r, 4 ){
-        //    LOOP( c, 3 ){
-        //        currentMatrix.m[ r ][ c ] = SCAST( F32 )( currentFbxMat[ r ][ c ] );
-        //    }
-        //}
-
-        ////  回転部分のクォータニオンを貰う
-        //currentMatrix.DecomposeRotate( &keys[ i ].m_Value );
-
-        ////  正規化
-        //keys[ i ].m_Value.Normalize();
-
-        //keys[ i ].m_Frame = SCAST( U16 )( frame - startFrame );
-
-        FbxAMatrix localMatrix = node->EvaluateLocalTransform();
-        localMatrix.Inverse();
-
-        s32 keyCount = animCurve->KeyGetCount();
         FbxTime keyTime;
         FbxDouble4 t;
         FbxQuaternion r;
         lmath::Vector3 tt;
         lmath::Quaternion tr;
-        for(s32 i=0; i<keyCount; ++i){
-            keyTime = animCurve->KeyGetTime(i).GetFramedTime();
 
-            FbxAMatrix transform = node->EvaluateLocalTransform(keyTime);
-            transform *= localMatrix;
+        if(NULL == animCurve){
+            FbxAMatrix transform = invBoneRootMatrix * evaluator->GetNodeLocalTransform(node);
 
             t = transform.GetT();
             r = transform.GetQ();
@@ -1816,12 +1992,189 @@ namespace
             tt.y_ = static_cast<f32>(t[1]);
             tt.z_ = static_cast<f32>(t[2]);
 
-            tr.w_ = static_cast<f32>(r[0]);
+            tr.w_ = static_cast<f32>(r[3]);
             tr.x_ = static_cast<f32>(r[0]);
             tr.y_ = static_cast<f32>(r[1]);
             tr.z_ = static_cast<f32>(r[2]);
-            u32 frame = keyTime.GetFrameCount();
-            jointAnimation.add(frame, tt, tr);
+            tr.normalize();
+            jointAnimation.add(0.0f, tt, tr);
+            return;
+        }
+
+        s32 keyCount = animCurve->KeyGetCount();
+        for(s32 i=0; i<keyCount; ++i){
+            keyTime = animCurve->KeyGetTime(i).GetFramedTime();
+
+            //FbxAMatrix transform = node->EvaluateLocalTransform(keyTime);
+            FbxAMatrix transform = invBoneRootMatrix * evaluator->GetNodeLocalTransform(node, keyTime);
+
+            t = transform.GetT();
+            r = transform.GetQ();
+
+            tt.x_ = static_cast<f32>(t[0]);
+            tt.y_ = static_cast<f32>(t[1]);
+            tt.z_ = static_cast<f32>(t[2]);
+
+            tr.w_ = static_cast<f32>(r[3]);
+            tr.x_ = static_cast<f32>(r[0]);
+            tr.y_ = static_cast<f32>(r[1]);
+            tr.z_ = static_cast<f32>(r[2]);
+            tr.normalize();
+
+            jointAnimation.add(static_cast<f32>(keyTime.GetSecondDouble()), tt, tr);
+            log_.print("trans: %f, %f, %f\n", tt.x_, tt.y_, tt.z_);
+            log_.print("rot:   %f, %f, %f, %f\n", tr.w_, tr.x_, tr.y_, tr.z_);
+        }
+    }
+
+
+    void Converter::pushAnimation2(JointAnimationCVT& jointAnimation, FbxAnimCurve* animCurve, FbxNode* node)
+    {
+        //FbxAMatrix invBoneRootMatrix;
+        //if(node == boneRootNode_){
+        //    invBoneRootMatrix = boneRootNode_->EvaluateGlobalTransform().Inverse();
+        //}else{
+        //    invBoneRootMatrix.SetIdentity();
+        //}
+
+
+        FbxAnimEvaluator* evaluator = scene_->GetAnimationEvaluator();
+
+        FbxTime keyTime;
+        FbxDouble4 t;
+        FbxQuaternion r;
+        lmath::Vector3 tt;
+        lmath::Quaternion tr;
+
+        if(NULL == animCurve){
+            FbxAMatrix transform = evaluator->GetNodeGlobalTransform(node);
+            //FbxNode* parentNode = node->GetParent();
+            //if(NULL != parentNode){
+            //    FbxAMatrix parentTransform = evaluator->GetNodeGlobalTransform(parentNode).Inverse();
+            //    transform *= parentTransform;
+            //}
+
+            t = transform.GetT();
+            r = transform.GetQ();
+
+            tt.x_ = static_cast<f32>(t[0]);
+            tt.y_ = static_cast<f32>(t[1]);
+            tt.z_ = static_cast<f32>(t[2]);
+
+            tr.w_ = static_cast<f32>(r[3]);
+            tr.x_ = static_cast<f32>(r[0]);
+            tr.y_ = static_cast<f32>(r[1]);
+            tr.z_ = static_cast<f32>(r[2]);
+            tr.normalize();
+            jointAnimation.add(0.0f, tt, tr);
+            return;
+        }
+        s32 keyCount = animCurve->KeyGetCount();
+        for(s32 i=0; i<keyCount; ++i){
+            keyTime = animCurve->KeyGetTime(i).GetFramedTime();
+
+            //FbxAMatrix transform = node->EvaluateGlobalTransform(keyTime);
+            FbxAMatrix transform = evaluator->GetNodeGlobalTransform(node, keyTime);
+            //FbxNode* parentNode = node->GetParent();
+            //if(NULL != parentNode){
+            //    FbxAMatrix parentTransform = evaluator->GetNodeGlobalTransform(parentNode, keyTime).Inverse();
+            //    transform *= parentTransform;
+            //}
+
+            t = transform.GetT();
+            r = transform.GetQ();
+
+            tt.x_ = static_cast<f32>(t[0]);
+            tt.y_ = static_cast<f32>(t[1]);
+            tt.z_ = static_cast<f32>(t[2]);
+
+            tr.w_ = static_cast<f32>(r[3]);
+            tr.x_ = static_cast<f32>(r[0]);
+            tr.y_ = static_cast<f32>(r[1]);
+            tr.z_ = static_cast<f32>(r[2]);
+            tr.normalize();
+
+            jointAnimation.add(static_cast<f32>(keyTime.GetSecondDouble()), tt, tr);
+            log_.print("trans: %f, %f, %f\n", tt.x_, tt.y_, tt.z_);
+            log_.print("rot:   %f, %f, %f, %f\n", tr.w_, tr.x_, tr.y_, tr.z_);
+        }
+    }
+
+    void Converter::pushAnimation3(
+            JointAnimationCVT& jointAnimation,
+            FbxAnimCurve* animCurve,
+            FbxNode* node,
+            FbxAnimCurve* animTransXCurve,
+            FbxAnimCurve* animTransYCurve,
+            FbxAnimCurve* animTransZCurve,
+            FbxAnimCurve* animRotXCurve,
+            FbxAnimCurve* animRotYCurve,
+            FbxAnimCurve* animRotZCurve)
+    {
+        if(NULL == animCurve){
+            return;
+        }
+
+        FbxAMatrix invBoneRootMatrix;
+        if(node == boneRootNode_){
+            invBoneRootMatrix = boneRootNode_->EvaluateGlobalTransform().Inverse();
+        }else{
+            invBoneRootMatrix.SetIdentity();
+        }
+
+        s32 keyCount = animCurve->KeyGetCount();
+        FbxTime keyTime;
+        FbxVector4 trans;
+        FbxVector4 rot;
+        FbxQuaternion r;
+        lmath::Vector3 tt;
+        lmath::Quaternion tr;
+        for(s32 i=0; i<keyCount; ++i){
+            keyTime = animCurve->KeyGetTime(i).GetFramedTime();
+
+            trans.Set(0.0, 0.0, 0.0, 0.0);
+            rot.Set(0.0, 0.0, 0.0, 0.0);
+            if(animTransXCurve){
+                trans.mData[0] = animTransXCurve->Evaluate(keyTime);
+            }
+            if(animTransYCurve){
+                trans.mData[1] = animTransYCurve->Evaluate(keyTime);
+            }
+            if(animTransZCurve){
+                trans.mData[2] = animTransZCurve->Evaluate(keyTime);
+            }
+            if(animRotXCurve){
+                rot.mData[0] = animRotXCurve->Evaluate(keyTime);
+            }
+            if(animRotYCurve){
+                rot.mData[1] = animRotYCurve->Evaluate(keyTime);
+            }
+            if(animRotZCurve){
+                rot.mData[2] = animRotZCurve->Evaluate(keyTime);
+            }
+
+            r.ComposeSphericalXYZ(rot);
+            if(node == boneRootNode_){
+                FbxAMatrix transform;
+                transform.SetTRS(trans, rot, FbxVector4(1.0,1.0,1.0,0.0));
+                transform = invBoneRootMatrix * transform;
+                trans = transform.GetT();
+                r = transform.GetQ();
+
+            }
+            tt.x_ = static_cast<f32>(trans[0]);
+            tt.y_ = static_cast<f32>(trans[1]);
+            tt.z_ = static_cast<f32>(trans[2]);
+            tr.w_ = static_cast<f32>(r[3]);
+            tr.x_ = static_cast<f32>(r[0]);
+            tr.y_ = static_cast<f32>(r[1]);
+            tr.z_ = static_cast<f32>(r[2]);
+
+            //tr.setRotateXYZ(DEG_TO_RAD*rot[0], DEG_TO_RAD*rot[1], DEG_TO_RAD*rot[2]);
+            tr.normalize();
+            jointAnimation.add(static_cast<f32>(keyTime.GetSecondDouble()), tt, tr);
+            log_.print("trans: %f, %f, %f\n", tt.x_, tt.y_, tt.z_);
+            log_.print("rot:   %f, %f, %f, %f\n", tr.w_, tr.x_, tr.y_, tr.z_);
         }
     }
 
@@ -1835,7 +2188,7 @@ namespace
             str += animStack->GetName();
             str += "\n\n";
             FBXSDK_printf(str);
-
+            scene->SetCurrentAnimationStack(animStack);
             print(animStack, scene->GetRootNode());
         }
     }
@@ -2123,4 +2476,5 @@ namespace
     void Converter::printListCurve(FbxAnimCurve* curve, FbxProperty* prop)
     {
     }
+}
 }

@@ -68,7 +68,7 @@
       <DisableSpecificWarnings>4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>lcore_vc110_d.lib;lmath_sse_vc110_d.lib;libfbxsdk-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lframework_dx11_sse_vc110_d.lib;libfbxsdk-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -89,7 +89,7 @@
       <DisableSpecificWarnings>4819;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
-      <AdditionalDependencies>lcore_vc110.lib;lmath_sse_vc110.lib;libfbxsdk-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>lframework_dx11_sse_vc110.lib;libfbxsdk-mt.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <AdditionalLibraryDirectories>..\..\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
@@ -100,18 +100,13 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="converter.cpp" />
+    <ClCompile Include="load_geometry.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="ObjConverter.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="converter.h" />
-    <ClInclude Include="load.h" />
     <ClInclude Include="load_geometry.h" />
-    <ClInclude Include="load_joint.h" />
-    <ClInclude Include="load_material.h" />
-    <ClInclude Include="load_mesh.h" />
-    <ClInclude Include="load_node.h" />
-    <ClInclude Include="load_texture.h" />
     <ClInclude Include="ObjConverter.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
