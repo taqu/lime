@@ -113,6 +113,8 @@ namespace lmath
         void mul(const Vector4& v, const Quaternion& q);
         void mul(const Quaternion& q, const Vector4& v);
 
+        void rotateToward(const Vector4& from, const Vector4& to);
+
         /**
         @brief 線形補間。q = (1-t)*q1 + t*q2
         @param q0 ... 

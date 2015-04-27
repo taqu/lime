@@ -44,6 +44,11 @@ namespace lmath
             position.set(s_.x_, s_.y_, s_.z_);
         }
 
+        void getPosition(lmath::Vector4& position) const
+        {
+            position.set(s_.x_, s_.y_, s_.z_, 0.0f);
+        }
+
         f32 getRadius() const
         {
             return s_.w_;
@@ -54,6 +59,20 @@ namespace lmath
             s_.x_ = x;
             s_.y_ = y;
             s_.z_ = z;
+        }
+
+        void setPosition(const lmath::Vector3& position)
+        {
+            s_.x_ = position.x_;
+            s_.y_ = position.y_;
+            s_.z_ = position.z_;
+        }
+
+        void setPosition(const lmath::Vector4& position)
+        {
+            s_.x_ = position.x_;
+            s_.y_ = position.y_;
+            s_.z_ = position.z_;
         }
 
         void setRadius(f32 radius)
@@ -80,7 +99,8 @@ namespace lmath
         static Sphere calcMiniSphere(const Vector3* points, u32 numPoints);
 
         void combine(const Sphere& s0, const Sphere& s1);
-        void add(const Sphere& s1);
+        void add(const Sphere& s1){ combine(*this, s1);}
+        void add(const Vector4& s1){ combine(*this, reinterpret_cast<const Sphere&>(s1));}
 
         f32 signedDistanceSqr(const Vector3& p) const;
 
@@ -90,7 +110,14 @@ namespace lmath
         {
             s_.swap(rhs.s_);
         }
-
+        operator const Vector4&() const
+        {
+            return s_;
+        }
+        operator Vector4&()
+        {
+            return s_;
+        }
         Vector4 s_; ///中心 半径
     };
 }

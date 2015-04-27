@@ -77,8 +77,6 @@ namespace lmath
 #define DEG_TO_RAD (static_cast<lmath::f32>(1.57079632679489661923/90.0))
 #define RAD_TO_DEG (static_cast<lmath::f32>(90.0/1.57079632679489661923))
 
-    extern const f32 SphereRadiusEpsilon; //=1.0e-5f;
-
 // 三角関数において、１とみなす下限
 #define F32_ANGLE_LIMIT1 (0.9999f)
     //extern const f64 PI;
@@ -123,7 +121,6 @@ namespace lmath
     {
         return (lcore::absolute<f64>(x1 - x2) <= epsilon);
     }
-
 
     inline bool isZero(f32 x1)
     {
@@ -445,6 +442,15 @@ namespace lmath
 
     f32 cubicPulse(f32 center, f32 width, f32 x);
 
+    f32 criticallyDampedSpring(f32 target, f32 current, f32& velocity, f32 timeStep, f32 maxVelocity);
+    f32 criticallyDampedSpring(f32 target, f32 current, f32& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity);
+    f32 criticallyDampedSpring2(f32 target, f32 current, f32& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity);
+
+    void criticallyDampedSpring(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 timeStep, f32 maxVelocity);
+    void criticallyDampedSpring(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity);
+    void criticallyDampedSpring2(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity);
+
+
     inline f32 gamma(f32 x, f32 g)
     {
         LASSERT(!lmath::isZero(g));
@@ -607,6 +613,11 @@ namespace lmath
     @brief Z軸をnormal方向へ回転する行列
     */
     void rotationMatrixFromOrthonormalBasis(lmath::Matrix44& mat, const lmath::Vector4& normal, const lmath::Vector4& binormal0, const lmath::Vector4& binormal1);
+
+    void smoothTranslate(Vector4& dst, const Vector4& current, const Vector4& target, f32 maxDistance);
+    void smoothRotate(Vector4& dst, const Vector4& current, const Vector4& target, f32 maxRotate);
+
+    f32 calcFOVY(f32 height, f32 znear);
 }
 
 #endif //INC_LMATHCORE_H__

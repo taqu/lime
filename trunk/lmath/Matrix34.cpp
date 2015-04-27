@@ -539,6 +539,13 @@ namespace lmath
         m_[2][3] += v.z_;
     }
 
+    void Matrix34::translate(const Vector4& v)
+    {
+        m_[0][3] += v.x_;
+        m_[1][3] += v.y_;
+        m_[2][3] += v.z_;
+    }
+
     void Matrix34::translate(f32 x, f32 y, f32 z)
     {
         m_[0][3] += x;

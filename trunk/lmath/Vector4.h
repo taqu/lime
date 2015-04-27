@@ -144,9 +144,18 @@ namespace lmath
         }
 
         /**
-        @brief v0 * t + v1 * (1-t0)
+        @brief v0 * (1-t) + v1 * t
         */
         void lerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
+
+        /**
+        @brief v0 * (1-t) + v1 * t
+        */
+        void slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
+        /**
+        @brief v0 * (1-t) + v1 * t
+        */
+        void slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t, f32 cosine);
 
 #if defined(LMATH_USE_SSE)
         inline static lm128 load(const Vector4& v)

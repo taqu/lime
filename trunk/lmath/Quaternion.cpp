@@ -97,8 +97,8 @@ namespace lmath
     {
         lmath::Quaternion rotX, rotY, rotZ;
         rotX.setRotateX(radx);
-        rotY.setRotateX(rady);
-        rotZ.setRotateX(radz);
+        rotY.setRotateY(rady);
+        rotZ.setRotateZ(radz);
 
         *this = rotX;
         *this *= rotY;
@@ -109,8 +109,8 @@ namespace lmath
     {
         lmath::Quaternion rotX, rotY, rotZ;
         rotX.setRotateX(radx);
-        rotY.setRotateX(rady);
-        rotZ.setRotateX(radz);
+        rotY.setRotateY(rady);
+        rotZ.setRotateZ(radz);
 
         *this = rotX;
         *this *= rotZ;
@@ -121,8 +121,8 @@ namespace lmath
     {
         lmath::Quaternion rotX, rotY, rotZ;
         rotX.setRotateX(radx);
-        rotY.setRotateX(rady);
-        rotZ.setRotateX(radz);
+        rotY.setRotateY(rady);
+        rotZ.setRotateZ(radz);
 
         *this = rotY;
         *this *= rotZ;
@@ -133,8 +133,8 @@ namespace lmath
     {
         lmath::Quaternion rotX, rotY, rotZ;
         rotX.setRotateX(radx);
-        rotY.setRotateX(rady);
-        rotZ.setRotateX(radz);
+        rotY.setRotateY(rady);
+        rotZ.setRotateZ(radz);
 
         *this = rotY;
         *this *= rotX;
@@ -145,8 +145,8 @@ namespace lmath
     {
         lmath::Quaternion rotX, rotY, rotZ;
         rotX.setRotateX(radx);
-        rotY.setRotateX(rady);
-        rotZ.setRotateX(radz);
+        rotY.setRotateY(rady);
+        rotZ.setRotateZ(radz);
 
         *this = rotZ;
         *this *= rotX;
@@ -157,8 +157,8 @@ namespace lmath
     {
         lmath::Quaternion rotX, rotY, rotZ;
         rotX.setRotateX(radx);
-        rotY.setRotateX(rady);
-        rotZ.setRotateX(radz);
+        rotY.setRotateY(rady);
+        rotZ.setRotateZ(radz);
 
         *this = rotZ;
         *this *= rotY;
@@ -923,6 +923,19 @@ namespace lmath
 #endif
     }
 
+    void Quaternion::rotateToward(const Vector4& from, const Vector4& to)
+    {
+        f32 cosine = from.dot(to);
+        if(F32_ANGLE_LIMIT1<lcore::absolute(cosine)){
+            identity();
+            return;
+        }
+        lmath::Vector4 axis;
+        axis.cross3(from, to);
+        axis.w_ = 0.0f;
+        axis.normalize();
+        setRotateAxis(axis, lmath::acos(cosine));
+    }
 
     Quaternion& Quaternion::lerp(const Quaternion& q0, const Quaternion& q1, f32 t)
     {
@@ -1093,19 +1106,15 @@ namespace
 
         }else{
             f32 sinOmega = lmath::sqrt(1.0f - cosOmega * cosOmega);
+            f32 oneOverSinOmega = 1.0f / sinOmega;
 
             f32 omega = lmath::atan2(sinOmega, cosOmega);
 
-            f32 s = lmath::sinf((1.0f-t) * omega);
-            k0 = _mm_load1_ps(&s);
+            f32 s0 = lmath::sinf((1.0f-t) * omega) * oneOverSinOmega;
+            k0 = _mm_load1_ps(&s0);
 
-            s = lmath::sinf(t * omega);
-            k1 = _mm_load1_ps(&s);
-
-            lm128 r = _mm_load1_ps(&sinOmega);
-
-            k0 = _mm_div_ps(k0, r);
-            k1 = _mm_div_ps(k1, r);
+            f32 s1 = lmath::sinf(t * omega) * oneOverSinOmega;
+            k1 = _mm_load1_ps(&s1);
         }
 
         lm128 t0 = _mm_loadu_ps(&q0.w_);

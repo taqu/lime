@@ -634,7 +634,7 @@ namespace
         return ret;
     }
 
-    bool QBVH::innerTest(HitRecord& hitRecord, const lmath::Vector3& bmin, const lmath::Vector3& bmax)
+    bool QBVH::innerTest(HitRecord& /*hitRecord*/, const lmath::Vector3& bmin, const lmath::Vector3& bmax)
     {
         lmath::lm128 bbox[2][3];
         

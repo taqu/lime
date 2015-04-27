@@ -428,8 +428,8 @@ namespace lmath
         conj.conjugate(rotation);
         Quaternion rot;
 
-        rot.mul(rotation, *this);
-        rot.mul(rot, conj);
+        rot.mul(conj, *this);
+        rot.mul(rot, rotation);
 
         x_ = rot.x_;
         y_ = rot.y_;
@@ -442,8 +442,8 @@ namespace lmath
         conj.conjugate(rotation);
         Quaternion rot;
 
-        rot.mul(rotation, v);
-        rot.mul(rot, conj);
+        rot.mul(conj, v);
+        rot.mul(rot, rotation);
 
         x_ = rot.x_;
         y_ = rot.y_;
@@ -491,5 +491,36 @@ namespace lmath
 //        tmp1 *= (1.0f-t);
 //        add(tmp0, tmp1);
 //#endif
+    }
+
+    void Vector4::slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t)
+    {
+        f32 cosine = v0.dot(v1);
+        if(F32_ANGLE_LIMIT1<=lcore::absolute(cosine)){
+            lerp(v0, v1, t);
+        }else{
+            slerp(v0, v1, t, cosine);
+        }
+    }
+
+    void Vector4::slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t, f32 cosine)
+    {
+        LASSERT(cosine<F32_ANGLE_LIMIT1);
+
+        f32 omega = lmath::acos(cosine);
+
+        f32 inv = 1.0f/lmath::sqrt(1.0f-cosine*cosine);
+        f32 s0 = lmath::sinf((1.0f-t)*omega) * inv;
+        f32 s1 = lmath::sinf(t*omega) * inv;
+
+        lm128 tv0 = load(v0);
+        lm128 tv1 = load(v1);
+        lm128 t0 = _mm_load1_ps(&s0);
+        lm128 t1 = _mm_load1_ps(&s1);
+
+        tv0 = _mm_mul_ps(t0, tv0);
+        tv1 = _mm_mul_ps(t1, tv1);
+
+        store(*this, _mm_add_ps(tv0, tv1));
     }
 }
