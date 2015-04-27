@@ -5,14 +5,16 @@
 
 #include <lcore/liostream.h>
 #include <lcore/utility.h>
-#include "load_node.h"
-#include "load_mesh.h"
-#include "load_geometry.h"
-#include "load_material.h"
-#include "load_joint.h"
-#include "load_texture.h"
+#include <lframework/scene/load/load_node.h>
+#include <lframework/scene/load/load_mesh.h>
+#include <lframework/scene/load/load_geometry.h>
+#include <lframework/scene/load/load_material.h>
+#include <lframework/scene/load/load_joint.h>
+#include <lframework/scene/load/load_texture.h>
 
-namespace load
+namespace lscene
+{
+namespace lload
 {
 namespace
 {
@@ -567,11 +569,19 @@ namespace
         case CodeMtl_RefracttionIndex:
             {
                 getFloat(material.shadow_.w_);
+                material.ambient_.w_ = lcore::calcFresnelTerm(material.shadow_.w_);
                 material.flags_ |= Material::Flag_RefractiveIndex;
             }
             return true;
 
         case CodeMtl_Ambient:
+            {
+                lmath::Vector3 ambient;
+                getFloat3(ambient);
+                material.ambient_.x_ = ambient.x_;
+                material.ambient_.y_ = ambient.y_;
+                material.ambient_.z_ = ambient.z_;
+            }
             return true;
 
         case CodeMtl_Diffuse:
@@ -945,8 +955,8 @@ namespace
 
         Node node;
         node.index_ = 0;
-        node.parentIndex_ = load::InvalidNode;
-        node.childStartIndex_ = load::InvalidNode;
+        node.parentIndex_ = lload::InvalidNode;
+        node.childStartIndex_ = lload::InvalidNode;
         node.numChildren_ = 0;
         node.meshStartIndex_ = 0;
         node.numMeshes_ = static_cast<u8>(meshes.size());
@@ -959,4 +969,5 @@ namespace
 
         file.close();
     }
+}
 }

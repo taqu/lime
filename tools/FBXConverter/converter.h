@@ -9,40 +9,39 @@
 #include <fbxsdk.h>
 
 #include <vector>
+#include <lcore/liostream.h>
 #include <lmath/Quaternion.h>
 
-#include "load.h"
-#include "load_node.h"
-#include "load_mesh.h"
+#include <lframework/scene/load/load.h>
+#include <lframework/scene/load/load_node.h>
+#include <lframework/scene/load/load_mesh.h>
+#include <lframework/scene/load/load_geometry.h>
+#include <lframework/scene/load/load_material.h>
+#include <lframework/scene/load/load_joint.h>
+#include <lframework/scene/load/load_texture.h>
+#include <lframework/scene/anim/JointPose.h>
 #include "load_geometry.h"
-#include "load_material.h"
-#include "load_joint.h"
-#include "load_texture.h"
 
-namespace load
+namespace lscene
+{
+namespace lload
 {
     class Importer;
     class Scene;
 
-    class JointPoseWithFrame
-    {
-    public:
-        u32 frameNo_;
-        lmath::Vector3 translation_;
-        lmath::Quaternion rotation_;
-    };
+    using lscene::lanim::JointPoseWithTime;
 
     class JointAnimationCVT
     {
     public:
-        typedef std::vector<JointPoseWithFrame> JointPoseVector;
+        typedef std::vector<JointPoseWithTime> JointPoseVector;
 
         JointAnimationCVT()
         {
             name_[0] = '\0';
         }
 
-        void add(u32 frame, const lmath::Vector3& translation, const lmath::Quaternion& rotation);
+        void add(f32 time, const lmath::Vector3& translation, const lmath::Quaternion& rotation);
 
         Char name_[MaxNameSize];
         JointPoseVector poses_;
@@ -54,15 +53,15 @@ namespace load
         typedef std::vector<JointAnimationCVT> JointAnimationVector;
 
         AnimationClipCVT()
-            :lastFrame_(0.0f)
+            :lastTime_(0.0f)
         {
             name_[0] = '\0';
         }
 
-        void calcLastFrame();
+        void calcLastTime();
 
         Char name_[MaxNameSize];
-        f32 lastFrame_;
+        f32 lastTime_;
 
         JointAnimationVector jointAnims_;
     };
@@ -142,16 +141,6 @@ namespace load
         typedef std::vector<FbxNode*> FbxNodeVector;
         typedef std::vector<FbxTexture*> FbxTextureVector;
 
-        static const s32 TriangleVertices = 3;
-        static const s32 DimPosition = 3;
-        static const s32 DimNormal = 3;
-        static const s32 DimTangent = 3;
-        static const s32 DimBinormal = 3;
-        static const s32 DimColor = 1;
-        static const s32 DimUV = 2;
-        static const s32 DimBone = 2;
-        static const s32 DimBoneWeight = 2;
-
         Converter();
         ~Converter();
 
@@ -162,10 +151,12 @@ namespace load
         static bool acceptNodeAttribute(const FbxNodeAttribute* attribute);
 
         void traverseSkeletonNode(FbxNode* root);
-
+        void traverseJoint(FbxNode* root);
         void traverseNode(FbxNode* node, s32 index);
+
         void pushNode(FbxNode* node, u8 parent);
         s16 pushGeometry(FbxNode* node);
+        void pushJoint(FbxNode* node);
 
         void getNormals(GeometryCVT& geometry, FbxMesh* mesh, FbxLayerElementNormal* elementNormal);
         void getTangents(GeometryCVT& geometry, FbxMesh* mesh, FbxLayerElementTangent* elementTangent);
@@ -180,17 +171,35 @@ namespace load
         const Char* getAttributeType(const FbxNodeAttribute* attr);
 
         s32 findSkeletonNode(const FbxNode* node) const;
+        //s32 findSkeletonLink(const FbxSkin* skin, const FbxNode* node) const;
         s16 findTexture(const FbxTexture* texture) const;
 
         void calcSphere(Mesh& mesh);
 
         void setVertexProperty(GeometryCVT& geometry);
 
-        void traverseAnimation(FbxScene* scene);
+        void traverseAnimation();
+        void traverseAnimation(FbxAnimStack* animStack, FbxNode* node);
         void traverseAnimation(FbxAnimLayer* animLayer, FbxNode* node);
         void traverseAnimation(JointAnimationCVT& jointAnimation, FbxAnimLayer* animLayer, FbxNode* node);
         void pushAnimation(JointAnimationCVT& jointAnimation, FbxAnimCurve* animCurve, FbxNode* node);
 
+        void pushAnimation2(JointAnimationCVT& jointAnimation, FbxAnimCurve* animCurve, FbxNode* node);
+
+        void pushAnimation3(
+            JointAnimationCVT& jointAnimation,
+            FbxAnimCurve* animCurve,
+            FbxNode* node,
+            FbxAnimCurve* animTransXCurve,
+            FbxAnimCurve* animTransYCurve,
+            FbxAnimCurve* animTransZCurve,
+            FbxAnimCurve* animRotXCurve,
+            FbxAnimCurve* animRotYCurve,
+            FbxAnimCurve* animRotZCurve);
+
+        bool forceDDS_; //テクスチャの拡張子をddsへ変換
+
+        FbxScene* scene_;
         FbxNodeVector skeletonNodes_;
         FbxTextureVector fbxTextures_;
         NodeVector nodes_;
@@ -200,6 +209,9 @@ namespace load
         JointVector joints_;
         TextureVector textures_;
         AnimationClipCVT animationClip_;
+        FbxNode* boneRootNode_;
+
+        lcore::ofstream log_;
 
         static void print(FbxScene* scene);
 
@@ -212,5 +224,6 @@ namespace load
         static void printCurve(FbxAnimCurve* curve);
         static void printListCurve(FbxAnimCurve* curve, FbxProperty* prop);
     };
+}
 }
 #endif //INC_CONVERTER_H__

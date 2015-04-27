@@ -1,9 +1,9 @@
 #ifndef INC_LOAD_LOADEROBJ_H__
 #define INC_LOAD_LOADEROBJ_H__
-#include "load.h"
 #include <lmath/lmath.h>
-#include "load_material.h"
-#include "load_texture.h"
+#include <lframework/scene/load/load.h>
+#include <lframework/scene/load/load_material.h>
+#include <lframework/scene/load/load_texture.h>
 
 #include <fstream>
 #include <vector>
@@ -15,7 +15,9 @@ namespace lcore
     class istream;
 }
 
-namespace load
+namespace lscene
+{
+namespace lload
 {
     class Geometry;
 
@@ -158,5 +160,6 @@ namespace load
         NameToTextureMap textures_;
         std::vector<Texture> textureVector_;
     };
+}
 }
 #endif //INC_LOAD_LOADEROBJ_H__

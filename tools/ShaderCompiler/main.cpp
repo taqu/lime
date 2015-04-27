@@ -19,6 +19,8 @@ enum ShaderType
     Shader_GS,
     Shader_PS,
     Shader_CS,
+    Shader_DS,
+    Shader_HS,
     Shader_None,
 };
 
@@ -52,6 +54,18 @@ const lcore::Char* ProfileCSName[] =
     "cs_5_0",
 };
 
+const lcore::Char* ProfileDSName[] =
+{
+    "",
+    "ds_5_0",
+};
+
+const lcore::Char* ProfileHSName[] =
+{
+    "",
+    "hs_5_0",
+};
+
 int main(int argc, char** argv)
 {
     if(argc < 3){
@@ -62,6 +76,7 @@ int main(int argc, char** argv)
 
     ShaderType type = Shader_None;
     bool ps = false;
+    bool force = false;
     int numFiles = 0;
     std::string files[2];
     for(int i=1; i<argc; ++i){
@@ -73,10 +88,16 @@ int main(int argc, char** argv)
             type = Shader_VS;
         }else if(lcore::strncmp(argv[i], "-cs", 3) == 0){
             type = Shader_CS;
+        } else if(lcore::strncmp(argv[i], "-ds", 3) == 0){
+            type = Shader_DS;
+        } else if(lcore::strncmp(argv[i], "-hs", 3) == 0){
+            type = Shader_HS;
         }else if(lcore::strncmp(argv[i], "-p4", 3) == 0){
             profile = Profile_4_0;
         }else if(lcore::strncmp(argv[i], "-p5", 3) == 0){
             profile = Profile_5_0;
+        } else if(lcore::strncmp(argv[i], "-force", 6) == 0){
+            force = true;
         }else{
             if(numFiles<2){
                 files[numFiles].assign(argv[i]);
@@ -85,10 +106,36 @@ int main(int argc, char** argv)
         }
     }
     if(type == Shader_None){
-        return 0;
+        return -1;
     }
     if(numFiles<2){
-        return 0;
+        return -1;
+    }
+
+    if(false == force){
+        int num = 0;
+        FILETIME writeTime[2];
+        for(int i=0; i<2; ++i){
+            HANDLE file = CreateFile(files[i].c_str(), GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+            if(NULL == file){
+                continue;
+            }
+
+            if(GetFileTime(file, NULL, NULL, &writeTime[i])){
+                ++num;
+            }
+            CloseHandle(file);
+        }
+
+        if(2<=num){
+            if(writeTime[0].dwHighDateTime<writeTime[1].dwHighDateTime){
+                return 0;
+            } else if(writeTime[0].dwHighDateTime == writeTime[1].dwHighDateTime){
+                if(writeTime[0].dwLowDateTime <= writeTime[1].dwLowDateTime){
+                    return 0;
+                }
+            }
+        }
     }
 
     static const char Title[] = "compiler";
@@ -143,6 +190,7 @@ int main(int argc, char** argv)
         in.read(buff.get(), size);
         in.close();
 
+        lgraphics::ShaderInculde* shaderIncude = LIME_NEW lgraphics::ShaderInculde;
         switch(type)
         {
         case Shader_VS:
@@ -151,6 +199,7 @@ int main(int argc, char** argv)
                 size,
                 ProfileVSName[profile],
                 0, NULL,
+                shaderIncude,
                 &error);
             break;
 
@@ -160,6 +209,7 @@ int main(int argc, char** argv)
                 size,
                 ProfileGSName[profile],
                 0, NULL,
+                shaderIncude,
                 &error);
             break;
 
@@ -169,6 +219,7 @@ int main(int argc, char** argv)
                 size,
                 ProfilePSName[profile],
                 0, NULL,
+                shaderIncude,
                 &error);
             break;
 
@@ -178,7 +229,32 @@ int main(int argc, char** argv)
                 size,
                 ProfileCSName[profile],
                 0, NULL,
+                shaderIncude,
                 &error);
+            break;
+
+        case Shader_DS:
+            if(Profile_5_0<=profile){
+                blob = ConcreteShaderCompiler::createComputeShaderBlobFromMemory(
+                    buff.get(),
+                    size,
+                    ProfileDSName[profile],
+                    0, NULL,
+                    shaderIncude,
+                    &error);
+            }
+            break;
+
+        case Shader_HS:
+            if(Profile_5_0<=profile){
+                blob = ConcreteShaderCompiler::createComputeShaderBlobFromMemory(
+                    buff.get(),
+                    size,
+                    ProfileHSName[profile],
+                    0, NULL,
+                    shaderIncude,
+                    &error);
+            }
             break;
 
         };
@@ -215,6 +291,8 @@ int main(int argc, char** argv)
                 out.close();
             }
         }
+
+        LIME_DELETE(shaderIncude);
     }
 
     lgraphics::Graphics::terminate();

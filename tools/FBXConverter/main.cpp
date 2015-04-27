@@ -12,11 +12,12 @@ namespace
 
 int main(int argc, char** argv)
 {
-    if(argc < 3){
+    if(argc < 2){
         std::cout << "FBXConverter <input file (.fbx, .obj)> <output file>" << std::endl;
         std::cout << " options:" << std::endl;
         std::cout << "\t-anim <output animation file> \t(-anim animation.anim) (only for FBX)" << std::endl;
         std::cout << "\t-scale <scale> (only for OBJ)" << std::endl;
+        std::cout << "\t-dds force convert file extension to dds" << std::endl;
         return 0;
     }
 
@@ -24,6 +25,7 @@ int main(int argc, char** argv)
     std::string outFile;
     std::string outSkeleton;
     std::string outAnimation;
+    bool forceDDS = false;
     float scale = 1.0f;
     for(int i=1; i<argc; ++i){
         if(strcmp(argv[i], "-anim") == 0){
@@ -39,7 +41,8 @@ int main(int argc, char** argv)
                 scale = atof(argv[j]);
                 ++i;
             }
-
+        }else if(strcmp(argv[i], "-dds") == 0){
+            forceDDS = true;
         }else if(inFile.size()<=0){
             inFile = argv[i];
         }else{
@@ -60,7 +63,7 @@ int main(int argc, char** argv)
     }
 
     if(Flag_Obj == flag){
-        load::LoaderObj loaderObj;
+        lscene::lload::LoaderObj loaderObj;
         if(loaderObj.load(inFile.c_str())){
             if(0 < outFile.size()){
                 loaderObj.save(outFile.c_str(), scale);
@@ -69,11 +72,11 @@ int main(int argc, char** argv)
 
     }else{
         //Fbx
-        load::Manager manager;
+        lscene::lload::Manager manager;
 
-        load::Scene scene;
+        lscene::lload::Scene scene;
         {
-            load::Importer importer;
+            lscene::lload::Importer importer;
             if(!manager.initialize(importer, inFile.c_str())){
                 return 0;
             }
@@ -82,15 +85,17 @@ int main(int argc, char** argv)
             }
         }
 
-        load::Converter converter;
-
+        lscene::lload::Converter converter;
+        converter.forceDDS_ = forceDDS;
         converter.process(scene.scene_);
-        converter.out(outFile.c_str());
+        if(0<outFile.size()){
+            converter.out(outFile.c_str());
+        }
         if(0<outAnimation.size()){
             converter.outAnimation(outAnimation.c_str());
         }
 
-        load::Converter::print(scene.scene_);
+        //lscene::lload::Converter::print(scene.scene_);
     }
     return 0;
 }
