@@ -170,6 +170,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="..\geometry\BVH.h" />
+    <ClInclude Include="..\geometry\DepthCluster.h" />
     <ClInclude Include="..\geometry\KDTree.h" />
     <ClInclude Include="..\geometry\Plane.h" />
     <ClInclude Include="..\geometry\PrimitiveTest.h" />
@@ -189,6 +190,7 @@
     <ClInclude Include="..\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\geometry\DepthCluster.cpp" />
     <ClCompile Include="..\geometry\Plane.cpp" />
     <ClCompile Include="..\geometry\PrimitiveTest.cpp" />
     <ClCompile Include="..\geometry\QBVH.cpp" />

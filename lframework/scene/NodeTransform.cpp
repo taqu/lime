@@ -29,6 +29,22 @@ namespace lscene
         return NodeType_Transform;
     }
 
+    void NodeTransform::update()
+    {
+        updateTransform();
+    }
+
+    void NodeTransform::traverseUpdateTransform()
+    {
+        updateTransform();
+        for(NodeVector::iterator itr = children_.begin();
+            itr != children_.end();
+            ++itr)
+        {
+            (*itr)->traverseUpdateTransform();
+        }
+    }
+
     void NodeTransform::createMatrix(lmath::Matrix44& matrix)
     {
         orientation_.getMatrix(matrix);

@@ -435,7 +435,7 @@ namespace lmath
 #endif
     }
 
-    void Matrix44::transpose()
+    void Matrix44::getTranspose(lmath::Matrix44& dst) const
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = _mm_loadu_ps(&m_[0][0]);
@@ -445,18 +445,19 @@ namespace lmath
 
         _MM_TRANSPOSE4_PS(r0, r1, r2, r3);
 
-        _mm_storeu_ps(&m_[0][0], r0);
-        _mm_storeu_ps(&m_[1][0], r1);
-        _mm_storeu_ps(&m_[2][0], r2);
-        _mm_storeu_ps(&m_[3][0], r3);
+        _mm_storeu_ps(&dst.m_[0][0], r0);
+        _mm_storeu_ps(&dst.m_[1][0], r1);
+        _mm_storeu_ps(&dst.m_[2][0], r2);
+        _mm_storeu_ps(&dst.m_[3][0], r3);
 
 #else
-        lcore::swap(m_[0][1], m_[1][0]);
-        lcore::swap(m_[0][2], m_[2][0]);
-        lcore::swap(m_[0][3], m_[3][0]);
-        lcore::swap(m_[1][2], m_[2][1]);
-        lcore::swap(m_[1][3], m_[3][1]);
-        lcore::swap(m_[2][3], m_[3][2]);
+        dst = *this;
+        lcore::swap(dst.m_[0][1], dst.m_[1][0]);
+        lcore::swap(dst.m_[0][2], dst.m_[2][0]);
+        lcore::swap(dst.m_[0][3], dst.m_[3][0]);
+        lcore::swap(dst.m_[1][2], dst.m_[2][1]);
+        lcore::swap(dst.m_[1][3], dst.m_[3][1]);
+        lcore::swap(dst.m_[2][3], dst.m_[3][2]);
 #endif
     }
 
@@ -571,7 +572,7 @@ namespace lmath
 #endif
     }
 
-    void Matrix44::invert()
+    void Matrix44::getInvert(Matrix44& dst) const
     {
 #if defined(LMATH_USE_SSE)
 
@@ -676,20 +677,20 @@ namespace lmath
 #endif
 
         m0 = _mm_mul_ps(det, m0);
-        _mm_storel_pi((lm64*)&m_[0][0], m0);
-        _mm_storeh_pi((lm64*)&m_[0][2], m0);
+        _mm_storel_pi((lm64*)&dst.m_[0][0], m0);
+        _mm_storeh_pi((lm64*)&dst.m_[0][2], m0);
 
         m1 = _mm_mul_ps(det, m1);
-        _mm_storel_pi((lm64*)&m_[1][0], m1);
-        _mm_storeh_pi((lm64*)&m_[1][2], m1);
+        _mm_storel_pi((lm64*)&dst.m_[1][0], m1);
+        _mm_storeh_pi((lm64*)&dst.m_[1][2], m1);
 
         m2 = _mm_mul_ps(det, m2);
-        _mm_storel_pi((lm64*)&m_[2][0], m2);
-        _mm_storeh_pi((lm64*)&m_[2][2], m2);
+        _mm_storel_pi((lm64*)&dst.m_[2][0], m2);
+        _mm_storeh_pi((lm64*)&dst.m_[2][2], m2);
 
         m3 = _mm_mul_ps(det, m3);
-        _mm_storel_pi((lm64*)&m_[3][0], m3);
-        _mm_storeh_pi((lm64*)&m_[3][2], m3);
+        _mm_storel_pi((lm64*)&dst.m_[3][0], m3);
+        _mm_storeh_pi((lm64*)&dst.m_[3][2], m3);
 
 #else
         Matrix44 tmp(*this);
@@ -739,7 +740,7 @@ namespace lmath
 
         }
 
-        (*this) = tmp2;
+        dst = tmp2;
 #endif
     }
 
@@ -760,7 +761,7 @@ namespace lmath
     }
 
     // 3x3部分行列の逆行列
-    void Matrix44::invert33()
+    void Matrix44::getInvert33(lmath::Matrix44& dst) const
     {
 #if defined(LMATH_USE_SSE)
         LIME_ALIGN16 f32 buffer[4];
@@ -804,9 +805,9 @@ namespace lmath
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer, t0);
 
-        m_[0][0] = buffer[0];
-        m_[1][0] = buffer[1];
-        m_[2][0] = buffer[2];
+        dst.m_[0][0] = buffer[0];
+        dst.m_[1][0] = buffer[1];
+        dst.m_[2][0] = buffer[2];
 
 
         t0 = _mm_shuffle_ps(c0, c0, 0xD2);//02 00 01 03
@@ -823,9 +824,9 @@ namespace lmath
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer, t0);
 
-        m_[0][1] = buffer[0];
-        m_[1][1] = buffer[1];
-        m_[2][1] = buffer[2];
+        dst.m_[0][1] = buffer[0];
+        dst.m_[1][1] = buffer[1];
+        dst.m_[2][1] = buffer[2];
 
 
         t0 = _mm_shuffle_ps(c0, c0, 0xC9);//01 02 00 03
@@ -842,9 +843,9 @@ namespace lmath
         t0 = _mm_mul_ps(t0, det);
         _mm_store_ps(buffer, t0);
 
-        m_[0][2] = buffer[0];
-        m_[1][2] = buffer[1];
-        m_[2][2] = buffer[2];
+        dst.m_[0][2] = buffer[0];
+        dst.m_[1][2] = buffer[1];
+        dst.m_[2][2] = buffer[2];
 #else
         f32 det = determinant33();
 
@@ -869,7 +870,7 @@ namespace lmath
         ret.m_[1][3] = m_[1][3];
         ret.m_[2][3] = m_[2][3];
 
-        *this = ret;
+        dst = ret;
 #endif
     }
 
@@ -1285,13 +1286,34 @@ namespace lmath
 
     void Matrix44::perspectiveFov(f32 fovy, f32 aspect, f32 znear, f32 zfar)
     {
-        f32 yscale = 1.0f / lmath::tan(0.5f * fovy);
+        f32 yscale = 1.0f/lmath::tan(0.5f * fovy);
         f32 xscale = yscale / aspect;
         f32 invDepth = 1.0f/(zfar-znear);
 
         m_[0][0] = xscale; m_[0][1] = 0.0f;   m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
         m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = zfar*invDepth; m_[2][3] = -znear*zfar*invDepth;
+        m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = 1.0f; m_[3][3] = 0.0f;
+    }
+
+    void Matrix44::perspectiveReverseZ(f32 width, f32 height, f32 znear, f32 zfar)
+    {
+        f32 invDepth = -1.0f/(znear-zfar);
+        m_[0][0] = 2.0f*znear/width; m_[0][1] = 0.0f;              m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
+        m_[1][0] = 0.0f;             m_[1][1] = 2.0f*znear/height; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
+        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = znear*invDepth; m_[2][3] = -znear*zfar*invDepth;
+        m_[3][0] = 0.0f;             m_[3][1] = 0.0f;              m_[3][2] = 1.0f; m_[3][3] = 0.0f;
+    }
+
+    void Matrix44::perspectiveFovReverseZ(f32 fovy, f32 aspect, f32 znear, f32 zfar)
+    {
+        f32 yscale = 1.0f/lmath::tan(0.5f * fovy);
+        f32 xscale = yscale / aspect;
+        f32 invDepth = -1.0f/(znear-zfar);
+
+        m_[0][0] = xscale; m_[0][1] = 0.0f;   m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
+        m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
+        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = znear*invDepth; m_[2][3] = -znear*zfar*invDepth;
         m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = 1.0f; m_[3][3] = 0.0f;
     }
 
@@ -1335,6 +1357,12 @@ namespace lmath
         m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
         m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = invDepth; m_[2][3] = -znear*invDepth;
         m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = 1.0f; m_[3][3] = 0.0f;
+    }
+
+    void Matrix44::getRow(Vector3& dst, s32 row) const
+    {
+        LASSERT(0<=row && row<4);
+        dst.set(m_[row][0], m_[row][1], m_[row][2]);
     }
 
     void Matrix44::getRow(Vector4& dst, s32 row) const

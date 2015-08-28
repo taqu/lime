@@ -101,6 +101,7 @@
     <ClInclude Include="..\api\CounterRef.h" />
     <ClInclude Include="..\api\Display.h" />
     <ClInclude Include="..\api\dx11\AsynchronousRef.h" />
+    <ClInclude Include="..\api\dx11\BufferRefBase.h" />
     <ClInclude Include="..\api\dx11\CounterRef.h" />
     <ClInclude Include="..\api\dx11\Display.h" />
     <ClInclude Include="..\api\dx11\PredicateRef.h" />
@@ -123,7 +124,6 @@
     <ClInclude Include="..\api\VertexBufferRef.h" />
     <ClInclude Include="..\api\dx11\BlendStateRef.h" />
     <ClInclude Include="..\api\dx11\BlobRef.h" />
-    <ClInclude Include="..\api\dx11\BufferRefBase.h" />
     <ClInclude Include="..\api\dx11\ConstantBufferRef.h" />
     <ClInclude Include="..\api\dx11\Enumerations.h" />
     <ClInclude Include="..\api\dx11\GraphicsDeviceRef.h" />
@@ -134,6 +134,7 @@
     <ClInclude Include="..\api\dx11\ShaderRef.h" />
     <ClInclude Include="..\api\dx11\TextureRef.h" />
     <ClInclude Include="..\api\dx11\VertexBufferRef.h" />
+    <ClInclude Include="..\api\ViewRef.h" />
     <ClInclude Include="..\io11\IOBMP.h" />
     <ClInclude Include="..\io11\IODDS.h" />
     <ClInclude Include="..\io11\IOPNG.h" />

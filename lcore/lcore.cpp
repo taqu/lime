@@ -6,7 +6,7 @@
 
 #include "lcore.h"
 
-#if defined(ANDROID)
+#if defined(ANDROID) || defined(__GNUC__)
 #include <stdio.h>
 #include <stdarg.h>
 
@@ -16,7 +16,7 @@
 #endif //defined(ANDROID)
 
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
 
 #if !defined(WIN32_LEAN_AND_MEAN)
 #define WIN32_LEAN_AND_MEAN
@@ -28,16 +28,21 @@
 #include <time.h>
 #include <sys/time.h>
 #include <sys/resource.h>
+#include <locale.h>
 #endif
 
+#ifdef ANDROID
+#else
 #include "allocator/dlmalloc.h"
-#include "utility.h"
-#include "clibrary.h"
 #include "async/SyncObject.h"
+#endif
+
+#include "clibrary.h"
 
 namespace
 {
-#ifdef _DEBUG
+
+#if defined(_DEBUG) && !defined(ANDROID)
     static const lcore::s32 DebugInfoMemorySize = 1024*1024;
     lcore::MemorySpace debugInfoMemorySpace_;
 
@@ -164,62 +169,81 @@ namespace
     }
 
     DebugMemory* debugMemory_ = NULL;
-#endif
+#endif //#if defined(_DEBUG) && !defined(ANDROID)
 }
 
 void* lcore_malloc(std::size_t size)
 {
+#ifdef ANDROID
+    return malloc(size);
+#else
     return dlmalloc(size);
+#endif
 }
 
 void* lcore_malloc(std::size_t size, std::size_t alignment)
 {
+#ifdef ANDROID
+    return memalign(alignment, size);
+#else
     return dlmemalign(alignment, size);
+#endif
 }
 
 void lcore_free(void* ptr)
 {
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(ANDROID)
     if(NULL != debugMemory_){
         debugMemory_->popMemoryInfo(ptr);
     }
 #endif
+#ifdef ANDROID
+    free(ptr);
+#else
     dlfree(ptr);
+#endif
 }
 
 void lcore_free(void* ptr, std::size_t /*alignment*/)
 {
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(ANDROID)
     if(NULL != debugMemory_){
         debugMemory_->popMemoryInfo(ptr);
     }
 #endif
+#ifdef ANDROID
+    free(ptr);
+#else
     dlfree(ptr);
+#endif
 }
 
-#ifdef _DEBUG
 void* lcore_malloc(std::size_t size, const char* file, int line)
 {
+#ifdef ANDROID
+    void* ptr = malloc(size);
+#else
     void* ptr = dlmalloc(size);
+#endif
+
+#if defined(_DEBUG) && !defined(ANDROID)
     //lcore::Log("[0x%X] size:%d, file:%s (%d)",(uintptr_t)ptr, size, file, line);
     if(NULL != debugMemory_){
         debugMemory_->pushMemoryInfo(ptr, file, line);
     }
-    return ptr;
-}
-
-#else
-void* lcore_malloc(std::size_t size, const char* /*file*/, int /*line*/)
-{
-    void* ptr = dlmalloc(size);
-    return ptr;
-}
 #endif
+    return ptr;
+}
 
 void* lcore_malloc(std::size_t size, std::size_t alignment, const char* file, int line)
 {
+#ifdef ANDROID
+    void* ptr = memalign(alignment, size);
+#else
     void* ptr = dlmemalign(alignment, size);
-#ifdef _DEBUG
+#endif
+
+#if defined(_DEBUG) && !defined(ANDROID)
     if(NULL != debugMemory_){
         debugMemory_->pushMemoryInfo(ptr, file, line);
     }
@@ -264,7 +288,7 @@ namespace
         1.608f, //1.53～1.686
     };
 
-#ifdef _DEBUG
+#if defined(_DEBUG) && !defined(ANDROID)
     void beginMalloc()
     {
         if(NULL == debugMemory_){
@@ -483,17 +507,24 @@ namespace
         __android_log_vprint(ANDROID_LOG_DEBUG, "LIME", format, ap);
         //__android_log_vprint(ANDROID_LOG_ERROR, "LIME", format, ap);
 #else
+
 #ifdef _DEBUG
         static const u32 MaxBuffer = 1024;
 #else
         static const u32 MaxBuffer = 64;
-#endif
+#endif //_DEBUG
+
         Char buffer[MaxBuffer+2];
-        int count=vsnprintf_s(buffer, MaxBuffer, format, ap);
+
+#if defined(_WIN32) || defined(_WIN64)
+        s32 count=vsnprintf_s(buffer, MaxBuffer, format, ap);
+#else
+        s32 count = ::vsnprintf(buffer, MaxBuffer, format, ap);
+#endif //defined(_WIN32) || defined(_WIN64)
         if(count<0){
             count = MaxBuffer;
         }
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WIN64)
         buffer[count]='\n';
         buffer[count+1]='\0';
         OutputDebugString(buffer);
@@ -501,9 +532,9 @@ namespace
         buffer[count]='\n';
         buffer[count+1]='\0';
         std::cerr << buffer;
-#endif
+#endif //defined(_WIN32) || defined(_WIN64)
 
-#endif
+#endif //defined(ANDROID)
 
         va_end(ap);
 #endif
@@ -517,7 +548,14 @@ namespace
 
         va_list ap;
         va_start(ap, format);
+
+#if defined(ANDROID)
+        __android_log_vprint(ANDROID_LOG_DEBUG, "LIME", format, ap);
+#elif defined(_WIN32) || defined(_WIN64)
         vprintf_s(format, ap);
+#else
+        vprintf(format, ap);
+#endif
         va_end(ap);
     }
 
@@ -533,18 +571,25 @@ namespace
 
     bool MemorySpace::create(u32 capacity, Locked locked)
     {
+#ifdef ANDROID
+        return false;
+#else
         destroy();
         mspace_ = create_mspace(capacity, locked);
         return (NULL != mspace_);
+#endif
     }
 
     void MemorySpace::destroy()
     {
+#ifdef ANDROID
+#else
         if(NULL != mspace_){
             u32 size = destroy_mspace(mspace_);
             lcore::Log("mspace size freed %d", size);
             mspace_ = NULL;
         }
+#endif
     }
 
     bool MemorySpace::valid() const
@@ -554,14 +599,21 @@ namespace
 
     void* MemorySpace::allocate(u32 size)
     {
+#ifdef ANDROID
+        return NULL;
+#else
         LASSERT(NULL != mspace_);
         return mspace_malloc(mspace_, size);
+#endif
     }
 
     void MemorySpace::deallocate(void* mem)
     {
+#ifdef ANDROID
+#else
         LASSERT(NULL !=  mspace_);
         mspace_free(mspace_, mem);
+#endif
     }
 
 #define LCORE_POPULATIONCOUNT(val)\
@@ -613,7 +665,7 @@ namespace
 #endif
 
 #elif defined(__GNUC__)
-        return (0!=val)? (__builtin_clzl(value) ^ 0x3FU) : 0;
+        return (0!=val)? (__builtin_clzl(val) ^ 0x3FU) : 0;
 #else
         val = (~val) & (val-1);
         LCORE_POPULATIONCOUNT(val);
@@ -631,7 +683,7 @@ namespace
 #endif
 
 #elif defined(__GNUC__)
-        return (0!=val)? (__builtin_ctzl(value)) : 0;
+        return (0!=val)? (__builtin_ctzl(val)) : 0;
 #else
         if(0 == val){
             return 32U;
@@ -697,6 +749,244 @@ namespace
 #undef LCORE_POPULATIONCOUNT
 
 
+    //---------------------------------------------------------
+    //---
+    //--- 文字列操作
+    //---
+    //---------------------------------------------------------
+    //-------------------------------------------------------------
+    // 後方から文字探索
+    const Char* rFindChr(const Char* src, Char c, u32 size)
+    {
+        LASSERT(src != NULL);
+        src += (size-1);
+        for(u32 i=0; i<size; ++i){
+            if(*src == c){
+                return src;
+            }
+            --src;
+        }
+        return NULL;
+    }
+
+
+    //-------------------------------------------------------------
+    // パスからディレクトリパス抽出
+    u32 extractDirectoryPath(Char* dst, const Char* path, u32 length)
+    {
+        if(length<=0){
+            return 0;
+        }
+
+        s32 i = static_cast<s32>(length-1);
+        for(; 0<=i; --i){
+            if(path[i] == '/' || path[i] == '\\'){
+                break;
+            }
+        }
+        u32 dstLen = i+1;
+        for(u32 j=0; j<dstLen; ++j){
+            dst[j] = path[j];
+        }
+        dst[dstLen] = '\0';
+        return dstLen;
+    }
+
+    //-------------------------------------------------------------
+    // パスからファイル名抽出
+    u32 extractFileName(Char* dst, u32 size, const Char* path)
+    {
+        if(size<=1){
+            if(0<size){
+                dst[0] = '\0';
+            }
+            return 0;
+        }
+
+        if(NULL == path){
+            return 0;
+        }
+
+        s32 length = lcore::strlen(path);
+        s32 i=length;
+        for(; 0<=i; --i){
+            if(path[i] == '/' || path[i] == '\\'){
+                break;
+            }
+        }
+        ++i;
+        if(length<i){
+            dst[0] = '\0';
+            return 0;
+        }
+        u32 dstLen = lcore::minimum(static_cast<u32>(length-i), size-1);
+        for(s32 j=i; j<=length; ++j){
+            s32 index = j-i;
+            if(dst[index] == '.'){
+                dstLen = j-i;
+                break;
+            }
+            dst[j-i] = path[j];
+        }
+        dst[dstLen]='\0';
+        return dstLen;
+    }
+
+    // パスから次のファイル名抽出
+    const Char* parseNextNameFromPath(const Char* str, u32& length, Char* name, u32 N)
+    {
+        length = 0;
+        while('\0' != *str && length<(N-1)){
+            if(Delimiter == *str){
+                ++str;
+                break;
+            }
+            name[length++] = *str;
+            ++str;
+        }
+        name[length] = '\0';
+        return str;
+    }
+
+    //---------------------------------------------------------
+    //---
+    //--- タイム関係
+    //---
+    //---------------------------------------------------------
+    void sleep(u32 milliSeconds)
+    {
+#if defined(_WIN32) || defined(_WIN64)
+        ::Sleep(milliSeconds);
+#else
+        timespec ts;
+        ts.tv_sec = 0;
+        while(1000<milliSeconds){
+            ts.tv_sec += 1;
+            milliSeconds -= 1000;
+        }
+        ts.tv_nsec = 1000000L * milliSeconds;
+        nanosleep(&ts, NULL);
+#endif
+    }
+
+    // カウント取得
+    ClockType getPerformanceCounter()
+    {
+#if defined(_WIN32) || defined(_WIN64)
+        LARGE_INTEGER count;
+        QueryPerformanceCounter(&count);
+        return count.QuadPart;
+#else
+        clock_t t = 0;
+        t = clock();
+        return t;
+#endif
+    }
+
+    // 秒間カウント数
+    ClockType getPerformanceFrequency()
+    {
+#if defined(_WIN32) || defined(_WIN64)
+        LARGE_INTEGER freq;
+        QueryPerformanceFrequency(&freq);
+        return freq.QuadPart;
+#else
+        return CLOCKS_PER_SEC;
+#endif
+    }
+
+    // 秒単位の時間差分計算
+    lcore::f64 calcTime64(lcore::ClockType prevTime, lcore::ClockType currentTime)
+    {
+        lcore::ClockType d = (currentTime>=prevTime)? currentTime - prevTime : lcore::numeric_limits<lcore::ClockType>::maximum() - prevTime + currentTime;
+        lcore::f64 delta = static_cast<lcore::f64>(d)/lcore::getPerformanceFrequency();
+        return delta;
+    }
+
+    // ミリ秒単位の時間を取得
+    u32 getTime()
+    {
+#if defined(_WIN32) || defined(_WIN64)
+        DWORD time = timeGetTime();
+        return static_cast<u32>(time);
+#else
+        struct timeval tv;
+        gettimeofday(&tv, NULL);
+
+        return static_cast<u32>(tv.tv_sec*1000 + tv.tv_usec/1000);
+#endif
+    }
+
+    namespace
+    {
+        inline u32 getUsageMSec()
+        {
+#if defined(_WIN32) || defined(_WIN64)
+            return 1;
+#else
+            rusage t;
+            getrusage(RUSAGE_SELF, &t);
+            return static_cast<u32>(t.ru_utime.tv_sec * 1000 + t.ru_utime.tv_usec/1000);
+#endif
+        }
+    }
+
+    //---------------------------------------------------------
+    //---
+    //--- Character Code
+    //---
+    //---------------------------------------------------------
+    // UTF8 to UTF16
+    s32 UTF8toUTF16(u16& utf16, const Char* utf8)
+    {
+        LASSERT(NULL != utf8);
+        u8 firstByte = ~(*((u8*)utf8));
+        if(firstByte & 0x80U){
+            utf16 = utf8[0];
+            return 1;
+
+        }else if(firstByte & 0x40U){
+
+        }else if(firstByte & 0x20U){
+            u8 c0 = (utf8[0] & 0x1FU);
+            u8 c1 = (utf8[1] & 0x3FU);
+            utf16 = (c0<<6) | c1;
+            return 2;
+        }else if(firstByte & 0x10U){
+            u8 c0 = (utf8[0] & 0x0FU);
+            u8 c1 = (utf8[1] & 0x3FU);
+            u8 c2 = (utf8[2] & 0x3FU);
+            utf16 = (c0<<12) | (c1<<6) | c2;
+            return 3;
+        }
+        utf16 = 0;
+        return 0;
+    }
+
+    // UTF16 to UTF8
+    s32 UTF16toUTF8(Char* utf8, u16 utf16)
+    {
+        LASSERT(NULL != utf8);
+        if(utf16 < 0x80U){
+            utf8[0] = static_cast<u8>(utf16);
+            return 1;
+        }else if(utf16 < 0x800U){
+            u8 c0 = static_cast<u8>((utf16>>6) | 0xC0U);
+            u8 c1 = static_cast<u8>((utf16&0x3FU) | 0x80U);
+            *((u8*)(utf8+0)) = c0;
+            *((u8*)(utf8+1)) = c1;
+            return 2;
+        }else{
+            u8 c0 = (utf16>>12) | 0xE0U;
+            u8 c1 = ((utf16>>6)&0x3FU) | 0x80U;
+            u8 c2 = ((utf16>>0)&0x3FU) | 0x80U;
+            *((u8*)(utf8+0)) = c0;
+            *((u8*)(utf8+1)) = c1;
+            *((u8*)(utf8+2)) = c2;
+            return 3;
+        }
+    }
+
     void setLocale(const Char* locale)
     {
         setlocale(LC_ALL, locale);
@@ -705,16 +995,26 @@ namespace
     // SJIS -> UTF16変換
     s32 MBSToWCS(WChar* dst, u32 sizeInWords, const Char* src, u32 srcSize)
     {
+#if defined(_WIN32) || defined(_WIN64)
         size_t converted = 0;
         s32 ret = mbstowcs_s(&converted, dst, sizeInWords, src, srcSize);
         return (0==ret)? converted : -1;
+#else
+        size_t ret = ::mbstowcs(dst, src, srcSize);
+        return (ret==(size_t)(-1))? -1 : static_cast<s32>(ret);
+#endif
     }
 
     // SJIS -> UTF16変換
     s32 MBSToWCS(WChar* dst, u32 sizeInWords, const Char* src)
     {
+#if defined(_WIN32) || defined(_WIN64)
         size_t converted = 0;
         s32 ret = mbstowcs_s(&converted, dst, sizeInWords, src, _TRUNCATE);
         return (0==ret)? converted : -1;
+#else
+        size_t ret = ::mbstowcs(dst, src, sizeInWords);
+        return (ret==(size_t)(-1))? -1 : static_cast<s32>(ret);
+#endif
     }
 }

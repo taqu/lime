@@ -43,10 +43,10 @@ namespace lgraphics
             BufferRefBase::swap(rhs);
         }
 
-        void setVS(ContextRef& context, u32 start);
-        void setGS(ContextRef& context, u32 start);
-        void setPS(ContextRef& context, u32 start);
-        void setCS(ContextRef& context, u32 start);
+        void attachVS(ContextRef& context, u32 start);
+        void attachGS(ContextRef& context, u32 start);
+        void attachPS(ContextRef& context, u32 start);
+        void attachCS(ContextRef& context, u32 start);
 
         void update(
             ContextRef& context,

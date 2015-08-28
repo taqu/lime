@@ -269,6 +269,7 @@ HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(double)
             inline static void destruct(pointer ptr)
             {
                 LASSERT(NULL != ptr);
+                //*ptr;
                 ptr->~T();
             }
         };

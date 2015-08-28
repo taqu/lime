@@ -15,6 +15,7 @@ namespace lgraphics
     public:
         typedef ID3D10Blob element_type;
         typedef ID3D10Blob* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         BlobRef();
         BlobRef(const BlobRef& rhs);
@@ -22,6 +23,11 @@ namespace lgraphics
         ~BlobRef();
 
         pointer_type get(){ return blob_;}
+        operator pointer_type(){ return blob_; }
+        operator pointer_array_type(){ return &blob_;}
+
+        bool valid() const{ return (blob_!=NULL);}
+
         void* getPointer();
         u32 getSize();
 
@@ -30,8 +36,6 @@ namespace lgraphics
             BlobRef(rhs).swap(*this);
             return *this;
         }
-
-        bool valid() const{ return (blob_!=NULL);}
 
         void swap(BlobRef& rhs)
         {

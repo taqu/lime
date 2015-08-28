@@ -55,6 +55,7 @@ namespace lgraphics
 
     static const u32 MAX_TEXTURES = 3;
 
+    //-----------------------------------------------------------
     //Bufferの場合はバイト単位、テクスチャの場合はテクセル単位
     struct Box
     {
@@ -76,6 +77,7 @@ namespace lgraphics
         u32 back_;
     };
 
+    //-----------------------------------------------------------
     struct MappedSubresource
     {
         void* data_;
@@ -86,6 +88,7 @@ namespace lgraphics
         T* getData(){ return reinterpret_cast<T*>(data_);}
     };
 
+    //-----------------------------------------------------------
     template<class T>
     class ScopedCOMPtr
     {
@@ -109,6 +112,236 @@ namespace lgraphics
 
         T* ptr_;
     };
+
+    //-----------------------------------------------------------
+    template<class T, u32 N>
+    class ResourceArrayBase
+    {
+    public:
+        typedef typename T::pointer_type pointer_type;
+        typedef pointer_type const const_pointer_type;
+        typedef const_pointer_type* pointer_array_type;
+
+        pointer_array_type get(){ return holder_.values_; }
+        operator pointer_array_type(){ return holder_.values_; }
+        const_pointer_type& operator[](s32 i){ return holder_.values_[i]; }
+
+        ResourceArrayBase()
+        {}
+
+        ResourceArrayBase(pointer_type v0)
+            :holder_({v0})
+        {}
+
+        ResourceArrayBase(pointer_type v0, pointer_type v1)
+            :holder_({v0, v1})
+        {}
+
+        ResourceArrayBase(pointer_type v0, pointer_type v1, pointer_type v2)
+            :holder_({v0, v1, v2})
+        {}
+
+        ResourceArrayBase(
+            pointer_type v0,
+            pointer_type v1,
+            pointer_type v2,
+            pointer_type v3)
+            :holder_({v0, v1, v2, v3})
+        {}
+
+        ResourceArrayBase(
+            pointer_type v0,
+            pointer_type v1,
+            pointer_type v2,
+            pointer_type v3,
+            pointer_type v4)
+            :holder_({v0, v1, v2, v3, v4})
+        {}
+
+        ResourceArrayBase(
+            pointer_type v0,
+            pointer_type v1,
+            pointer_type v2,
+            pointer_type v3,
+            pointer_type v4,
+            pointer_type v5)
+            :holder_({v0, v1, v2, v3, v4, v5})
+        {}
+
+        ResourceArrayBase(
+            pointer_type v0,
+            pointer_type v1,
+            pointer_type v2,
+            pointer_type v3,
+            pointer_type v4,
+            pointer_type v5,
+            pointer_type v6,
+            pointer_type v7)
+            :holder_({v0, v1, v2, v3, v4, v5, v6, v7})
+        {}
+
+    private:
+        struct Holder
+        {
+            pointer_type values_[N];
+        };
+        Holder holder_;
+    };
+    template<class T, u32 N>
+    class ResourceArray : public ResourceArrayBase<T,N>
+    {
+    public:
+
+    };
+
+    template<class T>
+    class ResourceArray<T,1> : public ResourceArrayBase<T,1>
+    {
+    public:
+        typedef ResourceArrayBase<T,1> base_type;
+
+        ResourceArray()
+        {}
+
+        ResourceArray(pointer_type v0)
+            :values_{v0}
+        {}
+    };
+
+    template<class T>
+    class ResourceArray<T,2> : public ResourceArrayBase<T,2>
+    {
+    public:
+        typedef ResourceArrayBase<T,2> base_type;
+
+        ResourceArray()
+        {}
+
+        ResourceArray(pointer_type v0, pointer_type v1)
+            :base_type(v0, v1)
+        {}
+    };
+
+    template<class T>
+    class ResourceArray<T,3> : public ResourceArrayBase<T,3>
+    {
+    public:
+        typedef ResourceArrayBase<T,3> base_type;
+
+        ResourceArray()
+        {}
+
+        ResourceArray(pointer_type v0, pointer_type v1, pointer_type v2)
+            :base_type(v0, v1, v2)
+        {}
+    };
+
+    template<class T>
+    class ResourceArray<T,4> : public ResourceArrayBase<T,4>
+    {
+    public:
+        typedef ResourceArrayBase<T,4> base_type;
+
+        ResourceArray()
+        {}
+
+        ResourceArray(
+            pointer_type v0,
+            pointer_type v1,
+            pointer_type v2,
+            pointer_type v3)
+            :base_type(v0, v1, v2, v3)
+        {}
+    };
+
+    template<class T>
+    class ResourceArray<T,5> : public ResourceArrayBase<T,5>
+    {
+    public:
+        typedef ResourceArrayBase<T,5> base_type;
+
+        ResourceArray()
+        {}
+
+        ResourceArray(
+            pointer_type v0,
+            pointer_type v1,
+            pointer_type v2,
+            pointer_type v3,
+            pointer_type v4)
+            :base_type(v0, v1, v2, v3, v4)
+        {}
+    };
+
+    template<class T>
+    class ResourceArray<T,6> : public ResourceArrayBase<T,6>
+    {
+    public:
+        typedef ResourceArrayBase<T,6> base_type;
+
+        ResourceArray()
+        {}
+
+        ResourceArray(
+            pointer_type v0,
+            pointer_type v1,
+            pointer_type v2,
+            pointer_type v3,
+            pointer_type v4,
+            pointer_type v5)
+            :base_type(v0, v1, v2, v3, v4, v5)
+        {}
+    };
+
+    template<class T>
+    class ResourceArray<T,7> : public ResourceArrayBase<T,7>
+    {
+    public:
+        typedef ResourceArrayBase<T,7> base_type;
+
+        ResourceArray()
+        {}
+
+        ResourceArray(
+            pointer_type v0,
+            pointer_type v1,
+            pointer_type v2,
+            pointer_type v3,
+            pointer_type v4,
+            pointer_type v5,
+            pointer_type v6)
+            :base_type(v0, v1, v2, v3, v4, v5, v6)
+        {}
+    };
+
+    template<class T>
+    class ResourceArray<T,8> : public ResourceArrayBase<T,8>
+    {
+    public:
+        typedef ResourceArrayBase<T,8> base_type;
+
+        ResourceArray()
+        {}
+
+        ResourceArray(
+            pointer_type v0,
+            pointer_type v1,
+            pointer_type v2,
+            pointer_type v3,
+            pointer_type v4,
+            pointer_type v5,
+            pointer_type v6,
+            pointer_type v7)
+            :base_type(v0, v1, v2, v3, v4, v5, v6, v7)
+        {}
+    };
+
+    //-----------------------------------------------------------
+    template<class T>
+    inline typename T::pointer_array_type resource_array_cast(T& t)
+    {
+        return t;
+    }
 
 //----------------------------------------------------------
 //---

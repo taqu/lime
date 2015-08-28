@@ -205,6 +205,7 @@ namespace lmath
         f32 radian = lmath::acos(d);
         lmath::Vector3 axis;
         axis.cross(Vector3::Forward, dir);
+        //axis.cross(dir, Vector3::Forward);
         axis.normalize();
         setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
     }
@@ -235,8 +236,8 @@ namespace lmath
 
         f32 radian = lmath::acos(d);
         lmath::Vector4 axis;
-        //axis.cross3(Vector4::Forward, dir);
-        axis.cross3(dir, Vector4::Forward);
+        axis.cross3(Vector4::Forward, dir);
+        //axis.cross3(dir, Vector4::Forward);
         axis.normalize();
         setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
     }

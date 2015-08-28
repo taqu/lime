@@ -73,12 +73,14 @@ namespace lscene
         inline void setConstantBuffer(ConstantBuffer* constantBuffer);
 
         void setSceneConstantVS(const Scene& scene, const ShadowMap& shadowMap);
+        void setSceneConstantDS(const Scene& scene);
         void setSceneConstantPS(const SceneConstantPS& src, const Scene& scene);
 
         inline lgraphics::ConstantBufferRef* getSceneConstantVS();
         inline lgraphics::ConstantBufferRef* getSceneConstantPS();
 
         lgraphics::ConstantBufferRef* createConstantBuffer(u32 size);
+        lgraphics::ConstantBufferRef* createConstantBuffer(u32 size, const void* data);
         bool setSystemConstantBuffer(Shader shader, s32 index, lgraphics::ConstantBufferRef* constant);
         bool setSystemConstant(Shader shader, s32 index, u32 size, const void* data);
         bool setSystemConstantAligned16(Shader shader, s32 index, u32 size, const void* data);
@@ -116,6 +118,7 @@ namespace lscene
         ConstantBuffer* constantBuffer_;
 
         lgraphics::ConstantBufferRef* sceneConstantBufferVS_;
+        lgraphics::ConstantBufferRef* sceneConstantBufferDS_;
         lgraphics::ConstantBufferRef* sceneConstantBufferPS_;
 
         s32 numPathConstants_[Shader_Num];

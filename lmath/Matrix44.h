@@ -92,10 +92,13 @@ namespace lmath
 
         void zero();
         void identity();
-        void transpose();
+        inline void transpose();
         void transpose(const Matrix44& src);
+        void getTranspose(lmath::Matrix44& dst) const;
+
         f32 determinant() const;
-        void invert();
+        inline void invert();
+        void getInvert(lmath::Matrix44& dst) const;
 
         /// 3x3部分行列の転置
         void transpose33();
@@ -104,7 +107,8 @@ namespace lmath
         f32 determinant33() const;
 
         /// 3x3部分行列の逆行列
-        void invert33();
+        inline void invert33();
+        void getInvert33(lmath::Matrix44& dst) const;
 
         /// 平行移動セット
         inline void setTranslate(const Vector3& v);
@@ -176,6 +180,16 @@ namespace lmath
         void perspectiveFov(f32 fovy, f32 aspect, f32 znear, f32 zfar);
 
         /**
+        @brief 透視投影. Reverse-Z
+        */
+        void perspectiveReverseZ(f32 width, f32 height, f32 znear, f32 zfar);
+
+        /**
+        @brief 透視投影. Reverse-Z
+        */
+        void perspectiveFovReverseZ(f32 fovy, f32 aspect, f32 znear, f32 zfar);
+
+        /**
         @brief 平行投影
         */
         void ortho(f32 width, f32 height, f32 znear, f32 zfar);
@@ -209,6 +223,7 @@ namespace lmath
             trans.w_ = 0.0f;
         }
 
+        void getRow(Vector3& dst, s32 row) const;
         void getRow(Vector4& dst, s32 row) const;
 
         bool isNan() const;
@@ -241,6 +256,21 @@ namespace lmath
         LASSERT(0<= c
             && c < 4);
         return m_[r][c];
+    }
+
+    inline void Matrix44::transpose()
+    {
+        getTranspose(*this);
+    }
+
+    inline void Matrix44::invert()
+    {
+        getInvert(*this);
+    }
+
+    inline void Matrix44::invert33()
+    {
+        getInvert33(*this);
     }
 
     // 平行移動セット

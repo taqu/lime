@@ -6,9 +6,9 @@
 @date 2012/03/20 create
 
 */
-#include "lpack.h"
+#include "lpacktree.h"
 
-namespace lpack
+namespace lpacktree
 {
     class PackReader
     {

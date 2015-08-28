@@ -40,7 +40,7 @@ namespace lcore
 	        SeekDir_ForceByte = 0xFFU,
 	    };
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
         static const int beg = FILE_BEGIN;
 	    static const int cur = FILE_CURRENT;
 	    static const int end = FILE_END;
@@ -73,7 +73,7 @@ namespace lcore
         
         static const Char* getModeString(int mode);
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
         static u32 getDesiredAccess(s32 mode);
         static u32 getCreationDisposition(s32 mode);
 #endif
@@ -146,7 +146,7 @@ namespace lcore
     //--- fstream_base
     //---
     //----------------------------------------------------------
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     template<class Base>
     class fstream_base : public Base
     {
@@ -218,8 +218,8 @@ namespace lcore
             ios::getCreationDisposition(mode),
             FILE_ATTRIBUTE_NORMAL,
             NULL);
-
-        if(INVALID_HANDLE_VALUE != file){
+        
+        if(INVALID_HANDLE_VALUE != file && (HANDLE)ERROR_ALREADY_EXISTS != file){
             file_ = file;
             return true;
         }else{
@@ -470,7 +470,7 @@ namespace lcore
     {
         s32 fd = fileno(file_);
         struct stat fileStat;
-        if(fstat(fd, &fileStart)<0){
+        if(fstat(fd, &fileStat)<0){
             return 0;
         }
         return fileStat.st_ino;

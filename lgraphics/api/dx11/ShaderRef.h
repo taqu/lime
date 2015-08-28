@@ -41,6 +41,7 @@ namespace lgraphics
     public:
         typedef ID3D11PixelShader element_type;
         typedef ID3D11PixelShader* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         PixelShaderRef()
             :shader_(NULL)
@@ -55,6 +56,12 @@ namespace lgraphics
         }
 
         pointer_type get(){ return shader_;}
+        operator pointer_type(){ return shader_; }
+        operator pointer_array_type(){ return &shader_; }
+
+        bool valid() const{ return (shader_!=NULL);}
+
+        void attach(ContextRef& context) const;
 
         PixelShaderRef& operator=(const PixelShaderRef& rhs)
         {
@@ -62,10 +69,6 @@ namespace lgraphics
             tmp.swap(*this);
             return *this;
         }
-
-        bool valid() const{ return (shader_!=NULL);}
-
-        void attach(ContextRef& context) const;
 
         void swap(PixelShaderRef& rhs)
         {
@@ -97,6 +100,7 @@ namespace lgraphics
     public:
         typedef ID3D11VertexShader element_type;
         typedef ID3D11VertexShader* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
          VertexShaderRef()
             :shader_(NULL)
@@ -111,6 +115,12 @@ namespace lgraphics
         }
 
         pointer_type get(){ return shader_;}
+        operator pointer_type(){ return shader_; }
+        operator pointer_array_type(){ return &shader_; }
+
+        bool valid() const{ return (shader_!=NULL);}
+
+        void attach(ContextRef& context) const;
 
         VertexShaderRef& operator=(const VertexShaderRef& rhs)
         {
@@ -118,10 +128,6 @@ namespace lgraphics
             tmp.swap(*this);
             return *this;
         }
-
-        bool valid() const{ return (shader_!=NULL);}
-
-        void attach(ContextRef& context) const;
 
         void swap(VertexShaderRef& rhs)
         {
@@ -153,8 +159,9 @@ namespace lgraphics
     public:
         typedef ID3D11GeometryShader element_type;
         typedef ID3D11GeometryShader* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
-         GeometryShaderRef()
+        GeometryShaderRef()
             :shader_(NULL)
         {
         }
@@ -166,18 +173,20 @@ namespace lgraphics
             destroy();
         }
 
+        pointer_type get(){ return shader_;}
+        operator pointer_type(){ return shader_; }
+        operator pointer_array_type(){ return &shader_; }
+
+        bool valid() const{ return (shader_!=NULL);}
+
+        void attach(ContextRef& context) const;
+
         GeometryShaderRef& operator=(const GeometryShaderRef& rhs)
         {
             GeometryShaderRef tmp(rhs);
             tmp.swap(*this);
             return *this;
         }
-
-        pointer_type get(){ return shader_;}
-
-        bool valid() const{ return (shader_!=NULL);}
-
-        void attach(ContextRef& context) const;
 
         void swap(GeometryShaderRef& rhs)
         {
@@ -208,8 +217,9 @@ namespace lgraphics
     public:
         typedef ID3D11ComputeShader element_type;
         typedef ID3D11ComputeShader* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
-         ComputeShaderRef()
+        ComputeShaderRef()
             :shader_(NULL)
         {
         }
@@ -222,6 +232,13 @@ namespace lgraphics
         }
 
         pointer_type get(){ return shader_;}
+        operator pointer_type(){ return shader_; }
+        operator pointer_array_type(){ return &shader_; }
+
+        bool valid() const{ return (shader_!=NULL);}
+
+        void attach(ContextRef& context) const;
+
 
         ComputeShaderRef& operator=(const ComputeShaderRef& rhs)
         {
@@ -229,10 +246,6 @@ namespace lgraphics
             tmp.swap(*this);
             return *this;
         }
-
-        bool valid() const{ return (shader_!=NULL);}
-
-        void attach(ContextRef& context) const;
 
         void swap(ComputeShaderRef& rhs)
         {
@@ -264,6 +277,7 @@ namespace lgraphics
     public:
         typedef ID3D11DomainShader element_type;
         typedef ID3D11DomainShader* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         DomainShaderRef()
             :shader_(NULL)
@@ -278,6 +292,12 @@ namespace lgraphics
         }
 
         pointer_type get(){ return shader_; }
+        operator pointer_type(){ return shader_; }
+        operator pointer_array_type(){ return &shader_; }
+
+        bool valid() const{ return (shader_!=NULL); }
+
+        void attach(ContextRef& context) const;
 
         DomainShaderRef& operator=(const DomainShaderRef& rhs)
         {
@@ -285,10 +305,6 @@ namespace lgraphics
             tmp.swap(*this);
             return *this;
         }
-
-        bool valid() const{ return (shader_!=NULL); }
-
-        void attach(ContextRef& context) const;
 
         void swap(DomainShaderRef& rhs)
         {
@@ -320,6 +336,7 @@ namespace lgraphics
     public:
         typedef ID3D11HullShader element_type;
         typedef ID3D11HullShader* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         HullShaderRef()
             :shader_(NULL)
@@ -334,6 +351,12 @@ namespace lgraphics
         }
 
         pointer_type get(){ return shader_; }
+        operator pointer_type(){ return shader_; }
+        operator pointer_array_type(){ return &shader_; }
+
+        bool valid() const{ return (shader_!=NULL); }
+
+        void attach(ContextRef& context) const;
 
         HullShaderRef& operator=(const HullShaderRef& rhs)
         {
@@ -341,10 +364,6 @@ namespace lgraphics
             tmp.swap(*this);
             return *this;
         }
-
-        bool valid() const{ return (shader_!=NULL); }
-
-        void attach(ContextRef& context) const;
 
         void swap(HullShaderRef& rhs)
         {

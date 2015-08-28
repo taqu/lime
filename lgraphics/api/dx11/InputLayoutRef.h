@@ -19,6 +19,7 @@ namespace lgraphics
     public:
         typedef ID3D11InputLayout element_type;
         typedef ID3D11InputLayout* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         InputLayoutRef()
             :layout_(NULL)
@@ -31,9 +32,11 @@ namespace lgraphics
             destroy();
         }
 
-        pointer_type get(){ return layout_;}
-
         void destroy();
+
+        pointer_type get(){ return layout_;}
+        operator pointer_type(){ return layout_; }
+        operator pointer_array_type(){ return &layout_; }
 
         bool valid() const{ return (NULL != layout_);}
 

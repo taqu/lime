@@ -55,7 +55,15 @@ namespace io
 
         static bool checkSignature(lcore::istream& is);
 
-        static bool read(Texture2DRef& texture, const u8* data, u32 size, Usage usage, TextureFilterType filter, TextureAddress address);
+        static bool read(
+            Texture2DRef& texture,
+            const u8* data,
+            u32 size,
+            Usage usage,
+            BindFlag bindFlag,
+            CPUAccessFlag access,
+            ResourceMisc misc,
+            u32& width, u32& height, DataFormat& format);
 
     };
 }

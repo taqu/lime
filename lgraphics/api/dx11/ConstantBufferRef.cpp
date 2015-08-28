@@ -9,22 +9,22 @@
 
 namespace lgraphics
 {
-    void ConstantBufferRef::setVS(ContextRef& context, u32 start)
+    void ConstantBufferRef::attachVS(ContextRef& context, u32 start)
     {
         context.setVSConstantBuffers(start, 1, &buffer_);
     }
 
-    void ConstantBufferRef::setGS(ContextRef& context, u32 start)
+    void ConstantBufferRef::attachGS(ContextRef& context, u32 start)
     {
         context.setGSConstantBuffers(start, 1, &buffer_);
     }
 
-    void ConstantBufferRef::setPS(ContextRef& context, u32 start)
+    void ConstantBufferRef::attachPS(ContextRef& context, u32 start)
     {
         context.setPSConstantBuffers(start, 1, &buffer_);
     }
 
-    void ConstantBufferRef::setCS(ContextRef& context, u32 start)
+    void ConstantBufferRef::attachCS(ContextRef& context, u32 start)
     {
         context.setCSConstantBuffers(start, 1, &buffer_);
     }

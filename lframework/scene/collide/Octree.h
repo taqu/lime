@@ -41,6 +41,8 @@ namespace lcollide
 
         void add(ColliderBase3* node);
         void collideAll(CollisionPairVector& collisions);
+
+        bool test(RayHitInfo& hitInfo, const lmath::Ray& ray, s16 group);
     private:
         class NodeTop : public ColliderBase
         {
@@ -48,6 +50,11 @@ namespace lcollide
 
         void push(ColliderBase3* node, s32 index);
         void innerCollideAll(s32 nodeIndex, CollisionPairVector& collisions);
+        void innerTest(RayHitInfo& hitInfo, const lmath::Ray& ray, s32 nodeIndex, lmath::Vector3 t0, lmath::Vector3 t1);
+
+        static inline void invert(lmath::Vector4& v);
+        static s32 firstNode(const lmath::Vector3& t0, const lmath::Vector3& tm);
+        static s32 nextNode(const lmath::Vector3& t, s32 x, s32 y, s32 z);
 
         u32 numSplits_;
         lmath::Vector4 bmin_;
@@ -57,6 +64,9 @@ namespace lcollide
 
         s32 depth_;
         s32 ancestorStack_[StackSize];
+
+        s16 negativeBits_;
+        s16 targetGroup_;
     };
 }
 #endif //INC_LCOLLIDE_OCTREE_H__

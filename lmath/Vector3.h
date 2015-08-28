@@ -6,7 +6,6 @@
 @date 2009/01/17 create
 */
 #include "lmathcore.h"
-#include <lcore/utility.h>
 
 namespace lmath
 {
@@ -30,18 +29,12 @@ namespace lmath
         Vector3()
         {}
 
-        Vector3(f32 x, f32 y, f32 z)
-            :x_(x)
-            ,y_(y)
-            ,z_(z)
-        {}
+        inline Vector3(f32 x, f32 y, f32 z);
+        explicit inline Vector3(f32 xyz);
 
         explicit Vector3(const lmath::Vector4& v);
 
-        inline void set(f32 x, f32 y, f32 z)
-        {
-            x_ = x; y_ = y; z_ = z;
-        }
+        inline void set(f32 x, f32 y, f32 z);
 
         Vector3& operator=(const lmath::Vector4& rhs);
 
@@ -95,6 +88,9 @@ namespace lmath
         */
         Vector3& lerp(const Vector3& v0, const Vector3& v1, f32 f0, f32 f1);
 
+        inline void mul(f32 a, const Vector3& v);
+        inline void mul(const Vector3& v, f32 a);
+
         void mul(const Matrix34& m, const Vector3& v);
         void mul(const Vector3& v, const Matrix34& m);
 
@@ -113,6 +109,8 @@ namespace lmath
 
         inline void add(const Vector3& v0, const Vector3& v1);
         inline void sub(const Vector3& v0, const Vector3& v1);
+        inline void mul(const Vector3& v0, const Vector3& v1);
+        inline void div(const Vector3& v0, const Vector3& v1);
 
         inline void minimum(const Vector3& v0, const Vector3& v1);
         inline void maximum(const Vector3& v0, const Vector3& v1);
@@ -132,10 +130,7 @@ namespace lmath
 
         inline static lm128 load(const Vector3& v)
         {
-            lm128 t = _mm_load_ss(&v.z_);
-            t = _mm_movelh_ps(t, t);
-            t = _mm_loadl_pi(t, reinterpret_cast<const __m64*>(&v.x_));
-            return t;
+            return load3(&v.x_);
         }
 
         inline static lm128 load(f32 x, f32 y, f32 z)
@@ -150,11 +145,7 @@ namespace lmath
 
         inline static void store(Vector3& v, const lm128& r)
         {
-            _mm_storel_pi(reinterpret_cast<__m64*>(&v.x_), r);
-
-            static const u32 Shuffle = 170;
-            lm128 t = _mm_shuffle_ps(r, r, Shuffle);
-            _mm_store_ss(&v.z_, t);
+            store3(&v.x_, r);
         }
 #endif
 
@@ -168,6 +159,24 @@ namespace lmath
     //--- 実装
     //---
     //--------------------------------------------
+    inline Vector3::Vector3(f32 x, f32 y, f32 z)
+        :x_(x)
+        ,y_(y)
+        ,z_(z)
+    {}
+
+    inline Vector3::Vector3(f32 xyz)
+        :x_(xyz)
+        ,y_(xyz)
+        ,z_(xyz)
+    {
+    }
+
+    inline void Vector3::set(f32 x, f32 y, f32 z)
+    {
+        x_ = x; y_ = y; z_ = z;
+    }
+
     inline void Vector3::zero()
     {
         x_ = y_ = z_ = 0.0f;
@@ -276,6 +285,20 @@ namespace lmath
         return lmath::sqrt( distanceSqr(v) );
     }
 
+    inline void Vector3::mul(f32 a, const Vector3& v)
+    {
+        x_ = a * v.x_;
+        y_ = a * v.y_;
+        z_ = a * v.z_;
+    }
+
+    inline void Vector3::mul(const Vector3& v, f32 a)
+    {
+        x_ = v.x_ * a;
+        y_ = v.y_ * a;
+        z_ = v.z_ * a;
+    }
+
     inline void Vector3::swap(Vector3& rhs)
     {
         lcore::swap(x_, rhs.x_);
@@ -300,6 +323,20 @@ namespace lmath
         x_ = v0.x_ - v1.x_;
         y_ = v0.y_ - v1.y_;
         z_ = v0.z_ - v1.z_;
+    }
+
+    inline void Vector3::mul(const Vector3& v0, const Vector3& v1)
+    {
+        x_ = v0.x_ * v1.x_;
+        y_ = v0.y_ * v1.y_;
+        z_ = v0.z_ * v1.z_;
+    }
+
+    inline void Vector3::div(const Vector3& v0, const Vector3& v1)
+    {
+        x_ = v0.x_ / v1.x_;
+        y_ = v0.y_ / v1.y_;
+        z_ = v0.z_ / v1.z_;
     }
 
 

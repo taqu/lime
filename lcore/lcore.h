@@ -10,14 +10,14 @@
 #include <float.h>
 
 //-------------------
-#if defined(_WIN32)
+#if defined(_WIN32) || defined(_WIN64)
+#include <limits>
 
 #if defined(_DEBUG)
 #include <malloc.h>
 #include <new>
 
 #define LIME_NEW new(__FILE__,__LINE__)
-//#define LIME_NEW new
 #define LIME_RAW_NEW new
 
 #else //_DEBUG
@@ -29,12 +29,8 @@
 
 #endif
 
-//#if !defined(WIN32_LEAN_AND_MEAN)
-//#define WIN32_LEAN_AND_MEAN
-//#endif //WIN32_LEAN_AND_MEAN
-//#include <windows.h>
-
-#else //_WIN32
+#elif defined(ANDROID) || defined(__GNUC__) //defined(_WIN32) || defined(_WIN64)
+#include <limits>
 #include <malloc.h>
 #include <new>
 #define LIME_NEW new
@@ -44,6 +40,7 @@
 //-------------------
 #if defined(ANDROID) || defined(__GNUC__)
 #include <stdint.h>
+#include <time.h>
 #endif //ANDROID __GNUC__
 
 //-------------------
@@ -110,48 +107,54 @@ inline void operator delete[](void* ptr, const char* /*file*/, int /*line*/)
 
 
 /// 16バイトアライメント変数指定
+#ifdef _MSC_VER
 #define LIME_ALIGN16 __declspec(align(16))
 #define LIME_ALIGN(x) __declspec(align(x))
+#else
+#define LIME_ALIGN16 __attribute__((align(16)))
+#define LIME_ALIGN(x) __attribute__((align(x)))
+#endif
+
 static const uintptr_t LIME_ALIGN16_MASK = (0xFU);
 
 #if defined(_DEBUG)
 
 #define LIME_PLACEMENT_NEW(ptr) new(ptr)
-#define LIME_DELETE(p) { delete p; (p)=NULL;}
+#define LIME_DELETE(p) delete p; (p)=NULL
 #define LIME_DELETE_NONULL(p) delete p
 //#define LIME_OPERATOR_NEW ::operator new
 //#define LIME_OPERATOR_DELETE ::operator delete
 
-#define LIME_DELETE_ARRAY(p) {delete[] (p); (p) = NULL;}
+#define LIME_DELETE_ARRAY(p) delete[] (p); (p)=NULL
 
 #define LIME_MALLOC(size) (lcore_malloc(size, __FILE__, __LINE__))
 #define LIME_MALLOC_DEBUG(size, file, line) (lcore_malloc(size, file, line))
-#define LIME_FREE(mem) {lcore_free(mem); mem = NULL;}
+#define LIME_FREE(mem) lcore_free(mem); (mem)=NULL
 
 /// アライメント指定malloc
 #define LIME_ALIGNED_MALLOC(size, align) (lcore_malloc(size, align, __FILE__, __LINE__))
 #define LIME_ALIGNED_MALLOC_DEBUG(size, align, file, line) (lcore_malloc(size, align, file, line))
 /// アライメント指定free
-#define LIME_ALIGNED_FREE(mem, align) (lcore_free(mem, align))
+#define LIME_ALIGNED_FREE(mem, align) lcore_free(mem, align); (mem)=NULL
 
 #else //defined(_DEBUG)
 
 #define LIME_PLACEMENT_NEW(ptr) new(ptr)
-#define LIME_DELETE(p) { delete p; (p)=NULL;}
+#define LIME_DELETE(p) delete p; (p)=NULL
 #define LIME_DELETE_NONULL(p) delete p
 //#define LIME_OPERATOR_NEW ::operator new
 //#define LIME_OPERATOR_DELETE ::operator delete
 
-#define LIME_DELETE_ARRAY(p) {delete[] (p); (p) = NULL;}
+#define LIME_DELETE_ARRAY(p) delete[] (p); (p)=NULL
 
 #define LIME_MALLOC(size) (lcore_malloc(size))
 #define LIME_MALLOC_DEBUG(size, file, line) (lcore_malloc(size))
-#define LIME_FREE(mem) {lcore_free(mem); mem = NULL;}
+#define LIME_FREE(mem) lcore_free(mem); mem=NULL
 
 /// アライメント指定malloc
 #define LIME_ALIGNED_MALLOC(size, align) (lcore_malloc(size, align))
 /// アライメント指定free
-#define LIME_ALIGNED_FREE(mem, align) (lcore_free(mem, align))
+#define LIME_ALIGNED_FREE(mem, align) lcore_free(mem, align); (mem)=NULL
 #endif
 
 
@@ -184,7 +187,6 @@ static const uintptr_t LIME_ALIGN16_MASK = (0xFU);
 
 namespace lcore
 {
-
 
 #if defined(_MSC_VER)
     typedef char Char;
@@ -261,6 +263,8 @@ namespace lcore
 #else
     typedef u64 ClockType;
 #endif
+
+    static const Char Delimiter = '/';
 
     template<class T>
     inline T* align16(T* ptr)
@@ -373,6 +377,20 @@ namespace lcore
         //return (1.0f-ratio)*v0 + ratio*v1;
     }
 
+#define LCORE_DEFINE_MINMAX_FUNC(TYPE) \
+    inline TYPE maximum(TYPE left, TYPE right){ return (left<right)? right : left;}\
+    inline TYPE minimum(TYPE left, TYPE right){ return (right<left)? right : left;}\
+
+    LCORE_DEFINE_MINMAX_FUNC(s8)
+    LCORE_DEFINE_MINMAX_FUNC(s16)
+    LCORE_DEFINE_MINMAX_FUNC(s32)
+    LCORE_DEFINE_MINMAX_FUNC(u8)
+    LCORE_DEFINE_MINMAX_FUNC(u16)
+    LCORE_DEFINE_MINMAX_FUNC(u32)
+    LCORE_DEFINE_MINMAX_FUNC(f32)
+    LCORE_DEFINE_MINMAX_FUNC(f64)
+#undef LCORE_DEFINE_MINMAX_FUNC
+
     template<class T>
     inline const T& maximum(const T& left, const T& right)
     {
@@ -385,6 +403,7 @@ namespace lcore
     {
         return (right<left)? right : left;
     }
+
 
     template<class T>
     inline T clamp(T val, T low, T high)
@@ -411,6 +430,14 @@ namespace lcore
     f32 clampRotate0(f32 val, f32 total);
     s32 clampRotate0(s32 val, s32 total);
 
+    template<class T>
+    T roundUp(const T& dividend, const T& divisor)
+    {
+        T quotient = dividend / divisor;
+        T remainder = dividend - divisor * quotient;
+        quotient += (0<remainder)? 1 : 0;
+        return quotient;
+    }
 
     template<class Itr>
     struct iterator_traits
@@ -706,6 +733,246 @@ namespace lcore
 
     //u16 mostSignificantBit(u16 v);
     //u8 mostSignificantBit(u8 v);
+
+    //---------------------------------------------------------
+    //---
+    //--- ScopedPtr
+    //---
+    //---------------------------------------------------------
+    template<class T>
+    class ScopedPtr
+    {
+    public:
+        ScopedPtr(T* pointer)
+            :pointer_(pointer)
+        {
+        }
+
+        ~ScopedPtr()
+        {
+            LIME_DELETE(pointer_);
+        }
+
+        T* get()
+        {
+            return pointer_;
+        }
+
+        T* release()
+        {
+            T* tmp = pointer_;
+            pointer_ = NULL;
+            return tmp;
+        }
+
+        T* operator->()
+        {
+            LASSERT(pointer_ != NULL);
+            return pointer_;
+        }
+
+        T& operator*() const
+        {
+            LASSERT(pointer_ != NULL);
+            return *pointer_;
+        }
+
+        operator bool() const
+        {
+            return pointer_ != NULL;
+        }
+
+        bool operator!() const
+        {
+            return pointer_ == NULL;
+        }
+    private:
+        // コピー禁止
+        explicit ScopedPtr(const ScopedPtr&);
+        ScopedPtr& operator=(const ScopedPtr&);
+
+        T *pointer_;
+    };
+
+    template<class T>
+    class ScopedArrayPtr
+    {
+    public:
+        ScopedArrayPtr(T* pointer)
+            :pointer_(pointer)
+        {
+        }
+
+        ~ScopedArrayPtr()
+        {
+            LIME_DELETE_ARRAY(pointer_);
+        }
+
+        T* get()
+        {
+            return pointer_;
+        }
+
+        T* release()
+        {
+            T* tmp = pointer_;
+            pointer_ = NULL;
+            return tmp;
+        }
+
+        T& operator[](int index)
+        {
+            LASSERT(pointer_ != NULL);
+            return pointer_[index];
+        }
+
+        const T& operator[](int index) const
+        {
+            LASSERT(pointer_ != NULL);
+            return pointer_[index];
+        }
+
+        operator bool() const
+        {
+            return pointer_ != NULL;
+        }
+
+        bool operator!() const
+        {
+            return pointer_ == NULL;
+        }
+    private:
+        // コピー禁止
+        explicit ScopedArrayPtr(const ScopedArrayPtr&);
+        ScopedArrayPtr& operator=(const ScopedArrayPtr&);
+
+        T *pointer_;
+    };
+
+    //---------------------------------------------------------
+    //---
+    //--- 文字列操作
+    //---
+    //---------------------------------------------------------
+    /**
+    @brief 後方から文字探索
+    @return 見つからなければNULL
+    @param src ... 入力
+    @param c ... 探索文字
+    @param size ... 文字列長
+    */
+    const Char* rFindChr(const Char* src, Char c, u32 size);
+
+
+    /**
+    @brief パスからディレクトリパス抽出
+    @return dstの長さ。ヌル含まず
+    @param dst ... 出力バッファ。ヌル込みで十分なサイズがあること
+    @param path ... 解析パス
+    @param length ... 解析パスの長さ。ヌル含まず
+    */
+    u32 extractDirectoryPath(Char* dst, const Char* path, u32 length);
+
+    // パスからファイル名抽出
+    u32 extractFileName(Char* dst, u32 size, const Char* path);
+
+    // パスから次のファイル名抽出
+    const Char* parseNextNameFromPath(const Char* str, u32& length, Char* path, u32 N);
+
+    //---------------------------------------------------------
+    //---
+    //--- タイム関係
+    //---
+    //---------------------------------------------------------
+    void sleep(u32 milliSeconds);
+
+    /// カウント取得
+    ClockType getPerformanceCounter();
+
+    /// 秒間カウント数
+    ClockType getPerformanceFrequency();
+
+    /// 秒単位の時間差分計算
+    f64 calcTime64(ClockType prevTime, ClockType currentTime);
+
+    inline f32 calcTime(ClockType prevTime, ClockType currentTime)
+    {
+        return static_cast<f32>(calcTime64(prevTime, currentTime));
+    }
+
+    /// ミリ秒単位の時間を取得
+    u32 getTime();
+
+
+    template<bool enable>
+    struct Timer
+    {
+        Timer()
+            :time_(0)
+            ,count_(0)
+            ,totalTime_(0.0f)
+        {}
+
+        void begin()
+        {
+            time_ = getPerformanceCounter();
+        }
+
+        void end()
+        {
+            totalTime_ += calcTime64(time_, getPerformanceCounter());
+            ++count_;
+        }
+
+        f64 getAverage() const
+        {
+            return (0 == count_)? 0.0 : totalTime_/count_;
+        }
+
+        void reset();
+
+        ClockType time_;
+        s32 count_;
+        f64 totalTime_;
+    };
+
+    template<bool enable>
+    void Timer<enable>::reset()
+    {
+        time_ = 0;
+        count_ = 0;
+        totalTime_ = 0.0f;
+    }
+
+    template<>
+    struct Timer<false>
+    {
+        void begin(){}
+        void end(){}
+        f64 getAverage() const{return 0.0;}
+        void reset(){}
+    };
+
+    //---------------------------------------------------------
+    //---
+    //--- Character Code
+    //---
+    //---------------------------------------------------------
+    /**
+    @brief UTF8 to UTF16
+    @return 変換したUTF8のバイト数
+    @param utf16 ... 出力。UTF16コード
+    @param utf8 ... UTF8文字
+    */
+    s32 UTF8toUTF16(u16& utf16, const Char* utf8);
+
+    /**
+    @brief UTF16 to UTF8
+    @return 変換されたUTF8のバイト数
+    @param utf8 ... 出力。UTF8コード
+    @param utf16 ... UTF16文字
+    */
+    s32 UTF16toUTF8(Char* utf8, u16 utf16);
 
     void setLocale(const Char* locale);
 

@@ -59,72 +59,32 @@ namespace lscene
         /**
         @brief 透視投影
         */
-        void perspective(f32 width, f32 height, f32 znear, f32 zfar)
-        {
-            znear_ = znear;
-            zfar_ = zfar;
-            width_ = width;
-            height_ = height;
-            aspect_ = width/height;
-            fovy_ = lmath::calcFOVY(height, znear);
-            projMatrix_.perspective(width, height, znear, zfar);
-        }
+        void perspective(f32 width, f32 height, f32 znear, f32 zfar);
 
         /**
         @brief 透視投影
         */
-        void perspectiveFov(f32 fovy, f32 aspect, f32 znear, f32 zfar)
-        {
-            znear_ = znear;
-            zfar_ = zfar;
-            height_ = 2.0f*znear*lmath::tan(0.5f*fovy);
-            width_ = height_*aspect;
-            aspect_ = aspect;
-            fovy_ = fovy;
-            projMatrix_.perspectiveFov(fovy, aspect, znear, zfar);
-        }
+        void perspectiveFov(f32 fovy, f32 aspect, f32 znear, f32 zfar);
+
+        /**
+        @brief 透視投影
+        */
+        void perspectiveLens(f32 focalLength, f32 frameHeight, f32 aspect, f32 znear, f32 zfar);
 
         /**
         @brief 平行投影
         */
-        void ortho(f32 width, f32 height, f32 znear, f32 zfar)
-        {
-            znear_ = znear;
-            zfar_ = zfar;
-            width_ = width;
-            height_ = height;
-            aspect_ = width/height;
-            fovy_ = 0.0f;
-            projMatrix_.ortho(width, height, znear, zfar);
-        }
+        void ortho(f32 width, f32 height, f32 znear, f32 zfar);
 
         /**
         @brief 透視投影。リニアＺ版
         */
-        void perspectiveLinearZ(f32 width, f32 height, f32 znear, f32 zfar)
-        {
-            znear_ = znear;
-            zfar_ = zfar;
-            width_ = width;
-            height_ = height;
-            aspect_ = width/height;
-            fovy_ = lmath::calcFOVY(height, znear);
-            projMatrix_.perspectiveLinearZ(width, height, znear, zfar);
-        }
+        void perspectiveLinearZ(f32 width, f32 height, f32 znear, f32 zfar);
 
         /**
         @brief 透視投影。リニアＺ版
         */
-        void perspectiveFovLinearZ(f32 fovy, f32 aspect, f32 znear, f32 zfar)
-        {
-            znear_ = znear;
-            zfar_ = zfar;
-            height_ = 2.0f*znear*lmath::tan(0.5f*fovy);
-            width_ = height_/aspect;
-            aspect_ = aspect;
-            fovy_ = fovy;
-            projMatrix_.perspectiveFovLinearZ(fovy, aspect, znear, zfar);
-        }
+        void perspectiveFovLinearZ(f32 fovy, f32 aspect, f32 znear, f32 zfar);
 
         void updateMatrix();
 

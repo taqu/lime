@@ -148,6 +148,16 @@ namespace lscene
     {
     }
 
+    void NodeBase::traverseUpdateTransform()
+    {
+        for(NodeVector::iterator itr = children_.begin();
+            itr != children_.end();
+            ++itr)
+        {
+            (*itr)->traverseUpdateTransform();
+        }
+    }
+
     void NodeBase::visitRenderQueue(RenderContext& renderContext)
     {
         if(checkFlag(NodeFlag_Render)){
@@ -161,6 +171,6 @@ namespace lscene
 
     const lmath::Matrix44& NodeBase::getMatrix() const
     {
-        return identity_;
+        return (NULL == parent_)? identity_ : parent_->getMatrix();
     }
 }

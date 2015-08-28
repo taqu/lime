@@ -24,6 +24,7 @@ namespace lgraphics
     public:
         typedef ID3D11BlendState element_type;
         typedef ID3D11BlendState* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         BlendStateRef()
             :state_(NULL)
@@ -38,17 +39,19 @@ namespace lgraphics
 
         void destroy();
 
+        pointer_type get(){ return state_;}
+        operator pointer_type(){ return state_; }
+        operator pointer_array_type(){ return &state_;}
+
+        bool valid() const{ return (NULL != state_);}
+
+        void attach(ContextRef& context);
+
         BlendStateRef& operator=(const BlendStateRef& rhs)
         {
             BlendStateRef(rhs).swap(*this);
             return *this;
         }
-
-        pointer_type getBlendState(){ return state_;}
-        pointer_type const* get(){ return &state_;}
-        bool valid() const{ return (NULL != state_);}
-
-        void attach(ContextRef& context);
 
         void swap(BlendStateRef& rhs)
         {

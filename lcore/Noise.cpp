@@ -4,7 +4,7 @@
 @date 2014/05/08 create
 */
 #include "Noise.h"
-#include "random/Random.h"
+#include "Random.h"
 #include "clibrary.h"
 
 #include <math.h>

@@ -7,13 +7,23 @@
 */
 #include "../lcore.h"
 
+#if defined(_WIN32) || defined(_WIN64)
+
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
 #include <windows.h>
 
+#else
+#include <errno.h>
+#include <pthread.h> 
+#include <unistd.h>
+#endif
+
 namespace lcore
 {
+
+#if defined(_WIN32) || defined(_WIN64)
 namespace thread
 {
     static const u32 Infinite = 0xFFFFFFFFU; /// タイムアウト時間に指定すると、シグナル状態になるまで待機
@@ -24,16 +34,11 @@ namespace thread
         Wait_Timeout = WAIT_TIMEOUT , /// タイムアウトした
         Wait_Failed = WAIT_FAILED , /// 関数失敗
     };
-
-    inline void sleep(u32 milliSeconds)
-    {
-        ::Sleep(milliSeconds);
-    }
 }
 
     //-------------------------------------------------------
     //---
-    //--- ConditionVariable
+    //--- CriticalSection
     //---
     //-------------------------------------------------------
     /**
@@ -71,6 +76,11 @@ namespace thread
     };
 
 
+    //-------------------------------------------------------
+    //---
+    //--- ScopedLock
+    //---
+    //-------------------------------------------------------
     /**
     @brief ロックオブジェクト
     */
@@ -103,7 +113,6 @@ namespace thread
     //--- Event
     //---
     //-------------------------------------------------------
-#if _WIN32
     class Event
     {
     public:
@@ -127,27 +136,11 @@ namespace thread
     private:
         Event(const Event&);
         Event& operator=(const Event&);
+
         HANDLE event_;
     };
 
-#else
-    class Event
-    {
-    public:
-        Event(bool manualReset, bool initState);
-        ~Event();
 
-        thread::WaitStatus wait(u32 timeout);
-
-        void set();
-        void reset();
-    private:
-        pthread_cond_t condVariable_;
-        pthread_mutex_t lock_;
-        s16 manualReset_;
-        s16 state_;
-    };
-#endif
 
     //-------------------------------------------------------
     //---
@@ -207,6 +200,9 @@ namespace thread
         void leaveWriter();
 
     private:
+        ReadersWriterLock(const ReadersWriterLock&);
+        ReadersWriterLock& operator=(const ReadersWriterLock&);
+
         s32 readers_;
         CRITICAL_SECTION csReaders_;
         CRITICAL_SECTION csWrite_;
@@ -238,33 +234,6 @@ namespace thread
     //--- SpinLock
     //---
     //-------------------------------------------------------
-#if defined(__GNUC__)
-    class SpinLock
-    {
-    public:
-        SpinLock()
-            :value_(0)
-        {}
-
-        ~SpinLock()
-        {}
-
-        void enter()
-        {
-            while(__sync_lock_test_and_set(&value_, 1)){
-            }
-        }
-
-        void leave()
-        {
-            __sync_lock_release(&value_);
-        }
-
-    private:
-        s32 value_;
-    };
-
-#elif defined(WIN32)
     class SpinLock
     {
     public:
@@ -287,11 +256,159 @@ namespace thread
         }
 
     private:
+        SpinLock(const SpinLock&);
+        SpinLock& operator=(const SpinLock&);
+
         LONG value_;
     };
 
     typedef ScopedLock<SpinLock> SPLock;
-}
-#endif
 
+#else
+namespace thread
+{
+    static const u32 Infinite = 0xFFFFFFFFU; /// タイムアウト時間に指定すると、シグナル状態になるまで待機
+    enum WaitStatus
+    {
+        Wait_Abandoned = 128, /// 所有していたオブジェクトが解放しないで終了した
+        Wait_Success = 0, /// シグナル状態になった
+        Wait_Timeout = ETIMEDOUT, /// タイムアウトした
+        Wait_Failed = -1, /// 関数失敗
+    };
+}
+
+    //-------------------------------------------------------
+    //---
+    //--- CriticalSection
+    //---
+    //-------------------------------------------------------
+    /**
+    @brief クリティカルセクション
+    */
+    class CriticalSection
+    {
+    public:
+        static const u32 DefaultSpinCount = 2000;
+        explicit CriticalSection(u32 spinCount = DefaultSpinCount)
+        {
+            //mutex_ = PTHREAD_MUTEX_INITIALIZER; //時刻情報付き
+            //mutex_ = PTHREAD_RECURSIVE_MUTEX_INITIALIZER_NP; //再帰ロックサポート
+            //mutex_ = PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP; //高速
+            //mutex_ = PTHREAD_ERRORCHECK_MUTEX_INITIALIZER_NP; //エラーチェック
+            pthread_mutex_init(&mutex_, NULL); //default PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
+        }
+
+        ~CriticalSection()
+        {
+            pthread_mutex_destroy(&mutex_);
+        }
+
+        void enter()
+        {
+            pthread_mutex_lock(&mutex_);
+        }
+
+        void leave()
+        {
+            pthread_mutex_unlock(&mutex_);
+        }
+
+    private:
+        CriticalSection(const CriticalSection&);
+        CriticalSection& operator=(const CriticalSection&);
+
+        friend class ThreadRaw;
+        friend class Thread;
+
+        pthread_mutex_t mutex_;
+    };
+
+    //-------------------------------------------------------
+    //---
+    //--- ScopedLock
+    //---
+    //-------------------------------------------------------
+    /**
+    @brief ロックオブジェクト
+    */
+    template<class T>
+    class ScopedLock
+    {
+    public:
+        explicit ScopedLock(T& obj)
+            :obj_(obj)
+        {
+            obj_.enter();
+        }
+
+        ~ScopedLock()
+        {
+            obj_.leave();
+        }
+
+    private:
+        ScopedLock(const ScopedLock&);
+        ScopedLock& operator=(const ScopedLock&);
+
+        T& obj_;
+    };
+
+    typedef ScopedLock<CriticalSection> CSLock;
+
+    //-------------------------------------------------------
+    //---
+    //--- SpinLock
+    //---
+    //-------------------------------------------------------
+    class SpinLock
+    {
+    public:
+        SpinLock()
+            :value_(0)
+        {}
+
+        ~SpinLock()
+        {}
+
+        void enter()
+        {
+            while(__sync_lock_test_and_set(&value_, 1)){
+            }
+        }
+
+        void leave()
+        {
+            __sync_lock_release(&value_);
+        }
+
+    private:
+        SpinLock(const SpinLock&);
+        SpinLock& operator=(const SpinLock&);
+
+        s32 value_;
+    };
+
+    typedef ScopedLock<SpinLock> SPLock;
+
+    class Event
+    {
+    public:
+        Event(bool manualReset, bool initState);
+        ~Event();
+
+        thread::WaitStatus wait(u32 timeout);
+
+        void set();
+        void reset();
+    private:
+        Event(const Event&);
+        Event& operator=(const Event&);
+
+        pthread_cond_t condVariable_;
+        pthread_mutex_t lock_;
+        s16 manualReset_;
+        s16 state_;
+    };
+#endif
+}
 #endif //INC_LCORE_SYNCOBJECT_H__

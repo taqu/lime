@@ -99,7 +99,7 @@ namespace lgraphics
         ResourceMisc_GenerateMips = D3D11_RESOURCE_MISC_GENERATE_MIPS,
         ResourceMisc_Shared = D3D11_RESOURCE_MISC_SHARED,
         ResourceMisc_TextureCube = D3D11_RESOURCE_MISC_TEXTURECUBE,
-        ResourceMisc_DrawDirectArgs = D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS,
+        ResourceMisc_DrawIndirectArgs = D3D11_RESOURCE_MISC_DRAWINDIRECT_ARGS,
         ResourceMisc_BufferAllowRawView = D3D11_RESOURCE_MISC_BUFFER_ALLOW_RAW_VIEWS,
         ResourceMisc_BufferStructured = D3D11_RESOURCE_MISC_BUFFER_STRUCTURED,
         ResourceMisc_ResourceClamp = D3D11_RESOURCE_MISC_RESOURCE_CLAMP,

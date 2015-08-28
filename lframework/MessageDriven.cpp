@@ -33,7 +33,7 @@ namespace lframework
             window_.terminate();
             return false;
         }
-        lgraphics::Graphics::getDevice().setViewport(0, 0, param.backBufferWidth_, param.backBufferHeight_);
+        lgraphics::Graphics::getDevice().setViewport(0, 0, param.backBufferWidth_, param.backBufferHeight_, 0.0f, 1.0f);
         return true;
     }
 

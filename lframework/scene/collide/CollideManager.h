@@ -38,6 +38,8 @@ namespace lcollide
         void setRange(const lmath::Vector3& bmin, const lmath::Vector3& bmax);
         void add(Collider* collider);
         void collideAll();
+
+        inline bool test(RayHitInfo& hitInfo, const lmath::Ray& ray, s16 group);
     private:
         CollideManager(const CollideManager&);
         CollideManager& operator=(const CollideManager&);
@@ -50,5 +52,10 @@ namespace lcollide
         lcollide::Octree::CollisionPairVector collisions_;
         lcollide::Octree octree_;
     };
+
+    inline bool CollideManager::test(RayHitInfo& hitInfo, const lmath::Ray& ray, s16 group)
+    {
+        return octree_.test(hitInfo, ray, group);
+    }
 }
 #endif //INC_LCOLLIDE_COLLIDEMANAGER_H__

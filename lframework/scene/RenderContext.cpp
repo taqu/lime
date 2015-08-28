@@ -24,6 +24,7 @@ namespace lscene
         ,context_(NULL)
         ,constantBuffer_(NULL)
         ,sceneConstantBufferVS_(NULL)
+        ,sceneConstantBufferDS_(NULL)
         ,sceneConstantBufferPS_(NULL)
         ,blendState_(lgraphics::ContextRef::BlendState_Num)
     {
@@ -54,27 +55,27 @@ namespace lscene
         switch(shader)
         {
         case Shader_VS:
-            context_->setVSConstantBuffers(index, 1, constant->get());
+            context_->setVSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_HS:
-            context_->setHSConstantBuffers(index, 1, constant->get());
+            context_->setHSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_DS:
-            context_->setDSConstantBuffers(index, 1, constant->get());
+            context_->setDSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_GS:
-            context_->setGSConstantBuffers(index, 1, constant->get());
+            context_->setGSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_PS:
-            context_->setPSConstantBuffers(index, 1, constant->get());
+            context_->setPSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_CS:
-            context_->setCSConstantBuffers(index, 1, constant->get());
+            context_->setCSConstantBuffers(index, 1, (*constant));
             break;
 
         default:
@@ -138,6 +139,19 @@ namespace lscene
         }
     }
 
+    void RenderContext::setSceneConstantDS(const Scene& scene)
+    {
+        sceneConstantBufferDS_ = createConstantBuffer(sizeof(lscene::SceneConstantDS));
+
+        lgraphics::MappedSubresource mapped;
+        if(sceneConstantBufferDS_->map(*context_, 0, lgraphics::MapType_WriteDiscard, mapped)){
+            lscene::SceneConstantDS* sceneConstantDS = reinterpret_cast<lscene::SceneConstantDS*>(mapped.data_);
+            lscene::setSceneConstantDS(*sceneConstantDS, scene);
+            sceneConstantBufferDS_->unmap(*context_, 0);
+            setSystemConstantBuffer(lscene::RenderContext::Shader_DS, lscene::DefaultSceneConstantDSAttachIndex, sceneConstantBufferDS_);
+        }
+    }
+
     void RenderContext::setSceneConstantPS(const SceneConstantPS& src, const Scene& scene)
     {
         sceneConstantBufferPS_ = createConstantBuffer(sizeof(lscene::SceneConstantPS));
@@ -156,6 +170,26 @@ namespace lscene
         return constantBuffer_->allocate(size);
     }
 
+    lgraphics::ConstantBufferRef* RenderContext::createConstantBuffer(u32 size, const void* data)
+    {
+        LASSERT(NULL != context_);
+        LASSERT(NULL != constantBuffer_);
+        LASSERT(NULL != data);
+
+        lgraphics::ConstantBufferRef* constant = constantBuffer_->allocate(size);
+        if(NULL == constant){
+            return NULL;
+        }
+
+        lgraphics::MappedSubresource mapped;
+        if(constant->map(*context_, 0, lgraphics::MapType_WriteDiscard, mapped)){
+            lscene::copyAlign16DstOnlySize16Times(mapped.data_, data, size);
+            constant->unmap(*context_, 0);
+            return constant;
+        }else{
+            return NULL;
+        }
+    }
 
     inline bool RenderContext::setConstantBuffer(Shader shader, s32 userIndex, lgraphics::ConstantBufferRef* constant)
     {
@@ -163,27 +197,27 @@ namespace lscene
         switch(shader)
         {
         case Shader_VS:
-            context_->setVSConstantBuffers(index, 1, constant->get());
+            context_->setVSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_HS:
-            context_->setHSConstantBuffers(index, 1, constant->get());
+            context_->setHSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_DS:
-            context_->setDSConstantBuffers(index, 1, constant->get());
+            context_->setDSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_GS:
-            context_->setGSConstantBuffers(index, 1, constant->get());
+            context_->setGSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_PS:
-            context_->setPSConstantBuffers(index, 1, constant->get());
+            context_->setPSConstantBuffers(index, 1, (*constant));
             break;
 
         case Shader_CS:
-            context_->setCSConstantBuffers(index, 1, constant->get());
+            context_->setCSConstantBuffers(index, 1, (*constant));
             break;
 
         default:
@@ -284,8 +318,8 @@ namespace lscene
         case Path_Opaque:
         case Path_Transparent:
             numPathConstants_[Shader_VS] = 1;
-            numPathConstants_[Shader_HS] = 0;
-            numPathConstants_[Shader_DS] = 0;
+            numPathConstants_[Shader_HS] = 1;
+            numPathConstants_[Shader_DS] = 1;
             numPathConstants_[Shader_GS] = 0;
             numPathConstants_[Shader_PS] = 1;
             numPathConstants_[Shader_CS] = 0;
@@ -336,7 +370,7 @@ namespace lscene
 
     void RenderContext::setBlendState(lgraphics::BlendStateRef& blendState)
     {
-        context_->setBlendState(blendState.getBlendState());
+        context_->setBlendState(blendState.get());
         blendState_ = lgraphics::ContextRef::BlendState_Num;
     }
 

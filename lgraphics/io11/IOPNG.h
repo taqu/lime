@@ -38,10 +38,7 @@ namespace io
             BindFlag bindFlag,
             CPUAccessFlag access,
             ResourceMisc misc,
-            TextureFilterType filter,
-            TextureAddress adress,
-            CmpFunc compFunc,
-            f32 borderColor,
+            u32& width, u32& height, u32& rowBytes, DataFormat& format,
             SwapRGB swap);
     };
 }

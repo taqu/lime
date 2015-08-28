@@ -29,6 +29,15 @@ namespace lscene
         //f32 reserved1_;
     };
 
+    struct LIME_ALIGN16 SceneConstantDS
+    {
+        lmath::Matrix44 v_;
+        lmath::Matrix44 iv_;
+        lmath::Matrix44 vp0_; //previous vew projection
+        lmath::Matrix44 vp1_; //current view projection
+        lmath::Vector4 cameraPos_;
+    };
+
     struct LIME_ALIGN16 SceneConstantPS
     {
         lmath::Vector4 dlDirection_;
@@ -85,6 +94,7 @@ namespace lscene
     };
 
     void setSceneConstantVS(SceneConstantVS& dst, const Scene& scene, const ShadowMap& shadowMap);
+    void setSceneConstantDS(SceneConstantDS& dst, const Scene& scene);
     void setSceneConstantPS(SceneConstantPS& dst, const SceneConstantPS& src, const Scene& scene);
     void setSceneConstantPS(SceneConstantPS& dst, const ShadowMap& shadowMap, f32 specularMapMipLevels, f32 shadowMapMomentBias, f32 shadowMapDepthBias, f32 lightBleedingBias);
     void setSceneConstantCameraMotionPS(SceneConstantCameraMotionPS& dst, const Scene& scene, f32 width, f32 height, f32 exposure, f32 maxMagnitude);

@@ -4,7 +4,6 @@
 @date 2011/09/04
 */
 #include "Random.h"
-#include "../utility.h"
 
 #ifdef _WIN32
 
@@ -93,6 +92,11 @@ namespace lcore
     {
     }
 
+    RandomXorshift::RandomXorshift(u32 seed)
+    {
+        srand(seed);
+    }
+
     RandomXorshift::~RandomXorshift()
     {
     }
@@ -158,6 +162,12 @@ namespace lcore
     RandomWELL::RandomWELL()
         :index_(0)
     {
+    }
+
+    RandomWELL::RandomWELL(u32 seed)
+        :index_(0)
+    {
+        srand(seed);
     }
 
     RandomWELL::~RandomWELL()

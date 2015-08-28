@@ -167,8 +167,6 @@ namespace lcollide
         ColliderBase* end = &nodes_[nodeIndex];
 
         while(node0 != end){
-            lmath::Vector4 normalDepth;
-
             ColliderBase* node1 = node0->getNext();
             while(node1 != end){
                 collisions.push_back(CollisionPair(node0, node1));
@@ -195,10 +193,9 @@ namespace lcollide
 
         ancestorStack_[depth_] = nodeIndex;
         ++depth_;
-
+        s32 nextIndex = getChildStartIndex(nodeIndex);
         for(s32 i=0; i<4; ++i){
-            s32 nextIndex = getChildStartIndex(nodeIndex) + i;
-            innerCollideAll(nextIndex, collisions);
+            innerCollideAll(nextIndex+i, collisions);
         }
         --depth_;
     }

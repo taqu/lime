@@ -12,6 +12,8 @@
 namespace lgraphics
 {
     class Texture2DRef;
+    class SamplerStateRef;
+    class ShaderResourceViewRef;
     class InputLayoutRef;
 }
 
@@ -32,6 +34,7 @@ namespace lrender
     class Mesh;
     class Material;
     class Node;
+    class Texture2D;
 }
 
 namespace lload
@@ -145,7 +148,7 @@ namespace lload
         @return 成否
         @param 出力。テクスチャ
         */
-        bool load(lgraphics::Texture2DRef& texture, const lload::Texture& loadTexture);
+        bool load(lrender::Texture2D& texture, const lload::Texture& loadTexture);
 
         /**
         @brief 頂点レイアウト作成

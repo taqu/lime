@@ -10,6 +10,7 @@
 #include <lgraphics/api/Enumerations.h>
 #include <lgraphics/api/VertexBufferRef.h>
 #include <lgraphics/api/IndexBufferRef.h>
+#include <lgraphics/api/TextureRef.h>
 
 namespace lscene
 {

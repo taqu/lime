@@ -9,11 +9,6 @@
 
 #include "render.h"
 
-namespace lgraphics
-{
-    class Texture2DRef;
-}
-
 namespace lscene
 {
 namespace lrender

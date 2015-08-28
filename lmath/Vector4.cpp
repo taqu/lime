@@ -228,6 +228,14 @@ namespace lmath
 #endif
     }
 
+    f32 Vector4::distance3(const Vector3& v) const
+    {
+        const f32 dx = x_ - v.x_;
+        const f32 dy = y_ - v.y_;
+        const f32 dz = z_ - v.z_;
+        return lmath::sqrt( dx * dx + dy * dy + dz * dz );
+    }
+
     f32 Vector4::distance3(const Vector4& v) const
     {
         const f32 dx = x_ - v.x_;
@@ -236,6 +244,56 @@ namespace lmath
         return lmath::sqrt( dx * dx + dy * dy + dz * dz );
     }
 
+    f32 Vector4::manhattanDistance(const Vector4& v) const
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(*this);
+        lm128 r1 = load(v);
+        lm128 d = _mm_sub_ps(r0, r1);
+        const u32 mask = 0x7FFFFFFFU;
+        lm128 m = _mm_load_ps1(reinterpret_cast<const f32*>(&mask));
+        d = _mm_and_ps(d, m);
+
+        d = _mm_add_ps( _mm_shuffle_ps(d, d, 0x4E), d);
+        d = _mm_add_ps( _mm_shuffle_ps(d, d, 0xB1), d);
+
+        f32 ret;
+        _mm_store_ss(&ret, d);
+        return ret;
+#else
+        Vector4 tmp;
+        tmp.sub(*this, v);
+        return lcore::absolute(tmp.x_) + lcore::absolute(tmp.y_) + lcore::absolute(tmp.z_) + lcore::absolute(tmp.w_);
+#endif
+    }
+
+    f32 Vector4::manhattanDistance3(const Vector3& v) const
+    {
+        f32 dx = x_ - v.x_;
+        f32 dy = y_ - v.y_;
+        f32 dz = z_ - v.z_;
+        return lcore::absolute(dx) + lcore::absolute(dy) + lcore::absolute(dz);
+    }
+
+    f32 Vector4::manhattanDistance3(const Vector4& v) const
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(*this);
+        lm128 r1 = load(v);
+        lm128 d = _mm_sub_ps(r0, r1);
+        const u32 mask = 0x7FFFFFFFU;
+        lm128 m = _mm_load_ps1(reinterpret_cast<const f32*>(&mask));
+        d = _mm_and_ps(d, m);
+
+        LIME_ALIGN16 f32 tmp[4];
+        _mm_store_ps(tmp, d);
+        return tmp[0] + tmp[1] + tmp[2];
+#else
+        Vector4 tmp;
+        tmp.sub(*this, v);
+        return lcore::absolute(tmp.x_) + lcore::absolute(tmp.y_) + lcore::absolute(tmp.z_);
+#endif
+    }
 
     void Vector4::mul(const Matrix34& m, const Vector4& v)
     {
@@ -521,6 +579,7 @@ namespace lmath
         tv0 = _mm_mul_ps(t0, tv0);
         tv1 = _mm_mul_ps(t1, tv1);
 
-        store(*this, _mm_add_ps(tv0, tv1));
+        lm128 r = _mm_add_ps(tv0, tv1);
+        store(*this, r);
     }
 }

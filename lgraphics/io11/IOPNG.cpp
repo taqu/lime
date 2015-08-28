@@ -193,14 +193,9 @@ namespace io
         BindFlag bindFlag,
         CPUAccessFlag access,
         ResourceMisc misc,
-        TextureFilterType filter,
-        TextureAddress adress,
-        CmpFunc compFunc,
-        f32 borderColor,
+        u32& width, u32& height, u32& rowBytes, DataFormat& format,
         SwapRGB swap)
     {
-        u32 width, height, rowBytes;
-        DataFormat format;
         if(false == read(is, NULL, width, height, rowBytes, format, swap)){
             return false;
         }
@@ -217,11 +212,6 @@ namespace io
         initData.pitch_ = rowBytes;
         initData.slicePitch_ = 0;
         initData.mem_ = buffer;
-        SRVDesc desc;
-        desc.dimension_ = lgraphics::ViewSRVDimension_Texture2D;
-        desc.format_ = format;
-        desc.tex2D_.mipLevels_ = 1;
-        desc.tex2D_.mostDetailedMip_ = 0;
 
         texture = lgraphics::Texture::create2D(
                 width,
@@ -233,12 +223,7 @@ namespace io
                 bindFlag,
                 access,
                 misc,
-                filter,
-                adress,
-                compFunc,
-                borderColor,
-                &initData,
-                &desc);
+                &initData);
 
         LIME_DELETE_ARRAY(buffer);
         return texture.valid();

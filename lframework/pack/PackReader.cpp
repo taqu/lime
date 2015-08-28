@@ -6,7 +6,7 @@
 */
 #include "PackReader.h"
 
-namespace lpack
+namespace lpacktree
 {
     //-------------------------------------------------
     bool PackReader::readEntry(PackEntry& pack, const Char* path)
@@ -31,9 +31,9 @@ namespace lpack
         }
 
         //FileEntry読み込み
-        FileEntry* entries = LIME_NEW FileEntry[header.numFiles_];
+        FileEntry* entries = LIME_NEW FileEntry[header.numEntries_];
 
-        u32 size = sizeof(FileEntry) * header.numFiles_;
+        u32 size = sizeof(FileEntry) * header.numEntries_;
         ret = lcore::io::read(file, entries, size);
         if(0 == ret){
             LIME_DELETE_ARRAY(entries);
@@ -43,7 +43,7 @@ namespace lpack
         //各エントリのチェック
         u32 dataOffset = sizeof(PackHeader) + size;
         u32 offset = dataOffset;
-        for(u32 i=0; i<header.numFiles_; ++i){
+        for(u32 i=0; i<header.numEntries_; ++i){
             if(offset < entries[i].offset_){ //offset値が不正
                 LIME_DELETE_ARRAY(entries);
                 return false;
@@ -84,9 +84,9 @@ namespace lpack
         }
 
         //FileEntry読み込み
-        FileEntry* entries = LIME_NEW FileEntry[header.numFiles_];
+        FileEntry* entries = LIME_NEW FileEntry[header.numEntries_];
 
-        u32 size = sizeof(FileEntry) * header.numFiles_;
+        u32 size = sizeof(FileEntry) * header.numEntries_;
         ret = lcore::io::read(file, entries, size);
         if(0 == ret){
             LIME_DELETE_ARRAY(entries);
@@ -96,7 +96,7 @@ namespace lpack
         //各エントリのチェックとoffsetの補正
         u32 dataOffset = sizeof(PackHeader) + size;
         u32 offset = dataOffset;
-        for(u32 i=0; i<header.numFiles_; ++i){
+        for(u32 i=0; i<header.numEntries_; ++i){
             if(offset < entries[i].offset_){ //offset値が不正
                 LIME_DELETE_ARRAY(entries);
                 return false;
@@ -148,9 +148,9 @@ namespace lpack
         }
 
         //FileEntry読み込み
-        FileEntry* entries = LIME_NEW FileEntry[header.numFiles_];
+        FileEntry* entries = LIME_NEW FileEntry[header.numEntries_];
 
-        u32 size = sizeof(FileEntry) * header.numFiles_;
+        u32 size = sizeof(FileEntry) * header.numEntries_;
         ret = lcore::io::read(file, entries, size);
         if(0 == ret){
             LIME_DELETE_ARRAY(entries);
@@ -160,7 +160,7 @@ namespace lpack
         //各エントリのチェック
         u32 dataOffset = sizeof(PackHeader) + size;
         u32 offset = dataOffset;
-        for(u32 i=0; i<header.numFiles_; ++i){
+        for(u32 i=0; i<header.numEntries_; ++i){
             if(offset < entries[i].offset_){ //offset値が不正
                 LIME_DELETE_ARRAY(entries);
                 return false;

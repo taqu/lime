@@ -93,6 +93,36 @@ namespace lgraphics
         SAFE_RELEASE(view_);
     }
 
+    void ShaderResourceViewRef::attachVS(lgraphics::ContextRef& context, u32 index)
+    {
+        context.setVSResources(index, 1, &view_);
+    }
+
+    void ShaderResourceViewRef::attachGS(lgraphics::ContextRef& context, u32 index)
+    {
+        context.setGSResources(index, 1, &view_);
+    }
+
+    void ShaderResourceViewRef::attachPS(lgraphics::ContextRef& context, u32 index)
+    {
+        context.setPSResources(index, 1, &view_);
+    }
+
+    void ShaderResourceViewRef::attachCS(lgraphics::ContextRef& context, u32 index)
+    {
+        context.setCSResources(index, 1, &view_);
+    }
+
+    void ShaderResourceViewRef::attachHS(lgraphics::ContextRef& context, u32 index)
+    {
+        context.setHSResources(index, 1, &view_);
+    }
+
+    void ShaderResourceViewRef::attachDS(lgraphics::ContextRef& context, u32 index)
+    {
+        context.setDSResources(index, 1, &view_);
+    }
+
     //--------------------------------------------------------
     //---
     //--- RenderTargetViewRef
@@ -172,7 +202,6 @@ namespace lgraphics
     {
         SAFE_RELEASE(view_);
     }
-
 
     //--------------------------------------------------------
     UnorderedAccessViewRef View::createUAView(const UAVDesc& desc, ID3D11Resource* resource)

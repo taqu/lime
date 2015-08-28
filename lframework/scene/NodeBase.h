@@ -64,11 +64,13 @@ namespace lscene
         inline void updateBase();
 
         virtual void update();
+        virtual void traverseUpdateTransform();
         virtual void visitRenderQueue(RenderContext& renderContext);
 
         virtual void render(RenderContext& renderContext);
 
         virtual const lmath::Matrix44& getMatrix() const;
+
     protected:
         friend class SceneManager;
         NodeBase(const NodeBase&);

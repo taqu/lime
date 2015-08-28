@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2011/08/20 create
 */
-#include "../lcore.h"
+#include "lcore.h"
 
 namespace lcore
 {
@@ -22,6 +22,7 @@ namespace lcore
     {
     public:
         RandomXorshift();
+        explicit RandomXorshift(u32 seed);
         ~RandomXorshift();
 
         /**
@@ -68,6 +69,7 @@ namespace lcore
     {
     public:
         RandomWELL();
+        explicit RandomWELL(u32 seed);
         ~RandomWELL();
 
         /**

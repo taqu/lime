@@ -81,9 +81,16 @@ namespace lscene
                 if(lload::FileType_Unknown == type){
                     return NULL;
                 }
-
-                lgraphics::Texture2DRef texture;
-                if(!lload::load(texture, file, type, lgraphics::Usage_Immutable, lgraphics::TexFilter_MinMagMipLinear, lgraphics::TexAddress_Clamp)){
+                lrender::Texture2D texture;
+                if(!lload::load(
+                    texture.texture_,
+                    texture.sampler_,
+                    texture.srv_,
+                    file,
+                    type,
+                    lgraphics::Usage_Immutable,
+                    lgraphics::TexFilter_MinMagMipLinear,
+                    lgraphics::TexAddress_Clamp)){
                     return NULL;
                 }
                 return LSCENE_NEW ResourceTexture2D(texture);
@@ -96,8 +103,17 @@ namespace lscene
                     return NULL;
                 }
 
-                lgraphics::Texture2DRef texture;
-                if(!lload::load(texture, file, type, lgraphics::Usage_Immutable, lgraphics::TexFilter_MinMagMipLinear, lgraphics::TexAddress_Clamp)){
+                lrender::Texture2D texture;
+                if(!lload::load(
+                    texture.texture_,
+                    texture.sampler_,
+                    texture.srv_,
+                    file,
+                    type,
+                    lgraphics::Usage_Immutable,
+                    lgraphics::TexFilter_MinMagMipLinear,
+                    lgraphics::TexAddress_Clamp))
+                {
                     return NULL;
                 }
                 return LSCENE_NEW ResourceTextureCube(texture);

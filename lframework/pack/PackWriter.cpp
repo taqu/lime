@@ -6,17 +6,17 @@
 */
 
 #include "PackWriter.h"
-#include <lcore/utility.h>
+#include <lcore/lcore.h>
 #include <lcore/clibrary.h>
 
-namespace lpack
+namespace lpacktree
 {
     //-------------------------------------------------
     PackWriter::PackWriter()
     {
         header_.endian_ = Endian_Little;
         header_.reserved_ = 0;
-        header_.numFiles_ = 0;
+        header_.numEntries_ = 0;
     }
 
     //-------------------------------------------------
@@ -31,7 +31,7 @@ namespace lpack
     }
 
     //-------------------------------------------------
-    bool PackWriter::push_back(const Char* name, u32 size, const void* buffer)
+    bool PackWriter::push_back(const Char* name, u32 size, s32 type, s32 numChildren, const void* buffer)
     {
         LASSERT(NULL != name);
 
@@ -41,14 +41,26 @@ namespace lpack
         entry.name_[MaxFileNameLength] = '\0';
 
         entry.size_ = size;
+        entry.type_ = type;
+        entry.numChildren_ = numChildren;
 
         entries_.push_back(entry);
         
-        u8* tmp = LIME_NEW u8[size];
-        lcore::memcpy(tmp, buffer, size);
+        if(NULL != buffer){
+            u8* tmp = LIME_NEW u8[size];
+            lcore::memcpy(tmp, buffer, size);
 
-        mempts_.push_back(tmp);
+            mempts_.push_back(tmp);
+        } else{
+            mempts_.push_back(NULL);
+        }
         return true;
+    }
+
+    //-------------------------------------------------
+    FileEntry& PackWriter::get(s32 index)
+    {
+        return entries_[index];
     }
 
     //-------------------------------------------------
@@ -58,14 +70,14 @@ namespace lpack
             return false;
         }
 
-        header_.numFiles_ = static_cast<u16>( entries_.size() );
+        header_.numEntries_ = static_cast<u16>( entries_.size() );
 
         lcore::lsize_t ret = lcore::io::write(stream_, header_);
         if(0 == ret){
             return false;
         }
 
-        s32 offset = stream_.tellg() + sizeof(FileEntry) * header_.numFiles_;
+        s32 offset = stream_.tellg() + sizeof(FileEntry) * header_.numEntries_;
 
         for(FileEntryArray::iterator itr = entries_.begin();
             itr != entries_.end();
@@ -85,9 +97,11 @@ namespace lpack
             itr != mempts_.end();
             ++itr)
         {
-            ret = lcore::io::write( stream_, (*itr), (*entryItr).size_ );
-            if(0 == ret){
-                return false;
+            if(NULL != (*itr)){
+                ret = lcore::io::write(stream_, (*itr), (*entryItr).size_);
+                if(0 == ret){
+                    return false;
+                }
             }
             ++entryItr;
         }

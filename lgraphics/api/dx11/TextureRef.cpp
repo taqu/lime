@@ -84,23 +84,8 @@ namespace lgraphics
         u32 bind,
         CPUAccessFlag access,
         ResourceMisc misc,
-        TextureFilterType filter,
-        TextureAddress adress,
-        CmpFunc compFunc,
-        f32 borderColor,
-        const SubResourceData* initData,
-        const SRVDesc* resourceViewDesc)
+        const SubResourceData* initData)
     {
-        SamplerStateRef sampler = SamplerState::create(
-            filter,
-            adress,
-            adress,
-            adress,
-            compFunc,
-            borderColor);
-        if(false == sampler.valid()){
-            return Texture1DRef();
-        }
 
         D3D11_TEXTURE1D_DESC desc;
 
@@ -120,50 +105,7 @@ namespace lgraphics
             &desc,
             reinterpret_cast<const D3D11_SUBRESOURCE_DATA*>(initData),
             &texture);
-
-        if(FAILED(hr)){
-            return Texture1DRef();
-        }
-
-        if(NULL == resourceViewDesc){
-            return Texture1DRef(sampler, NULL, texture);
-        }
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
-        viewDesc.Format = static_cast<DXGI_FORMAT>(resourceViewDesc->format_);
-
-        switch(resourceViewDesc->dimension_)
-        {
-        case ViewSRVDimension_Texture1D:
-            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1D;
-            viewDesc.Texture1D.MostDetailedMip = resourceViewDesc->tex1D_.mostDetailedMip_;
-            viewDesc.Texture1D.MipLevels = resourceViewDesc->tex1D_.mipLevels_;
-            break;
-
-        case ViewSRVDimension_Texture1DArray:
-            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE1DARRAY;
-            viewDesc.Texture1DArray.MostDetailedMip = resourceViewDesc->tex1DArray_.mostDetailedMip_;
-            viewDesc.Texture1DArray.MipLevels = resourceViewDesc->tex1DArray_.mipLevels_;
-            viewDesc.Texture1DArray.FirstArraySlice = resourceViewDesc->tex1DArray_.firstArraySlice_;
-            viewDesc.Texture1DArray.ArraySize = resourceViewDesc->tex1DArray_.arraySize_;
-            break;
-
-        default:
-            return Texture1DRef(sampler, NULL, texture);
-        };
-
-        ID3D11ShaderResourceView* view = NULL;
-        hr = device->CreateShaderResourceView(
-            texture,
-            &viewDesc,
-            &view);
-
-        if(SUCCEEDED(hr)){
-            return Texture1DRef(sampler, view, texture);
-        }else{
-            texture->Release();
-            return Texture1DRef();
-        }
+        return SUCCEEDED(hr)? Texture1DRef(texture) : Texture1DRef();
     }
 
     Texture2DRef Texture::create2D(
@@ -176,12 +118,7 @@ namespace lgraphics
             u32 bind,
             CPUAccessFlag access,
             ResourceMisc misc,
-            TextureFilterType filter,
-            TextureAddress adress,
-            CmpFunc compFunc,
-            f32 borderColor,
-            const SubResourceData* initData,
-            const SRVDesc* resourceViewDesc)
+            const SubResourceData* initData)
     {
         return Texture::create2D(
             width,
@@ -195,12 +132,7 @@ namespace lgraphics
             bind,
             access,
             misc,
-            filter,
-            adress,
-            compFunc,
-            borderColor,
-            initData,
-            resourceViewDesc);
+            initData);
     }
 
     Texture2DRef Texture::create2D(
@@ -215,24 +147,8 @@ namespace lgraphics
         u32 bind,
         CPUAccessFlag access,
         ResourceMisc misc,
-        TextureFilterType filter,
-        TextureAddress adress,
-        CmpFunc compFunc,
-        f32 borderColor,
-        const SubResourceData* initData,
-        const SRVDesc* resourceViewDesc)
+        const SubResourceData* initData)
     {
-        SamplerStateRef sampler = SamplerState::create(
-            filter,
-            adress,
-            adress,
-            adress,
-            compFunc,
-            borderColor);
-        if(false == sampler.valid()){
-            return Texture2DRef();
-        }
-
         D3D11_TEXTURE2D_DESC desc;
 
         desc.Width = width;
@@ -255,63 +171,7 @@ namespace lgraphics
             reinterpret_cast<const D3D11_SUBRESOURCE_DATA*>(initData),
             &texture);
 
-        if(FAILED(hr)){
-            return Texture2DRef();
-        }
-
-        if(NULL == resourceViewDesc){
-            return Texture2DRef(sampler, NULL, texture);
-        }
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
-        viewDesc.Format = static_cast<DXGI_FORMAT>(resourceViewDesc->format_);
-
-        switch(resourceViewDesc->dimension_)
-        {
-        case ViewSRVDimension_Texture2D:
-            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2D;
-            viewDesc.Texture2D.MostDetailedMip = resourceViewDesc->tex2D_.mostDetailedMip_;
-            viewDesc.Texture2D.MipLevels = resourceViewDesc->tex2D_.mipLevels_;
-            break;
-
-        case ViewSRVDimension_Texture2DArray:
-            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-            viewDesc.Texture2DArray.MostDetailedMip = resourceViewDesc->tex2DArray_.mostDetailedMip_;
-            viewDesc.Texture2DArray.MipLevels = resourceViewDesc->tex2DArray_.mipLevels_;
-            viewDesc.Texture2DArray.FirstArraySlice = resourceViewDesc->tex2DArray_.firstArraySlice_;
-            viewDesc.Texture2DArray.ArraySize = resourceViewDesc->tex2DArray_.arraySize_;
-            break;
-
-        case ViewSRVDimension_Cube:
-            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBE;
-            viewDesc.TextureCube.MostDetailedMip = resourceViewDesc->texCube_.mostDetailedMip_;
-            viewDesc.TextureCube.MipLevels = resourceViewDesc->texCube_.mipLevels_;
-            break;
-
-        case ViewSRVDimension_CubeArray:
-            viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURECUBEARRAY;
-            viewDesc.TextureCubeArray.MostDetailedMip = resourceViewDesc->texCubeArray_.mostDetailedMip_;
-            viewDesc.TextureCubeArray.MipLevels = resourceViewDesc->texCubeArray_.mipLevels_;
-            viewDesc.TextureCubeArray.First2DArrayFace = resourceViewDesc->texCubeArray_.first2DArraySlice_;
-            viewDesc.TextureCubeArray.NumCubes = resourceViewDesc->texCubeArray_.numCubes_;
-            break;
-
-        default:
-            return Texture2DRef(sampler, NULL, texture);
-        };
-
-        ID3D11ShaderResourceView* view = NULL;
-        hr = device->CreateShaderResourceView(
-            texture,
-            &viewDesc,
-            &view);
-
-        if(SUCCEEDED(hr)){
-            return Texture2DRef(sampler, view, texture);
-        }else{
-            texture->Release();
-            return Texture2DRef();
-        }
+        return SUCCEEDED(hr)? Texture2DRef(texture) : Texture2DRef();
     }
 
     Texture3DRef Texture::create3D(
@@ -324,24 +184,8 @@ namespace lgraphics
         u32 bind,
         CPUAccessFlag access,
         ResourceMisc misc,
-        TextureFilterType filter,
-        TextureAddress adress,
-        CmpFunc compFunc,
-        f32 borderColor,
-        const SubResourceData* initData,
-        const SRVDesc* resourceViewDesc)
+        const SubResourceData* initData)
     {
-        SamplerStateRef sampler = SamplerState::create(
-            filter,
-            adress,
-            adress,
-            adress,
-            compFunc,
-            borderColor);
-        if(false == sampler.valid()){
-            return Texture3DRef();
-        }
-
         D3D11_TEXTURE3D_DESC desc;
 
         desc.Width = width;
@@ -362,32 +206,7 @@ namespace lgraphics
             reinterpret_cast<const D3D11_SUBRESOURCE_DATA*>(initData),
             &texture);
 
-        if(FAILED(hr)){
-            return Texture3DRef();
-        }
-
-        if(NULL == resourceViewDesc){
-            return Texture3DRef(sampler, NULL, texture);
-        }
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
-        viewDesc.Format = static_cast<DXGI_FORMAT>(resourceViewDesc->format_);
-        viewDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE3D;
-        viewDesc.Texture2D.MostDetailedMip = resourceViewDesc->tex3D_.mostDetailedMip_;
-        viewDesc.Texture2D.MipLevels = resourceViewDesc->tex3D_.mipLevels_;
-
-        ID3D11ShaderResourceView* view = NULL;
-        hr = device->CreateShaderResourceView(
-            texture,
-            &viewDesc,
-            &view);
-
-        if(SUCCEEDED(hr)){
-            return Texture3DRef(sampler, view, texture);
-        }else{
-            texture->Release();
-            return Texture3DRef();
-        }
+        return SUCCEEDED(hr)? Texture3DRef(texture) : Texture3DRef();
     }
 
 
@@ -398,19 +217,8 @@ namespace lgraphics
         CPUAccessFlag access,
         ResourceMisc misc,
         u32 structureByteStride,
-        const SubResourceData* initData,
-        const SRVDesc* resourceViewDesc)
+        const SubResourceData* initData)
     {
-        SamplerStateRef sampler = SamplerState::create(
-            TextureFilterType::TexFilter_MinMagMipPoint,
-            TextureAddress::TexAddress_Clamp,
-            TextureAddress::TexAddress_Clamp,
-            TextureAddress::TexAddress_Clamp,
-            Cmp_Never);
-        if(false == sampler.valid()){
-            return BufferRef();
-        }
-
         D3D11_BUFFER_DESC desc;
 
         desc.ByteWidth = size;
@@ -428,32 +236,7 @@ namespace lgraphics
             reinterpret_cast<const D3D11_SUBRESOURCE_DATA*>(initData),
             &buffer);
 
-        if(FAILED(hr)){
-            return BufferRef();
-        }
-
-        if(NULL == resourceViewDesc){
-            return BufferRef(sampler, NULL, buffer);
-        }
-
-        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
-        viewDesc.Format = static_cast<DXGI_FORMAT>(resourceViewDesc->format_);
-        viewDesc.ViewDimension = D3D11_SRV_DIMENSION_BUFFER;
-        viewDesc.Buffer.FirstElement = resourceViewDesc->buffer_.firstElement_;
-        viewDesc.Buffer.NumElements = resourceViewDesc->buffer_.numElements_;
-
-        ID3D11ShaderResourceView* view = NULL;
-        hr = device->CreateShaderResourceView(
-            buffer,
-            &viewDesc,
-            &view);
-
-        if(SUCCEEDED(hr)){
-            return BufferRef(sampler, view, buffer);
-        }else{
-            buffer->Release();
-            return BufferRef();
-        }
+        return SUCCEEDED(hr)? BufferRef(buffer) : BufferRef();
     }
 
 
@@ -470,16 +253,16 @@ namespace lgraphics
         ID3D11UnorderedAccessView* tmpUavs[MaxRenderTargets];
 
         for(u32 i=0; i<numViews; ++i){
-            tmpTargets[i] = views[i].getView();
+            tmpTargets[i] = views[i].get();
         }
 
         for(u32 i=0; i<numUAVs; ++i){
-            tmpUavs[i] = uavs[i].getView();
+            tmpUavs[i] = uavs[i].get();
         }
         lgraphics::Graphics::getDevice().setRenderTargetsAndUAV(
             numViews,
             tmpTargets,
-            (NULL == depthStencilView)? NULL : depthStencilView->getView(),
+            (NULL == depthStencilView)? NULL : depthStencilView->get(),
             UAVStart,
             numUAVs,
             tmpUavs,
@@ -495,7 +278,7 @@ namespace lgraphics
         ID3D11UnorderedAccessView* tmpUavs[MaxRenderTargets];
 
         for(u32 i=0; i<numUAVs; ++i){
-            tmpUavs[i] = uavs[i].getView();
+            tmpUavs[i] = uavs[i].get();
         }
         lgraphics::Graphics::getDevice().setCSUnorderedAccessViews(
             UAVStart,

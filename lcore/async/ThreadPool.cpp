@@ -4,7 +4,6 @@
 @date 2014/04/26 create
 */
 #include "ThreadPool.h"
-#include "../utility.h"
 
 namespace lcore
 {
@@ -121,21 +120,43 @@ namespace lcore
     {
         u32 prev = lcore::getTime();
         for(;;){
-            {
-                CSLock lock(localCS_);
-                if(numPendigJobs_<=0 && numActiveJobs_<=0){
-                    return WaitStatus_Success;
-                }
+            localCS_.enter();
+            if(numPendigJobs_<=0 && numActiveJobs_<=0){
+                localCS_.leave();
+                return WaitStatus_Success;
             }
+            localCS_.leave();
+
             u32 time = lcore::getTime();
             u32 d = (time>=prev)? time - prev : lcore::numeric_limits<u32>::maximum() - prev + time;
             if(timeout<d){
                 return WaitStatus_Timeout;
             }
 
-            lcore::thread::sleep(1);
+            lcore::sleep(1);
         }
     }
+
+    //ThreadPool::WaitStatus ThreadPool::busyWaitAllFinish(u32 timeout)
+    //{
+    //    u32 prev = lcore::getTime();
+    //    for(;;){
+    //        for(s32 i=0; i<512; ++i){
+    //            localCS_.enter();
+    //            if(numPendigJobs_<=0 && numActiveJobs_<=0){
+    //                localCS_.leave();
+    //                return WaitStatus_Success;
+    //            }
+    //            localCS_.leave();
+    //        }
+
+    //        u32 time = lcore::getTime();
+    //        u32 d = (time>=prev)? time - prev : lcore::numeric_limits<u32>::maximum() - prev + time;
+    //        if(timeout<d){
+    //            return WaitStatus_Timeout;
+    //        }
+    //    }
+    //}
 
     ThreadPool::WaitStatus ThreadPool::waitFinish(s32 numJobs, u32 timeout)
     {
@@ -153,6 +174,31 @@ namespace lcore
             numFreeJobs = getNumFreeJobs();
         }
         return WaitStatus_Success;
+    }
+
+    ThreadPool::WaitStatus ThreadPool::waitJobFinish(s32 jobId, u32 timeout)
+    {
+        u32 prev = lcore::getTime();
+        for(;;){
+            for(s32 i=0; i<512; ++i){
+                localCS_.enter();
+                Job* job = freeJobs_;
+                while(NULL != job){
+                    if(jobId == job->jobId_){
+                        localCS_.leave();
+                        return WaitStatus_Success;
+                    }
+                    job = job->next_;
+                }
+                localCS_.leave();
+            }
+
+            u32 time = lcore::getTime();
+            u32 d = (time>=prev)? time - prev : lcore::numeric_limits<u32>::maximum() - prev + time;
+            if(timeout<d){
+                return WaitStatus_Timeout;
+            }
+        }
     }
 
     s32 ThreadPool::getNumFreeJobs()

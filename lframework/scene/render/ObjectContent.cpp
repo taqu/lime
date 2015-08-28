@@ -8,12 +8,11 @@
 #include <lmath/lmath.h>
 #include <lmath/DualQuaternion.h>
 
-#include <lgraphics/api/TextureRef.h>
-
 #include "Geometry.h"
 #include "Mesh.h"
 #include "Material.h"
 #include "Node.h"
+#include "Texture.h"
 
 namespace lscene
 {
@@ -76,8 +75,8 @@ namespace lrender
         nodes_ = placementArrayConstruct<Node>(buffer+offset, numNodes_);
         offset += numNodes_ * sizeof(Node);
 
-        textures_ = placementArrayConstruct<lgraphics::Texture2DRef>(buffer+offset, numTextures_);
-        offset += numTextures_ * sizeof(lgraphics::Texture2DRef);
+        textures_ = placementArrayConstruct<Texture2D>(buffer+offset, numTextures_);
+        offset += numTextures_ * sizeof(Texture2D);
 
         return true;
     }
@@ -102,7 +101,7 @@ namespace lrender
         }
 
         for(u32 i=0; i<numTextures_; ++i){
-            textures_[i].~Texture2DRef();
+            textures_[i].~Texture2D();
         }
 
         LSCENE_FREE(geometries_);
@@ -253,7 +252,7 @@ namespace lrender
 
     //--------------------------------------------------
     // テクスチャ
-    lgraphics::Texture2DRef& ObjectContent::getTexture(u32 index)
+    Texture2D& ObjectContent::getTexture(u32 index)
     {
         LASSERT(index<numTextures_);
         return textures_[index];
@@ -261,7 +260,7 @@ namespace lrender
 
     //--------------------------------------------------
     // テクスチャ
-    void ObjectContent::setTexture(u32 index, lgraphics::Texture2DRef& texture)
+    void ObjectContent::setTexture(u32 index, Texture2D& texture)
     {
         LASSERT(index<numTextures_);
         textures_[index] = texture;
@@ -323,8 +322,8 @@ namespace lrender
         nodes_ = placementArrayConstruct<Node>(buffer+offset, numNodes_);
         offset += numNodes_ * sizeof(Node);
 
-        textures_ = placementArrayConstruct<lgraphics::Texture2DRef>(buffer+offset, numTextures_);
-        offset += numTextures_ * sizeof(lgraphics::Texture2DRef);
+        textures_ = placementArrayConstruct<Texture2D>(buffer+offset, numTextures_);
+        offset += numTextures_ * sizeof(Texture2D);
 
         //16バイトアライン
         //u8* ptr = lcore::align16(buffer+offset); 

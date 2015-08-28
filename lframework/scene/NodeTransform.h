@@ -21,6 +21,9 @@ namespace lscene
         virtual ~NodeTransform();
         virtual s32 getType() const;
 
+        virtual void update();
+        virtual void traverseUpdateTransform();
+
         inline const lmath::Vector4& getPosition() const;
         inline void setPosition(const lmath::Vector4& position);
 
@@ -29,6 +32,8 @@ namespace lscene
 
         inline virtual const lmath::Matrix44& getMatrix() const;
         void createMatrix(lmath::Matrix44& matrix);
+
+        inline void updateTransform();
 
         virtual void calcDepth(const RenderContext& renderContext);
         virtual bool checkInWorldFrustum(const lmath::Vector4& bsphere, const RenderContext& renderContext) const;
@@ -67,5 +72,10 @@ namespace lscene
         return matrix_;
     }
 
+    inline void NodeTransform::updateTransform()
+    {
+        createMatrix(matrix_);
+        matrix_.mul(parent_->getMatrix(), matrix_);
+    }
 }
 #endif //INC_LSCENE_NODETRANSFORM_H__

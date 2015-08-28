@@ -135,18 +135,18 @@ namespace lfile
             return SharedFile();
         }
 
-        if(Delimiter == path[0]){
+        if(lcore::Delimiter == path[0]){
             ++path;
         }
         u32 length;
-        path = parseNextNameFromPath<MaxFileNameBufferSize>(path, length, name_);
+        path = lcore::parseNextNameFromPath(path, length, name_, MaxFileNameBufferSize);
         const PackEntry* current = &entries_[0];
         while(0<length){
             current = current->findChild(length, name_);
             if(NULL == current){
                 return SharedFile();
             }
-            path = parseNextNameFromPath<MaxFileNameBufferSize>(path, length, name_);
+            path = lcore::parseNextNameFromPath(path, length, name_, MaxFileNameBufferSize);
             if(0<length && current->isFile()){
                 return SharedFile();
             }
@@ -191,7 +191,7 @@ namespace lfile
             return true;
         }
 
-        if(Delimiter == path[length-1]){
+        if(lcore::Delimiter == path[length-1]){
             --length;
         }
 
@@ -217,7 +217,7 @@ namespace lfile
 
         path_[0] = '\0';
         lcore::strcat(path_, size, root_);
-        if(Delimiter != path[0]){
+        if(lcore::Delimiter != path[0]){
             lcore::strcat(path_, size, "/");
         }
         lcore::strcat(path_, size, path);

@@ -4,7 +4,7 @@
 @date 2015/01/15 create
 */
 #include "load.h"
-#include <lcore/utility.h>
+#include <lcore/lcore.h>
 #include <lgraphics/api/TextureRef.h>
 #include <lgraphics/io11/IODDS.h>
 #include <lgraphics/io11/IOPNG.h>
@@ -15,6 +15,41 @@ namespace lscene
 {
 namespace lload
 {
+namespace
+{
+    void createSRVDesc(lgraphics::SRVDesc& dst, lgraphics::Texture2DDesc& desc)
+    {
+        dst.format_ = (lgraphics::DataFormat)desc.Format;
+
+        if(desc.MiscFlags & lgraphics::ResourceMisc_TextureCube){
+            //if(1<desc.ArraySize){
+            //    dst.dimension_ = lgraphics::ViewSRVDimension_CubeArray;
+            //    dst.texCubeArray_.mostDetailedMip_ = 0;
+            //    dst.texCubeArray_.mipLevels_ = desc.MipLevels;
+            //    dst.texCubeArray_.first2DArraySlice_ = 0;
+            //    dst.texCubeArray_.numCubes_ = desc.ArraySize;
+            //} else{
+                dst.dimension_ = lgraphics::ViewSRVDimension_Cube;
+                dst.texCube_.mostDetailedMip_ = 0;
+                dst.texCube_.mipLevels_ = desc.MipLevels;
+            //}
+
+        } else{
+            if(1<desc.ArraySize){
+                dst.dimension_ = lgraphics::ViewSRVDimension_Texture2DArray;
+                dst.tex2DArray_.mostDetailedMip_ = 0;
+                dst.tex2DArray_.mipLevels_ = desc.MipLevels;
+                dst.tex2DArray_.firstArraySlice_ = 0;
+                dst.tex2DArray_.arraySize_ = desc.ArraySize;
+            } else{
+                dst.dimension_ = lgraphics::ViewSRVDimension_Texture2D;
+                dst.tex2D_.mostDetailedMip_ = 0;
+                dst.tex2D_.mipLevels_ = desc.MipLevels;
+            }
+        }
+    }
+}
+
     FileType getFileType(const Char* path)
     {
         LASSERT(NULL != path);
@@ -38,6 +73,8 @@ namespace lload
 
     bool load(
         lgraphics::Texture2DRef& texture,
+        lgraphics::SamplerStateRef& sampler,
+        lgraphics::ShaderResourceViewRef& srv,
         lscene::lfile::SharedFile& file,
         FileType type,
         u32 usage,
@@ -48,7 +85,14 @@ namespace lload
         u32 height = 0;
         u32 rowBytes = 0;
         lgraphics::DataFormat format = lgraphics::Data_R8G8B8A8_UNorm_SRGB;
+        sampler = lgraphics::SamplerState::create(
+            (lgraphics::TextureFilterType)filterType,
+            (lgraphics::TextureAddress)address,
+            (lgraphics::TextureAddress)address,
+            (lgraphics::TextureAddress)address,
+            lgraphics::Cmp_Never);
 
+        lgraphics::SRVDesc srvDesc;
         switch(type)
         {
         case FileType_DDS:
@@ -56,8 +100,23 @@ namespace lload
                 u32 size = file.getSize(0);
                 u8* buffer = reinterpret_cast<u8*>( LSCENE_MALLOC(size) );
                 lcore::io::read(file, buffer, size);
-                bool ret = lgraphics::io::IODDS::read(texture, buffer, size, (lgraphics::Usage)usage, (lgraphics::TextureFilterType)filterType, (lgraphics::TextureAddress)address);
+                bool ret = lgraphics::io::IODDS::read(
+                    texture,
+                    buffer,
+                    size,
+                    (lgraphics::Usage)usage,
+                    lgraphics::BindFlag_ShaderResource,
+                    lgraphics::CPUAccessFlag_None,
+                    lgraphics::ResourceMisc_None,
+                    width, height, format);
                 LSCENE_FREE(buffer);
+
+                if(ret){
+                    lgraphics::Texture2DDesc desc;
+                    texture.getDesc(desc);
+                    createSRVDesc(srvDesc, desc);
+                    srv = texture.createSRView(srvDesc);
+                }
                 return ret;
             }
             break;
@@ -96,12 +155,6 @@ namespace lload
             initData.pitch_ = rowBytes;
             initData.slicePitch_ = 0;
 
-            lgraphics::ResourceViewDesc viewDesc;
-            viewDesc.dimension_ = lgraphics::ViewSRVDimension_Texture2D;
-            viewDesc.format_ = format;
-            viewDesc.tex2D_.mostDetailedMip_ = 0;
-            viewDesc.tex2D_.mipLevels_ = 1;
-
             texture = lgraphics::Texture::create2D(
                 width,
                 height,
@@ -112,16 +165,19 @@ namespace lload
                 lgraphics::BindFlag_ShaderResource,
                 lgraphics::CPUAccessFlag_None,
                 lgraphics::ResourceMisc_None,
-                (lgraphics::TextureFilterType)filterType,
-                (lgraphics::TextureAddress)address,
-                lgraphics::Cmp_Never,
-                0.0f,
-                &initData,
-                &viewDesc);
+                &initData);
             ret = texture.valid();
+            if(ret){
+                srvDesc.dimension_ = lgraphics::ViewSRVDimension_Texture2D;
+                srvDesc.format_ = format;
+                srvDesc.tex2D_.mostDetailedMip_ = 0;
+                srvDesc.tex2D_.mipLevels_ = 1;
+                srv = texture.createSRView(srvDesc);
+            }
         }
         LSCENE_FREE(buffer);
         return ret;
     }
+
 }
 }

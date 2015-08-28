@@ -112,9 +112,9 @@
     <ClInclude Include="..\intrusive\List.h" />
     <ClInclude Include="..\intrusive\RedBlackTree.h" />
     <ClInclude Include="..\Noise.h" />
+    <ClInclude Include="..\Random.h" />
     <ClInclude Include="..\smart_ptr\intrusive_ptr.h" />
     <ClInclude Include="..\smart_ptr\shared_ptr.h" />
-    <ClInclude Include="..\random\Random.h" />
     <ClInclude Include="..\async\Socket.h" />
     <ClInclude Include="..\async\SyncObject.h" />
     <ClInclude Include="..\async\Thread.h" />
@@ -131,7 +131,6 @@
     <ClInclude Include="..\Search.h" />
     <ClInclude Include="..\Sort.h" />
     <ClInclude Include="..\String.h" />
-    <ClInclude Include="..\utility.h" />
     <ClInclude Include="..\Vector.h" />
   </ItemGroup>
   <ItemGroup>
@@ -143,7 +142,6 @@
     <ClCompile Include="..\Cryptography.cpp" />
     <ClCompile Include="..\HashMap.cpp" />
     <ClCompile Include="..\Noise.cpp" />
-    <ClCompile Include="..\random\Random.cpp" />
     <ClCompile Include="..\async\Socket.cpp" />
     <ClCompile Include="..\async\SyncObject.cpp" />
     <ClCompile Include="..\async\Thread.cpp" />
@@ -152,7 +150,7 @@
     <ClCompile Include="..\lcore.cpp" />
     <ClCompile Include="..\ldll.cpp" />
     <ClCompile Include="..\liostream.cpp" />
-    <ClCompile Include="..\utlity.cpp" />
+    <ClCompile Include="..\Random.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

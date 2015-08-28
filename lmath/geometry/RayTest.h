@@ -31,8 +31,21 @@ namespace lmath
     @param t ... 交差点の陰関数パラメータ。交差点 = t*ray.direction_ + ray.origin_
     @param ray ... 
     @param sphere ... 
+
+    線分の始点が球の内側の場合 t=0
     */
     bool testRaySphere(f32& t, const Ray& ray, const Sphere& sphere);
+
+    //-----------------------------------------------------------
+    /**
+    @brief 線分と球の交差判定
+    @return 交差するか
+    @param tmin ... 交差点の陰関数パラメータ。交差点 = tmin*ray.direction_ + ray.origin_
+    @param tmax ... 交差点の陰関数パラメータ。交差点 = tmax*ray.direction_ + ray.origin_
+    @param ray ... 
+    @param sphere ... 
+    */
+    bool testRaySphere(f32& tmin, f32& tmax, const Ray& ray, const Sphere& sphere);
 
     //-----------------------------------------------------------
     /**

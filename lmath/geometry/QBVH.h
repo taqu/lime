@@ -178,8 +178,8 @@ namespace lmath
 
         struct HitRecord
         {
-            f32 t_;
             const Face* face_;
+            f32 t_; //Œõü‚Ì”¼’¼ü‹——£ƒpƒ‰ƒ[ƒ^
         };
 
         QBVH();

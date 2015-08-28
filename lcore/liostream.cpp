@@ -56,7 +56,7 @@ namespace lcore
         return NULL;
     }
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     u32 ios::getDesiredAccess(s32 mode)
     {
         u32 access = 0;
@@ -99,11 +99,12 @@ namespace lcore
     //--- ifstream
     //---
     //----------------------------------------------------------
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     s32 ifstream::get()
     {
-        Char c = 0;
-        ReadFile(file_, &c, 1, NULL, NULL);
+        s32 c = 0;
+        DWORD numRead = 0;
+        ReadFile(file_, &c, 1, &numRead, NULL);
         return c;
     }
 
@@ -119,7 +120,7 @@ namespace lcore
     //--- ofstream
     //---
     //----------------------------------------------------------
-#ifdef _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     int ofstream::print(const Char* format, ... )
     {
         LASSERT(NULL != file_);

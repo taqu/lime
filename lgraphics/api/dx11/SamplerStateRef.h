@@ -24,6 +24,7 @@ namespace lgraphics
     public:
         typedef ID3D11SamplerState element_type;
         typedef ID3D11SamplerState* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         SamplerStateRef()
             :state_(NULL)
@@ -38,19 +39,18 @@ namespace lgraphics
 
         void destroy();
 
-        pointer_type getSampler(){ return state_;}
-        pointer_type const* get(){ return &state_;}
+        pointer_type get(){ return state_;}
+        operator pointer_type(){ return state_; }
+        operator pointer_array_type(){ return &state_; }
+
         bool valid() const{ return (NULL != state_);}
 
-        void setVS(ContextRef& context, u32 start);
-        void setGS(ContextRef& context, u32 start);
-        void setPS(ContextRef& context, u32 start);
-        void setCS(ContextRef& context, u32 start);
-
-        void swap(SamplerStateRef& rhs)
-        {
-            lcore::swap(state_, rhs.state_);
-        }
+        void attachVS(ContextRef& context, u32 start);
+        void attachHS(ContextRef& context, u32 start);
+        void attachDS(ContextRef& context, u32 start);
+        void attachGS(ContextRef& context, u32 start);
+        void attachPS(ContextRef& context, u32 start);
+        void attachCS(ContextRef& context, u32 start);
 
         SamplerStateRef& operator=(const SamplerStateRef& rhs)
         {
@@ -58,6 +58,10 @@ namespace lgraphics
             return *this;
         }
 
+        void swap(SamplerStateRef& rhs)
+        {
+            lcore::swap(state_, rhs.state_);
+        }
     private:
         friend class SamplerState;
 
@@ -83,6 +87,12 @@ namespace lgraphics
             TextureAddress addressW,
             CmpFunc compFunc,
             f32 borderColor = 0.0f);
+
+        static SamplerStateRef create(
+            TextureFilterType filter,
+            TextureAddress address,
+            CmpFunc compFunc,
+            f32 borderColor);
     };
 }
 #endif //INC_LGRAPHICS_DX11_SAMPLERSTATEREF_H__

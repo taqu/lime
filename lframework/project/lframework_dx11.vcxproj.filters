@@ -41,9 +41,6 @@
     <ClCompile Include="..\pack\PackReader.cpp">
       <Filter>pack</Filter>
     </ClCompile>
-    <ClCompile Include="..\pack\lpack.cpp">
-      <Filter>pack</Filter>
-    </ClCompile>
     <ClCompile Include="..\pack\PackWriter.cpp">
       <Filter>pack</Filter>
     </ClCompile>
@@ -185,6 +182,12 @@
     <ClCompile Include="..\scene\collide\Collider.cpp">
       <Filter>scene\collide</Filter>
     </ClCompile>
+    <ClCompile Include="..\scene\NodeStaticObject.cpp">
+      <Filter>scene</Filter>
+    </ClCompile>
+    <ClCompile Include="..\pack\lpacktree.cpp">
+      <Filter>pack</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\scene\Camera.h">
@@ -208,9 +211,6 @@
     <ClInclude Include="..\Application.h" />
     <ClInclude Include="..\lframework.h" />
     <ClInclude Include="..\MessageDriven.h" />
-    <ClInclude Include="..\pack\lpack.h">
-      <Filter>pack</Filter>
-    </ClInclude>
     <ClInclude Include="..\pack\PackReader.h">
       <Filter>pack</Filter>
     </ClInclude>
@@ -417,6 +417,18 @@
     </ClInclude>
     <ClInclude Include="..\scene\collide\Collider.h">
       <Filter>scene\collide</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scene\render\Texture.h">
+      <Filter>scene\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scene\NodeStaticObject.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scene\MultipleBuffer.h">
+      <Filter>scene</Filter>
+    </ClInclude>
+    <ClInclude Include="..\pack\lpacktree.h">
+      <Filter>pack</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -324,7 +324,15 @@ namespace io
         return (magic == DDS_MAGIC);
     }
 
-    bool IODDS::read(Texture2DRef& texture, const u8* data, u32 size, Usage usage, TextureFilterType filter, TextureAddress adress)
+    bool IODDS::read(
+        Texture2DRef& texture,
+        const u8* data,
+        u32 size,
+        Usage usage,
+        BindFlag bindFlag,
+        CPUAccessFlag access,
+        ResourceMisc misc,
+        u32& width, u32& height, DataFormat& format)
     {
         static const u32 MaxNumSubResourceData = 256;
         SubResourceData initData[MaxNumSubResourceData];
@@ -348,7 +356,7 @@ namespace io
             return false;
         }
 
-        DataFormat format = Data_Unknown;
+        format = Data_Unknown;
         u32 arraySize = 0;
         DDS_HEADER_DXT10 header10;
         if((header.ddpf_.flags_ & DDPF_FOURCC) != 0
@@ -417,37 +425,33 @@ namespace io
 
         //u32 fileSize = (u32)mem - (u32)data;
 
-        lgraphics::ResourceMisc miscFlag = ResourceMisc_None;
-        ResourceViewDesc viewDesc;
+        SRVDesc viewDesc;
         viewDesc.format_ = format;
 
         if(arraySize>1){
             viewDesc.dimension_ = ViewSRVDimension_Cube;
             viewDesc.texCube_.mostDetailedMip_ = 0;
             viewDesc.texCube_.mipLevels_ = mipmapLevel;
-            miscFlag = lgraphics::ResourceMisc_TextureCube;
+            misc = (lgraphics::ResourceMisc)(misc | lgraphics::ResourceMisc_TextureCube);
         }else{
             viewDesc.dimension_ = ViewSRVDimension_Texture2D;
             viewDesc.tex2D_.mostDetailedMip_ = 0;
             viewDesc.tex2D_.mipLevels_ = mipmapLevel;
         }
 
+        width = header.width_;
+        height = header.height_;
         texture = Texture::create2D(
-            header.width_,
-            header.height_,
+            width,
+            height,
             mipmapLevel,
             arraySize,
             format,
             usage,
-            BindFlag_ShaderResource,
-            CPUAccessFlag_None,
-            miscFlag,
-            filter,
-            adress,
-            lgraphics::Cmp_Never,
-            0.0f,
-            initData,
-            &viewDesc);
+            bindFlag,
+            access,
+            misc,
+            initData);
 
         return true;
     }

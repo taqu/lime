@@ -85,10 +85,10 @@ namespace lrender
         inline u32 getNumTextures() const;
 
         /// テクスチャ
-        inline lgraphics::Texture2DRef& getTexture(u32 index);
+        inline Texture2D& getTexture(u32 index);
 
         /// テクスチャ
-        inline void setTexture(u32 index, lgraphics::Texture2DRef& texture);
+        inline void setTexture(u32 index, Texture2D& texture);
 
         inline ObjectContent& getContent();
     private:
@@ -220,14 +220,14 @@ namespace lrender
 
     //--------------------------------------------------
     // テクスチャ
-    inline lgraphics::Texture2DRef& Object::getTexture(u32 index)
+    inline Texture2D& Object::getTexture(u32 index)
     {
         return content_.getTexture(index);
     }
 
     //--------------------------------------------------
     // テクスチャ
-    inline void Object::setTexture(u32 index, lgraphics::Texture2DRef& texture)
+    inline void Object::setTexture(u32 index, Texture2D& texture)
     {
         return content_.setTexture(index, texture);
     }

@@ -19,16 +19,26 @@ namespace lmath
 
     void Ray::invertDirection()
     {
+        //invDirection_[0] = 1.0f/direction_[0];
+        //invDirection_[1] = 1.0f/direction_[1];
+        //invDirection_[2] = 1.0f/direction_[2];
+
         for(s32 i=0; i<3; ++i){
             if(isPositive(direction_[i])){
-                invDirection_[i] = (lmath::isZeroPositive(direction_[i]))? lcore::numeric_limits<f32>::inifinity() : 1.0f/direction_[i];
+                invDirection_[i] = (lmath::isZeroPositive(direction_[i]))? lcore::numeric_limits<f32>::maximum() : 1.0f/direction_[i];
             }else{
-                invDirection_[i] = (lmath::isZero(direction_[i]))? -lcore::numeric_limits<f32>::inifinity() : 1.0f/direction_[i];
+                invDirection_[i] = (lmath::isZeroNegative(direction_[i]))? -lcore::numeric_limits<f32>::maximum() : 1.0f/direction_[i];
             }
         }
     }
 
     void Ray::setDirection(const lmath::Vector3& direction)
+    {
+        direction_ = direction;
+        invertDirection();
+    }
+
+    void Ray::setDirection(const lmath::Vector4& direction)
     {
         direction_ = direction;
         invertDirection();
@@ -40,4 +50,9 @@ namespace lmath
         invDirection_ = invDirection;
     }
 
+    void Ray::setDirection(const lmath::Vector4& direction, const lmath::Vector4& invDirection)
+    {
+        direction_ = direction;
+        invDirection_ = invDirection;
+    }
 }

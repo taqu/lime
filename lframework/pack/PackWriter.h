@@ -8,9 +8,9 @@
 */
 #include <lcore/liostream.h>
 #include <lcore/vector.h>
-#include "lpack.h"
+#include "lpacktree.h"
 
-namespace lpack
+namespace lpacktree
 {
     class PackWriter
     {
@@ -18,7 +18,10 @@ namespace lpack
         PackWriter();
         ~PackWriter();
 
-        bool push_back(const Char* name, u32 size, const void* buffer);
+        bool push_back(const Char* name, u32 size, s32 type, s32 numChildren, const void* buffer);
+
+        s32 size() const{ return entries_.size();}
+        FileEntry& get(s32 index);
 
         bool write(const Char* path);
         bool writeList(const Char* path);

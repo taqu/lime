@@ -10,6 +10,9 @@
 namespace lgraphics
 {
     class Texture2DRef;
+    class Texture3DRef;
+    class SamplerStateRef;
+    class ShaderResourceViewRef;
 }
 
 namespace lscene
@@ -145,6 +148,8 @@ namespace lload
 
     bool load(
         lgraphics::Texture2DRef& texture,
+        lgraphics::SamplerStateRef& sampler,
+        lgraphics::ShaderResourceViewRef& srv,
         lscene::lfile::SharedFile& file,
         FileType type,
         u32 usage,

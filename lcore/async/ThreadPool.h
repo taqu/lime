@@ -30,7 +30,9 @@ namespace lcore
         s32 add(JobProc proc, void* data);
 
         WaitStatus waitAllFinish(u32 timeout);
+        //WaitStatus busyWaitAllFinish(u32 timeout);
         WaitStatus waitFinish(s32 numJobs, u32 timeout);
+        WaitStatus waitJobFinish(s32 jobId, u32 timeout);
 
         s32 getNumMaxJobs() const{ return maxJobs_;}
         s32 getNumMaxThreads() const{ return maxThreads_;}
@@ -93,7 +95,6 @@ namespace lcore
 
         s32 maxThreads_;
         WorkerThread** threads_;
-
     };
 }
 

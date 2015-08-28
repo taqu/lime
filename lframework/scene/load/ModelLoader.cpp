@@ -208,14 +208,14 @@ namespace lload
 
         {//テクスチャロード
             lload::Texture loadTexture;
-            lgraphics::Texture2DRef texture;
+            lrender::Texture2D texture;
             for(u32 i=0; i<numTextures; ++i){
                 file_->read(&loadTexture);
 
                 if(false == load(texture, loadTexture)){
                     continue;
                 }
-                obj.getTexture(i) = texture;
+                obj.setTexture(i, texture);
 
             }
 
@@ -417,7 +417,7 @@ namespace lload
 
     //---------------------------------------------
     // テクスチャロード
-    bool ModelLoader::load(lgraphics::Texture2DRef& texture, const lload::Texture& loadTexture)
+    bool ModelLoader::load(lrender::Texture2D& texture, const lload::Texture& loadTexture)
     {
         u32 len = lcore::strlen(loadTexture.name_);
         const Char* ext = lcore::rFindChr(loadTexture.name_, '.', len);
@@ -441,7 +441,15 @@ namespace lload
         if(!texfile.is_open()){
             return false;
         }
-        return lload::load(texture, texfile, type, lgraphics::Usage_Immutable, lgraphics::TexFilter_MinMagLinearMipPoint, textureAddress_);
+        return lload::load(
+            texture.texture_,
+            texture.sampler_,
+            texture.srv_,
+            texfile,
+            type,
+            lgraphics::Usage_Immutable,
+            lgraphics::TexFilter_MinMagMipLinear,
+            textureAddress_);
     }
 
     //---------------------------------------------

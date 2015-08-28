@@ -6,18 +6,16 @@
 @date 2009/09/12 create
 */
 #include "lcore.h"
-#include "utility.h"
 
 namespace lcore
 {
+    //----------------------------------------------------------------------
     /**
     @brief バッファ管理クラス
     */
     class Buffer
     {
     public:
-        static const u32 MemAlignSize = sizeof(f64);
-
         inline Buffer();
         inline Buffer(u32 size);
 
@@ -124,5 +122,119 @@ namespace lcore
             t->~T();
         }
     }
+
+#if 0
+    //----------------------------------------------------------------------
+    /**
+    @brief バッファ管理クラス
+    */
+    template<class T, s32 INC_SIZE>
+    class ObjectBuffer
+    {
+    public:
+        static const s32 IncSize = INC_SIZE;
+
+        ObjectBuffer();
+        ~ObjectBuffer();
+
+        inline s32 capacity() const;
+        inline s32 size() const;
+        inline void clear();
+
+        void resize(s32 size);
+        inline void expand()
+        {
+            resize(capacity_+IncSize);
+        }
+        //void push_back(const T& t);
+
+        inline T& operator[](s32 index);
+        inline const T& operator[](s32 index) const;
+    private:
+        ObjectBuffer(const ObjectBuffer&);
+        ObjectBuffer& operator=(const ObjectBuffer&);
+
+        s32 capacity_;
+        s32 size_;
+        T* buffer_;
+    };
+
+    template<class T, s32 INC_SIZE>
+    ObjectBuffer<T, INC_SIZE>::ObjectBuffer()
+        :capacity_(0)
+        ,size_(0)
+        ,buffer_(NULL)
+    {
+    }
+
+    template<class T, s32 INC_SIZE>
+    ObjectBuffer<T, INC_SIZE>::~ObjectBuffer()
+    {
+        LIME_DELETE_ARRAY(buffer_);
+    }
+
+    template<class T, s32 INC_SIZE>
+    inline s32 ObjectBuffer<T, INC_SIZE>::capacity() const
+    {
+        return capacity_;
+    }
+
+    template<class T, s32 INC_SIZE>
+    inline s32 ObjectBuffer<T, INC_SIZE>::size() const
+    {
+        return size_;
+    }
+
+    template<class T, s32 INC_SIZE>
+    inline void ObjectBuffer<T, INC_SIZE>::clear()
+    {
+        size_ = 0;
+    }
+
+    template<class T, s32 INC_SIZE>
+    void ObjectBuffer<T, INC_SIZE>::resize(s32 size)
+    {
+        if(capacity_<size){
+            capacity_ = size;
+            T* buffer = LIME_NEW T[capacity_];
+            for(s32 i=0; i<size_; ++i){
+                buffer[i] = buffer_[i];
+            }
+            LIME_DELETE_ARRAY(buffer_);
+            buffer_ = buffer;
+        }
+        size_ = size;
+    }
+
+    template<class T, s32 INC_SIZE>
+    inline T& ObjectBuffer<T, INC_SIZE>::operator[](s32 index)
+    {
+        LASSERT(0<=index && index<size_);
+        return buffer_[index];
+    }
+
+    template<class T, s32 INC_SIZE>
+    inline const T& ObjectBuffer<T, INC_SIZE>::operator[](s32 index) const
+    {
+        LASSERT(0<=index && index<size_);
+        return buffer_[index];
+    }
+
+    //template<class T, s32 INC_SIZE>
+    //void ObjectBuffer<T, INC_SIZE>::push_back(const T& t)
+    //{
+    //    if(capacity_<=size_){
+    //        capacity_ += IncSize;
+    //        T* buffer = LIME_NEW T[capacity_];
+    //        for(s32 i=0; i<size_; ++i){
+    //            buffer[i] = buffer_[i];
+    //        }
+    //        LIME_DELETE_ARRAY(buffer_);
+    //        buffer_ = buffer;
+    //    }
+    //    buffer_[size_] = t;
+    //    ++size_;
+    //}
+#endif
 }
 #endif //INC_LCORE_BUFFER_H__

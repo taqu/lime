@@ -9,9 +9,6 @@
     <ClInclude Include="..\geometry\BVH.h">
       <Filter>geometry</Filter>
     </ClInclude>
-    <ClInclude Include="..\geometry\KDTree.h">
-      <Filter>geometry</Filter>
-    </ClInclude>
     <ClInclude Include="..\geometry\Plane.h">
       <Filter>geometry</Filter>
     </ClInclude>
@@ -38,6 +35,12 @@
       <Filter>geometry</Filter>
     </ClInclude>
     <ClInclude Include="..\geometry\QBVH.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\geometry\KDTree.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
+    <ClInclude Include="..\geometry\DepthCluster.h">
       <Filter>geometry</Filter>
     </ClInclude>
   </ItemGroup>
@@ -68,6 +71,9 @@
       <Filter>geometry</Filter>
     </ClCompile>
     <ClCompile Include="..\geometry\QBVH.cpp">
+      <Filter>geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\geometry\DepthCluster.cpp">
       <Filter>geometry</Filter>
     </ClCompile>
   </ItemGroup>

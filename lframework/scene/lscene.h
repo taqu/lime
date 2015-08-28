@@ -29,7 +29,6 @@ namespace lscene
 
     static const u32 MemoryAlign = 16;
     static const u32 MaxNameSize = 24;
-    static const Char Delimiter = '/';
 
     static const s32 FrameSyncFlag_None = 0;
     static const s32 FrameSyncFlag_InGPUUse = 1;
@@ -114,20 +113,20 @@ namespace lscene
     };
 
 #if defined(_DEBUG)
-#define LSCENE_MALLOC(size) SceneAllocator::malloc(size, __FILE__, __LINE__)
-#define LSCENE_FREE(mem) {SceneAllocator::free((mem));(mem)=NULL;}
-#define LSCENE_ALIGNED_MALLOC(size, align) SceneAllocator::malloc(size, align, __FILE__, __LINE__)
-#define LSCENE_ALIGNED_FREE(mem, align) {SceneAllocator::free((mem), (align));(mem)=NULL;}
+#define LSCENE_MALLOC(size) lscene::SceneAllocator::malloc(size, __FILE__, __LINE__)
+#define LSCENE_FREE(mem) {lscene::SceneAllocator::free((mem));(mem)=NULL;}
+#define LSCENE_ALIGNED_MALLOC(size, align) lscene::SceneAllocator::malloc(size, align, __FILE__, __LINE__)
+#define LSCENE_ALIGNED_FREE(mem, align) {lscene::SceneAllocator::free((mem), (align));(mem)=NULL;}
 #define LSCENE_NEW new(__FILE__, __LINE__)
 #define LSCENE_PLACEMENT_NEW(ptr) new(ptr)
 #define LSCENE_DELETE(ptr) {delete (ptr); (ptr) = NULL;}
 #define LSCENE_DELETE_NO_NULL(ptr) delete (ptr)
 #define LSCENE_DELETE_ARRAY(ptr) {delete[] (ptr); (ptr) = NULL;}
 #else
-#define LSCENE_MALLOC(size) SceneAllocator::malloc(size)
-#define LSCENE_FREE(mem) {SceneAllocator::free((mem));(mem)=NULL;}
-#define LSCENE_ALIGNED_MALLOC(size, align) SceneAllocator::malloc(size, align)
-#define LSCENE_ALIGNED_FREE(mem, align) {SceneAllocator::free((mem), (align));(mem)=NULL;}
+#define LSCENE_MALLOC(size) lscene::SceneAllocator::malloc(size)
+#define LSCENE_FREE(mem) {lscene::SceneAllocator::free((mem));(mem)=NULL;}
+#define LSCENE_ALIGNED_MALLOC(size, align) lscene::SceneAllocator::malloc(size, align)
+#define LSCENE_ALIGNED_FREE(mem, align) {lscene::SceneAllocator::free((mem), (align));(mem)=NULL;}
 #define LSCENE_NEW new
 #define LSCENE_PLACEMENT_NEW(ptr) new(ptr)
 #define LSCENE_DELETE(ptr) {delete (ptr); (ptr) = NULL;}
@@ -209,22 +208,6 @@ namespace lscene
     void copyAlign16DstOnlySize16Times(void* dst, const void* src, s32 size);
     void copyAlign16Size16Times(void* dst, const void* src, s32 size);
 
-    template<u32 N>
-    const Char* parseNextNameFromPath(const Char* str, u32& length, Char name[N])
-    {
-        length = 0;
-        while('\0' != *str && length<(N-1)){
-            if(Delimiter == *str){
-                ++str;
-                break;
-            }
-            name[length++] = *str;
-            ++str;
-        }
-        name[length] = '\0';
-        return str;
-    }
-
     static const s32 MaxPaths = 32;
     enum Path
     {
@@ -245,10 +228,14 @@ namespace lscene
         NodeType_AnimObject,
         NodeType_ObjectMotion,
         NodeType_AnimObjectMotion,
+        NodeType_StaticObject,
         NodeType_User =1000,
     };
 
     static const s32 DefaultSceneConstantVSAttachIndex = 0;
+    static const s32 DefaultSceneConstantHSAttachIndex = 0;
+    static const s32 DefaultSceneConstantDSAttachIndex = 0;
+    static const s32 DefaultSceneConstantGSAttachIndex = 0;
     static const s32 DefaultSceneConstantPSAttachIndex = 0;
 
     //static const s32 DefaultMaterialConstantPSAttachIndex = 1;
@@ -266,6 +253,7 @@ namespace lscene
         ResourceType_AnimObject,
         ResourceType_AnimClip,
         ResourceType_Texture2D,
+        ResourceType_Texture3D,
         ResourceType_TextureCube,
         ResourceType_User = 1000,
     };

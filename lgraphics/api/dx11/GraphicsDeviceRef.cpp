@@ -176,6 +176,8 @@ namespace lgraphics
         ,viewportY_(0)
         ,viewportWidth_(0)
         ,viewportHeight_(0)
+        ,minDepth_(0.0f)
+        ,maxDepth_(1.0f)
         ,context_(NULL)
         ,backBuffer_(NULL)
         ,renderTargetView_(NULL)
@@ -349,26 +351,41 @@ namespace lgraphics
         D3D11_VIEWPORT vp;
         vp.Width = static_cast<f32>(width);
         vp.Height = static_cast<f32>(height);
-        vp.MinDepth = 0.0f;
-        vp.MaxDepth = 1.0f;
+        vp.MinDepth = minDepth_;
+        vp.MaxDepth = maxDepth_;
         vp.TopLeftX = static_cast<f32>(x);
         vp.TopLeftY = static_cast<f32>(y);
         context_->RSSetViewports(1, &vp );
     }
 
     //---------------------------------------------------------
-    void ContextRef::setDefaultViewport(u32 x, u32 y, u32 width, u32 height)
+    void ContextRef::setViewport(u32 x, u32 y, u32 width, u32 height, f32 minDepth, f32 maxDepth)
+    {
+        D3D11_VIEWPORT vp;
+        vp.Width = static_cast<f32>(width);
+        vp.Height = static_cast<f32>(height);
+        vp.MinDepth = minDepth;
+        vp.MaxDepth = maxDepth;
+        vp.TopLeftX = static_cast<f32>(x);
+        vp.TopLeftY = static_cast<f32>(y);
+        context_->RSSetViewports(1, &vp );
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::setDefaultViewport(u32 x, u32 y, u32 width, u32 height, f32 minDepth, f32 maxDepth)
     {
         viewportX_ = x;
         viewportY_ = y;
         viewportWidth_ = width;
         viewportHeight_ = height;
+        minDepth_ = minDepth;
+        maxDepth_ = maxDepth;
     }
 
     //---------------------------------------------------------
     void ContextRef::restoreDefaultViewport()
     {
-        setViewport(viewportX_, viewportY_, viewportWidth_, viewportHeight_);
+        setViewport(viewportX_, viewportY_, viewportWidth_, viewportHeight_, minDepth_, maxDepth_);
     }
 
     //---------------------------------------------------------
@@ -798,11 +815,6 @@ namespace lgraphics
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DDisableWDisable]);
 
-            desc.DepthEnable = TRUE;
-            desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
-            desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_LessEqual);
-            device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWDisableLessEqual]);
-
             setDepthStencilState(DepthStencil_DEnableWEnable);
 
 #ifdef _DEBUG
@@ -842,7 +854,7 @@ namespace lgraphics
                 lgraphics::Blend_One,
                 lgraphics::BlendOp_Add,
                 lgraphics::Blend_SrcAlpha,
-                lgraphics::Blend_One,
+                lgraphics::Blend_DestAlpha,
                 lgraphics::BlendOp_Add,
                 lgraphics::ColorWrite_All);
 
@@ -1005,7 +1017,7 @@ namespace lgraphics
 
         context_->OMSetRenderTargets(1, &renderTargetView_, depthStencilView_);
 
-        setDefaultViewport(0, 0, width, height);
+        setDefaultViewport(0, 0, width, height, 0.0f, 1.0f);
         restoreDefaultViewport();
         return true;
     }
@@ -1077,8 +1089,8 @@ namespace lgraphics
         bool stencilEnable,
         u8 stencilReadMask,
         u8 stencilWriteMask,
-        const DepthStencilStateRef::StencilOPDesc& frontFace,
-        const DepthStencilStateRef::StencilOPDesc& backFace)
+        const StencilOPDesc& frontFace,
+        const StencilOPDesc& backFace)
     {
         D3D11_DEPTH_STENCIL_DESC desc;
         desc.DepthEnable = (depthEnable)? TRUE : FALSE;

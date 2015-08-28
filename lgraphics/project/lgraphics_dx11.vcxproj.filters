@@ -63,9 +63,6 @@
     <ClInclude Include="..\api\dx11\BlobRef.h">
       <Filter>api\dx11</Filter>
     </ClInclude>
-    <ClInclude Include="..\api\dx11\BufferRefBase.h">
-      <Filter>api\dx11</Filter>
-    </ClInclude>
     <ClInclude Include="..\api\dx11\ConstantBufferRef.h">
       <Filter>api\dx11</Filter>
     </ClInclude>
@@ -149,15 +146,15 @@
     <ClInclude Include="..\io11\MemoryStream.h">
       <Filter>io11</Filter>
     </ClInclude>
+    <ClInclude Include="..\api\dx11\BufferRefBase.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\api\dx11\BlendStateRef.cpp">
       <Filter>api\dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\api\dx11\BlobRef.cpp">
-      <Filter>api\dx11</Filter>
-    </ClCompile>
-    <ClCompile Include="..\api\dx11\BufferRefBase.cpp">
       <Filter>api\dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\api\dx11\ConstantBufferRef.cpp">
@@ -220,6 +217,9 @@
       <Filter>io11</Filter>
     </ClCompile>
     <ClCompile Include="..\api\dx11\ShaderInclude.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\BufferRefBase.cpp">
       <Filter>api\dx11</Filter>
     </ClCompile>
   </ItemGroup>

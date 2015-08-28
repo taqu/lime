@@ -32,17 +32,13 @@ namespace lgraphics
         typedef TextureRefBase<T> this_type;
         typedef T element_type;
         typedef T* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         pointer_type get() { return texture_;}
-        bool hasSampler() const{ return sampler_.valid();}
-        bool hasResourceView() const{ return shaderResourceView_.valid();}
+        operator pointer_type(){ return texture_; }
+        operator pointer_array_type(){ return &texture_; }
+
         bool valid() const{ return (NULL != texture_);}
-
-        SamplerStateRef::pointer_type const* getSamplerGet(){ return sampler_.get();}
-        ShaderResourceViewRef::pointer_type const* getShaderResourceViewGet(){ return shaderResourceView_.get();}
-
-        SamplerStateRef::pointer_type getSampler(){ return sampler_.getSampler(); }
-        ShaderResourceViewRef::pointer_type getShaderResourceView(){ return shaderResourceView_.getView(); }
 
         ShaderResourceViewRef createSRView(const SRVDesc& desc)
         {
@@ -64,21 +60,6 @@ namespace lgraphics
             return View::createUAView(desc, texture_);
         }
 
-        void setSamplerState(TextureFilterType filter, TextureAddress adress)
-        {
-            sampler_ = SamplerState::create(filter, adress, adress, adress);
-        }
-
-        inline void attachVS(ContextRef& context, u32 viewIndex, u32 samplerIndex);
-        inline void attachGS(ContextRef& context, u32 viewIndex, u32 samplerIndex);
-        inline void attachPS(ContextRef& context, u32 viewIndex, u32 samplerIndex);
-        inline void attachCS(ContextRef& context, u32 viewIndex, u32 samplerIndex);
-
-        inline void attachVS(ContextRef& context, u32 viewIndex);
-        inline void attachGS(ContextRef& context, u32 viewIndex);
-        inline void attachPS(ContextRef& context, u32 viewIndex);
-        inline void attachCS(ContextRef& context, u32 viewIndex);
-
         inline void copy(ContextRef& context, this_type& src);
         inline void updateSubresource(ContextRef& context, u32 index, const Box* box, const void* data, u32 rowPitch, u32 depthPitch);
 
@@ -96,25 +77,22 @@ namespace lgraphics
             return (texture_ != rhs.texture_);
         }
     protected:
+        TextureRefBase& operator=(const TextureRefBase&);
 
         TextureRefBase()
             :texture_(NULL)
         {}
 
         TextureRefBase(const this_type& rhs)
-            :sampler_(rhs.sampler_)
-            ,shaderResourceView_(rhs.shaderResourceView_)
-            ,texture_(rhs.texture_)
+            :texture_(rhs.texture_)
         {
             if(texture_){
                 texture_->AddRef();
             }
         }
 
-        TextureRefBase(const SamplerStateRef& sampler, ShaderResourceViewRef::pointer_type view, pointer_type texture)
-            :sampler_(sampler)
-            ,shaderResourceView_(view)
-            ,texture_(texture)
+        TextureRefBase(pointer_type texture)
+            :texture_(texture)
         {}
 
         ~TextureRefBase()
@@ -124,15 +102,11 @@ namespace lgraphics
 
         void destroy()
         {
-            sampler_.destroy();
-            shaderResourceView_.destroy();
             SAFE_RELEASE(texture_);
         }
 
         void swap(this_type& rhs)
         {
-            sampler_.swap(rhs.sampler_);
-            shaderResourceView_.swap(rhs.shaderResourceView_);
             lcore::swap(texture_, rhs.texture_);
         }
 
@@ -141,8 +115,6 @@ namespace lgraphics
         DepthStencilViewRef createDSView(const DSVDesc& desc, ID3D11Resource* resource);
         UnorderedAccessViewRef createUAView(const UAVDesc& desc, ID3D11Resource* resource);
 
-        SamplerStateRef sampler_;
-        ShaderResourceViewRef shaderResourceView_;
         pointer_type texture_;
     };
 
@@ -256,66 +228,6 @@ namespace lgraphics
     }
 
     template<class T>
-    inline void TextureRefBase<T>::attachVS(ContextRef& context, u32 viewIndex, u32 samplerIndex)
-    {
-        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        context.setVSResources(viewIndex, 1, &view);
-        context.setVSSamplers(samplerIndex, 1, sampler_.get());
-    }
-
-    template<class T>
-    inline void TextureRefBase<T>::attachGS(ContextRef& context, u32 viewIndex, u32 samplerIndex)
-    {
-        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        context.setGSResources(viewIndex, 1, &view);
-        context.setGSSamplers(samplerIndex, 1, sampler_.get());
-    }
-
-    template<class T>
-    inline void TextureRefBase<T>::attachPS(ContextRef& context, u32 viewIndex, u32 samplerIndex)
-    {
-        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        context.setPSResources(viewIndex, 1, &view);
-        context.setPSSamplers(samplerIndex, 1, sampler_.get());
-    }
-
-    template<class T>
-    inline void TextureRefBase<T>::attachCS(ContextRef& context, u32 viewIndex, u32 samplerIndex)
-    {
-        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        context.setCSResources(viewIndex, 1, &view);
-        context.setCSSamplers(samplerIndex, 1, sampler_.get());
-    }
-
-    template<class T>
-    inline void TextureRefBase<T>::attachVS(ContextRef& context, u32 viewIndex)
-    {
-        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        context.setVSResources(viewIndex, 1, &view);
-    }
-
-    template<class T>
-    inline void TextureRefBase<T>::attachGS(ContextRef& context, u32 viewIndex)
-    {
-        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        context.setGSResources(viewIndex, 1, &view);
-    }
-
-    template<class T>
-    inline void TextureRefBase<T>::attachPS(ContextRef& context, u32 viewIndex)
-    {
-        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        context.setPSResources(viewIndex, 1, &view);
-    }
-
-    template<class T>
-    inline void TextureRefBase<T>::attachCS(ContextRef& context, u32 viewIndex)
-    {
-        ID3D11ShaderResourceView* view = shaderResourceView_.getView();
-        context.setCSResources(viewIndex, 1, &view);
-    }
-
-    template<class T>
     inline void TextureRefBase<T>::copy(ContextRef& context, this_type& src)
     {
         context.copyResource(texture_, src.texture_);
@@ -333,8 +245,8 @@ namespace lgraphics
         return context.map(
             texture_,
             subresource,
-            (D3D11_MAP)type,
-            reinterpret_cast<D3D11_MAPPED_SUBRESOURCE*>(&mapped));
+            type,
+            mapped);
 
     }
 
@@ -386,8 +298,8 @@ namespace lgraphics
     private:
         friend class Texture;
 
-        explicit Texture1DRef(const SamplerStateRef& sampler, ID3D11ShaderResourceView* view, ID3D11Texture1D* texture)
-            :parent_type(sampler, view, texture)
+        explicit Texture1DRef(ID3D11Texture1D* texture)
+            :parent_type(texture)
         {}
     };
 
@@ -429,8 +341,8 @@ namespace lgraphics
     private:
         friend class Texture;
 
-        explicit Texture2DRef(const SamplerStateRef& sampler, ID3D11ShaderResourceView* view, ID3D11Texture2D* texture)
-            :parent_type(sampler, view, texture)
+        explicit Texture2DRef(ID3D11Texture2D* texture)
+            :parent_type(texture)
         {}
     };
 
@@ -476,8 +388,8 @@ namespace lgraphics
     private:
         friend class Texture;
 
-        explicit Texture3DRef(const SamplerStateRef& sampler, ID3D11ShaderResourceView* view, ID3D11Texture3D* texture)
-            :parent_type(sampler, view, texture)
+        explicit Texture3DRef(ID3D11Texture3D* texture)
+            :parent_type(texture)
         {}
     };
 
@@ -517,8 +429,8 @@ namespace lgraphics
     private:
         friend class Texture;
 
-        explicit BufferRef(const SamplerStateRef& sampler, ID3D11ShaderResourceView* view, ID3D11Buffer* texture)
-            :parent_type(sampler, view, texture)
+        explicit BufferRef(ID3D11Buffer* texture)
+            :parent_type(texture)
         {}
     };
 
@@ -540,12 +452,7 @@ namespace lgraphics
             u32 bind,
             CPUAccessFlag access,
             ResourceMisc misc,
-            TextureFilterType filter,
-            TextureAddress adress,
-            CmpFunc compFunc,
-            f32 borderColor,
-            const SubResourceData* initData,
-            const SRVDesc* resourceViewDesc);
+            const SubResourceData* initData);
 
         static Texture2DRef create2D(
             u32 width,
@@ -557,12 +464,7 @@ namespace lgraphics
             u32 bind,
             CPUAccessFlag access,
             ResourceMisc misc,
-            TextureFilterType filter,
-            TextureAddress adress,
-            CmpFunc compFunc,
-            f32 borderColor,
-            const SubResourceData* initData,
-            const SRVDesc* resourceViewDesc);
+            const SubResourceData* initData);
 
         static Texture2DRef create2D(
             u32 width,
@@ -576,12 +478,7 @@ namespace lgraphics
             u32 bind,
             CPUAccessFlag access,
             ResourceMisc misc,
-            TextureFilterType filter,
-            TextureAddress adress,
-            CmpFunc compFunc,
-            f32 borderColor,
-            const SubResourceData* initData,
-            const SRVDesc* resourceViewDesc);
+            const SubResourceData* initData);
 
         static Texture3DRef create3D(
             u32 width,
@@ -593,12 +490,7 @@ namespace lgraphics
             u32 bind,
             CPUAccessFlag access,
             ResourceMisc misc,
-            TextureFilterType filter,
-            TextureAddress adress,
-            CmpFunc compFunc,
-            f32 borderColor,
-            const SubResourceData* initData,
-            const SRVDesc* resourceViewDesc);
+            const SubResourceData* initData);
             
         static BufferRef createBuffer(
             u32 size,
@@ -607,8 +499,7 @@ namespace lgraphics
             CPUAccessFlag access,
             ResourceMisc misc,
             u32 structureByteStride,
-            const SubResourceData* initData,
-            const SRVDesc* resourceViewDesc);
+            const SubResourceData* initData);
     };
 
 

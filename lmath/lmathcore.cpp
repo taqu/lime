@@ -625,9 +625,9 @@ namespace lmath
         Quaternion r1;
         r1.setRotateAxis(Vector4::Forward.x_, Vector4::Forward.y_, Vector4::Forward.z_, x1*PI2);
 
-        r0 *= r1;
+        r1 *= r0;
         lmath::Vector4 v;
-        v.rotate(r0, z);
+        v.rotate(r1, z);
         vx = v.x_;
         vy = v.y_;
         vz = v.z_;
@@ -822,5 +822,28 @@ namespace lmath
     f32 calcFOVY(f32 height, f32 znear)
     {
         return 2.0f*lmath::atan2(0.5f*height, znear);
+    }
+
+    // Statistics, Probability
+    //----------------------------------------------------------------
+    // ガウス分布
+    f32 gaussian(f32 d, f32 sigma)
+    {
+        return lmath::exp(-d*d/(2.0f*sigma)) * lmath::rsqrt_22bit(2.0f*PI*sigma);
+    }
+
+    // 分散
+    f32 calcVariance(s32 num, const f32* v)
+    {
+        f32 avg = 0.0f;
+        f32 avg2 = 0.0f;
+        for(s32 i=0; i<num; ++i){
+            avg += v[i];
+            avg2 += v[i] * v[i];
+        }
+        f32 invN = 1.0f/num;
+        avg *= invN;
+        avg2 *= invN;
+        return avg2 - avg*avg;
     }
 }

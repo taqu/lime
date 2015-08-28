@@ -412,14 +412,14 @@ namespace lscene
     void TransientBuffer<Buffer, Creator>::AllocatedChunk::attach(lgraphics::ContextRef& context, u32 startSlot, u32 stride, u32 offsetInBytes)
     {
         LASSERT(NULL != chunk_);
-        context.setVertexBuffers(startSlot, 1, chunk_->buffer_.get(), &stride, &offsetInBytes);
+        context.setVertexBuffers(startSlot, 1, (chunk_->buffer_), &stride, &offsetInBytes);
     }
 
     template<class Buffer, class Creator>
     void TransientBuffer<Buffer, Creator>::AllocatedChunk::attach(lgraphics::ContextRef& context, lgraphics::DataFormat format, u32 offsetInBytes)
     {
         LASSERT(NULL != chunk_);
-        context.setIndexBuffer(chunk_->buffer_.getBuffer(), format, offsetInBytes);
+        context.setIndexBuffer(chunk_->buffer_.get(), format, offsetInBytes);
     }
 
     template<class Buffer, class Creator>

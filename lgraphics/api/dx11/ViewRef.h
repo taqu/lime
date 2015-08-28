@@ -178,8 +178,6 @@ namespace lgraphics
         static bool copy(D3D11_SHADER_RESOURCE_VIEW_DESC& viewDesc, const SRVDesc& desc);
     };
 
-    typedef SRVDesc ResourceViewDesc;
-
     struct BufferUAV
     {
         u32 firstElement_;
@@ -238,8 +236,8 @@ namespace lgraphics
     struct SubResourceData
     {
         const void* mem_;
-        u32 pitch_;
-        u32 slicePitch_;
+        u32 pitch_; //in bytes
+        u32 slicePitch_; //in bytes
     };
 
     //--------------------------------------------------------
@@ -252,6 +250,7 @@ namespace lgraphics
     public:
         typedef ID3D11ShaderResourceView element_type;
         typedef ID3D11ShaderResourceView* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         ShaderResourceViewRef()
             :view_(NULL)
@@ -283,8 +282,16 @@ namespace lgraphics
             lcore::swap(view_, rhs.view_);
         }
 
-        pointer_type getView(){ return view_;}
-        pointer_type const* get(){ return &view_;}
+        pointer_type get(){ return view_;}
+        operator pointer_type(){ return view_;}
+        operator pointer_array_type(){ return &view_; }
+
+        void attachVS(lgraphics::ContextRef& context, u32 index);
+        void attachGS(lgraphics::ContextRef& context, u32 index);
+        void attachPS(lgraphics::ContextRef& context, u32 index);
+        void attachCS(lgraphics::ContextRef& context, u32 index);
+        void attachHS(lgraphics::ContextRef& context, u32 index);
+        void attachDS(lgraphics::ContextRef& context, u32 index);
     private:
         pointer_type view_;
     };
@@ -299,6 +306,7 @@ namespace lgraphics
     public:
         typedef ID3D11RenderTargetView element_type;
         typedef ID3D11RenderTargetView* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         RenderTargetViewRef()
             :view_(NULL)
@@ -330,8 +338,9 @@ namespace lgraphics
             lcore::swap(view_, rhs.view_);
         }
 
-        pointer_type getView(){ return view_;}
-        pointer_type const* get(){ return &view_;}
+        pointer_type get(){ return view_;}
+        operator pointer_type(){ return view_;}
+        operator pointer_array_type(){ return &view_; }
 
         ShaderResourceViewRef createSRView(const SRVDesc& desc);
     private:
@@ -348,6 +357,7 @@ namespace lgraphics
     public:
         typedef ID3D11DepthStencilView element_type;
         typedef ID3D11DepthStencilView* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         DepthStencilViewRef()
             :view_(NULL)
@@ -379,8 +389,10 @@ namespace lgraphics
             lcore::swap(view_, rhs.view_);
         }
 
-        pointer_type getView(){ return view_;}
-        pointer_type const* get(){ return &view_;}
+        pointer_type get(){ return view_;}
+        operator pointer_type(){ return view_;}
+        operator pointer_array_type(){ return &view_; }
+
     private:
         pointer_type view_;
     };
@@ -395,6 +407,7 @@ namespace lgraphics
     public:
         typedef ID3D11UnorderedAccessView element_type;
         typedef ID3D11UnorderedAccessView* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         UnorderedAccessViewRef()
             :view_(NULL)
@@ -426,16 +439,16 @@ namespace lgraphics
             lcore::swap(view_, rhs.view_);
         }
 
-        pointer_type getView(){ return view_;}
-        pointer_type const* get(){ return &view_; }
+        pointer_type get(){ return view_;}
+        operator pointer_type(){ return view_;}
+        operator pointer_array_type(){ return &view_; }
     private:
         pointer_type view_;
     };
 
-    class View
+    struct View
     {
-    public:
-        static UnorderedAccessViewRef createUAView(const UAVDesc& desc, ID3D11Resource* resource);
+        static UnorderedAccessViewRef View::createUAView(const UAVDesc& desc, ID3D11Resource* resource);
     };
 }
 #endif //INC_LGRAPHICS_DX11_VIEWREF_H__

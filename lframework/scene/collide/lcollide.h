@@ -9,6 +9,11 @@
 #include <lcore/lcore.h>
 #include <lmath/lmath.h>
 
+namespace lmath
+{
+    class Ray;
+}
+
 namespace lcollide
 {
     using lcore::s8;
@@ -38,6 +43,7 @@ namespace lcollide
 
     static const s32 MaxCollisionGroup = 16;
 
+
     //-------------------------------------------------------
     //---
     //--- CollisionInfo
@@ -48,6 +54,7 @@ namespace lcollide
         s32 type_;
         lmath::Vector4 info_;
     };
+
 
     //-------------------------------------------------------
     //---
@@ -87,10 +94,34 @@ namespace lcollide
             prev_->next_ = this;
         }
 
+        const void* getData() const{ return data_;}
+        void* getData(){ return data_;}
+        void setData(void* data){ data_ = data;}
+
+        virtual bool test(const lmath::Ray& /*ray*/, f32& /*t*/) const
+        {
+            return false;
+        }
+
+        u16 getGroup() const{ return group_;}
+        void setGroup(u16 group){ group_ = group;}
+        u16 getType() const{ return type_;}
+        void setType(u16 type){ type_ = type;}
     protected:
         ColliderBase()
             :prev_(this)
             ,next_(this)
+            ,data_(NULL)
+            ,group_(0)
+            ,type_(0)
+        {}
+
+        ColliderBase(void* data, u16 group, u16 type)
+            :prev_(this)
+            ,next_(this)
+            ,data_(data)
+            ,group_(group)
+            ,type_(type)
         {}
 
         virtual ~ColliderBase()
@@ -98,6 +129,10 @@ namespace lcollide
 
         ColliderBase* prev_;
         ColliderBase* next_;
+        void* data_;
+
+        u16 group_;
+        u16 type_;
     };
 
     //-------------------------------------------------------
@@ -109,6 +144,14 @@ namespace lcollide
     {
     public:
         virtual void getBoundingBox(lmath::Vector2& bmin, lmath::Vector2& bmax) =0;
+
+    protected:
+        ColliderBase2()
+        {}
+
+        ColliderBase2(void* data, u16 group, u16 type)
+            :ColliderBase(data, group, type)
+        {}
     };
 
     //-------------------------------------------------------
@@ -120,6 +163,14 @@ namespace lcollide
     {
     public:
         virtual void getBoundingBox(lmath::Vector4& bmin, lmath::Vector4& bmax) =0;
+
+    protected:
+        ColliderBase3()
+        {}
+
+        ColliderBase3(void* data, u16 group, u16 type)
+            :ColliderBase(data, group, type)
+        {}
     };
 
     //-------------------------------------------------------
@@ -138,6 +189,17 @@ namespace lcollide
 
         ColliderBase* node0_;
         ColliderBase* node1_;
+    };
+
+    //-------------------------------------------------------
+    //---
+    //--- RayHitInfo
+    //---
+    //-------------------------------------------------------
+    struct RayHitInfo
+    {
+        ColliderBase* collider_;
+        f32 t_;
     };
 }
 #endif //INC_LCOLLIDE_LCOLLIDE_H__

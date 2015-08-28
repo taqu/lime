@@ -37,6 +37,12 @@ namespace lscene
         return NodeType_ObjectMotion;
     }
 
+    void NodeObjectMotion::update()
+    {
+        pushMatrix();
+        NodeTransform::updateTransform();
+    }
+
     void NodeObjectMotion::pushMatrix()
     {
         prevMatrix_ = matrix_;
@@ -47,10 +53,6 @@ namespace lscene
         if(!checkFlag(NodeFlag_Render)){
             return;
         }
-
-        pushMatrix();
-        createMatrix(matrix_);
-        matrix_.mul(parent_->getMatrix(), matrix_);
 
         if(NULL == object_){
             return;

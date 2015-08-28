@@ -22,11 +22,16 @@ namespace lgraphics
     public:
         typedef ID3D11Asynchronous element_type;
         typedef ID3D11Asynchronous* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         void destroy()
         {
             SAFE_RELEASE(asynchronous_);
         }
+
+        pointer_type get(){ return asynchronous_;}
+        operator pointer_type(){ return asynchronous_;}
+        operator pointer_array_type(){ return &asynchronous_;}
 
         bool valid() const
         {

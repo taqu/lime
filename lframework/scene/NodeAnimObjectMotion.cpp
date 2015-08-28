@@ -39,6 +39,12 @@ namespace lscene
         return NodeType_AnimObjectMotion;
     }
 
+    void NodeAnimObjectMotion::update()
+    {
+        pushMatrix();
+        NodeAnimObject::update();
+    }
+
     void NodeAnimObjectMotion::pushMatrix()
     {
         prevMatrix_ = matrix_;
@@ -55,10 +61,6 @@ namespace lscene
         if(!checkFlag(NodeFlag_Render)){
             return;
         }
-
-        pushMatrix();
-        createMatrix(matrix_);
-        matrix_.mul(parent_->getMatrix(), matrix_);
 
         if(NULL == object_){
             return;
@@ -83,7 +85,9 @@ namespace lscene
                 queue.add(Path_Transparent, this);
             }
 
-            queue.add(Path_MotionVelocity, this);
+            if(checkFlag(NodeFlag_Update)){
+                queue.add(Path_MotionVelocity, this);
+            }
         }
 
         visitRenderQueueChildren(renderContext);

@@ -232,14 +232,9 @@ namespace
         BindFlag bindFlag,
         CPUAccessFlag access,
         ResourceMisc misc,
-        TextureFilterType filter,
-        TextureAddress adress,
-        CmpFunc compFunc,
-        f32 borderColor,
+        u32& width, u32& height, DataFormat& format,
         bool transpose)
     {
-        u32 width, height;
-        DataFormat format;
         if(false == read(is, NULL, width, height, format, transpose)){
             return false;
         }
@@ -276,12 +271,7 @@ namespace
                 bindFlag,
                 access,
                 misc,
-                filter,
-                adress,
-                compFunc,
-                borderColor,
-                &initData,
-                &desc);
+                &initData);
 
         LIME_DELETE_ARRAY(buffer);
         return texture.valid();

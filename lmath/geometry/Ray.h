@@ -23,7 +23,9 @@ namespace lmath
         void invertDirection();
 
         void setDirection(const lmath::Vector3& direction);
+        void setDirection(const lmath::Vector4& direction);
         void setDirection(const lmath::Vector3& direction, const lmath::Vector3& invDirection);
+        void setDirection(const lmath::Vector4& direction, const lmath::Vector4& invDirection);
 
         Vector3 origin_;
         Vector3 direction_;

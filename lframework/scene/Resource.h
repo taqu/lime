@@ -7,7 +7,7 @@
 */
 #include "lscene.h"
 #include "./mixin/ReferenceCounted.h"
-#include <lgraphics/api/TextureRef.h>
+#include "./render/Texture.h"
 
 namespace lscene
 {
@@ -69,18 +69,39 @@ namespace lscene
         {
         }
 
-        ResourceTexture2D(lgraphics::Texture2DRef& texture)
+        ResourceTexture2D(lrender::Texture2D& texture)
             :texture_(texture)
         {
         }
 
-        lgraphics::Texture2DRef& get() { return texture_;}
+        lrender::Texture2D& get() { return texture_;}
     private:
         virtual ~ResourceTexture2D()
         {
         }
 
-        lgraphics::Texture2DRef texture_;
+        lrender::Texture2D texture_;
+    };
+
+    class ResourceTexture3D : public ResourceTyped<ResourceType_Texture3D>
+    {
+    public:
+        ResourceTexture3D()
+        {
+        }
+
+        ResourceTexture3D(lrender::Texture3D& texture)
+            :texture_(texture)
+        {
+        }
+
+        lrender::Texture3D& get() { return texture_;}
+    private:
+        virtual ~ResourceTexture3D()
+        {
+        }
+
+        lrender::Texture3D texture_;
     };
 
     class ResourceTextureCube : public ResourceTyped<ResourceType_TextureCube>
@@ -90,18 +111,18 @@ namespace lscene
         {
         }
 
-        ResourceTextureCube(lgraphics::Texture2DRef& texture)
+        ResourceTextureCube(lrender::Texture2D& texture)
             :texture_(texture)
         {
         }
 
-        lgraphics::Texture2DRef& get() { return texture_;}
+        lrender::Texture2D& get() { return texture_;}
     private:
         virtual ~ResourceTextureCube()
         {
         }
 
-        lgraphics::Texture2DRef texture_;
+        lrender::Texture2D texture_;
     };
 }
 #endif //INC_LSCENE_RESOURCE_H__

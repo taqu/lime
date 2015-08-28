@@ -50,20 +50,20 @@ namespace lscene
     NodeBase* SceneManager::find(const Char* path)
     {
         LASSERT(NULL != path);
-        if(Delimiter == path[0]){
+        if(lcore::Delimiter == path[0]){
             ++path;
         }
 
         u32 length;
-        path = parseNextNameFromPath<MaxNodeNameBufferSize>(path, length, name_);
+        path = lcore::parseNextNameFromPath(path, length, name_, MaxNodeNameBufferSize);
 
         NodeBase* current = root_;
-        while(0<length){
+        while(0<=length){
             current = current->findChild(length, name_);
             if(NULL == current){
                 return NULL;
             }
-            path = parseNextNameFromPath<MaxNodeNameBufferSize>(path, length, name_);
+            path = lcore::parseNextNameFromPath(path, length, name_, MaxNodeNameBufferSize);
         }
         return (current == root_)? NULL : current;
     }

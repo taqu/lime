@@ -167,6 +167,30 @@ namespace lmath
         return (x1 <= epsilon);
     }
 
+    inline bool isZeroNegative(f32 x1)
+    {
+        LASSERT(x1<0.0f);
+        return (-F32_EPSILON<=x1);
+    }
+
+    inline bool isZeroNegative(f32 x1, f32 epsilon)
+    {
+        LASSERT(x1<0.0f);
+        return (epsilon<=x1);
+    }
+
+    inline bool isZeroNegative(f64 x1)
+    {
+        LASSERT(x1<0.0f);
+        return (-F64_EPSILON<=x1);
+    }
+
+    inline bool isZeroNegative(f64 x1, f64 epsilon)
+    {
+        LASSERT(x1<0.0f);
+        return (epsilon<=x1);
+    }
+
 #if defined(LMATH_USE_SSE)
     inline lm128 set_m128(f32 x, f32 y, f32 z, f32 w)
     {
@@ -177,6 +201,23 @@ namespace lmath
         t0 = _mm_load_ss(&y);
         t1 = _mm_load_ss(&w);
         return _mm_unpacklo_ps(ret, _mm_unpacklo_ps(t0, t1));
+    }
+
+    inline lm128 load3(const f32* v)
+    {
+        lm128 t = _mm_load_ss(&v[2]);
+        t = _mm_movelh_ps(t, t);
+        t = _mm_loadl_pi(t, reinterpret_cast<const __m64*>(v));
+        return t;
+    }
+
+    inline void store3(f32* v, const lm128& r)
+    {
+        _mm_storel_pi(reinterpret_cast<__m64*>(v), r);
+
+        static const u32 Shuffle = 170;
+        lm128 t = _mm_shuffle_ps(r, r, Shuffle);
+        _mm_store_ss(&v[2], t);
     }
 
     /**
@@ -345,6 +386,16 @@ namespace lmath
         return ::exp(x);
     }
 
+    inline f32 exp2(f32 x)
+    {
+        return ::exp2f(x);
+    }
+
+    inline f64 exp2(f64 x)
+    {
+        return ::exp2(x);
+    }
+
     inline f32 log(f32 x)
     {
         return ::logf(x);
@@ -353,6 +404,16 @@ namespace lmath
     inline f64 log(f64 x)
     {
         return ::log(x);
+    }
+
+    inline f32 log2(f32 x)
+    {
+        return ::log2f(x);
+    }
+
+    inline f64 log2(f64 x)
+    {
+        return ::log2(x);
     }
     
     inline f32 pow(f32 x, f32 y)
@@ -618,6 +679,20 @@ namespace lmath
     void smoothRotate(Vector4& dst, const Vector4& current, const Vector4& target, f32 maxRotate);
 
     f32 calcFOVY(f32 height, f32 znear);
+
+    
+    // Statistics, Probability
+    //----------------------------------------------------------------
+    /**
+    @brief ガウス分布
+    @param d ... 平均からの差
+    */
+    f32 gaussian(f32 d, f32 sigma);
+
+    /**
+    @brief 分散
+    */
+    f32 calcVariance(s32 num, const f32* v);
 }
 
 #endif //INC_LMATHCORE_H__

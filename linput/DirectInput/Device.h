@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2009/05/13 create
 */
-#include <lcore/utility.h>
+#include <lcore/lcore.h>
 
 struct HWND__;
 struct IDirectInputDevice8;

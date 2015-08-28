@@ -12,7 +12,6 @@ namespace lcore
     /**
     @brief ソート済み配列の2分探索
     @return 見つかった要素のインデックス、なければ-1
-    @param T ... インデックスの型
     @param U ... 検索対象型
     @param V ... 検索対象の値の型
     @param CompFunc(const T&, const V&) ... 比較関数 v0<v1:負数, v0==v1:0, v0>v1:正数
@@ -22,25 +21,24 @@ namespace lcore
     @param value
     @param func
     */
-    template<class T, class U, class V, class CompFunc>
-    T binarySearchIndex(T num, const U* elements, const V& value, CompFunc func)
+    template<class U, class V, class CompFunc>
+    s32 binarySearchIndex(s32 num, const U* elements, const V& value, CompFunc func)
     {
-        T mid = 0;
-        T left = 0;
-        T right = num;
-        while(left<right){
+        s32 mid;
+        s32 left = 0;
+        s32 right = num-1;
+        while(left<=right){
             mid = (left+right) >> 1;
-            if(func(elements[mid], value)<=0){
+            s32 ret = func(elements[mid], value);
+            if(ret<0){
                 left = mid + 1;
+            }else if(0<ret){
+                right = mid - 1;
             }else{
-                right = mid;
+                return mid;
             }
         }
-        if(left <= 0) {
-            return -1;
-        }
-        --left;
-        return (0 == func(elements[left], value))? left : -1;
+        return -1;
     }
 }
 

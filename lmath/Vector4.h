@@ -6,7 +6,6 @@
 @date 2009/01/17 create
 */
 #include "lmathcore.h"
-#include <lcore/utility.h>
 #include "Vector3.h"
 
 namespace lmath
@@ -82,7 +81,12 @@ namespace lmath
         f32 distance(const Vector4& v) const;
         f32 distanceSqr(const Vector4& v) const;
 
+        f32 distance3(const Vector3& v) const;
         f32 distance3(const Vector4& v) const;
+
+        f32 manhattanDistance(const Vector4& v) const;
+        f32 manhattanDistance3(const Vector3& v) const;
+        f32 manhattanDistance3(const Vector4& v) const;
 
         void mul(f32 a, const Vector4& v);
         void mul(const Vector4& v, f32 a){ mul(a, v);}
@@ -106,6 +110,8 @@ namespace lmath
 
         inline void add(const Vector4& v0, const Vector4& v1);
         inline void sub(const Vector4& v0, const Vector4& v1);
+        inline void mul(const Vector4& v0, const Vector4& v1);
+        inline void div(const Vector4& v0, const Vector4& v1);
 
         inline void add(f32 v);
         inline void sub(f32 v);
@@ -537,6 +543,36 @@ namespace lmath
 #endif
     }
 
+    inline void Vector4::mul(const Vector4& v0, const Vector4& v1)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(v0);
+        lm128 r1 = load(v1);
+        r0 = _mm_mul_ps(r0, r1);
+        store(*this, r0);
+#else
+        x_ = v0.x_ * v1.x_;
+        y_ = v0.y_ * v1.y_;
+        z_ = v0.z_ * v1.z_;
+        w_ = v0.w_ * v1.w_;
+#endif
+    }
+
+    inline void Vector4::div(const Vector4& v0, const Vector4& v1)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = load(v0);
+        lm128 r1 = load(v1);
+        r0 = _mm_div_ps(r0, r1);
+        store(*this, r0);
+#else
+        x_ = v0.x_ / v1.x_;
+        y_ = v0.y_ / v1.y_;
+        z_ = v0.z_ / v1.z_;
+        w_ = v0.w_ / v1.w_;
+#endif
+    }
+
     inline void Vector4::add(f32 v)
     {
 #if defined(LMATH_USE_SSE)
@@ -568,6 +604,7 @@ namespace lmath
         w_ -= v;
 #endif
     }
+
 
     inline void Vector4::minimum(const Vector4& v0, const Vector4& v1)
     {

@@ -5,6 +5,10 @@
 */
 #include "SyncObject.h"
 
+#if defined(ANDROID) || defined(__GNUC__)
+#include <errno.h>
+#endif
+
 namespace lcore
 {
     //-------------------------------------------------------
@@ -12,7 +16,7 @@ namespace lcore
     //--- Event
     //---
     //-------------------------------------------------------
-#if _WIN32
+#if defined(_WIN32) || defined(_WIN64)
     Event::Event(bool manualReset, bool initState)
     {
         event_ = CreateEvent(0, (manualReset)?TRUE:FALSE, (initState)?TRUE:FALSE, NULL);
@@ -22,97 +26,6 @@ namespace lcore
     {
         CloseHandle(event_);
     }
-
-#else
-    Event::Event(bool manualReset, bool initState)
-    {
-        pthread_cond_init(&condVariable_, 0);
-        pthread_mutex_init(&lock_, 0);
-
-        state_ = 0;
-        manualReset_ = (manualReset)? 1 : 0;
-        if(initState){
-            set();
-        }
-    }
-
-    Event::~Event()
-    {
-        pthread_mutex_destroy(&lock_);
-        pthread_cond_destroy(&condVariable_);
-    }
-
-    thread::WaitStatus Event::wait(u32 timeout)
-    {
-        if(0 == timeout){
-            if(EBUSY == pthread_mutex_trylock(&lock_)){
-                return thread::Wait_Timeout;
-            }
-        }else{
-            pthread_mutex_lock(&lock_);
-        }
-
-        thread::WaitStatus result;
-        if(!state_){
-            if(0 == timeout){
-                result = thread::Wait_Timeout;
-
-            }else{
-
-                if(timeout != thread::Infinite){
-                    timespec ts;
-                    clock_gettime(CLOCK_REALTIME, &ts);
-
-                    u64 nanosec = ts.tv_nsec + timeout * 1000 * 1000;
-                    u64 sec = nanosec/1000/1000/1000;
-                    nanosec -= sec * 1000 * 1000 * 1000;
-                    ts.tv_sec += sec;
-                    ts.tv_nsec = nanosec;
-                    do{
-                        result = pthread_cond_timedwait(&condVariable_, &lock_, &ts);
-                    }while(0==result && !state_);
-
-                }else{
-                    do{
-                        result = pthread_cond_wait(&condVariable_, &lock_);
-                    }while(0==result && !state_);
-                }
-
-                if(0==result && !manualReset_){
-                    state_ = 0;
-                }
-            }
-
-        }else if(!manualReset_){
-            state_ = 0;
-            result = 0;
-        }
-
-        pthread_mutex_unlock(&lock_);
-        return result;
-    }
-
-    void Event::set()
-    {
-        pthread_mutex_lock(&lock_);
-        state_ = 1;
-
-        if(manualReset_){
-            pthread_mutex_unlock(&lock_);
-            pthread_cond_broadcast(&condVariable_);
-        }else{
-            pthread_mutex_unlock(&lock_);
-            pthread_cond_signal(&condVariable_);
-        }
-    }
-
-    void Event::reset()
-    {
-        pthread_mutex_lock(&lock_);
-        state_ = 0;
-        pthread_mutex_unlock(&lock_);
-    }
-#endif
 
     //-------------------------------------------------------
     //---
@@ -260,4 +173,97 @@ namespace lcore
         ReleaseSemaphore(semaphore_, count, &prev);
         return prev;
     }
+
+#else
+    Event::Event(bool manualReset, bool initState)
+    {
+        pthread_cond_init(&condVariable_, NULL);
+        pthread_mutex_init(&lock_, NULL); //default PTHREAD_ADAPTIVE_MUTEX_INITIALIZER_NP
+
+        state_ = 0;
+        manualReset_ = (manualReset)? 1 : 0;
+        if(initState){
+            set();
+        }
+    }
+
+    Event::~Event()
+    {
+        pthread_mutex_destroy(&lock_);
+        pthread_cond_destroy(&condVariable_);
+    }
+
+    thread::WaitStatus Event::wait(u32 timeout)
+    {
+        if(0 == timeout){
+            if(EBUSY == pthread_mutex_trylock(&lock_)){
+                return thread::Wait_Timeout;
+            }
+        }else{
+            pthread_mutex_lock(&lock_);
+        }
+
+        s32 result;
+        if(!state_){
+            if(0 == timeout){
+                result = thread::Wait_Timeout;
+
+            }else{
+
+                if(timeout != thread::Infinite){
+                    timespec ts;
+                    if(clock_gettime(CLOCK_REALTIME, &ts) != -1) {
+
+                        while(1000<timeout){
+                            ts.tv_sec += 1;
+                            timeout -= 1000;
+                        }
+                        ts.tv_nsec += 1000000L * timeout;
+                        do{
+                            result = pthread_cond_timedwait(&condVariable_, &lock_, &ts);
+                        }while(0==result && !state_);
+                    }else{
+                        result = thread::Wait_Failed;
+                    }
+                }else{
+                    do{
+                        result = pthread_cond_wait(&condVariable_, &lock_);
+                    }while(0==result && !state_);
+                }
+
+                if(0==result && !manualReset_){
+                    state_ = 0;
+                }
+            }
+
+        }else if(!manualReset_){
+            state_ = 0;
+            result = 0;
+        }
+
+        pthread_mutex_unlock(&lock_);
+        return static_cast<thread::WaitStatus>(result);
+    }
+
+    void Event::set()
+    {
+        pthread_mutex_lock(&lock_);
+        state_ = 1;
+
+        if(manualReset_){
+            pthread_mutex_unlock(&lock_);
+            pthread_cond_broadcast(&condVariable_);
+        }else{
+            pthread_mutex_unlock(&lock_);
+            pthread_cond_signal(&condVariable_);
+        }
+    }
+
+    void Event::reset()
+    {
+        pthread_mutex_lock(&lock_);
+        state_ = 0;
+        pthread_mutex_unlock(&lock_);
+    }
+#endif
 }

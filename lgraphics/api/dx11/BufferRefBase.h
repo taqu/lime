@@ -25,11 +25,15 @@ namespace lgraphics
     public:
         typedef ID3D11Buffer element_type;
         typedef ID3D11Buffer* pointer_type;
+        typedef pointer_type const* pointer_array_type;
 
         void destroy();
 
-        pointer_type getBuffer(){ return buffer_;}
-        pointer_type const* get(){ return &buffer_;}
+        pointer_type get(){ return buffer_;}
+        operator pointer_type(){ return buffer_;}
+        operator pointer_array_type(){ return &buffer_;}
+
+        bool valid() const{ return buffer_ != NULL;}
 
         bool map(ContextRef& context, u32 subresource, MapType type, MappedSubresource& mapped);
         void unmap(ContextRef& context, u32 subresource);
@@ -41,9 +45,9 @@ namespace lgraphics
         {
             return View::createUAView(desc, buffer_);
         }
-
-        bool valid() const{ return buffer_ != NULL;}
     protected:
+        BufferRefBase& operator=(const BufferRefBase& rhs);
+
         BufferRefBase()
             :buffer_(NULL)
         {}

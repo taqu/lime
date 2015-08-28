@@ -256,19 +256,19 @@ namespace lcollide
             Collider* node0 = reinterpret_cast<Collider*>(collisions_[i].node0_);
             Collider* node1 = reinterpret_cast<Collider*>(collisions_[i].node1_);
 
-            if(isGroupCollidable(node0->group_, node1->group_)){
+            if(isGroupCollidable(node0->getGroup(), node1->getGroup())){
 
-                PrimitiveCollideFunc func = collideFuncs_[node0->type_][node1->type_];
+                PrimitiveCollideFunc func = collideFuncs_[node0->getType()][node1->getType()];
                 if(func(node0, node1, info)){
-                    LASSERT(NULL != node0->node_);
-                    LASSERT(NULL != node1->node_);
+                    LASSERT(NULL != node0->getData());
+                    LASSERT(NULL != node1->getData());
                     ++statistics_.numCollides_;
-                    node0->node_->onCollide(node1->node_, info);
+                    node0->getNode()->onCollide(node1->getNode(), info);
                     if(info.type_ == CollisionInfoType_NormalDepth){
                         info.info_ = -info.info_;
                         info.info_.w_ = -info.info_.w_;
                     }
-                    node1->node_->onCollide(node0->node_, info);
+                    node1->getNode()->onCollide(node0->getNode(), info);
                 }
             }
         }

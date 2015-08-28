@@ -36,6 +36,19 @@ namespace lgraphics
 
     //--------------------------------------
     //---
+    //--- StencilOPDesc
+    //---
+    //--------------------------------------
+    struct StencilOPDesc
+    {
+        StencilOp failOp_;
+        StencilOp depthFailOp_;
+        StencilOp passOp_;
+        CmpFunc cmpFunc_;
+    };
+
+    //--------------------------------------
+    //---
     //--- DepthStencilStateRef
     //---
     //--------------------------------------
@@ -44,14 +57,6 @@ namespace lgraphics
     public:
         typedef ID3D11DepthStencilState element_type;
         typedef ID3D11DepthStencilState* pointer_type;
-
-        struct StencilOPDesc
-        {
-            StencilOp failOp_;
-            StencilOp depthFailOp_;
-            StencilOp passOp_;
-            CmpFunc cmpFunc_;
-        };
 
         DepthStencilStateRef();
         DepthStencilStateRef(const DepthStencilStateRef& rhs);
@@ -136,8 +141,6 @@ namespace lgraphics
             DepthStencil_DEnableWDisable,
             DepthStencil_DDisableWEnable,
             DepthStencil_DDisableWDisable,
-
-            DepthStencil_DEnableWDisableLessEqual,
             DepthStencil_Num,
         };
 
@@ -153,6 +156,7 @@ namespace lgraphics
         static const u32 MaxSOBufferSlot = D3D11_SO_BUFFER_SLOT_COUNT;
         static const u32 MaxSOStreamCount = D3D11_SO_STREAM_COUNT;
         static const u32 SONoRasterizedStream = D3D11_SO_NO_RASTERIZED_STREAM;
+        static const u32 MaxUAVRegisterCount = D3D11_PS_CS_UAV_REGISTER_COUNT;
 
         static const Char* GSModel;
         static const Char* VSModel;
@@ -196,7 +200,8 @@ namespace lgraphics
         inline void dispatchIndirect(ID3D11Buffer* buffers, u32 alignedOffset);
 
         void setViewport(u32 x, u32 y, u32 width, u32 height);
-        void setDefaultViewport(u32 x, u32 y, u32 width, u32 height);
+        void setViewport(u32 x, u32 y, u32 width, u32 height, f32 minDepth, f32 maxDepth);
+        void setDefaultViewport(u32 x, u32 y, u32 width, u32 height, f32 minDepth=0.0f, f32 maxDepth=1.0f);
         void restoreDefaultViewport();
 
         void restoreDefaultRenderTargets();
@@ -347,6 +352,8 @@ namespace lgraphics
         u32 viewportY_;
         u32 viewportWidth_;
         u32 viewportHeight_;
+        f32 minDepth_;
+        f32 maxDepth_;
 
         ID3D11DeviceContext* context_;
 
@@ -846,8 +853,8 @@ namespace lgraphics
             bool stencilEnable,
             u8 stencilReadMask,
             u8 stencilWriteMask,
-            const DepthStencilStateRef::StencilOPDesc& frontFace,
-            const DepthStencilStateRef::StencilOPDesc& backFace);
+            const StencilOPDesc& frontFace,
+            const StencilOPDesc& backFace);
 
         bool checkMultisampleQualityLevels(
             lgraphics::DataFormat format,

@@ -167,7 +167,11 @@ namespace lcore
 
     inline void strcat(Char* dst, u32 dstSize, const Char* str)
     {
+#if defined(_WIN32) || defined(_WIN64)
         ::strcat_s(dst, dstSize, str);
+#else
+        ::strcat(dst, str);
+#endif
     }
 
     //-----------------------------------------------------

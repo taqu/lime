@@ -44,7 +44,41 @@ namespace lmath
         f32 c = m.dot(m) - sphere.getRadius() * sphere.getRadius();
 
         // 線分の起点が球の外で、向きが球の方向と逆
-        if(c>0.0f && b > 0.0f){
+        if(0.0f<c){
+            if(0.0f<b){// 線分の起点が球の外で、向きが球の方向と逆
+                return false;
+            }
+        }else{
+            t = 0.0f;
+            return true;
+        }
+
+        f32 discr = b*b - c; //判別式
+        if(discr < 0.0f){
+            return false;
+        }
+
+        discr = lmath::sqrt(discr);
+        b = -b;
+        t = b-discr;
+        f32 tmax = b + discr;
+        return (tmax<=ray.t_);
+    }
+
+    //-----------------------------------------------------------
+    // 線分と球の交差判定
+    bool testRaySphere(f32& tmin, f32& tmax, const Ray& ray, const Sphere& sphere)
+    {
+        Vector3 m;
+        sphere.getPosition(m);
+        m.sub(ray.origin_, m);
+
+
+        f32 b = m.dot(ray.direction_);
+        f32 c = m.dot(m) - sphere.getRadius() * sphere.getRadius();
+
+        // 線分の起点が球の外で、向きが球の方向と逆
+        if(0.0f<c && 0.0f<b){
             return false;
         }
 
@@ -56,8 +90,9 @@ namespace lmath
         discr = lmath::sqrt(discr);
         b = -b;
 
-        t = (b<discr)? b+discr : b-discr;
-        return true;
+        tmin = b - discr;
+        tmax = b + discr;
+        return (c<=0.0f)? true : (tmax<=ray.t_);
     }
 
 
@@ -153,7 +188,7 @@ namespace lmath
 
         for(s32 i=0; i<3; ++i){
             if(lcore::absolute(ray.direction_[i])<F32_EPSILON){
-                //光線とスラブが平行で、原点がスラブの中にない
+                //線分とスラブが平行で、原点がスラブの中にない
                 if(ray.origin_[i]<bmin[i] || bmax[i]<ray.origin_[i]){
                     return false;
                 }

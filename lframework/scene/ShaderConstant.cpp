@@ -31,14 +31,25 @@ namespace
 
         //copy(dst.v_, camera.getViewMatrix());
         //copy(dst.p_, camera.getProjMatrix());
-        copy(dst.vp0_, camera.getViewProjMatrix());
-        copy(dst.vp1_, camera.getPrevViewProjMatrix());
+        copy(dst.vp0_, camera.getPrevViewProjMatrix());
+        copy(dst.vp1_, camera.getViewProjMatrix());
         shadowMap.getLightViewProjectionAlign16(dst.lvp_);
         dst.cameraPos_ = camera.getEyePosition();
         //dst.zrange_ = 1.0f/(camera.getZFar() - camera.getZNear());
         //dst.znear_ = camera.getZNear();
     }
 
+    void setSceneConstantDS(SceneConstantDS& dst, const Scene& scene)
+    {
+        const lscene::Camera& camera = scene.getCamera();
+
+        copy(dst.v_, camera.getViewMatrix());
+        camera.getViewMatrix().getInvert(dst.iv_);
+
+        copy(dst.vp0_, camera.getPrevViewProjMatrix());
+        copy(dst.vp1_, camera.getViewProjMatrix());
+        dst.cameraPos_ = camera.getEyePosition();
+    }
 
     void setSceneConstantPS(SceneConstantPS& dst, const SceneConstantPS& src, const Scene& scene)
     {

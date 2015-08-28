@@ -70,10 +70,7 @@ namespace io
             BindFlag bindFlag,
             CPUAccessFlag access,
             ResourceMisc misc,
-            TextureFilterType filter,
-            TextureAddress adress,
-            CmpFunc compFunc,
-            f32 borderColor,
+            u32& width, u32& height, DataFormat& format,
             bool transpose = false);
 
         static bool write(lcore::ostream& os, const u8* buffer, u32 width, u32 height);

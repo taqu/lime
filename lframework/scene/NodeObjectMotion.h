@@ -16,6 +16,7 @@ namespace lscene
         virtual ~NodeObjectMotion();
 
         virtual s32 getType() const;
+        virtual void update();
 
         inline virtual const lmath::Matrix44& getPrevMatrix() const;
         void pushMatrix();

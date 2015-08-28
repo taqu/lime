@@ -13,11 +13,6 @@ namespace lmath
     class DualQuaternion;
 }
 
-namespace lgraphics
-{
-    class Texture2DRef;
-}
-
 namespace lscene
 {
 namespace lrender
@@ -26,6 +21,7 @@ namespace lrender
     class Mesh;
     class Material;
     class Node;
+    class Texture2D;
 
     //------------------------------------------
     //---
@@ -96,10 +92,10 @@ namespace lrender
         inline u32 getNumTextures() const;
 
         /// テクスチャ
-        lgraphics::Texture2DRef& getTexture(u32 index);
+        Texture2D& getTexture(u32 index);
 
         /// テクスチャ
-        void setTexture(u32 index, lgraphics::Texture2DRef& texture);
+        void setTexture(u32 index, Texture2D& texture);
 
         template<class T>
         T* placementArrayConstruct(void* ptr, u32 num)
@@ -115,7 +111,7 @@ namespace lrender
         Mesh* meshes_; /// メッシュ配列
         Material* materials_; /// マテリアル配列
         Node* nodes_;
-        lgraphics::Texture2DRef* textures_;
+        Texture2D* textures_;
 
         u32 numGeometries_;
         u32 numMeshes_; /// メッシュ数

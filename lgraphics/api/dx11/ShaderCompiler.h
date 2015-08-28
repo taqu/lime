@@ -6,8 +6,8 @@
 @date 2013/12/30 create
 */
 #include <D3Dcompiler.h>
+#include <lcore/lcore.h>
 #include <lcore/liostream.h>
-#include <lcore/utility.h>
 #include "../../lgraphicscore.h"
 #include "../../lgraphicsAPIInclude.h"
 #include "ShaderRef.h"

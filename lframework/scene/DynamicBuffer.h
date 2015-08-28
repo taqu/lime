@@ -36,6 +36,8 @@ namespace lscene
 
         void attach(lgraphics::ContextRef& context, u32 startSlot, u32 stride, u32 offsetInBytes);
         void attach(lgraphics::ContextRef& context, lgraphics::DataFormat format, u32 offsetInBytes);
+
+        buffer_type& getBuffer(){ return buffer_;}
     private:
         RingBuffer ringBuffer_;
         buffer_type buffer_;

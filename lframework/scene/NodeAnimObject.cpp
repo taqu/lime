@@ -87,6 +87,7 @@ namespace lscene
 
     void NodeAnimObject::update()
     {
+        NodeTransform::updateTransform();
         animation_.update();
     }
 
@@ -284,12 +285,14 @@ namespace lscene
     inline void NodeAnimObject::setTexture(lgraphics::ContextRef& context, lrender::Material& material)
     {
         if(material.hasTexture(lrender::Tex_Albedo)){
-            lgraphics::Texture2DRef& tex = object_->getTexture( material.textureIDs_[lrender::Tex_Albedo] );
-            tex.attachPS(context, lrender::Tex_Albedo, lrender::Tex_Albedo);
+            lrender::Texture2D& tex = object_->getTexture( material.textureIDs_[lrender::Tex_Albedo] );
+            context.setPSResources(lrender::Tex_Albedo, 1, (tex.srv_));
+            context.setPSSamplerStates(lrender::Tex_Albedo, 1, (tex.sampler_));
         }
         if(material.hasTexture(lrender::Tex_Normal)){
-            lgraphics::Texture2DRef& tex = object_->getTexture( material.textureIDs_[lrender::Tex_Normal] );
-            tex.attachPS(context, lrender::Tex_Normal, lrender::Tex_Normal);
+            lrender::Texture2D& tex = object_->getTexture( material.textureIDs_[lrender::Tex_Normal] );
+            context.setPSResources(lrender::Tex_Normal, 1, (tex.srv_));
+            context.setPSSamplerStates(lrender::Tex_Normal, 1, (tex.sampler_));
         }
     }
 

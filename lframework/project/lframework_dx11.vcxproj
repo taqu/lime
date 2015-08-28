@@ -94,7 +94,7 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\pack\lpack.cpp" />
+    <ClCompile Include="..\pack\lpacktree.cpp" />
     <ClCompile Include="..\pack\PackReader.cpp" />
     <ClCompile Include="..\pack\PackWriter.cpp" />
     <ClCompile Include="..\scene\anim\Animation.cpp" />
@@ -123,6 +123,7 @@
     <ClCompile Include="..\scene\NodeBase.cpp" />
     <ClCompile Include="..\scene\NodeObject.cpp" />
     <ClCompile Include="..\scene\NodeObjectMotion.cpp" />
+    <ClCompile Include="..\scene\NodeStaticObject.cpp" />
     <ClCompile Include="..\scene\NodeTransform.cpp" />
     <ClCompile Include="..\scene\ObjectFactory.cpp" />
     <ClCompile Include="..\scene\ReflectiveShadowMap.cpp" />
@@ -150,7 +151,7 @@
     <ClCompile Include="..\scene\SystemBase.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\pack\lpack.h" />
+    <ClInclude Include="..\pack\lpacktree.h" />
     <ClInclude Include="..\pack\PackReader.h" />
     <ClInclude Include="..\pack\PackWriter.h" />
     <ClInclude Include="..\scene\anim\Animation.h" />
@@ -192,11 +193,13 @@
     <ClInclude Include="..\scene\mixin\Module.h" />
     <ClInclude Include="..\scene\mixin\ReferenceCounted.h" />
     <ClInclude Include="..\scene\mixin\Renderable.h" />
+    <ClInclude Include="..\scene\MultipleBuffer.h" />
     <ClInclude Include="..\scene\NodeAnimObject.h" />
     <ClInclude Include="..\scene\NodeAnimObjectMotion.h" />
     <ClInclude Include="..\scene\NodeBase.h" />
     <ClInclude Include="..\scene\NodeObject.h" />
     <ClInclude Include="..\scene\NodeObjectMotion.h" />
+    <ClInclude Include="..\scene\NodeStaticObject.h" />
     <ClInclude Include="..\scene\NodeTransform.h" />
     <ClInclude Include="..\scene\ObjectFactory.h" />
     <ClInclude Include="..\scene\ObjectFactoryBase.h" />
@@ -215,6 +218,7 @@
     <ClInclude Include="..\scene\render\ShaderID.h" />
     <ClInclude Include="..\scene\render\ShaderManager.h" />
     <ClInclude Include="..\scene\render\ShaderSet.h" />
+    <ClInclude Include="..\scene\render\Texture.h" />
     <ClInclude Include="..\scene\Resource.h" />
     <ClInclude Include="..\scene\Resources.h" />
     <ClInclude Include="..\scene\RingBuffer.h" />

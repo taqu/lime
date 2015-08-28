@@ -7,9 +7,6 @@
     <Filter Include="smart_ptr">
       <UniqueIdentifier>{6b5fd3c0-09d5-425a-a73a-527671c94145}</UniqueIdentifier>
     </Filter>
-    <Filter Include="random">
-      <UniqueIdentifier>{fb37fc43-dfb8-48e6-a3c5-60ecc5ca8081}</UniqueIdentifier>
-    </Filter>
     <Filter Include="async">
       <UniqueIdentifier>{1327b7e5-781e-45f3-8e3d-13321009aa6e}</UniqueIdentifier>
     </Filter>
@@ -29,9 +26,6 @@
     </ClInclude>
     <ClInclude Include="..\smart_ptr\shared_ptr.h">
       <Filter>smart_ptr</Filter>
-    </ClInclude>
-    <ClInclude Include="..\random\Random.h">
-      <Filter>random</Filter>
     </ClInclude>
     <ClInclude Include="..\async\Socket.h">
       <Filter>async</Filter>
@@ -55,7 +49,6 @@
     <ClInclude Include="..\Search.h" />
     <ClInclude Include="..\Sort.h" />
     <ClInclude Include="..\String.h" />
-    <ClInclude Include="..\utility.h" />
     <ClInclude Include="..\Vector.h" />
     <ClInclude Include="..\allocator\dlmalloc.h">
       <Filter>allocator</Filter>
@@ -87,11 +80,9 @@
     <ClInclude Include="..\Coroutine.h" />
     <ClInclude Include="..\Hash.h" />
     <ClInclude Include="..\HashMap.h" />
+    <ClInclude Include="..\Random.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\random\Random.cpp">
-      <Filter>random</Filter>
-    </ClCompile>
     <ClCompile Include="..\async\Socket.cpp">
       <Filter>async</Filter>
     </ClCompile>
@@ -106,7 +97,6 @@
     <ClCompile Include="..\lcore.cpp" />
     <ClCompile Include="..\ldll.cpp" />
     <ClCompile Include="..\liostream.cpp" />
-    <ClCompile Include="..\utlity.cpp" />
     <ClCompile Include="..\allocator\dlmalloc.c">
       <Filter>allocator</Filter>
     </ClCompile>
@@ -123,5 +113,6 @@
     <ClCompile Include="..\Noise.cpp" />
     <ClCompile Include="..\Coroutine.cpp" />
     <ClCompile Include="..\HashMap.cpp" />
+    <ClCompile Include="..\Random.cpp" />
   </ItemGroup>
 </Project>

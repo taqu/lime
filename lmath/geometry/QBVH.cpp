@@ -286,13 +286,13 @@ namespace
         ranges[3][1] = begin + numFaces;
 
         lmath::Vector3 minmax[4][2];
+        LIME_ALIGN16 f32 bbox[2][3][4];
         {
             for(s32 i=0; i<4; ++i){
                 u32 num = ranges[i][1] - ranges[i][0];
                 getBBox(minmax[i][0], minmax[i][1], faces_+ranges[i][0], num);
             }
 
-            f32 bbox[2][3][4];
             for(s32 i=0; i<3; ++i){
                 for(s32 j=0; j<4; ++j){
                     bbox[0][i][j] = minmax[j][0][i] - boundingExpansion_;
