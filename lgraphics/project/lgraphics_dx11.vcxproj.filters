@@ -149,6 +149,7 @@
     <ClInclude Include="..\api\dx11\BufferRefBase.h">
       <Filter>api\dx11</Filter>
     </ClInclude>
+    <ClInclude Include="..\api\ViewRef.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\api\dx11\BlendStateRef.cpp">
