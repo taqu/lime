@@ -165,6 +165,7 @@ namespace lmath
         void lookAt(const Vector3& eye, const Vector3& at, const Vector3& up);
 
         void lookAt(const Vector4& at);
+        void lookAt(const Vector3& at);
 
         void viewPointAlign(const Matrix44& view, const Vector4& position);
         void axisAlign(const Vector4& axis, const Matrix44& view, const Vector4& position);

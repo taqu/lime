@@ -37,9 +37,11 @@ namespace lmath
     using lcore::s8;
     using lcore::s16;
     using lcore::s32;
+    using lcore::s64;
     using lcore::u8;
     using lcore::u16;
     using lcore::u32;
+    using lcore::u64;
     using lcore::f32;
     using lcore::f64;
     using lcore::Char;
@@ -169,7 +171,7 @@ namespace lmath
 
     inline bool isZeroNegative(f32 x1)
     {
-        LASSERT(x1<0.0f);
+        LASSERT(x1<=0.0f);
         return (-F32_EPSILON<=x1);
     }
 
@@ -473,6 +475,11 @@ namespace lmath
         return round2S32(val + doublemagicroundeps);
     }
 
+    inline f32 fmod(f32 x, f32 y)
+    {
+        return ::fmodf(x, y);
+    }
+
     inline f32 step(f32 x, f32 a)
     {
         return (a<=x)? 1.0f : 0.0f;
@@ -507,9 +514,9 @@ namespace lmath
     f32 criticallyDampedSpring(f32 target, f32 current, f32& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity);
     f32 criticallyDampedSpring2(f32 target, f32 current, f32& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity);
 
-    void criticallyDampedSpring(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 timeStep, f32 maxVelocity);
-    void criticallyDampedSpring(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity);
-    void criticallyDampedSpring2(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity);
+    void criticallyDampedSpring(const Vector4& target, Vector4& current, Vector4& velocity, f32 timeStep, f32 maxVelocity);
+    void criticallyDampedSpring(const Vector4& target, Vector4& current, Vector4& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity);
+    void criticallyDampedSpring2(const Vector4& target, Vector4& current, Vector4& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity);
 
 
     inline f32 gamma(f32 x, f32 g)
@@ -535,8 +542,8 @@ namespace lmath
     @param x1 ... 乱数1
     */
     void randomInSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1, f32 x2);
-    void randomInSphere(lmath::Vector3& dst, f32 x0, f32 x1, f32 x2);
-    void randomInSphere(lmath::Vector4& dst, f32 x0, f32 x1, f32 x2);
+    void randomInSphere(Vector3& dst, f32 x0, f32 x1, f32 x2);
+    void randomInSphere(Vector4& dst, f32 x0, f32 x1, f32 x2);
 
 
     /**
@@ -548,8 +555,8 @@ namespace lmath
     @param x1 ... 乱数1
     */
     void randomOnSphere(f32& vx, f32& vy, f32& vz, f32 x0, f32 x1);
-    void randomOnSphere(lmath::Vector3& dst, f32 x0, f32 x1);
-    void randomOnSphere(lmath::Vector4& dst, f32 x0, f32 x1);
+    void randomOnSphere(Vector3& dst, f32 x0, f32 x1);
+    void randomOnSphere(Vector4& dst, f32 x0, f32 x1);
 
     template<class T>
     void randomOnSphere(f32& vx, f32& vy, f32& vz, T& random)
@@ -579,7 +586,7 @@ namespace lmath
     @param x0 ... 乱数0
     @param x1 ... 乱数1
     */
-    void randomOnHemiSphere(
+    void randomOnHemisphere(
         f32& vx, f32& vy, f32& vz,
         f32 x0, f32 x1);
 
@@ -592,7 +599,7 @@ namespace lmath
     @param x0 ... 乱数0
     @param x1 ... 乱数1
     */
-    void randomOnHemiSphere(
+    void randomOnHemisphere(
         f32& vx, f32& vy, f32& vz,
         const Vector3& n,
         f32 x0, f32 x1);
@@ -606,7 +613,7 @@ namespace lmath
     @param x0 ... 乱数0
     @param x1 ... 乱数1
     */
-    void consineWeightedRandomOnHemiSphere(
+    void cosineWeightedRandomOnHemisphere(
         f32& vx, f32& vy, f32& vz,
         f32 x0, f32 x1);
 
@@ -619,17 +626,28 @@ namespace lmath
     @param x0 ... 乱数0
     @param x1 ... 乱数1
     */
-    void consineWeightedRandomOnHemiSphere(
+    void cosineWeightedRandomOnHemisphere(
         f32& vx, f32& vy, f32& vz,
         const Vector3& n,
         f32 x0, f32 x1);
 
     void randomCone(
         f32& vx, f32& vy, f32& vz,
-        f32 angle,
-        f32 nx, f32 ny, f32 nz,
+        f32 cutoffAngle,
         f32 x0,
         f32 x1);
+
+    //
+    void randomDiskConcentric(f32& vx, f32& vy, f32 x0, f32 x1);
+
+    /**
+    @brief 一様ランダム
+    @param u ... 重心座標
+    @param v ... 重心座標
+    @param x0 ... 乱数0
+    @param x1 ... 乱数1
+    */
+    void randomTriangle(f32& u, f32& v, f32 x0, f32 x1);
 
     void reflect(Vector3& dst, const Vector3& src, const Vector3& normal);
     void reflect(Vector4& dst, const Vector4& src, const Vector4& normal);
@@ -661,19 +679,33 @@ namespace lmath
     void cubeToSphere(lmath::Vector4& inout);
 
     void calcNormalFromSphericalCoordinate(f32& x, f32& y, f32& z, f32 theta, f32 phi);
-    void calcNormalFromSphericalCoordinate(lmath::Vector3& normal, f32 theta, f32 phi);
-    void calcNormalFromSphericalCoordinate(lmath::Vector4& normal, f32 theta, f32 phi);
+    void calcNormalFromSphericalCoordinate(Vector3& normal, f32 theta, f32 phi);
+    void calcNormalFromSphericalCoordinate(Vector4& normal, f32 theta, f32 phi);
+
+    void calcNormalFromSphericalCoordinate(
+        Vector3& v, f32 theta, f32 phi,
+        const Vector3& x,
+        const Vector3& y,
+        const Vector3& z);
+
+    void calcNormalFromSphericalCoordinate(
+        Vector4& v, f32 theta, f32 phi,
+        const Vector4& x,
+        const Vector4& y,
+        const Vector4& z);
 
     void normalToSphericalCoordinate(f32& theta, f32& phi, f32 x, f32 y, f32 z);
-    void normalToSphericalCoordinate(f32& theta, f32& phi, const lmath::Vector3& normal);
-    void normalToSphericalCoordinate(f32& theta, f32& phi, const lmath::Vector4& normal);
+    void normalToSphericalCoordinate(f32& theta, f32& phi, const Vector3& normal);
+    void normalToSphericalCoordinate(f32& theta, f32& phi, const Vector4& normal);
 
-    void orthonormalBasis(lmath::Vector4& binormal0, lmath::Vector4& binormal1, const lmath::Vector4& normal);
+
+    void orthonormalBasis(Vector3& binormal0, Vector3& binormal1, const Vector3& normal);
+    void orthonormalBasis(Vector4& binormal0, Vector4& binormal1, const Vector4& normal);
 
     /**
     @brief Z軸をnormal方向へ回転する行列
     */
-    void rotationMatrixFromOrthonormalBasis(lmath::Matrix44& mat, const lmath::Vector4& normal, const lmath::Vector4& binormal0, const lmath::Vector4& binormal1);
+    void rotationMatrixFromOrthonormalBasis(Matrix44& mat, const Vector4& normal, const Vector4& binormal0, const Vector4& binormal1);
 
     void smoothTranslate(Vector4& dst, const Vector4& current, const Vector4& target, f32 maxDistance);
     void smoothRotate(Vector4& dst, const Vector4& current, const Vector4& target, f32 maxRotate);
@@ -693,6 +725,50 @@ namespace lmath
     @brief 分散
     */
     f32 calcVariance(s32 num, const f32* v);
+
+    /**
+    @brief 一様半球面サンプルの確率密度関数
+    */
+    inline f32 uniformHemispherePdf()
+    {
+        return 1.0f/(2.0f*PI);
+    }
+    
+    /**
+    @brief 一様球面サンプルの確率密度関数
+    */
+    inline f32 uniformSpherePdf()
+    {
+        return 1.0f/(4.0f*PI);
+    }
+
+    /**
+    */
+    inline f32 uniformConePdf(f32 cosCutoffAngle)
+    {
+        LASSERT(!isZero(cosCutoffAngle));
+        return INV_PI2/(1.0f - cosCutoffAngle);
+    }
+
+    /**
+    @brief 一様円面サンプルの確率密度関数
+    */
+    inline f32 uniformDiskConcentricPdf()
+    {
+        return INV_PI;
+    }
+
+    /**
+    @brief cosine偏重半球面サンプルの確率密度関数
+    */
+    inline f32 cosineWeightedHemispherePdf(f32 cosTheta)
+    {
+        return cosTheta * INV_PI;
+    }
+
+    //
+    //-------------------------------------------------------
+    bool solveLinearSystem2x2(const f32 A[2][2], const f32 B[2], f32& x0, f32& x1);
 }
 
 #endif //INC_LMATHCORE_H__

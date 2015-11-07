@@ -377,7 +377,7 @@ namespace lmath
         return current + velocity * timeStep;
     }
 
-    void criticallyDampedSpring(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 timeStep, f32 maxVelocity)
+    void criticallyDampedSpring(const Vector4& target, Vector4& current, Vector4& velocity, f32 timeStep, f32 maxVelocity)
     {
         lmath::Vector4 difference;
         difference.sub(target, current);
@@ -395,7 +395,7 @@ namespace lmath
         current.muladd(timeStep, velocity, current);
     }
 
-    void criticallyDampedSpring(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity)
+    void criticallyDampedSpring(const Vector4& target, Vector4& current, Vector4& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity)
     {
         lmath::Vector4 difference;
         difference.sub(target, current);
@@ -414,7 +414,7 @@ namespace lmath
         current.muladd(timeStep, velocity, current);
     }
 
-    void criticallyDampedSpring2(const lmath::Vector4& target, lmath::Vector4& current, lmath::Vector4& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity)
+    void criticallyDampedSpring2(const Vector4& target, Vector4& current, Vector4& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity)
     {
         lmath::Vector4 difference;
         difference.sub(target, current);
@@ -457,25 +457,25 @@ namespace lmath
         LASSERT(0.0f<=x0 && x0<=1.0f);
         LASSERT(0.0f<=x1 && x1<=1.0f);
 
-        f32 z = 2.0f*x0 - 1.0f;
-        f32 t = PI2 *x1;
-        f32 r = lmath::sqrt(1.0f - z*z);
+        f32 theta = 2.0f*x0 - 1.0f;
+        f32 r = lmath::sqrt(1.0f - theta*theta);
 
+        f32 phi = PI2 *x1;
         f32 sn, cs;
-        lmath::sincos(sn, cs, t);
+        lmath::sincos(sn, cs, phi);
 
         r *= x2;
         vx = r * cs;
         vy = r * sn;
-        vz = x2 * z;
+        vz = x2 * theta;
     }
 
-    void randomInSphere(lmath::Vector3& dst, f32 x0, f32 x1, f32 x2)
+    void randomInSphere(Vector3& dst, f32 x0, f32 x1, f32 x2)
     {
         randomInSphere(dst.x_, dst.y_, dst.z_, x0, x1, x2);
     }
 
-    void randomInSphere(lmath::Vector4& dst, f32 x0, f32 x1, f32 x2)
+    void randomInSphere(Vector4& dst, f32 x0, f32 x1, f32 x2)
     {
         randomInSphere(dst.x_, dst.y_, dst.z_, x0, x1, x2);
     }
@@ -485,48 +485,48 @@ namespace lmath
         LASSERT(0.0f<=x0 && x0<=1.0f);
         LASSERT(0.0f<=x1 && x1<=1.0f);
 
-        f32 z = 2.0f*x0 - 1.0f;
-        f32 t = PI2 *x1;
-        f32 r = lmath::sqrt(1.0f - z*z);
+        f32 theta = 2.0f*x0 - 1.0f;
+        f32 r = lmath::sqrt(1.0f - theta*theta);
 
+        f32 phi = PI2 *x1;
         f32 sn, cs;
-        lmath::sincos(sn, cs, t);
+        lmath::sincos(sn, cs, phi);
         vx = r * cs;
         vy = r * sn;
-        vz = z;
+        vz = theta;
     }
 
-    void randomOnSphere(lmath::Vector3& dst, f32 x0, f32 x1)
+    void randomOnSphere(Vector3& dst, f32 x0, f32 x1)
     {
         randomOnSphere(dst.x_, dst.y_, dst.z_, x0, x1);
     }
 
-    void randomOnSphere(lmath::Vector4& dst, f32 x0, f32 x1)
+    void randomOnSphere(Vector4& dst, f32 x0, f32 x1)
     {
         randomOnSphere(dst.x_, dst.y_, dst.z_, x0, x1);
     }
 
     // 単位半球面上ランダム
-    void randomOnHemiSphere(
+    void randomOnHemisphere(
         f32& vx, f32& vy, f32& vz,
         f32 x0, f32 x1)
     {
         LASSERT(0.0f<=x0 && x0<=1.0f);
         LASSERT(0.0f<=x1 && x1<=1.0f);
 
-        f32 z = x0;
-        f32 t = PI2 *x1;
-        f32 r = lmath::sqrt(1.0f - z*z);
+        f32 theta = x0;
+        f32 r = lmath::sqrt(1.0f - theta*theta);
 
+        f32 phi = PI2 *x1;
         f32 sn, cs;
-        lmath::sincos(sn, cs, t);
+        lmath::sincos(sn, cs, phi);
         vx = r * cs;
         vy = r * sn;
-        vz = z;
+        vz = theta;
     }
 
     // 単位半球面上ランダム
-    void randomOnHemiSphere(
+    void randomOnHemisphere(
         f32& vx, f32& vy, f32& vz,
         const Vector3& n,
         f32 x0, f32 x1)
@@ -544,93 +544,79 @@ namespace lmath
     }
 
     // cosineに偏重した単位半球面上ランダム
-    void consineWeightedRandomOnHemiSphere(
+    void cosineWeightedRandomOnHemisphere(
         f32& vx, f32& vy, f32& vz,
         f32 x0, f32 x1)
     {
-        f32 r = lmath::sqrt(x0);
-        f32 t = PI2 * x1;
-
-        f32 sn, cs;
-        lmath::sincos(sn, cs, t);
-
-        vx = r * cs;
-        vy = r * sn;
-        vz = lmath::sqrt(lcore::maximum(0.0f, 1.0f - x0));
+        randomDiskConcentric(vx, vy, x0, x1);
+        vz = lmath::sqrt(lcore::maximum(0.0f, 1.0f-vx*vx-vy*vy));
     }
 
     // cosineに偏重した単位半球面上ランダム
-    void consineWeightedRandomOnHemiSphere(
+    void cosineWeightedRandomOnHemisphere(
         f32& vx, f32& vy, f32& vz,
         const Vector3& n,
         f32 x0, f32 x1)
     {
-        f32 theta = lmath::acos(sqrt(1.0f - x0));
-        f32 phi = PI2 * x1;
+        f32 xs, ys, zs;
+        cosineWeightedRandomOnHemisphere(xs, ys, zs, x0, x1);
 
-        f32 sineTheta = lmath::sinf(theta);
-        f32 xs = sineTheta*lmath::cosf(phi);
-        f32 ys = lmath::cosf(theta);
-        f32 zs = sineTheta*lmath::sinf(phi);
+        Vector3 b0, b1;
+        orthonormalBasis(b0, b1, n);
 
-
-        lmath::Vector3 h(n);
-        if(lcore::absolute(h.x_)<=lcore::absolute(h.y_) && lcore::absolute(h.x_)<=lcore::absolute(h.z_)){
-            h.x_ = 1.0f;
-        }else if(lcore::absolute(h.y_)<=lcore::absolute(h.x_) && lcore::absolute(h.y_)<=lcore::absolute(h.z_)){
-            h.y_ = 1.0f;
-        }else{
-            h.z_ = 1.0f;
-        }
-
-        lmath::Vector3 x;
-        x.cross(h, n);
-        x.normalize();
-
-        lmath::Vector3 z;
-        z.cross(x, n);
-        z.normalize();
-
-        vx = xs*x.x_ + ys*n.x_ + zs*z.x_;
-        vy = xs*x.y_ + ys*n.y_ + zs*z.y_;
-        vz = xs*x.z_ + ys*n.z_ + zs*z.z_;
-
-        f32 il = 1.0f/lmath::sqrt(vx*vx + vy*vy + vz*vz);
-        LASSERT(!lmath::isZeroPositive(il));
-
-        vx *= il;
-        vy *= il;
-        vz *= il;
+        vx = xs*b0.x_ + ys*n.x_ + zs*b1.x_;
+        vy = xs*b0.y_ + ys*n.y_ + zs*b1.y_;
+        vz = xs*b0.z_ + ys*n.z_ + zs*b1.z_;
     }
 
     void randomCone(
         f32& vx, f32& vy, f32& vz,
-        f32 angle,
-        f32 nx, f32 ny, f32 nz,
+        f32 cutoffAngle,
         f32 x0,
         f32 x1)
     {
-        Vector4 n(nx, ny, nz, 0.0f);
-        LASSERT(!lmath::isZero(n.length()));
+        f32 cosTheta = (1.0f-x0) + x0*cutoffAngle;
+        f32 sinTheta = lmath::sqrt(1.0f - cosTheta*cosTheta);
+        f32 cosPhi, sinPhi;
+        sincos(sinPhi, cosPhi, 2.0f*PI*x1);
 
-        angle *= x0-0.5f;
-        f32 cs = cosf_fast(angle);
-        f32 sn = sinf_fast(angle);
+        vx = sinTheta * cosPhi;
+        vy = sinTheta * sinPhi;
+        vz = cosTheta;
+    }
 
-        lmath::Vector4 z(sn, 0.0f, cs, 0.0f);
-        
-        Quaternion r0;
-        r0.lookAt(n);
+    void randomDiskConcentric(f32& vx, f32& vy, f32 x0, f32 x1)
+    {
+        //http://psgraphics.blogspot.ch/2011/01/improved-code-for-concentric-map.html
+        f32 sx = 2.0f*x0 - 1.0f;
+        f32 sy = 2.0f*x1 - 1.0f;
 
-        Quaternion r1;
-        r1.setRotateAxis(Vector4::Forward.x_, Vector4::Forward.y_, Vector4::Forward.z_, x1*PI2);
+        f32 phi, r;
+        if(0.0f==sx && 0.0f==sy){
+            r = 0.0f;
+            phi = 0.0f;
 
-        r1 *= r0;
-        lmath::Vector4 v;
-        v.rotate(r1, z);
-        vx = v.x_;
-        vy = v.y_;
-        vz = v.z_;
+        }else if(sy*sy<sx*sx){
+            r = sx;
+            phi = (PI/4)*(sy/sx);
+
+        } else {
+            r = sy;
+            phi = (PI/2) - (PI/4)*(sx/sy);
+        }
+
+        f32 cosPhi, sinPhi;
+        sincos(sinPhi, cosPhi, phi);
+        vx = r * cosPhi;
+        vy = r * sinPhi;
+        //LASSERT(sqrt(vx*vx+vy*vy)<=1.0f);
+    }
+
+    void randomTriangle(f32& u, f32& v, f32 x0, f32 x1)
+    {
+        f32 su = lmath::sqrt(x0);
+        u = 1.0f - su;
+        v = x1 * su;
     }
 
 
@@ -726,52 +712,103 @@ namespace lmath
         z = dz;
     }
 
-    void cubeToSphere(lmath::Vector3& inout)
+    void cubeToSphere(Vector3& inout)
     {
         cubeToSphere(inout.x_, inout.y_, inout.z_);
     }
 
-    void cubeToSphere(lmath::Vector4& inout)
+    void cubeToSphere(Vector4& inout)
     {
         cubeToSphere(inout.x_, inout.y_, inout.z_);
     }
 
     void calcNormalFromSphericalCoordinate(f32& x, f32& y, f32& z, f32 theta, f32 phi)
     {
-        f32 sn = lmath::sinf(phi);
-        x = lmath::cosf(theta) * sn;
-        y = lmath::sinf(theta) * sn;
-        z = lmath::cosf(phi);
+        f32 csTheta, snTheta;
+        f32 csPhi, snPhi;
+        sincos(snTheta, csTheta, theta);
+        sincos(snPhi, csPhi, phi);
+
+        x = snTheta * csPhi;
+        y = snTheta * snPhi;
+        z = csTheta;
     }
 
-    void calcNormalFromSphericalCoordinate(lmath::Vector3& normal, f32 theta, f32 phi)
+    void calcNormalFromSphericalCoordinate(Vector3& normal, f32 theta, f32 phi)
     {
         calcNormalFromSphericalCoordinate(normal.x_, normal.y_, normal.z_, theta, phi);
     }
 
-    void calcNormalFromSphericalCoordinate(lmath::Vector4& normal, f32 theta, f32 phi)
+    void calcNormalFromSphericalCoordinate(Vector4& normal, f32 theta, f32 phi)
     {
         calcNormalFromSphericalCoordinate(normal.x_, normal.y_, normal.z_, theta, phi);
+    }
+
+    void calcNormalFromSphericalCoordinate(
+        Vector3& v, f32 theta, f32 phi,
+        const Vector3& x,
+        const Vector3& y,
+        const Vector3& z)
+    {
+        f32 csTheta, snTheta;
+        f32 csPhi, snPhi;
+        sincos(snTheta, csTheta, theta);
+        sincos(snPhi, csPhi, phi);
+
+        v.mul(snTheta * csPhi, x);
+        v.muladd(snTheta * snPhi, y, v);
+        v.muladd(csTheta, z, v);
+    }
+
+    void calcNormalFromSphericalCoordinate(
+        Vector4& v, f32 theta, f32 phi,
+        const Vector4& x,
+        const Vector4& y,
+        const Vector4& z)
+    {
+        f32 csTheta, snTheta;
+        f32 csPhi, snPhi;
+        sincos(snTheta, csTheta, theta);
+        sincos(snPhi, csPhi, phi);
+
+        v.mul(snTheta * csPhi, x);
+        v.muladd(snTheta * snPhi, y, v);
+        v.muladd(csTheta, z, v);
     }
 
     void normalToSphericalCoordinate(f32& theta, f32& phi, f32 x, f32 y, f32 z)
     {
-        phi = lmath::acos(z);
-        theta = lmath::atan2(y, x);
+        theta = acosf(lcore::clamp(z, -1.0f, 1.0f));
+        f32 p = atan2f(y, x);
+        phi = (p<0.0f)? p + PI2 : p;
     }
 
-    void normalToSphericalCoordinate(f32& theta, f32& phi, const lmath::Vector3& normal)
+    void normalToSphericalCoordinate(f32& theta, f32& phi, const Vector3& normal)
     {
         normalToSphericalCoordinate(theta, phi, normal.x_, normal.y_, normal.z_);
     }
 
-    void normalToSphericalCoordinate(f32& theta, f32& phi, const lmath::Vector4& normal)
+    void normalToSphericalCoordinate(f32& theta, f32& phi, const Vector4& normal)
     {
         normalToSphericalCoordinate(theta, phi, normal.x_, normal.y_, normal.z_);
     }
 
     //from Jeppe Revall Frisvad, "Building an Orthonormal Basis from a 3D Unit Vector Without Normalization"
-    void orthonormalBasis(lmath::Vector4& binormal0, lmath::Vector4& binormal1, const lmath::Vector4& normal)
+    void orthonormalBasis(Vector3& binormal0, Vector3& binormal1, const Vector3& normal)
+    {
+        if(normal.z_<-0.9999999f){
+            binormal0.set(0.0f, -1.0f, 0.0f);
+            binormal1.set(-1.0f,  0.0f, 0.0f);
+            return;
+        }
+
+        const f32 a = 1.0f/(1.0f + normal.z_);
+        const f32 b = -normal.x_*normal.y_*a;
+        binormal0.set(1.0f - normal.x_*normal.x_*a, b, -normal.x_);
+        binormal1.set(b, 1.0f - normal.y_*normal.y_*a, -normal.y_);
+    }
+
+    void orthonormalBasis(Vector4& binormal0, Vector4& binormal1, const Vector4& normal)
     {
         if(normal.z_<-0.9999999f){
             binormal0.set(0.0f, -1.0f, 0.0f, 0.0f);
@@ -785,7 +822,7 @@ namespace lmath
         binormal1.set(b, 1.0f - normal.y_*normal.y_*a, -normal.y_, 0.0f);
     }
 
-    void rotationMatrixFromOrthonormalBasis(lmath::Matrix44& mat, const lmath::Vector4& normal, const lmath::Vector4& binormal0, const lmath::Vector4& binormal1)
+    void rotationMatrixFromOrthonormalBasis(Matrix44& mat, const Vector4& normal, const Vector4& binormal0, const Vector4& binormal1)
     {
         mat.identity();
         mat.m_[0][0] = binormal0.x_; mat.m_[0][1] = binormal1.x_; mat.m_[0][2] = normal.x_;
@@ -845,5 +882,21 @@ namespace lmath
         avg *= invN;
         avg2 *= invN;
         return avg2 - avg*avg;
+    }
+
+    //
+    //-------------------------------------------------------
+    bool solveLinearSystem2x2(const f32 A[2][2], const f32 B[2], f32& x0, f32& x1)
+    {
+        f32 determinant = A[0][0]*A[1][1] - A[0][1]*A[1][0];
+        if(lcore::absolute(determinant)<1.0e-6f){
+            return false;
+        }
+
+        f32 invDeterminant = 1.0f/determinant;
+        x0 = (A[1][1]*B[0] - A[0][1]*B[1]) * invDeterminant;
+        x1 = (A[0][0]*B[1] - A[1][0]*B[0]) * invDeterminant;
+
+        return (lcore::isNan(x0) || lcore::isNan(x1))? false : true;
     }
 }

@@ -56,6 +56,7 @@ namespace lmath
         inline f32 length() const;
         inline f32 lengthSqr() const;
         inline void normalize();
+        inline void normalizeChecked();
 
         inline f32 dot(const Vector2& v) const;
 
@@ -69,7 +70,8 @@ namespace lmath
 
         inline void add(const Vector2& v0, const Vector2& v1);
         inline void sub(const Vector2& v0, const Vector2& v1);
-
+        inline void mul(f32 a, const Vector2& v);
+        inline void mul(const Vector2& v, f32 a);
         void muladd(f32 t, const Vector2& v0, const Vector2& v1);
 
         f32 x_, y_;
@@ -179,6 +181,17 @@ namespace lmath
         *this /= l;
     }
 
+    inline void Vector2::normalizeChecked()
+    {
+        f32 l = lengthSqr();
+        if(lmath::isZero(l, 0.0f)){
+            set(0.0f, 0.0f);
+            return;
+        }
+        l = lmath::sqrt(l);
+        *this /= l;
+    }
+
     inline f32 Vector2::dot(const Vector2& v) const
     {
         return ( x_ * v.x_ + y_ * v.y_ );
@@ -211,6 +224,18 @@ namespace lmath
     {
         x_ = v0.x_ - v1.x_;
         y_ = v0.y_ - v1.y_;
+    }
+
+    inline void Vector2::mul(f32 a, const Vector2& v)
+    {
+        x_ = a * v.x_;
+        y_ = a * v.y_;
+    }
+
+    inline void Vector2::mul(const Vector2& v, f32 a)
+    {
+        x_ = a * v.x_;
+        y_ = a * v.y_;
     }
 }
 

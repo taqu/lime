@@ -1238,6 +1238,32 @@ namespace lmath
         m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
     }
 
+    void Matrix44::lookAt(const Vector3& at)
+    {
+        Vector3 xaxis, yaxis, zaxis = at;
+        zaxis.normalize();
+        
+        f32 d = zaxis.dot(Vector3::Up);
+        if(lmath::isEqual(d, -1.0f, 0.000001f)){
+            setRotateX(-PI_2);
+            return;
+        }
+        if(lmath::isEqual(d, 1.0f, 0.000001f)){
+            setRotateX(PI_2);
+            return;
+        }
+
+        xaxis.cross(Vector3::Up, zaxis);
+        xaxis.normalize();
+
+        yaxis.cross(zaxis, xaxis);
+
+        m_[0][0] = xaxis.x_; m_[0][1] = xaxis.y_; m_[0][2] = xaxis.z_; m_[0][3] = 0.0f;
+        m_[1][0] = yaxis.x_; m_[1][1] = yaxis.y_; m_[1][2] = yaxis.z_; m_[1][3] = 0.0f;
+        m_[2][0] = zaxis.x_; m_[2][1] = zaxis.y_; m_[2][2] = zaxis.z_; m_[2][3] = 0.0f;
+        m_[3][0] = 0.0f; m_[3][1] = 0.0f; m_[3][2] = 0.0f; m_[3][3] = 1.0f;
+    }
+
     void Matrix44::viewPointAlign(const Matrix44& view, const Vector4& position)
     {
         Vector4 axis(position.x_-view(0,3), position.y_-view(1,3), position.z_-view(2,3), 0.0f);
@@ -1277,10 +1303,10 @@ namespace lmath
 
     void Matrix44::perspective(f32 width, f32 height, f32 znear, f32 zfar)
     {
-        f32 invDepth = 1.0f/(zfar-znear);
+        f32 invDepth = zfar / (zfar - znear);
         m_[0][0] = 2.0f*znear/width; m_[0][1] = 0.0f;              m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;             m_[1][1] = 2.0f*znear/height; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = zfar*invDepth; m_[2][3] = -znear*zfar*invDepth;
+        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = invDepth; m_[2][3] = -znear*invDepth;
         m_[3][0] = 0.0f;             m_[3][1] = 0.0f;              m_[3][2] = 1.0f; m_[3][3] = 0.0f;
     }
 
@@ -1288,20 +1314,20 @@ namespace lmath
     {
         f32 yscale = 1.0f/lmath::tan(0.5f * fovy);
         f32 xscale = yscale / aspect;
-        f32 invDepth = 1.0f/(zfar-znear);
+        f32 invDepth = zfar / (zfar - znear);
 
         m_[0][0] = xscale; m_[0][1] = 0.0f;   m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = zfar*invDepth; m_[2][3] = -znear*zfar*invDepth;
+        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = invDepth; m_[2][3] = -znear*invDepth;
         m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = 1.0f; m_[3][3] = 0.0f;
     }
 
     void Matrix44::perspectiveReverseZ(f32 width, f32 height, f32 znear, f32 zfar)
     {
-        f32 invDepth = -1.0f/(znear-zfar);
+        f32 invDepth = znear / (znear - zfar);
         m_[0][0] = 2.0f*znear/width; m_[0][1] = 0.0f;              m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;             m_[1][1] = 2.0f*znear/height; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = znear*invDepth; m_[2][3] = -znear*zfar*invDepth;
+        m_[2][0] = 0.0f;             m_[2][1] = 0.0f;              m_[2][2] = invDepth; m_[2][3] = -zfar*invDepth;
         m_[3][0] = 0.0f;             m_[3][1] = 0.0f;              m_[3][2] = 1.0f; m_[3][3] = 0.0f;
     }
 
@@ -1309,11 +1335,11 @@ namespace lmath
     {
         f32 yscale = 1.0f/lmath::tan(0.5f * fovy);
         f32 xscale = yscale / aspect;
-        f32 invDepth = -1.0f/(znear-zfar);
+        f32 invDepth = znear / (znear - zfar);
 
         m_[0][0] = xscale; m_[0][1] = 0.0f;   m_[0][2] = 0.0f;              m_[0][3] = 0.0f;
         m_[1][0] = 0.0f;   m_[1][1] = yscale; m_[1][2] = 0.0f;              m_[1][3] = 0.0f;
-        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = znear*invDepth; m_[2][3] = -znear*zfar*invDepth;
+        m_[2][0] = 0.0f;   m_[2][1] = 0.0f;   m_[2][2] = invDepth; m_[2][3] = -zfar*invDepth;
         m_[3][0] = 0.0f;   m_[3][1] = 0.0f;   m_[3][2] = 1.0f; m_[3][3] = 0.0f;
     }
 

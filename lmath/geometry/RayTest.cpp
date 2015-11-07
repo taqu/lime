@@ -112,17 +112,17 @@ namespace lmath
         f32 discr = c.dot(d0);
 
         Vector3 qvec;
-        if(discr > F32_EPSILON){
+        if(F32_EPSILON < discr){
             Vector3 tvec = ray.origin_;
             tvec -= v0;
             u = tvec.dot(c);
-            if(u<0.0f || u>discr){
+            if(u<0.0f || discr<u){
                 return false;
             }
 
             qvec.cross(tvec, d0);
             v = qvec.dot(ray.direction_);
-            if(v<0.0f || u+v>discr){
+            if(v<0.0f || discr<(u+v)){
                 return false;
             }
 
@@ -130,13 +130,13 @@ namespace lmath
             Vector3 tvec = ray.origin_;
             tvec -= v0;
             u = tvec.dot(c);
-            if(u>0.0f || u<discr){
+            if(0.0f<u || u<discr){
                 return false;
             }
 
             qvec.cross(tvec, d0);
             v = qvec.dot(ray.direction_);
-            if(v>0.0f || u+v<discr){
+            if(0.0f<v || (u+v)<discr){
                 return false;
             }
 
@@ -227,12 +227,12 @@ namespace lmath
 
 
         //線分の始点から終点へのベクトル
-        Vector3 d = ray.direction_;
-        d *= ray.t_;
+        Vector3 d;
+        d.mul(ray.t_, ray.direction_);
 
         //線分の中点
-        Vector3 m = d;
-        m += ray.origin_;
+        Vector3 m;
+        m.add(d, ray.origin_);
         m -= bmin;
         m -= bmax;
 
