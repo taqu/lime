@@ -1,4 +1,4 @@
-#ifndef INC_LSCENE_LANIM_JOINT_H__
+﻿#ifndef INC_LSCENE_LANIM_JOINT_H__
 #define INC_LSCENE_LANIM_JOINT_H__
 /**
 @file Joint.h

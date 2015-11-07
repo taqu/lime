@@ -1,4 +1,4 @@
-#ifndef INC_LSCENE_LANIM_SKELETON_H__
+﻿#ifndef INC_LSCENE_LANIM_SKELETON_H__
 #define INC_LSCENE_LANIM_SKELETON_H__
 /**
 @file Skeleton.h

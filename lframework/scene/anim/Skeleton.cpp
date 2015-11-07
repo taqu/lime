@@ -1,4 +1,4 @@
-/**
+﻿/**
 @file Skeleton.cpp
 @author t-sakai
 @date 2010/11/12 create

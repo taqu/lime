@@ -199,7 +199,7 @@ namespace
 
         //データ保存
         LIME_ALIGN16 f32 tmp[4];
-        for(u32 i=0; i<nodes_.size(); ++i){
+        for(s32 i=0; i<nodes_.size(); ++i){
             //SSEレジスタ保存
             //_mm_store_ps(tmp, nodes_[i].bbox_[0][0]); lcore::io::write(out, tmp, sizeof(f32)*4);
             //_mm_store_ps(tmp, nodes_[i].bbox_[0][1]); lcore::io::write(out, tmp, sizeof(f32)*4);

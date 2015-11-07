@@ -81,13 +81,21 @@ namespace lcore
 
     bool isWin2000()
     {
-        OSVERSIONINFO versionInfo;
-        ZeroMemory(&versionInfo, sizeof(OSVERSIONINFO));
-        versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        OSVERSIONINFOEX versionInfo;
+        ZeroMemory(&versionInfo, sizeof(OSVERSIONINFOEX));
+        versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+        versionInfo.dwMajorVersion = 5;
 
-        GetVersionEx(&versionInfo);
+        DWORDLONG conditionMask = 0;
+        VER_SET_CONDITION(conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
+        return TRUE == VerifyVersionInfo(&versionInfo, VER_MAJORVERSION, conditionMask);
 
-        return (versionInfo.dwMajorVersion >= 5);
+        //OSVERSIONINFO versionInfo;
+        //ZeroMemory(&versionInfo, sizeof(OSVERSIONINFO));
+        //versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
+        //GetVersionEx(&versionInfo);
+
+        //return (versionInfo.dwMajorVersion >= 5);
     }
 
     /**

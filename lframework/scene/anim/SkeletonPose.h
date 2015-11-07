@@ -1,4 +1,4 @@
-#ifndef INC_LSCENE_LANIM_SKELETONPOSE_H__
+﻿#ifndef INC_LSCENE_LANIM_SKELETONPOSE_H__
 #define INC_LSCENE_LANIM_SKELETONPOSE_H__
 /**
 @file SkeletonPose.h

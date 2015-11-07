@@ -606,25 +606,63 @@ namespace lcore
     class DynamicString
     {
     public:
+        typedef Char* iterator;
+        typedef const Char* const_iterator;
+
         DynamicString();
+        DynamicString(const DynamicString& rhs);
         explicit DynamicString(const Char* str);
+        DynamicString(const Char* begin, const Char* end);
         ~DynamicString();
 
         s32 length() const{ return length_;}
         const Char* c_str() const{ return data_;}
 
         void assign(const Char* str);
+        void assign(const Char* begin, const Char* end);
+
+        void append(const Char* begin, const Char* end);
+
         void swap(DynamicString& rhs);
 
         bool operator==(const DynamicString& rhs) const;
         bool operator!=(const DynamicString& rhs) const;
 
         s32 compare(const Char* rhs) const;
-    private:
-        DynamicString(const DynamicString&);
-        DynamicString& operator=(const DynamicString&);
 
+        iterator begin(){ return data_;}
+        iterator end(){ return data_+length_;}
+
+        const_iterator begin() const{ return data_;}
+        const_iterator end() const{ return data_+length_;}
+
+        DynamicString& operator=(const DynamicString& rhs);
+    private:
         static Char null_[4];
+        s32 length_;
+        Char* data_;
+    };
+
+    //---------------------------------------------
+    //---
+    //--- DynamicStringBuilder
+    //---
+    //---------------------------------------------
+    class DynamicStringBuilder
+    {
+    public:
+        explicit DynamicStringBuilder(s32 capacity);
+        ~DynamicStringBuilder();
+
+        void push_back(Char c);
+        void toString(DynamicString& str);
+    private:
+        DynamicStringBuilder(const DynamicStringBuilder&);
+        DynamicStringBuilder& operator=(const DynamicStringBuilder&);
+
+        void resize();
+
+        s32 capacity_;
         s32 length_;
         Char* data_;
     };

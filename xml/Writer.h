@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2011/08/18 create
 */
-#include "Core.h"
+#include "xml_core.h"
 #include <stdio.h>
 
 namespace xml

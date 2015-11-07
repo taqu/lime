@@ -1,12 +1,12 @@
-﻿#ifndef __XML_PARSER_H__
-#define __XML_PARSER_H__
+﻿#ifndef INC_XML_PARSER_H__
+#define INC_XML_PARSER_H__
 /**
 @file Parser.h
 @author t-sakai
 @date 2009/01/29 create
 @data 2009/05/19 lcoreライブラリ用に変更
 */
-#include "Core.h"
+#include "xml_core.h"
 #include "NodePtrStack.h"
 
 namespace xml
@@ -32,7 +32,7 @@ namespace xml
         @return ルートノード
         @param memory ... XMLテキスト
         */
-        Node* parse(const char* memory);
+        Node* parse(const Char* memory);
 
     private:
         /// 文字コード
@@ -43,28 +43,28 @@ namespace xml
             CharEncode_Num,
         };
 
-        const char* xmlHead(const char* text, CharEncode &encode);
-        const char* beginElementTag(const char* text);
-        const char* endElementTag(const char* text);
-        const char* attribute(const char* text);
-        const char* content(const char* text);
+        const Char* xmlHead(const Char* text, CharEncode &encode);
+        const Char* beginElementTag(const Char* text);
+        const Char* endElementTag(const Char* text);
+        const Char* attribute(const Char* text);
+        const Char* content(const Char* text);
 
-        const char* tagName(const char* text);
+        const Char* tagName(const Char* text);
 
-        const char* BOM(const char* text);
+        const Char* BOM(const Char* text);
 
         /// スタックポップ
         void popStack()
         {
             //スタックにひとつしかなければポップしない
-            if(_nodeStack.count() > 1){
-                _nodeStack.pop();
+            if(nodeStack_.count() > 1){
+                nodeStack_.pop();
             }
         }
 
         /// ノード階層のロールバック用スタック
-        NodePtrStack _nodeStack;
+        NodePtrStack nodeStack_;
     };
 }
 
-#endif //__XML_PARSER_H__
+#endif //INC_XML_PARSER_H__

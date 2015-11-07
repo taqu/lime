@@ -3,61 +3,51 @@
 @author t-sakai
 @date 2009/01/29 create
 @data 2009/05/19 lcoreライブラリ用に変更
+@data 2015/11/07 STL排除
 */
 #include "Node.h"
 #include <algorithm>
 
+#ifdef _MSC_VER
+#include <iterator>
+#endif
+
 namespace xml
 {
-    //-------------------------------------------------
-    //---
-    //--- Helper Function
-    //---
-    //-------------------------------------------------
-    void deleteStringPair(Node::string_pair*& strPair)
-    {
-        XML_DELETE(strPair);
-        strPair = NULL;
-    }
-
-
-    void deleteNode(Node*& node)
-    {
-        XML_DELETE(node);
-        node = NULL;
-    }
-
-
     //----------------------------------------------------------------------
     //---
     //--- Node
     //---
     //----------------------------------------------------------------------
     Node::Node()
-        :_attributes(0),
-        _childs(0)
+        :attributes_(0),
+        children_(0)
     {
     }
 
     //----------------------------------------------------------------------
     Node::~Node()
     {
-        std::for_each(_attributes.begin(), _attributes.end(), deleteStringPair);
-        std::for_each(_childs.begin(), _childs.end(), deleteNode);
+        for(AttrList::iterator itr = attributes_.begin(); itr != attributes_.end(); ++itr){
+            XML_DELETE(*itr);
+        }
+
+        for(NodeList::iterator itr = children_.begin(); itr != children_.end(); ++itr){
+            XML_DELETE(*itr);
+        }
     }
 
     //----------------------------------------------------------------------
     // 属性をキー名で検索
     const Node::string_type* Node::getAttributeByName(const string_type& key) const
     {
-        AttrList::const_iterator end = _attributes.end();
-        for(AttrList::const_iterator itr = _attributes.begin();
-            itr != end;
+        for(AttrList::const_iterator itr = attributes_.begin();
+            itr != attributes_.end();
             ++itr)
         {
-            const string_type &registeredKey = (*itr)->_first;
+            const string_type &registeredKey = (*itr)->first_;
             if(registeredKey == key){
-                return &( (*itr)->_second );
+                return &( (*itr)->second_ );
             }
         }
         return NULL;
@@ -67,27 +57,27 @@ namespace xml
     // 子を追加
     void Node::addChild(xml::Node *child)
     {
-        //効率悪いけれども
-        NodeList tmpList(_childs.size() + 1);
+        NodeList tmpList(children_.size() + 1);
 
-        std::copy(_childs.begin(), _childs.end(), tmpList.begin());
+        for(s32 i=0; i<children_.size(); ++i){
+            tmpList[i] = children_[i];
+        }
+        tmpList[ children_.size() ] = child;
 
-        tmpList[ _childs.size() ] = child;
-
-        _childs.swap(tmpList);
+        children_.swap(tmpList);
     }
 
     //----------------------------------------------------------------------
     // 属性を追加
     void Node::addAttribute(const string_type& key, const string_type& value)
     {
-        //効率悪いけれども
-        AttrList tmpList(_attributes.size() + 1);
+        AttrList tmpList(attributes_.size() + 1);
+        for(s32 i=0; i<attributes_.size(); ++i){
+            tmpList[i] = attributes_[i];
+        }
 
-        std::copy(_attributes.begin(), _attributes.end(), tmpList.begin());
+        tmpList[ attributes_.size() ] = XML_NEW string_pair(key, value);
 
-        tmpList[ _attributes.size() ] = XML_NEW string_pair(key, value);
-
-        _attributes.swap(tmpList);
+        attributes_.swap(tmpList);
     }
 }

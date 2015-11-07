@@ -1132,7 +1132,7 @@ namespace
 
     f32 radicalInverseSobol(u32 i, u32 scramble)
     {
-        for(u32 v=1<<31; i; i>>=1, v ^= v>>1){
+        for(u32 v=1U<<31; i; i>>=1, v ^= v>>1){
             if(i&1){
                 scramble ^= v;
             }
@@ -1142,7 +1142,7 @@ namespace
 
     f32 radicalInverseLarcherPillichshammer(u32 i, u32 scramble)
     {
-        for(u32 v=1<<31; i; i>>=1, v |= v>>1){
+        for(u32 v=1U<<31; i; i>>=1, v |= v>>1){
             if(i&1){
                 scramble ^= v;
             }

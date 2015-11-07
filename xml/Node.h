@@ -1,12 +1,14 @@
-﻿#ifndef __XML_NODE_H__
-#define __XML_NODE_H__
+﻿#ifndef INC_XML_NODE_H__
+#define INC_XML_NODE_H__
 /**
 @file Node.h
 @author t-sakai
 @date 2009/02/05 create
 @data 2009/05/19 lcoreライブラリ用に変更
+@data 2015/11/07 STL排除
 */
-#include "Core.h"
+#include "xml_core.h"
+#include <lcore/String.h>
 #include <lcore/FixedArray.h>
 
 namespace xml
@@ -18,25 +20,26 @@ namespace xml
         typedef SecondType second_type;
 
         Pair()
-            :_first(first_type()),
-            _second(second_type())
+            :first_(first_type())
+            ,second_(second_type())
         {
         }
 
         Pair(const first_type& first, const second_type& second)
-            :_first(first), _second(second)
+            :first_(first)
+            ,second_(second)
         {
         }
 
         Pair(const Pair<first_type, second_type>& pair)
-            :_first(pair._first),
-            _second(pair._second)
+            :first_(pair.first_),
+            second_(pair.second_)
         {
 
         }
 
-        first_type _first;
-        second_type _second;
+        first_type first_;
+        second_type second_;
     };
 
     // Nodeクラスのプライベートにアクセスするためのクラス
@@ -46,7 +49,7 @@ namespace xml
     class Node
     {
     public:
-        typedef std::string string_type;
+        typedef lcore::DynamicString string_type;
         typedef Pair<string_type, string_type> string_pair;
         typedef lcore::FixedArray<string_pair*> AttrList;
         typedef lcore::FixedArray<Node*> NodeList;
@@ -62,7 +65,7 @@ namespace xml
         */
         const string_type& getName() const
         {
-            return _name;
+            return name_;
         }
 
         /**
@@ -70,7 +73,7 @@ namespace xml
         */
         string_type& getName()
         {
-            return _name;
+            return name_;
         }
 
         /**
@@ -78,7 +81,7 @@ namespace xml
         */
         const string_type& getText() const
         {
-            return _text;
+            return text_;
         }
 
         /**
@@ -86,15 +89,15 @@ namespace xml
         */
         string_type& getText()
         {
-            return _text;
+            return text_;
         }
 
         /**
         @return 属性数
         */
-        size_t attributeNum() const
+        s32 attributeNum() const
         {
-            return _attributes.size();
+            return attributes_.size();
         }
 
         /**
@@ -112,18 +115,15 @@ namespace xml
         */
         const string_pair* getAttribute(size_t index) const
         {
-            XML_ASSERT(0<=index
-                && index < attributeNum());
-
-            return _attributes[index];
+            return attributes_[index];
         }
 
         /**
         @return 子の数
         */
-        size_t childNum() const
+        s32 getNumChildren() const
         {
-            return _childs.size();
+            return children_.size();
         }
 
         /**
@@ -134,8 +134,7 @@ namespace xml
         */
         const Node* getChild(size_t index) const
         {
-            XML_ASSERT(0 <= index && index < (s32)_childs.size());
-            return _childs[index];
+            return children_[index];
         }
 
         /**
@@ -159,9 +158,9 @@ namespace xml
         @param nameBegin ... 名前文字列の先頭
         @param nameEnd ... 名前文字列の末尾のひとつ後
         */
-        void setName(const char* nameBegin, const char* nameEnd)
+        void setName(const Char* nameBegin, const Char* nameEnd)
         {
-            _name.assign<const char*>(nameBegin, nameEnd);
+            name_.assign(nameBegin, nameEnd);
         }
 
         /**
@@ -169,22 +168,22 @@ namespace xml
         @param beginText ... 追加文字列の先頭
         @param endText ... 追加文字列の末尾のひとつ後
         */
-        void appendText(const char* beginText, const char* endText)
+        void appendText(const Char* beginText, const Char* endText)
         {
-            _text.append<const char*>(beginText, endText);
+            text_.append(beginText, endText);
         }
 
         /// ノード名
-        string_type _name;
+        string_type name_;
 
         /// 属性キー名と属性文字列のペアのリスト
-        AttrList _attributes;
+        AttrList attributes_;
 
         /// ノードの内容文字列
-        string_type _text;
+        string_type text_;
 
         /// 子ノードのリスト
-        NodeList _childs;
+        NodeList children_;
     };
 }
-#endif //__XML_NODE_H__
+#endif //INC_XML_NODE_H__

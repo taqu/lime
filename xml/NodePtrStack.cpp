@@ -25,7 +25,7 @@ namespace xml
 
     //-------------------------------------------------
     // スタック領域を拡張
-    void NodePtrStack::expand(u32 newSize)
+    void NodePtrStack::expand(s32 newSize)
     {
         XML_ASSERT(nodes_.size() <= newSize);
 

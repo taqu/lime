@@ -14,7 +14,7 @@ namespace lcore
     class FixedArray
     {
     public:
-        typedef u32 size_type;
+        typedef s32 size_type;
         typedef T* pointer;
         typedef const T* const_pointer;
         typedef T& reference;

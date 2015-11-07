@@ -9,7 +9,6 @@
 #include "Node.h"
 #include <cstring>
 #include <cctype>
-#include <string>
 
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
@@ -30,7 +29,7 @@ namespace xml
             parent->addChild(child);
         }
 
-        static void setName(Node* node, const char* nameBegin, const char* nameEnd)
+        static void setName(Node* node, const Char* nameBegin, const Char* nameEnd)
         {
             node->setName(nameBegin, nameEnd);
         }
@@ -40,7 +39,7 @@ namespace xml
             node->addAttribute(key, value);
         }
 
-        static void appendText(Node* node, const char* beginText, const char* endText)
+        static void appendText(Node* node, const Char* beginText, const Char* endText)
         {
             node->appendText(beginText, endText);
         }
@@ -56,26 +55,25 @@ namespace xml
     namespace str
     {
         /// strncmp
-        inline s32 strcompare(const char* str1, const char* str2, s32 count)
+        inline s32 strcompare(const Char* str1, const Char* str2, s32 count)
         {
             return strncmp(str1, str2, count);
         }
 
         /// 文字列の一致判定
-        inline bool isEqual(const char* str1, const char* str2, s32 count)
+        inline bool isEqual(const Char* str1, const Char* str2, s32 count)
         {
             return (strcompare(str1, str2, count) == 0);
         }
 
         /// isspace
-        bool isSpace(const char c)
+        bool isSpace(Char c)
         {
-            const unsigned char uc = (const unsigned char)c;
-            return (isspace(uc) != 0);
+            return (isspace(c) != 0);
         }
 
         /// 空白読み飛ばし
-        const char* skipSpace(const char* str)
+        const Char* skipSpace(const Char* str)
         {
             XML_ASSERT(str != NULL);
 
@@ -89,7 +87,7 @@ namespace xml
         }
 
         /// 空白以外を読み飛ばし
-        const char* skipNotSpace(const char* str)
+        const Char* skipNotSpace(const Char* str)
         {
             XML_ASSERT(str != NULL);
 
@@ -103,13 +101,13 @@ namespace xml
         }
 
         /// 指定数読み飛ばし
-        inline const char* skipCount(const char* str, s32 count)
+        inline const Char* skipCount(const Char* str, s32 count)
         {
             return (str + count);
         }
 
         /// 海胆か。正しくは海胆っぽいか
-        inline bool isTextUnicode(const char* text, s32 count)
+        inline bool isTextUnicode(const Char* text, s32 count)
         {
             return (::IsTextUnicode((const void*)text, count, NULL) != 0);
         }
@@ -121,19 +119,18 @@ namespace xml
         @param multi ... 
         @param mutiByte ... 
         */
-        inline s32 wideCharToMultiByte(const wchar_t* wide, char* multi, s32 multiByte)
+        inline s32 wideCharToMultiByte(const wchar_t* wide, Char* multi, s32 multiByte)
         {
             return ::WideCharToMultiByte(0, 0, wide, -1, multi, multiByte, NULL, NULL);
         }
     }
 
-    Node* Parser::parse(const char* memory)
+    Node* Parser::parse(const Char* memory)
     {
-        const char* text = memory;
+        const Char* text = memory;
         text = BOM(text);
 
         text = str::skipSpace(text); //空白読み飛ばし
-        std::string buffer;
 
         CharEncode encode = CharEncode_Num;
         text = xmlHead(text, encode);
@@ -142,11 +139,6 @@ namespace xml
         //}
 
         if(encode == CharEncode_UTF8){
-            //s32 bufferSize = str::wideCharToMultiByte((const wchar_t*)text, NULL, 0);
-            //buffer.resize(bufferSize);
-            //
-            //str::wideCharToMultiByte((const wchar_t*)text, &(buffer[0]), bufferSize);
-            //text = &(buffer[0]);
         }
 
         while(*text != '\0'){
@@ -166,12 +158,12 @@ namespace xml
             }
         }
 
-        return (_nodeStack.count() > 0)? _nodeStack.top() : NULL;
+        return (nodeStack_.count() > 0)? nodeStack_.top() : NULL;
     }
 
-    const char* Parser::BOM(const char* text)
+    const Char* Parser::BOM(const Char* text)
     {
-        if((unsigned char)*text == 0xEF){
+        if(*text == 0xEF){
             for(s32 i=0; i<3; ++i){
                 if(*text == '\0'){
                     break;
@@ -182,9 +174,9 @@ namespace xml
         return text;
     }
 
-    const char* Parser::xmlHead(const char* text, CharEncode &encode)
+    const Char* Parser::xmlHead(const Char* text, CharEncode &encode)
     {
-        static const char XML_TAG[] = "<?xml";// version=\"1.0\"";// encoding=";
+        static const Char XML_TAG[] = "<?xml";// version=\"1.0\"";// encoding=";
         static const s32 XML_TAG_COUNT = sizeof(XML_TAG) - 1;
         if(!str::isEqual(text, XML_TAG, XML_TAG_COUNT)){
             return text;
@@ -192,7 +184,7 @@ namespace xml
         text = str::skipCount(text, XML_TAG_COUNT);
         text = str::skipSpace(text);
 
-        static const char XML_VERSION[] = "version=\"1.0\"";
+        static const Char XML_VERSION[] = "version=\"1.0\"";
         static const s32 XML_VERSION_COUNT = sizeof(XML_VERSION) - 1;
         if(!str::isEqual(text, XML_VERSION, XML_VERSION_COUNT)){
             return text;
@@ -200,8 +192,8 @@ namespace xml
         text = str::skipCount(text, XML_VERSION_COUNT);
         text = str::skipSpace(text);
 
-        static const char XML_ENCODING[] = "encoding=";
-        static const char XML_ENCODING_COUNT = sizeof(XML_ENCODING) - 1;
+        static const Char XML_ENCODING[] = "encoding=";
+        static const Char XML_ENCODING_COUNT = sizeof(XML_ENCODING) - 1;
         if(str::isEqual(text, XML_ENCODING, XML_ENCODING_COUNT)){
             text = str::skipCount(text, XML_ENCODING_COUNT);
 
@@ -218,17 +210,17 @@ namespace xml
         return text;
     }
 
-    const char* Parser::beginElementTag(const char* text)
+    const Char* Parser::beginElementTag(const Char* text)
     {
         // 新しいノードエレメントをスタックに積む
         Node *node = XML_NEW Node;
         
         // スタックにノードがあればスタック先頭の子にする
-        if(_nodeStack.count() > 0){
-            NodeAccess::addChild(_nodeStack.top(), node);
+        if(nodeStack_.count() > 0){
+            NodeAccess::addChild(nodeStack_.top(), node);
         }
 
-        _nodeStack.push(node);
+        nodeStack_.push(node);
 
         ++text; //'<'読み飛ばし
         str::skipSpace(text);
@@ -253,7 +245,7 @@ namespace xml
         return text;
     }
 
-    const char* Parser::endElementTag(const char* text)
+    const Char* Parser::endElementTag(const Char* text)
     {
         while(*text != '\0'){
             if(*text == '>'){
@@ -266,15 +258,15 @@ namespace xml
         return text;
     }
 
-    const char* Parser::tagName(const char* text)
+    const Char* Parser::tagName(const Char* text)
     {
-        const char *nameBegin = text;
+        const Char *nameBegin = text;
         while(*text != '\0'){
             if(str::isSpace(*text)
                 || (*text == '>'))
             {
                 //タグ名をスタックの先頭ノードに割り当て
-                NodeAccess::setName( _nodeStack.top(), nameBegin, text);
+                NodeAccess::setName( nodeStack_.top(), nameBegin, text);
                 break;
             }
             ++text;
@@ -282,11 +274,11 @@ namespace xml
         return text;
     }
 
-    const char* Parser::attribute(const char* text)
+    const Char* Parser::attribute(const Char* text)
     {
-        std::string attrKey, tmpAttrValue;
+        lcore::DynamicString attrKey, tmpAttrValue;
 
-        const char* strBegin = text;
+        const Char* strBegin = text;
         while(*text != '\0'){
             if(str::isSpace(*text)){
                 attrKey.assign(strBegin, text);
@@ -325,28 +317,31 @@ namespace xml
             ++text;
         }
 
-        std::string attrValue;
-        for(std::string::iterator itr = tmpAttrValue.begin();
+        lcore::DynamicStringBuilder stringBuilder(tmpAttrValue.length()+1);
+        for(lcore::DynamicString::iterator itr = tmpAttrValue.begin();
             itr != tmpAttrValue.end();
             ++itr)
         {
             if(*itr == '\\'){
                 continue;
             }
-            attrValue.push_back(*itr);
+            stringBuilder.push_back(*itr);
         }
 
+        lcore::DynamicString attrValue;
+        stringBuilder.toString(attrValue);
+
         //アトリビュートをスタック先頭に追加
-        NodeAccess::addAttribute( _nodeStack.top(), attrKey, attrValue);
+        NodeAccess::addAttribute( nodeStack_.top(), attrKey, attrValue);
         return text;
     }
 
-    const char* Parser::content(const char* text)
+    const Char* Parser::content(const Char* text)
     {
-        const char* beginContent = text;
+        const Char* beginContent = text;
         while(*text != '\0'){
             if(*text == '<'){
-                NodeAccess::appendText(_nodeStack.top(), beginContent, text);
+                NodeAccess::appendText(nodeStack_.top(), beginContent, text);
                 break;
             }
             ++text;

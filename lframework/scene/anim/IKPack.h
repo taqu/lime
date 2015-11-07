@@ -1,4 +1,4 @@
-#ifndef INC_LSCENE_LANIM_IKPACK_H__
+﻿#ifndef INC_LSCENE_LANIM_IKPACK_H__
 #define INC_LSCENE_LANIM_IKPACK_H__
 /**
 @file IKPack.h

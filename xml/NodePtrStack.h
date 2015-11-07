@@ -1,12 +1,12 @@
-﻿#ifndef __XML_NODEPTRSTACK_H__
-#define __XML_NODEPTRSTACK_H__
+﻿#ifndef INC_XML_NODEPTRSTACK_H__
+#define INC_XML_NODEPTRSTACK_H__
 /**
 @file NodePtrStack.h
 @author t-sakai
 @date 2009/02/02 create
 @data 2009/05/19 lcoreライブラリ用に変更
 */
-#include "Core.h"
+#include "xml_core.h"
 #include <lcore/FixedArray.h>
 
 namespace xml
@@ -50,7 +50,7 @@ namespace xml
         /**
         @return 現在スタックに積まれている個数
         */
-        u32 count() const
+        s32 count() const
         {
             return count_;
         }
@@ -62,13 +62,13 @@ namespace xml
         @brief スタック領域を拡張
         @param newSize ... 新しいサイズ
         */
-        void expand(u32 newSize);
+        void expand(s32 newSize);
 
         /// スタック
         NodeArray nodes_;
 
         /// スタック内の数
-        u32 count_;
+        s32 count_;
     };
 }
-#endif //__XML_NODEPTRSTACK_H__
+#endif //INC_XML_NODEPTRSTACK_H__
