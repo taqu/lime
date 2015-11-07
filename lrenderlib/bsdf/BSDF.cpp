@@ -7,7 +7,6 @@
 #include "core/Spectrum.h"
 #include "core/Coordinate.h"
 #include "core/Intersection.h"
-#include "sampler/ImportanceResampler.h"
 
 namespace lrender
 {
