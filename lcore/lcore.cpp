@@ -342,6 +342,29 @@ namespace
         return val;
     }
 
+    u32 roundUpPow2(u32 x)
+    {
+        --x;
+        x |= (x>>1);
+        x |= (x>>2);
+        x |= (x>>4);
+        x |= (x>>8);
+        x |= (x>>16);
+        return ++x;
+    }
+
+    u64 roundUpPow2(u64 x)
+    {
+         --x;
+        x |= (x>>1);
+        x |= (x>>2);
+        x |= (x>>4);
+        x |= (x>>8);
+        x |= (x>>16);
+        x |= (x>>32);
+        return ++x;
+    }
+
     bool isLittleEndian()
     {
         u32 v = 1;
@@ -748,6 +771,38 @@ namespace
 
 #undef LCORE_POPULATIONCOUNT
 
+    u32 bitreverse(u32 x)
+    {
+#if defined(__GNUC__)
+        x = __builtin_bswap32(x);
+#elif defined(__clang__)
+        x = __builtin_bswap32(x);
+#else
+        x = (x << 16) | (x >> 16);
+        x = ((x & 0x00FF00FFU) << 8) | ((x & 0xFF00FF00U) >> 8);
+#endif
+        x = ((x & 0x0F0F0F0FU) << 4) | ((x & 0xF0F0F0F0U) >> 4);
+        x = ((x & 0x33333333U) << 2) | ((x & 0xCCCCCCCCU) >> 2);
+        x = ((x & 0x55555555U) << 1) | ((x & 0xAAAAAAAAU) >> 1);
+        return x;
+    }
+
+    u64 bitreverse(u64 x)
+    {
+#if defined(__GNUC__)
+        x = __builtin_bswap64(x);
+#elif defined(__clang__)
+        x = __builtin_bswap64(x);
+#else
+        x = (x << 32) | (x >> 32);
+        x = ((x & 0x0000FFFF0000FFFFULL) << 16) | ((x & 0xFFFF0000FFFF0000ULL) >> 16);
+        x = ((x & 0x00FF00FF00FF00FFULL) << 8) | ((x & 0xFF00FF00FF00FF00ULL) >> 8);
+#endif
+        x = ((x & 0x0F0F0F0F0F0F0F0FULL) << 4) | ((x & 0xF0F0F0F0F0F0F0F0ULL) >> 4);
+        x = ((x & 0x3333333333333333ULL) << 2) | ((x & 0xCCCCCCCCCCCCCCCCULL) >> 2);
+        x = ((x & 0x5555555555555555ULL) << 1) | ((x & 0xAAAAAAAAAAAAAAAAULL) >> 1);
+        return x;
+    }
 
     //---------------------------------------------------------
     //---
@@ -1016,5 +1071,82 @@ namespace
         size_t ret = ::mbstowcs(dst, src, sizeInWords);
         return (ret==(size_t)(-1))? -1 : static_cast<s32>(ret);
 #endif
+    }
+
+
+    //---------------------------------------------------------
+    //---
+    //--- Low-Discrepancy
+    //---
+    //---------------------------------------------------------
+    f32 halton(s32 index, s32 prime)
+    {
+        f32 result = 0.0f;
+        f32 f = 1.0f / prime;
+        int i = index;
+        while(0 < i) {
+            result = result + f * (i % prime);
+            i = (s32)floor((f32)i / prime);
+            f = f / prime;
+        }
+        return result;
+    }
+
+    f32 halton_next(f32 prev, s32 prime)
+    {
+        float r = 1.0f - prev - 0.000001f;
+        float f = 1.0f/prime;
+        if(f < r) {
+            return prev + f;
+        } else {
+            float h = f;
+            float hh;
+            do {
+                hh = h;
+                h *= f;
+            } while(h >= r);
+            return prev + hh + h - 1.0f;
+        }
+    }
+
+    f32 vanDerCorput(u32 n, u32 base)
+    {
+        f32 vdc = 0.0f;
+        f32 inv = 1.0f/base;
+        f32 factor = inv;
+        
+        while(n){
+            vdc += static_cast<f32>(n%base) * factor;
+            n /= base;
+            factor *= inv;
+        }
+        return vdc;
+    }
+
+    f32 radicalInverseVanDerCorput(u32 bits, u32 scramble)
+    {
+        bits = bitreverse(bits);
+        bits ^= scramble;
+        return static_cast<f32>(bits) / static_cast<f32>(0x100000000L);
+    }
+
+    f32 radicalInverseSobol(u32 i, u32 scramble)
+    {
+        for(u32 v=1<<31; i; i>>=1, v ^= v>>1){
+            if(i&1){
+                scramble ^= v;
+            }
+        }
+        return static_cast<f32>(scramble) / static_cast<f32>(0x100000000L);
+    }
+
+    f32 radicalInverseLarcherPillichshammer(u32 i, u32 scramble)
+    {
+        for(u32 v=1<<31; i; i>>=1, v |= v>>1){
+            if(i&1){
+                scramble ^= v;
+            }
+        }
+        return static_cast<f32>(scramble) / static_cast<f32>(0x100000000L);
     }
 }

@@ -8,7 +8,7 @@
 */
 #include "../lcore.h"
 
-namespace smart_ptr
+namespace lcore
 {
     //---------------------------------------------------
     //---

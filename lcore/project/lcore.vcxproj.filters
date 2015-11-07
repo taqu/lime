@@ -114,5 +114,6 @@
     <ClCompile Include="..\Coroutine.cpp" />
     <ClCompile Include="..\HashMap.cpp" />
     <ClCompile Include="..\Random.cpp" />
+    <ClCompile Include="..\String.cpp" />
   </ItemGroup>
 </Project>

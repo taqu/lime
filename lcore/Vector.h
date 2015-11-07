@@ -20,6 +20,11 @@ namespace lcore
             incSize_ = size;
         }
 
+        s32 getNewCapacity(s32 prevCapacity) const
+        {
+            return prevCapacity + incSize_;
+        }
+
     protected:
         vector_arena_dynamic_inc_size()
             :incSize_(DEFAULT_INCREMENT_SIZE)
@@ -45,12 +50,14 @@ namespace lcore
     class vector_arena_static_inc_size
     {
     public:
-        static const s32 incSize_ = INC_SIZE;
-
         void setIncSize(s32 /*size*/)
         {
         }
 
+        s32 getNewCapacity(s32 prevCapacity) const
+        {
+            return prevCapacity + INC_SIZE;
+        }
     protected:
         vector_arena_static_inc_size()
         {}
@@ -207,7 +214,7 @@ namespace lcore
     {
         if(size_ >= capacity_){
             //新しいバッファ確保
-            s32 newCapacity = capacity_ + inc_size_type::incSize_;
+            s32 newCapacity = inc_size_type::getNewCapacity(capacity_);
             T *newItems = reinterpret_cast<T*>( allocator_type::malloc(newCapacity*sizeof(T)) );
 
             //コピーコンストラクタでコピー。古い要素のデストラクト
@@ -328,7 +335,7 @@ namespace lcore
     {
     public:
 
-        typedef vector_arena<T, Allocator, IncSize> this_type;
+        typedef vector_arena<T*, Allocator, IncSize> this_type;
         typedef s32 size_type;
         typedef T** iterator;
         typedef const T** const_iterator;
@@ -385,10 +392,10 @@ namespace lcore
         void pop_back();
 
         iterator begin(){ return items_;}
-        const_iterator begin() const{ return items_;}
+        const_iterator begin() const{ return (const_iterator)(items_);}
 
         iterator end(){ return items_ + size_;}
-        const_iterator end() const{ return items_ + size_;}
+        const_iterator end() const{ return (const_iterator)(items_ + size_);}
 
         void clear();
         void swap(this_type& rhs);
@@ -462,7 +469,7 @@ namespace lcore
     {
         if(size_ >= capacity_){
             //新しいバッファ確保
-            s32 newCapacity = capacity_ + inc_size_type::incSize_;
+            s32 newCapacity = inc_size_type::getNewCapacity(capacity_);
             T** newItems = reinterpret_cast<T**>(allocator_type::malloc(newCapacity*sizeof(T*)));
 
             //コピー

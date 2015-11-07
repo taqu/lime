@@ -51,6 +51,7 @@ namespace lcore
         */
         f64 drand();
 
+        void swap(RandomXorshift& rhs);
     private:
         u32 rand(u32 v, u32 i);
 
@@ -98,6 +99,7 @@ namespace lcore
         */
         f64 drand();
 
+        void swap(RandomWELL& rhs);
     private:
         static const u32 N = 16;
 
@@ -145,6 +147,25 @@ namespace random
         LASSERT(vmin<=vmax);
         return (vmax-vmin)*random.frand() + vmin;
     }
+
+    /**
+    @brief [0, v)
+    */
+    template<class T, class U>
+    U range(T& random, U v)
+    {
+        u32 i = random.rand() % v;
+        return static_cast<U>(i);
+    }
+
+    template<class T, class U>
+    void shuffle(T& random, U* start, U* end)
+    {
+        for(U* i=end-1; start<i; --i){
+            u32 offset = range(random, static_cast<u32>(i-start));
+            lcore::swap(*i, *(start+offset));
+        }
+	}
 }
 }
 

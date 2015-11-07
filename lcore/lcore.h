@@ -430,6 +430,19 @@ namespace lcore
     f32 clampRotate0(f32 val, f32 total);
     s32 clampRotate0(s32 val, s32 total);
 
+    inline bool isPow2(u32 x)
+    {
+        return 0 == (x & (x-1));
+    }
+
+    inline bool isPow2(u64 x)
+    {
+        return 0 == (x & (x-1));
+    }
+
+    u32 roundUpPow2(u32 x);
+    u64 roundUpPow2(u64 x);
+
     template<class T>
     T roundUp(const T& dividend, const T& divisor)
     {
@@ -734,6 +747,9 @@ namespace lcore
     //u16 mostSignificantBit(u16 v);
     //u8 mostSignificantBit(u8 v);
 
+    u32 bitreverse(u32 x);
+    u64 bitreverse(u64 x);
+
     //---------------------------------------------------------
     //---
     //--- ScopedPtr
@@ -987,6 +1003,27 @@ namespace lcore
     @return 成功なら変換した文字数、失敗なら-1
     */
     s32 MBSToWCS(WChar* dst, u32 sizeInWords, const Char* src);
+
+
+    //---------------------------------------------------------
+    //---
+    //--- Low-Discrepancy
+    //---
+    //---------------------------------------------------------
+    f32 halton(s32 index, s32 prime);
+    f32 halton_next(f32 prev, s32 prime);
+
+    f32 vanDerCorput(u32 n, u32 base);
+
+    f32 radicalInverseVanDerCorput(u32 bits, u32 scramble);
+    f32 radicalInverseSobol(u32 i, u32 scramble);
+    f32 radicalInverseLarcherPillichshammer(u32 i, u32 scramble);
+
+    inline void sobol02(f32& v0, f32& v1, u32 i, u32 scramble0, u32 scramble1)
+    {
+        v0 = radicalInverseVanDerCorput(i, scramble0);
+        v1 = radicalInverseSobol(i, scramble1);
+    }
 }
 
 #endif //INC_LCORE_H__

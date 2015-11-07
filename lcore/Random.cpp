@@ -84,6 +84,13 @@ namespace lcore
     }
 
 
+#define LCORE_RANDOM_XORSHIFT_PROC \
+    u32 t = x_^(x_<<11);\
+    x_ = y_;\
+    y_ = z_;\
+    z_ = w_;\
+    w_ = (w_^(w_>>19)) ^ (t^(t>>8));\
+
     RandomXorshift::RandomXorshift()
         :x_(123459876)
         ,y_(362436069)
@@ -111,21 +118,13 @@ namespace lcore
 
     u32 RandomXorshift::rand()
     {
-        u32 t = x_^(x_<<11);
-        x_ = y_;
-        y_ = z_;
-        z_ = w_;
-        w_ = (w_^(w_>>19)) ^ (t^(t>>8));
+LCORE_RANDOM_XORSHIFT_PROC
         return w_;
     }
 
     f32 RandomXorshift::frand()
     {
-        u32 t = x_^(x_<<11);
-        x_ = y_;
-        y_ = z_;
-        z_ = w_;
-        w_ = (w_^(w_>>19)) ^ (t^(t>>8));
+LCORE_RANDOM_XORSHIFT_PROC
 
         static const u32 m0 = 0x3F800000U;
         static const u32 m1 = 0x007FFFFFU;
@@ -135,11 +134,7 @@ namespace lcore
 
     f32 RandomXorshift::frand2()
     {
-        u32 t = x_^(x_<<11);
-        x_ = y_;
-        y_ = z_;
-        z_ = w_;
-        w_ = (w_^(w_>>19)) ^ (t^(t>>8));
+LCORE_RANDOM_XORSHIFT_PROC
 
         static const u32 m0 = 0x3F800000U;
         static const u32 m1 = 0x007FFFFFU;
@@ -156,7 +151,16 @@ namespace lcore
     {
         return (1812433253 * (v^(v >> 30)) + i);
     }
+#undef LCORE_RANDOM_XORSHIFT_PROC
 
+
+    void RandomXorshift::swap(RandomXorshift& rhs)
+    {
+        lcore::swap(x_, rhs.x_);
+        lcore::swap(y_, rhs.y_);
+        lcore::swap(z_, rhs.z_);
+        lcore::swap(w_, rhs.w_);
+    }
 
 
     RandomWELL::RandomWELL()
@@ -222,5 +226,13 @@ namespace lcore
     f64 RandomWELL::drand()
     {
         return rand()*(1.0/4294967295.0); 
+    }
+
+    void RandomWELL::swap(RandomWELL& rhs)
+    {
+        for(u32 i=0; i<N; ++i){
+            lcore::swap(state_[i], rhs.state_[i]);
+        }
+        lcore::swap(index_, rhs.index_);
     }
 }

@@ -106,13 +106,14 @@ namespace lcore
     }
 #endif
 
-    inline bool isNan(double f)
+    inline bool isNan(f32 f)
     {
-#if defined(_WIN32)
-        return (0 != ::_isnan(f));
-#else
-        return (0 != isnan(f));
-#endif
+        return std::isnan(f);
+    }
+
+    inline bool isNan(f64 f)
+    {
+        return std::isnan(f);
     }
 
     inline bool isSpace(Char c)

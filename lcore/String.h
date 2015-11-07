@@ -596,6 +596,38 @@ namespace lcore
     {
         return rhs.write(os);
     }
+
+
+    //---------------------------------------------
+    //---
+    //--- DynamicString
+    //---
+    //---------------------------------------------
+    class DynamicString
+    {
+    public:
+        DynamicString();
+        explicit DynamicString(const Char* str);
+        ~DynamicString();
+
+        s32 length() const{ return length_;}
+        const Char* c_str() const{ return data_;}
+
+        void assign(const Char* str);
+        void swap(DynamicString& rhs);
+
+        bool operator==(const DynamicString& rhs) const;
+        bool operator!=(const DynamicString& rhs) const;
+
+        s32 compare(const Char* rhs) const;
+    private:
+        DynamicString(const DynamicString&);
+        DynamicString& operator=(const DynamicString&);
+
+        static Char null_[4];
+        s32 length_;
+        Char* data_;
+    };
 }
 
 #endif //INC_LCORE_STRING_H__

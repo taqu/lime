@@ -7,7 +7,7 @@
 
 */
 #include "../LangSpec.h" //for NULL define
-namespace smart_ptr
+namespace lcore
 {
     //---------------------------------------------------
     //---
