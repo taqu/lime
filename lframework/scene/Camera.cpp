@@ -18,14 +18,15 @@ namespace lscene
         ,isJitter_(0)
         ,jitterWidth_(0.0f)
         ,jitterHeight_(0.0f)
-        ,haltonX_(0.0f)
-        ,haltonY_(0.0f)
+        ,sampleIndex_(0)
     {
         viewMatrix_.identity();
         projMatrix_.identity();
         viewProjMatrix_.identity();
         prevVewProjMatrix_.identity();
         eyePosition_.zero();
+
+        lcore::memset(samples_, 0, sizeof(Sample2D)*NumJitterSamples);
     }
 
     void Camera::setProjMatrix(const lmath::Matrix44& proj)
@@ -141,13 +142,10 @@ namespace lscene
         viewProjMatrix_ = projMatrix_;
 
         if(isJitter()){
-            haltonX_ = halton_next(haltonX_, JitterPrime0);
-            haltonY_ = halton_next(haltonY_, JitterPrime1);
+            sampleIndex_ = (sampleIndex_+1) & (NumJitterSamples-1);
 
-            f32 jitterX = (2.0f*haltonX_ - 1.0f)*jitterWidth_;
-            f32 jitterY = (2.0f*haltonY_ - 1.0f)*jitterHeight_;
-            viewProjMatrix_.m_[0][3] += jitterX;
-            viewProjMatrix_.m_[1][3] += jitterY;
+            viewProjMatrix_.m_[0][3] += samples_[sampleIndex_].x_;
+            viewProjMatrix_.m_[1][3] += samples_[sampleIndex_].y_;
         }
         viewProjMatrix_ *= viewMatrix_;
 
@@ -164,20 +162,11 @@ namespace lscene
         eye.w_ = 0.0f;
     }
 
-    f32 Camera::halton_next(f32 prev, s32 prime)
+    void Camera::generateJitterSamples()
     {
-        float r = 1.0f - prev - 0.000001f;
-        float f = 1.0f/prime;
-        if(f < r) {
-            return prev + f;
-        } else {
-            float h = f;
-            float hh;
-            do {
-                hh = h;
-                h *= f;
-            } while(h >= r);
-            return prev + hh + h - 1.0f;
+        for(s32 i=0; i<NumJitterSamples; ++i){
+            samples_[i].x_ = (2.0f*lcore::halton(i, JitterPrime0) - 1.0f) * jitterWidth_;
+            samples_[i].y_ = (2.0f*lcore::halton(i, JitterPrime1) - 1.0f) * jitterHeight_;
         }
     }
 }

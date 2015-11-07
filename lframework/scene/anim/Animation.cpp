@@ -237,7 +237,7 @@ namespace lanim
         lmath::lm128 zero = _mm_setzero_ps();
         lmath::lm128 identity = _mm_load_ss(&one);
         for(s32 i=0; i<skeleton_->getNumJoints(); ++i){
-            const Joint& joint = skeleton_->getJoint(i);
+            //const Joint& joint = skeleton_->getJoint(i);
             _mm_store_ps(&transforms_[i].translation_.x_, zero);
             _mm_store_ps(&transforms_[i].rotation_.w_, identity);
         }
@@ -253,7 +253,7 @@ namespace lanim
     void Animation::getMatrices(lmath::Matrix34* matrices)
     {
         for(s32 i=0; i<skeleton_->getNumJoints(); ++i){
-            lanim::Joint& joint = skeleton_->getJoint(i);
+            //lanim::Joint& joint = skeleton_->getJoint(i);
 
             transforms_[i].rotation_.getMatrix( matrices[i] );
 
@@ -296,9 +296,7 @@ namespace lanim
     void Animation::getDualQuaternion(lmath::DualQuaternion* dq)
     {
         for(s32 i=0; i<skeleton_->getNumJoints(); ++i){
-            lanim::Joint& joint = skeleton_->getJoint(i);
-
-
+            //lanim::Joint& joint = skeleton_->getJoint(i);
             dq[i].identity();
 
             dq[i].rotate(transforms_[i].rotation_);

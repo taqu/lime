@@ -13,7 +13,6 @@ namespace lscene
     class Camera
     {
     public:
-
         Camera();
 
         inline f32 getWidth() const{ return width_;}
@@ -110,9 +109,16 @@ namespace lscene
     private:
         static const s32 JitterPrime0 = 2;
         static const s32 JitterPrime1 = 3;
+        static const s32 NumJitterSamples = 64;
+
+        struct Sample2D
+        {
+            f32 x_;
+            f32 y_;
+        };
 
         void getEyePosition(lmath::Vector4& eye) const;
-        static f32 halton_next(f32 prev, s32 prime);
+        void generateJitterSamples();
 
         lmath::Matrix44 viewMatrix_;
         lmath::Matrix44 projMatrix_;
@@ -132,8 +138,8 @@ namespace lscene
 
         f32 jitterWidth_;
         f32 jitterHeight_;
-        f32 haltonX_;
-        f32 haltonY_;
+        s32 sampleIndex_;
+        Sample2D samples_[NumJitterSamples];
     };
 
     inline void Camera::setJitter(bool enable)
@@ -150,6 +156,7 @@ namespace lscene
     {
         jitterWidth_ = width;
         jitterHeight_ = height;
+        generateJitterSamples();
     }
 }
 

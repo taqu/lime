@@ -21,7 +21,7 @@ namespace lanim
     class Skeleton : public SkeletonAllocator
     {
     public:
-        typedef smart_ptr::intrusive_ptr<Skeleton> pointer;
+        typedef lcore::intrusive_ptr<Skeleton> pointer;
 
         Skeleton();
         explicit Skeleton(s32 numJoints);

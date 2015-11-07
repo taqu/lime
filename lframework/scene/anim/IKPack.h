@@ -39,7 +39,7 @@ namespace lanim
     class IKPack
     {
     public:
-        typedef smart_ptr::intrusive_ptr<IKPack> pointer;
+        typedef lcore::intrusive_ptr<IKPack> pointer;
 
         IKPack();
         explicit IKPack(s32 numIKs);
