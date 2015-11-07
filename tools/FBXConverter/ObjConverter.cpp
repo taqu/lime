@@ -4,7 +4,6 @@
 #include <iostream>
 
 #include <lcore/liostream.h>
-#include <lcore/utility.h>
 #include <lframework/scene/load/load_node.h>
 #include <lframework/scene/load/load_mesh.h>
 #include <lframework/scene/load/load_geometry.h>

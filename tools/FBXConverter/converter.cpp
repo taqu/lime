@@ -6,7 +6,7 @@
 */
 #include "converter.h"
 #include <fstream>
-#include <lcore/utility.h>
+#include <lcore/lcore.h>
 #include <lmath/lmath.h>
 
 namespace lscene

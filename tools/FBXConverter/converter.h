@@ -6,6 +6,7 @@
 @date 2012/10/30 create
 
 */
+#include <lcore/CLibrary.h>
 #include <fbxsdk.h>
 
 #include <vector>

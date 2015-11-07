@@ -44,15 +44,15 @@
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\Programs\Autodesk\FBX\FBX SDK\2016.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Programs\Autodesk\FBX\FBX SDK\2016.0\lib\vs2013\x86\debug;$(LibraryPath)</LibraryPath>
+    <IncludePath>E:\Programs\Autodesk\FBX\FBX SDK\2016.1.2\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Programs\Autodesk\FBX\FBX SDK\2016.1.2\lib\vs2013\x86\debug;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(SolutionDir)$(Configuration)\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>D:\Programs\Autodesk\FBX\FBX SDK\2016.0\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Programs\Autodesk\FBX\FBX SDK\2016.0\lib\vs2013\x86\release;$(LibraryPath)</LibraryPath>
+    <IncludePath>E:\Programs\Autodesk\FBX\FBX SDK\2016.1.2\include;$(IncludePath)</IncludePath>
+    <LibraryPath>E:\Programs\Autodesk\FBX\FBX SDK\2016.1.2\lib\vs2013\x86\release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
