@@ -20,10 +20,10 @@ namespace lrender
     }
 
     void Visibility::setRay(
-        const Vector3& p, f32 eps,
+        const Vector3& p, f32 eps, f32 tmax,
         const Vector3& w)
     {
-        ray_ = Ray(p, w, RAY_EPSILON, LRENDER_INFINITY, RAY_EPSILON);
+        ray_ = Ray(p, w, eps, tmax, RAY_EPSILON);
     }
 
     bool Visibility::unoccluded(const Scene& scene) const

@@ -23,14 +23,14 @@ namespace
     }
 
     //-------------------------------------------------------------------------
-    void read32(Color4* buffer, lcore::istream& src, u32 width, u32 height)
+    void read32(Color4* buffer, lcore::istream& src, s32 width, s32 height)
     {
-        static const u32 bpp = 4;
+        static const s32 bpp = 4;
 
-        u32 pixels = width*height;
+        s32 pixels = width*height;
 
         u8 tmp[bpp];
-        for(u32 i=0; i<pixels; ++i){
+        for(s32 i=0; i<pixels; ++i){
             lcore::io::read(src, tmp, bpp);
             buffer->setRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
             buffer += 1;
@@ -39,29 +39,29 @@ namespace
         //lcore::io::read(src, buffer, pixels*bpp);
     }
 
-    void read32RLE(Color4* buffer, lcore::istream& src, u32 width, u32 height)
+    void read32RLE(Color4* buffer, lcore::istream& src, s32 width, s32 height)
     {
-        static const u32 bpp = 4;
+        static const s32 bpp = 4;
 
-        u32 pixels = width*height;
+        s32 pixels = width*height;
         u8 tmp[bpp];
-        for(u32 i=0; i<pixels;){
+        for(s32 i=0; i<pixels;){
             u8 byte;
             lcore::io::read(src, byte);
             //最上位ビットが０なら連続しないデータ数
             //１なら連続するデータ数
             bool b = ((byte & 0x80U) == 0)? false : true;
-            u32 count = (byte & 0x7FU) + 1;
+            s32 count = (byte & 0x7FU) + 1;
             if(b){
                 //連続するデータ
                 lcore::io::read(src, tmp, bpp);
-                for(u32 j=0; j<count; ++j){
+                for(s32 j=0; j<count; ++j){
                     buffer->setRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                     buffer += 1;
                 }
             }else{
                 //連続しないデータ
-                for(u32 j=0; j<count; ++j){
+                for(s32 j=0; j<count; ++j){
                     lcore::io::read(src, tmp, bpp);
                     buffer->setRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                     buffer += 1;
@@ -72,43 +72,43 @@ namespace
     }
 
 
-    void read24(Color4* buffer, lcore::istream& src, u32 width, u32 height)
+    void read24(Color4* buffer, lcore::istream& src, s32 width, s32 height)
     {
-        static const u32 bpp = 3;
+        static const s32 bpp = 3;
 
-        u32 pixels = width*height;
+        s32 pixels = width*height;
 
         u8 tmp[bpp];
-        for(u32 i=0; i<pixels; ++i){
+        for(s32 i=0; i<pixels; ++i){
             lcore::io::read(src, tmp, bpp);
             buffer->setRGBA(tmp[0], tmp[1], tmp[2], 0xFFU);
             buffer += 1;
         }
     }
 
-    void read24RLE(Color4* buffer, lcore::istream& src, u32 width, u32 height)
+    void read24RLE(Color4* buffer, lcore::istream& src, s32 width, s32 height)
     {
-        static const u32 bpp = 3;
+        static const s32 bpp = 3;
 
-        u32 pixels = width*height;
+        s32 pixels = width*height;
         u8 tmp[bpp];
-        for(u32 i=0; i<pixels;){
+        for(s32 i=0; i<pixels;){
             u8 byte;
             lcore::io::read(src, byte);
             //最上位ビットが０なら連続しないデータ数
             //１なら連続するデータ数
             bool b = ((byte & 0x80U) == 0)? false : true;
-            u32 count = (byte & 0x7FU) + 1;
+            s32 count = (byte & 0x7FU) + 1;
             if(b){
                 //連続するデータ
                 lcore::io::read(src, tmp, bpp);
-                for(u32 j=0; j<count; ++j){
+                for(s32 j=0; j<count; ++j){
                     buffer->setRGBA(tmp[0], tmp[1], tmp[2], 0xFFU);
                     buffer += 1;
                 }
             }else{
                 //連続しないデータ
-                for(u32 j=0; j<count; ++j){
+                for(s32 j=0; j<count; ++j){
                     lcore::io::read(src, tmp, bpp);
                     buffer->setRGBA(tmp[0], tmp[1], tmp[2], 0xFFU);
                     buffer += 1;
@@ -121,17 +121,17 @@ namespace
 
 
     //-------------------------------------------------------------------------
-    void read32Transpose(Color4* buffer, lcore::istream& src, u32 width, u32 height)
+    void read32Transpose(Color4* buffer, lcore::istream& src, s32 width, s32 height)
     {
-        static const u32 bpp = 4;
+        static const s32 bpp = 4;
 
         //転地する
         Color4* tmpBuffer = buffer + width * (height-1);
         u8 tmp[bpp];
-        for(u32 i=0; i<height; ++i){
+        for(s32 i=0; i<height; ++i){
 
             Color4* row = tmpBuffer;
-            for(u32 j=0; j<width; ++j){
+            for(s32 j=0; j<width; ++j){
                 lcore::io::read(src, tmp, bpp);
                 row->setRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                 row += 1;
@@ -140,19 +140,19 @@ namespace
         }
     }
 
-    void read32RLETranspose(Color4* buffer, lcore::istream& src, u32 width, u32 height)
+    void read32RLETranspose(Color4* buffer, lcore::istream& src, s32 width, s32 height)
     {
-        static const u32 bpp = 4;
+        static const s32 bpp = 4;
 
         //転地する
-        u32 pixels = width*height;
+        s32 pixels = width*height;
         Color4* tmpBuffer = buffer + width * (height-1);
         Color4* row = tmpBuffer;
-        u32 x = 0;
-        u32 count = 0;
+        s32 x = 0;
+        s32 count = 0;
         u8 byte = 0;
         u8 tmp[bpp];
-        for(u32 i=0; i<pixels;){
+        for(s32 i=0; i<pixels;){
 
             lcore::io::read(src, byte);
             //最上位ビットが０なら連続しないデータ数
@@ -162,7 +162,7 @@ namespace
             if(b){
                 //連続するデータ
                 lcore::io::read(src, tmp, bpp);
-                for(u32 j=0; j<count; ++j){
+                for(s32 j=0; j<count; ++j){
                     row->setRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                     row += 1;
 
@@ -174,7 +174,7 @@ namespace
                 }
             }else{
                 //連続しないデータ
-                for(u32 j=0; j<count; ++j){
+                for(s32 j=0; j<count; ++j){
                     lcore::io::read(src, tmp, bpp);
                     row->setRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                     row += 1;
@@ -191,17 +191,17 @@ namespace
     }
 
 
-    void read24Transpose(Color4* buffer, lcore::istream& src, u32 width, u32 height)
+    void read24Transpose(Color4* buffer, lcore::istream& src, s32 width, s32 height)
     {
-        static const u32 bpp = 3;
+        static const s32 bpp = 3;
 
         //転地する
         Color4* tmpBuffer = buffer + width * (height-1);
         u8 tmp[bpp];
-        for(u32 i=0; i<height; ++i){
+        for(s32 i=0; i<height; ++i){
 
             Color4* row = tmpBuffer;
-            for(u32 j=0; j<width; ++j){
+            for(s32 j=0; j<width; ++j){
                 lcore::io::read(src, tmp, bpp);
                 row->setRGBA(tmp[0], tmp[1], tmp[2], 0xFFU);
                 row += 1;
@@ -210,20 +210,20 @@ namespace
         }
     }
 
-    void read24RLETranspose(Color4* buffer, lcore::istream& src, u32 width, u32 height)
+    void read24RLETranspose(Color4* buffer, lcore::istream& src, s32 width, s32 height)
     {
-        static const u32 bpp = 3;
+        static const s32 bpp = 3;
 
         //転地する
-        u32 pixels = width*height;
+        s32 pixels = width*height;
         Color4* tmpBuffer = buffer + width * (height-1);
         Color4* row = tmpBuffer;
-        u32 x = 0;
-        u32 count = 0;
+        s32 x = 0;
+        s32 count = 0;
         u8 byte = 0;
         u8 tmp[bpp];
 
-        for(u32 i=0; i<pixels;){
+        for(s32 i=0; i<pixels;){
             lcore::io::read(src, byte);
             //最上位ビットが０なら連続しないデータ数
             //１なら連続するデータ数
@@ -233,7 +233,7 @@ namespace
             if(b){
                 //連続するデータ
                 lcore::io::read(src, tmp, bpp);
-                for(u32 j=0; j<count; ++j){
+                for(s32 j=0; j<count; ++j){
                     row->setRGBA(tmp[0], tmp[1], tmp[2], 0xFFU);
                     row += 1;
 
@@ -246,7 +246,7 @@ namespace
 
             }else{
                 //連続しないデータ
-                for(u32 j=0; j<count; ++j){
+                for(s32 j=0; j<count; ++j){
                     lcore::io::read(src, tmp, bpp);
                     row->setRGBA(tmp[0], tmp[1], tmp[2], 0xFFU);
                     row += 1;
@@ -264,7 +264,7 @@ namespace
 }
 
         //-----------------------------------------------------------------
-        bool IOTGA::read(lcore::istream& is, Color4* buffer, u32& width, u32& height, bool transpose)
+        bool IOTGA::read(lcore::istream& is, Color4* buffer, s32& width, s32& height, bool transpose)
         {
             u8 tgaHeader[TGA_HEADER_SIZE];
 
@@ -272,10 +272,10 @@ namespace
 
             lcore::io::read(is, tgaHeader, TGA_HEADER_SIZE);
 
-            width = static_cast<u32>( getU16(tgaHeader[Offset_WidthL], tgaHeader[Offset_WidthH]) );
-            height = static_cast<u32>( getU16(tgaHeader[Offset_HeightL], tgaHeader[Offset_HeightH]) );
+            width = getU16(tgaHeader[Offset_WidthL], tgaHeader[Offset_WidthH]);
+            height = getU16(tgaHeader[Offset_HeightL], tgaHeader[Offset_HeightH]);
 
-            u32 bpp = static_cast<u32>( tgaHeader[Offset_BitPerPixel] );
+            s32 bpp = tgaHeader[Offset_BitPerPixel];
 
 
             u8 type = tgaHeader[Offset_ImageType];
@@ -306,7 +306,7 @@ namespace
 
             // カラーマップがあればスキップ
             if(tgaHeader[Offset_ColorMapType] == 1){
-                u32 length = static_cast<u32>( getU16(tgaHeader[Offset_ColorMapLengL], tgaHeader[Offset_ColorMapLengH]) );
+                s32 length = getU16(tgaHeader[Offset_ColorMapLengL], tgaHeader[Offset_ColorMapLengH]);
                 length *= (tgaHeader[Offset_ColorMapSize] >> 3);
                 is.seekg(length, lcore::ios::cur);
             }
@@ -372,10 +372,10 @@ namespace
 
 namespace
 {
-        u8 calcRunLength(const u8* buffer, u32 index, u32 pixels)
+        u8 calcRunLength(const u8* buffer, s32 index, s32 pixels)
         {
-            static const u32 bpp = 4;
-            static const u32 maxCount = 0x7FU;
+            static const s32 bpp = 4;
+            static const s32 maxCount = 0x7FU;
 
             if(pixels<=(index+1)){
                 return 0x80U | 0x01U;
@@ -390,7 +390,7 @@ namespace
                 && (buffer[2] == next[2])
                 && (buffer[3] == next[3]))
             {
-                for(u32 i=index; i<(pixels-1); ++i){
+                for(s32 i=index; i<(pixels-1); ++i){
 
                     if((buffer[0] != next[0])
                         || (buffer[1] != next[1])
@@ -409,7 +409,7 @@ namespace
 
             }else{
 
-                for(u32 i=index; i<(pixels-1); ++i){
+                for(s32 i=index; i<(pixels-1); ++i){
                     if((buffer[0] == next[0])
                         && (buffer[1] == next[1])
                         && (buffer[2] == next[2])
@@ -428,12 +428,12 @@ namespace
             }
         }
 
-        void write32RLE(lcore::ostream& os, const u8* buffer, u32 width, u32 height)
+        void write32RLE(lcore::ostream& os, const u8* buffer, s32 width, s32 height)
         {
-            static const u32 bpp = 4;
+            static const s32 bpp = 4;
 
-            u32 pixels = width*height;
-            for(u32 i=0; i<pixels;){
+            s32 pixels = width*height;
+            for(s32 i=0; i<pixels;){
 
                 u8 run = calcRunLength(buffer, i, pixels);
                 u8 count = run & 0x7FU;
@@ -450,13 +450,13 @@ namespace
             }
         }
 
-        void write32(lcore::ostream& os, const Color4* buffer, u32 width, u32 height)
+        void write32(lcore::ostream& os, const Color4* buffer, s32 width, s32 height)
         {
-            static const u32 bpp = 4;
+            static const s32 bpp = 4;
 
-            u32 pixels = width*height;
+            s32 pixels = width*height;
             u8 tmp[bpp];
-            for(u32 i=0; i<pixels; ++i){
+            for(s32 i=0; i<pixels; ++i){
                 buffer->getRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                 lcore::io::write(os, tmp, bpp);
                 buffer += 1;
@@ -467,7 +467,7 @@ namespace
 
 
     //-----------------------------------------------------------------
-    bool IOTGA::write(lcore::ostream& os, const Color4* buffer, u32 width, u32 height)
+    bool IOTGA::write(lcore::ostream& os, const Color4* buffer, s32 width, s32 height)
     {
         u8 tgaHeader[TGA_HEADER_SIZE];
         lcore::memset(tgaHeader, 0, TGA_HEADER_SIZE);

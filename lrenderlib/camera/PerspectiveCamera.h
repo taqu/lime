@@ -15,8 +15,8 @@ namespace lrender
         PerspectiveCamera();
         virtual ~PerspectiveCamera();
 
-        virtual Color3 generateRay(Ray& ray, f32 screenX, f32 screenY) const;
-        virtual Color3 generateRayDifferential(RayDifferential& rayDifferential, f32 screenX, f32 screenY) const;
+        virtual Color3 generateRay(Ray& ray, f32 screenX, f32 screenY, f32 tmax) const;
+        virtual Color3 generateRayDifferential(RayDifferential& rayDifferential, f32 screenX, f32 screenY, f32 tmax) const;
 
         void perspective(f32 aspect, f32 fovx);
         void lookAt(const Vector3& eye, const Vector3& at, const Vector3& up);

@@ -440,6 +440,51 @@ namespace lcore
         return 0 == (x & (x-1));
     }
 
+    template<class T>
+    inline bool isSameSign(T x0, T x1);
+
+    template<>
+    inline bool isSameSign<s8>(s8 x0, s8 x1)
+    {
+        return 0 == ((x0^x1)&(0x1U<<7));
+    }
+    template<>
+    inline bool isSameSign<s16>(s16 x0, s16 x1)
+    {
+        return 0 == ((x0^x1)&(0x1U<<15));
+    }
+    template<>
+    inline bool isSameSign<s32>(s32 x0, s32 x1)
+    {
+        return 0 == ((x0^x1)&(0x1U<<31));
+    }
+    template<>
+    inline bool isSameSign<s64>(s64 x0, s64 x1)
+    {
+        return 0 == ((x0^x1)&(0x1ULL<<63));
+    }
+
+    template<> inline bool isSameSign<u8>(u8, u8){ return true;}
+    template<> inline bool isSameSign<u16>(u16, u16){ return true;}
+    template<> inline bool isSameSign<u32>(u32, u32){ return true;}
+    template<> inline bool isSameSign<u64>(u64, u64){ return true;}
+
+    template<>
+    inline bool isSameSign<f32>(f32 x0, f32 x1)
+    {
+        static const u32 mask = 0x1U<<31;
+        u32 t = (*(u32*)&x0)^(*(u32*)&x1);
+        return 0 == (t&mask);
+    }
+
+    template<>
+    inline bool isSameSign<f64>(f64 x0, f64 x1)
+    {
+        static const u64 mask = 0x1ULL<<63;
+        u64 t = (*(u64*)&x0)^(*(u64*)&x1);
+        return 0 == (t&mask);
+    }
+
     u32 roundUpPow2(u32 x);
     u64 roundUpPow2(u64 x);
 

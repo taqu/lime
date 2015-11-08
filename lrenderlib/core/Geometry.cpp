@@ -44,7 +44,7 @@ namespace lrender
 
     //-----------------------------------------------------------
     // ü•ª‚ÆOŠpŒ`‚ÌŒğ·”»’è
-    bool testRayTriangle(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    bool testRayTriangle(f32& t, f32& v, f32& w, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
         Vector3 d0;
         d0.sub(v1, v0);
@@ -60,23 +60,23 @@ namespace lrender
         Vector3 qvec;
         if(F32_EPSILON<discr){
             //•\–Ê
-            Vector3 tvec = ray.origin_;
-            tvec -= v0;
-            u = tvec.dot(c);
-            if(u<0.0f || discr<u){
+            Vector3 tvec;
+            tvec.sub(ray.origin_, v0);
+            v = tvec.dot(c);
+            if(v<0.0f || discr<v){
                 return false;
             }
 
             qvec.cross(tvec, d0);
-            v = qvec.dot(ray.direction_);
-            if(v<0.0f || discr<(u+v)){
+            w = qvec.dot(ray.direction_);
+            if(w<0.0f || discr<(v+w)){
                 return false;
             }
 
         //}else if(discr < -F32_EPSILON){
         //    //— –Ê
-        //    Vector3 tvec = ray.origin_;
-        //    tvec -= v0;
+        //    Vector3 tvec;
+        //    tvec.sub(ray.origin_, v0);
         //    u = tvec.dot(c);
         //    if(u>0.0f || discr<u){
         //        return false;
@@ -96,8 +96,8 @@ namespace lrender
 
         t = d1.dot(qvec);
         t *= invDiscr;
-        u *= invDiscr;
         v *= invDiscr;
+        w *= invDiscr;
         return true;
     }
 

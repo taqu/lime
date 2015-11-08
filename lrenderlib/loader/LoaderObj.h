@@ -131,7 +131,6 @@ namespace lrender
 
         void pushMesh();
 
-        void generateNormals();
         void generateNormals(BufferVector3& normals, const BufferTriangle& triangles, const BufferVector3& positions);
         void adjustGeometryNormals(BufferTriangle& triangles, const BufferVector3& normals, const BufferVector3& positions);
 

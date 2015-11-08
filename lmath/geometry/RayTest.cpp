@@ -98,13 +98,11 @@ namespace lmath
 
     //-----------------------------------------------------------
     // 線分と三角形の交差判定
-    bool testRayTriangle(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    bool testRayTriangleUnstableFront(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
-        Vector3 d0 = v1;
-        d0 -= v0;
-
-        Vector3 d1 = v2;
-        d1 -= v0;
+        Vector3 d0, d1;
+        d0.sub(v1, v0);
+        d1.sub(v2, v0);
 
         Vector3 c;
         c.cross(ray.direction_, d1);
@@ -113,8 +111,48 @@ namespace lmath
 
         Vector3 qvec;
         if(F32_EPSILON < discr){
-            Vector3 tvec = ray.origin_;
-            tvec -= v0;
+            Vector3 tvec;
+            tvec.sub(ray.origin_, v0);
+            u = tvec.dot(c);
+            if(u<0.0f || discr<u){
+                return false;
+            }
+
+            qvec.cross(tvec, d0);
+            v = qvec.dot(ray.direction_);
+            if(v<0.0f || discr<(u+v)){
+                return false;
+            }
+
+        }else {
+            return false;
+        }
+
+        f32 invDiscr = 1.0f/discr;
+
+        t = d1.dot(qvec);
+        t *= invDiscr;
+        u *= invDiscr;
+        v *= invDiscr;
+        return true;
+    }
+
+    // 線分と三角形の交差判定
+    bool testRayTriangleUnstableBoth(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    {
+        Vector3 d0, d1;
+        d0.sub(v1, v0);
+        d1.sub(v2, v0);
+
+        Vector3 c;
+        c.cross(ray.direction_, d1);
+
+        f32 discr = c.dot(d0);
+
+        Vector3 qvec;
+        if(F32_EPSILON < discr){
+            Vector3 tvec;
+            tvec.sub(ray.origin_, v0);
             u = tvec.dot(c);
             if(u<0.0f || discr<u){
                 return false;
@@ -127,8 +165,8 @@ namespace lmath
             }
 
         }else if(discr < -F32_EPSILON){
-            Vector3 tvec = ray.origin_;
-            tvec -= v0;
+            Vector3 tvec;
+            tvec.sub(ray.origin_, v0);
             u = tvec.dot(c);
             if(0.0f<u || u<discr){
                 return false;
@@ -153,6 +191,69 @@ namespace lmath
         return true;
     }
 
+    //-----------------------------------------------------------
+    // 線分と三角形の交差判定
+    bool testRayTriangleFront(f32& u, f32& v, f32& w, const Vector3& startPoint, const Vector3& endPoint, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    {
+        Vector3 d, d0, d1, d2;
+        d.sub(endPoint, startPoint);
+        d0.sub(v0, startPoint);
+        d1.sub(v1, startPoint);
+        d2.sub(v2, startPoint);
+
+        Vector3 m;
+        m.cross(d, d2);
+        u = d1.dot(m);
+        if(u<0.0f){
+            return false;
+        }
+
+        v = -d0.dot(m);
+        if(v<0.0f){
+            return false;
+        }
+
+        m.cross(d, d1);
+        w = d0.dot(m);
+        if(w<0.0f){
+            return false;
+        }
+
+        f32 denom = 1.0f/(u+v+w);
+        u *= denom;
+        v *= denom;
+        w = 1.0f - u - v;
+        return true;
+    }
+
+    bool testRayTriangleBoth(f32& u, f32& v, f32& w, const Vector3& startPoint, const Vector3& endPoint, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    {
+        Vector3 d, d0, d1, d2;
+        d.sub(endPoint, startPoint);
+        d0.sub(v0, startPoint);
+        d1.sub(v1, startPoint);
+        d2.sub(v2, startPoint);
+
+        Vector3 m;
+        m.cross(d, d2);
+        u = d1.dot(m);
+        v = -d0.dot(m);
+        if(!lcore::isSameSign(u,v)){
+            return false;
+        }
+
+        m.cross(d, d1);
+        w = d0.dot(m);
+        if(!lcore::isSameSign(u,w)){
+            return false;
+        }
+
+        f32 denom = 1.0f/(u+v+w);
+        u *= denom;
+        v *= denom;
+        w = 1.0f - u - v;
+        return true;
+    }
 
     bool testRayRectangle(f32& t, const Ray& ray, const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3)
     {
@@ -173,9 +274,9 @@ namespace lmath
         f32 tu,tv;
         if(v>=0.0f){
             
-            return testRayTriangle(t, tu, tv, ray, p0, p1, p2);
+            return testRayTriangleFront(t, tu, tv, ray, p0, p1, p2);
         }else{
-            return testRayTriangle(t, tu, tv, ray, p3, p0, p2);
+            return testRayTriangleFront(t, tu, tv, ray, p3, p0, p2);
         }
     }
 

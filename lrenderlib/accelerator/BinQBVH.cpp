@@ -164,8 +164,10 @@ namespace lrender
             recursiveConstruct(0, numPrimitives, 0, bbox, 1);
         }
 
-        primitiveCentroids_.swap(F32Vector());
-        primitiveBBoxes_.swap(AABBVector());
+        F32Vector tmpF32Vector;
+        primitiveCentroids_.swap(tmpF32Vector);
+        AABBVector tmpAABBVector;
+        primitiveBBoxes_.swap(tmpAABBVector);
 
         //intersectのためにスタック準備
         if(prevDepth<depth_){

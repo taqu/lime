@@ -27,7 +27,8 @@ namespace lrender
     Color3 DistantLight::sample_L(
         const Vector3& p,
         const Vector3& ng,
-        f32 epsilon,
+        const Vector3& ns,
+        f32 tmax,
         const EmitterSample& sample,
         Vector3& wiw,
         f32& pdf,
@@ -36,13 +37,9 @@ namespace lrender
         wiw = direction_;
         pdf = 1.0f;
 
-        if(ng.dot(direction_)<SHADOW_EPSILON){
-            Vector3 o;
-            o.muladd(SHADOW_EPSILON, -ng, p);
-            visibility.setRay(o, epsilon, wiw);
-        }else{
-            visibility.setRay(p, epsilon, wiw);
-        }
+        Vector3 o;
+        o.muladd(SHADOW_EPSILON, ng, p);
+        visibility.setRay(o, 0.0f, tmax, wiw);
         return radiance_;
     }
 
@@ -72,7 +69,7 @@ namespace lrender
         bsphere.getPosition(point);
         point += dir;
 
-        ray = Ray(point, direction_, 0.0f, LRENDER_INFINITY, RAY_EPSILON);
+        ray = Ray(point, direction_, 0.0f, scene.getWorldMaxSize(), RAY_EPSILON);
         Ns = ray.direction_;
         pdf = 1.0f/(PI*bsphere.getRadius()*bsphere.getRadius());
         return radiance_;
@@ -81,7 +78,7 @@ namespace lrender
     Color3 DistantLight::sample_L(
         const Vector3& p,
         const Vector3& n,
-        f32 epsilon,
+        f32 tmax,
         const EmitterSample& sample,
         Vector3& wiw,
         f32& pdf) const

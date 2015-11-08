@@ -12,7 +12,8 @@
 namespace lrender
 {
     Scene::Scene()
-        :camera_(NULL)
+        :worldMaxSize_(0.0f)
+        ,camera_(NULL)
         ,globalRefractiveIndex_(1.0f)
     {
         worldBound_.setInvalid();
@@ -242,5 +243,7 @@ namespace lrender
             bvh_.addShape(shapes_[i]);
         }
         bvh_.build();
+        Vector3 extent = getWorldBound().extent();
+        worldMaxSize_ = extent.length() * RAY_MAX_RATIO_OF_WORLD_SIZE;
     }
 }

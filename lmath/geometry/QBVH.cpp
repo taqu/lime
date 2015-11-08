@@ -522,7 +522,7 @@ namespace
                 const lmath::Vector3& p1 = vertices_[face.v1_].position_;
                 const lmath::Vector3& p2 = vertices_[face.v2_].position_;
 
-                if(lmath::testRayTriangle(t, u, v, localRay, p0, p1, p2)){
+                if(lmath::testRayTriangleFront(t, u, v, localRay, p0, p1, p2)){
                     if(0.0f<=t && t<=tmax){
                         tmax = t;
                         hitRecord.t_ = t;
@@ -602,7 +602,7 @@ namespace
                     const lmath::Vector3& p1 = vertices_[face.v1_].position_;
                     const lmath::Vector3& p2 = vertices_[face.v2_].position_;
 
-                    if(lmath::testRayTriangle(t, u, v, ray, p0, p1, p2)){
+                    if(lmath::testRayTriangleFront(t, u, v, ray, p0, p1, p2)){
                         if(0<=t && t<=tmax){
                             ret = true;
                             hitRecord.t_ = t;

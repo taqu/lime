@@ -205,13 +205,15 @@ namespace lrender
         Vector2 uvs[3];
         getTexcoord(uvs, triangle);
 
-        Vector3 e0, e1;
-        e0.sub(p1, p0);
-        e1.sub(p2, p0);
-
         f32 b0 = 1.0f - b1 - b2;
         intersection.uv_.x_ = b0 * uvs[0].x_ + b1 * uvs[1].x_ + b2 * uvs[2].x_;
         intersection.uv_.y_ = b0 * uvs[0].y_ + b1 * uvs[1].y_ + b2 * uvs[2].y_;
+
+        Vector3 e0, e1;
+        e0.sub(p1, p0);
+        e1.sub(p2, p0);
+        e0.normalize();
+        e1.normalize();
         intersection.geometricNormal_.cross(e0, e1);
         intersection.geometricNormal_.normalizeChecked();
 

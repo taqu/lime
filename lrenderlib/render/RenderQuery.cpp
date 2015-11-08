@@ -47,7 +47,7 @@ namespace lrender
                     Sample2D cameraSample = sampler_->next2D();
                     cameraSample.x_ += x;
                     cameraSample.y_ += y;
-                    scene_->getCamera().generateRayDifferential(ray, cameraSample.x_, cameraSample.y_);
+                    scene_->getCamera().generateRayDifferential(ray, cameraSample.x_, cameraSample.y_, scene_->getWorldMaxSize());
                     integratorQuery.clear();
                     Color3 color = integrator_->Li(ray, integratorQuery);
                     screen_->setFiltered(cameraSample.x_, cameraSample.y_, color);

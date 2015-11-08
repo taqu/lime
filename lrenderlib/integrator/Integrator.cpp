@@ -68,7 +68,7 @@ namespace lrender
         Vector3 wiw;
         f32 lightPdf, bsdfPdf;
         Visibility visibility;
-        Color3 Li = emitter.sample_L(p, ns, RAY_EPSILON, emitterSample, wiw, lightPdf, visibility);
+        Color3 Li = emitter.sample_L(p, ng, ns, scene_->getWorldMaxSize(), emitterSample, wiw, lightPdf, visibility);
 
         if(0.0f<lightPdf && !Li.isZero()){
             Color3 f = bsdf->f(wow, wiw, (BSDF::Type)bsdfType, intersection_);

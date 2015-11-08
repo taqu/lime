@@ -27,7 +27,7 @@ namespace lrender
     {
     }
 
-    Color3 PerspectiveCamera::generateRay(Ray& ray, f32 screenX, f32 screenY) const
+    Color3 PerspectiveCamera::generateRay(Ray& ray, f32 screenX, f32 screenY, f32 tmax) const
     {
         Vector3 dx;
         dx.mul((invHalfWidth_*screenX - 1.0f)*cameraDx_, right_);
@@ -41,12 +41,12 @@ namespace lrender
         ray.direction_.normalize();
         ray.invertDirection();
         ray.tmin_ = 0.0f;
-        ray.tmax_ = LRENDER_INFINITY;
+        ray.tmax_ = tmax;
 
         return Color3(1.0f);
     }
 
-    Color3 PerspectiveCamera::generateRayDifferential(RayDifferential& rayDifferential, f32 screenX, f32 screenY) const
+    Color3 PerspectiveCamera::generateRayDifferential(RayDifferential& rayDifferential, f32 screenX, f32 screenY, f32 tmax) const
     {
         Vector3 dx;
         dx.mul((invHalfWidth_*screenX - 1.0f)*cameraDx_, right_);
@@ -62,7 +62,7 @@ namespace lrender
         rayDifferential.direction_ = normalize(camera_point);
         rayDifferential.invertDirection();
         rayDifferential.tmin_ = 0.0f;
-        rayDifferential.tmax_ = LRENDER_INFINITY;
+        rayDifferential.tmax_ = tmax;
 
         rayDifferential.rxOrigin_ = rayDifferential.ryOrigin_ = rayDifferential.origin_;
         rayDifferential.rxDirection_.mul(cameraDx_, right_);

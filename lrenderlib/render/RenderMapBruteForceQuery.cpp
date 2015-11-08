@@ -72,7 +72,8 @@ namespace lrender
             }
         }
 
-        accelerator_.swap(MidBVH2D());
+        MidBVH2D tmpBVH;
+        accelerator_.swap(tmpBVH);
 
         Image image(image_->getWidth(), image_->getHeight());
         ImageProcessing::dilate(image, *image_);

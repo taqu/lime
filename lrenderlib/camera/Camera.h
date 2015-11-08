@@ -21,8 +21,8 @@ namespace lrender
         virtual ~Camera()
         {}
 
-        virtual Color3 generateRay(Ray& ray, f32 screenX, f32 screenY) const=0;
-        virtual Color3 generateRayDifferential(RayDifferential& rayDifferential, f32 screenX, f32 screenY) const=0;
+        virtual Color3 generateRay(Ray& ray, f32 screenX, f32 screenY, f32 tmax) const=0;
+        virtual Color3 generateRayDifferential(RayDifferential& rayDifferential, f32 screenX, f32 screenY, f32 tmax) const=0;
 
         inline void setResolution(s32 width, s32 height);
     protected:

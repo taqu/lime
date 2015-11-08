@@ -56,9 +56,9 @@ namespace lrender
     };
 
     inline Fresnel::Fresnel()
-        :type_(Type_None)
-        ,eta_i_(1.0f)
-        ,eta_t_(1.0f)
+        :type_(Type_Dielectic)
+        ,eta_i_(1.00028f)
+        ,eta_t_(1.43f)
     {
     }
 

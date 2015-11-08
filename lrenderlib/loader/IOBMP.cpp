@@ -10,13 +10,13 @@ namespace lrender
 {
     namespace
     {
-        void read32(Color4* buffer, lcore::istream& src, u32 width, u32 height, bool leftTop)
+        void read32(Color4* buffer, lcore::istream& src, s32 width, s32 height, bool leftTop)
         {
             //DX版
             u8 tmp[4];
             if(leftTop){
                 buffer += width * (height-1);
-                for(u32 i=0; i<height; ++i){
+                for(s32 i=0; i<height; ++i){
                     Color4 *b = buffer;
                     for(s32 j=0; j<width; ++j){
                         lcore::io::read(src, tmp, 4);
@@ -27,7 +27,7 @@ namespace lrender
                 }
 
             }else{
-                for(u32 i=0; i<height; ++i){
+                for(s32 i=0; i<height; ++i){
                     Color4 *b = buffer;
                     for(s32 j=0; j<width; ++j){
                         lcore::io::read(src, tmp, 4);
@@ -40,20 +40,20 @@ namespace lrender
         }
 
 
-        void read24(Color4* buffer, lcore::istream& src, u32 width, u32 height, bool leftTop)
+        void read24(Color4* buffer, lcore::istream& src, s32 width, s32 height, bool leftTop)
         {
             //DX版
-            u32 pitch = width * 3;
-            u32 diff = (pitch + 0x03U) & (~0x03U);
+            s32 pitch = width * 3;
+            s32 diff = (pitch + 0x03U) & (~0x03U);
             diff -= pitch;
 
             u8 tmp[3];
 
             if(leftTop){
                 buffer += width * (height-1);
-                for(u32 i=0; i<height; ++i){
+                for(s32 i=0; i<height; ++i){
                     Color4 *b = buffer;
-                    for(u32 j=0; j<width; ++j){
+                    for(s32 j=0; j<width; ++j){
                         lcore::io::read(src, tmp, 3);
                         b->setRGBA(tmp[0], tmp[1], tmp[2], 0xFFU);
                         b += 1;
@@ -63,8 +63,8 @@ namespace lrender
                 }
 
             }else{
-                for(u32 i=0; i<height; ++i){
-                    for(u32 j=0; j<width; ++j){
+                for(s32 i=0; i<height; ++i){
+                    for(s32 j=0; j<width; ++j){
                         lcore::io::read(src, tmp, 3);
                         buffer->setRGBA(tmp[0], tmp[1], tmp[2], 0xFFU);
                         buffer += 1;
@@ -75,14 +75,14 @@ namespace lrender
         }
 
 
-        void write32(lcore::ostream& dst, const Color4* buffer, u32 width, u32 height, bool leftTop)
+        void write32(lcore::ostream& dst, const Color4* buffer, s32 width, s32 height, bool leftTop)
         {
             u8 tmp[4];
             if(leftTop){
                 buffer += width * (height-1);
-                for(u32 i=0; i<height; ++i){
+                for(s32 i=0; i<height; ++i){
                     const Color4* b = buffer;
-                    for(u32 j=0; j<width; ++j){
+                    for(s32 j=0; j<width; ++j){
                         b->getRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                         lcore::io::write(dst, tmp, 4);
                         b += 1;
@@ -91,8 +91,8 @@ namespace lrender
                 }
 
             }else{
-                for(u32 i=0; i<height; ++i){
-                    for(u32 j=0; j<width; ++j){
+                for(s32 i=0; i<height; ++i){
+                    for(s32 j=0; j<width; ++j){
                         buffer->getRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                         lcore::io::write(dst, tmp, 4);
                         buffer += 1;
@@ -102,20 +102,20 @@ namespace lrender
         }
 
 
-        void write24(lcore::ostream& dst, const Color4* buffer, u32 width, u32 height, bool leftTop)
+        void write24(lcore::ostream& dst, const Color4* buffer, s32 width, s32 height, bool leftTop)
         {
-            u32 pitch = 3*width;
-            u32 dstPitch = (pitch + 0x03U) & (~0x03U);
-            u32 diff = dstPitch - pitch;
+            s32 pitch = 3*width;
+            s32 dstPitch = (pitch + 0x03U) & (~0x03U);
+            s32 diff = dstPitch - pitch;
 
             u8 tmp[4];
 
             if(leftTop){
                 buffer += width * (height-1);
 
-                for(u32 i=0; i<height; ++i){
+                for(s32 i=0; i<height; ++i){
                     const Color4* b = buffer;
-                    for(u32 j=0; j<width; ++j){
+                    for(s32 j=0; j<width; ++j){
                         b->getRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                         lcore::io::write(dst, tmp, 3);
                         b += 1;
@@ -128,8 +128,8 @@ namespace lrender
                 }
 
             }else{
-                for(u32 i=0; i<height; ++i){
-                    for(u32 j=0; j<width; ++j){
+                for(s32 i=0; i<height; ++i){
+                    for(s32 j=0; j<width; ++j){
                         buffer->getRGBA(tmp[0], tmp[1], tmp[2], tmp[3]);
                         lcore::io::write(dst, tmp, 3);
                         buffer += 1;
@@ -147,7 +147,7 @@ namespace lrender
     //マジックナンバー
     const u16 IOBMP::BMP_MAGIC = 'MB';
 
-    bool IOBMP::read(lcore::istream& is, Color4* buffer, u32& width, u32& height, bool transpose)
+    bool IOBMP::read(lcore::istream& is, Color4* buffer, s32& width, s32& height, bool transpose)
     {
         s32 startPos = is.tellg();
 
@@ -173,8 +173,8 @@ namespace lrender
             return false;
         }
 
-        width = static_cast<u32>(header.width_);
-        height = static_cast<u32>(header.height_);
+        width = header.width_;
+        height = header.height_;
 
         if(NULL == buffer){
             is.seekg(startPos, lcore::ios::beg); //ファイルポインタを元の位置に戻す
@@ -209,7 +209,7 @@ namespace lrender
     }
 
     //---------------------------------------------------------------------------------------------------
-    bool IOBMP::write(lcore::ostream& os, const Color4* buffer, u32 width, u32 height, WriteFormat format)
+    bool IOBMP::write(lcore::ostream& os, const Color4* buffer, s32 width, s32 height, WriteFormat format)
     {
         BMP_HEADER header = {0};
         u32 fileSize = sizeof(BMP_MAGIC);

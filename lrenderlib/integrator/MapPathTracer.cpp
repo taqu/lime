@@ -103,7 +103,7 @@ namespace lrender
         for(s32 i=0; i<sampler.getNumSamples(); ++i){
             sample = sampler.next2D();
             query.clear();
-            ray = shadingGeometry.nextCosineWeightedHemisphere(sample.x_, sample.y_, LRENDER_INFINITY);
+            ray = shadingGeometry.nextCosineWeightedHemisphere(sample.x_, sample.y_, query.scene_->getWorldMaxSize());
 
 
             Color3 L = Li(ray, query);

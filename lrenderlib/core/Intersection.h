@@ -43,7 +43,7 @@ namespace lrender
 
         Vector3 worldToLocal(const Vector3& v) const;
         Vector3 localToWorld(const Vector3& v) const;
-        Ray nextRay(const Vector3& direction, f32 tmax=LRENDER_INFINITY) const;
+        Ray nextRay(const Vector3& direction, f32 tmax) const;
 
         Vector3 point_;
         Vector3 shadingNormal_;

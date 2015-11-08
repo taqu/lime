@@ -10,7 +10,7 @@
 
 namespace lrender
 {
-    class EmitterSample;
+    struct EmitterSample;
     class Visibility;
     class Scene;
     class Ray;
@@ -25,8 +25,9 @@ namespace lrender
 
         virtual Color3 sample_L(
             const Vector3& p,
-            const Vector3& n,
-            f32 epsilon,
+            const Vector3& ng,
+            const Vector3& ns,
+            f32 tmax,
             const EmitterSample& sample,
             Vector3& wi,
             f32& pdf,
@@ -42,7 +43,7 @@ namespace lrender
         virtual Color3 sample_L(
             const Vector3& p,
             const Vector3& n,
-            f32 epsilon,
+            f32 tmax,
             const EmitterSample& sample,
             Vector3& wi,
             f32& pdf) const=0;

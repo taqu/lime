@@ -57,7 +57,24 @@ namespace lmath
     @param v1 ... 
     @param v2 ... 
     */
-    bool testRayTriangle(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    bool testRayTriangleFront(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    bool testRayTriangleBoth(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+
+    /**
+    @brief 線分と三角形の交差判定
+    @return 交差するか
+    @param u ... 重心座標
+    @param v ... 重心座標
+    @param w ... 重心座標
+    @param startPoint ... 線分の始点
+    @param endPoint ... 線分の終点
+    @param v0 ... 
+    @param v1 ... 
+    @param v2 ... 
+    */
+    bool testRayTriangleFront(f32& u, f32& v, f32& w, const Vector3& startPoint, const Vector3& endPoint, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    bool testRayTriangleBoth(f32& u, f32& v, f32& w, const Vector3& startPoint, const Vector3& endPoint, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+
 
     bool testRayRectangle(f32& t, const Ray& ray, const Vector3& p0, const Vector3& p1, const Vector3& p2, const Vector3& p3);
 

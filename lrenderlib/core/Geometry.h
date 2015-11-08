@@ -40,7 +40,7 @@ namespace lrender
     @param v1 ... 
     @param v2 ... 
     */
-    bool testRayTriangle(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    bool testRayTriangle(f32& t, f32& v, f32& w, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2);
 
     s32 testRayTriangle(
         __m128& t,

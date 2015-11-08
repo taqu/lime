@@ -500,8 +500,18 @@ namespace
         lastNumTriangles_ = 0;
         while(readLine());
 
+        //ƒ}ƒeƒŠƒAƒ‹‚ª‚È‚¢
+        if(bsdfs_.size()<=0){
+            Microfacet::pointer microfacet(LIME_NEW Microfacet());
+            microfacet->initialize();
+            bsdfs_.push_back(microfacet);
+        }
+
+        //shape‚ª‚È‚¢
         if(shapes_->size()<=0){
-            return 0;
+            MeshInstance::pointer meshInstance(LIME_NEW MeshInstance(mesh_, 0, 0));
+            meshInstance->setBSDF(bsdfs_[0]);
+            shapes_->push_back(meshInstance);
         }
 
         {
@@ -573,6 +583,7 @@ namespace
         if(0<normals.size() && !existNormal){
             generateNormals(normals, triangles, points);
         }
+
         if(0<normals.size() && adjustGeometryNormals_){
             adjustGeometryNormals(triangles, normals, points);
         }

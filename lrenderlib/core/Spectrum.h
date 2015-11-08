@@ -36,14 +36,20 @@ namespace lrender
         this_type& operator-=(const this_type& rhs);
 
         this_type operator*(value_type x) const;
-        friend this_type operator*(value_type x, const this_type& rhs);
+
+        template<class T, s32 Dimensions, class Derived>
+        friend SpectrumBase<T, Dimensions, Derived> operator*(T x, const SpectrumBase<T, Dimensions, Derived>& rhs);
+
         this_type& operator*=(value_type x);
 
         this_type operator*(const this_type& rhs) const;
         this_type& operator*=(const this_type& rhs);
 
         this_type operator/(value_type x) const;
-        friend this_type operator/(value_type x, const this_type& rhs);
+
+        template<class T, s32 Dimensions, class Derived>
+        friend SpectrumBase<T, Dimensions, Derived> operator/(T x, const SpectrumBase<T, Dimensions, Derived>& rhs);
+
         this_type& operator/=(value_type x);
 
         this_type operator/(const this_type& rhs) const;
@@ -172,10 +178,10 @@ namespace lrender
     }
 
     template<class T, s32 Dimensions, class Derived>
-    typename SpectrumBase<T, Dimensions, Derived>::this_type
-        operator*(typename SpectrumBase<T, Dimensions, Derived>::value_type x, const typename SpectrumBase<T, Dimensions, Derived>::this_type& rhs)
+    SpectrumBase<T, Dimensions, Derived>
+        operator*(T x, const SpectrumBase<T, Dimensions, Derived>& rhs)
     {
-        this_type ret;
+        SpectrumBase<T, Dimensions, Derived> ret;
         for(s32 i=0; i<Dimensions; ++i){
             ret.values_[i] = x * rhs.values_[i];
         }
@@ -226,10 +232,10 @@ namespace lrender
     }
 
     template<class T, s32 Dimensions, class Derived>
-    typename SpectrumBase<T, Dimensions, Derived>::this_type
-        operator/(typename SpectrumBase<T, Dimensions, Derived>::value_type x, const typename SpectrumBase<T, Dimensions, Derived>::this_type& rhs)
+    SpectrumBase<T, Dimensions, Derived>
+        operator/(T x, const SpectrumBase<T, Dimensions, Derived>& rhs)
     {
-        this_type ret(x);
+        SpectrumBase<T, Dimensions, Derived> ret(x);
         for(s32 i=0; i<Dimensions; ++i){
             ret.values_[i] /= rhs.values_[i];
         }

@@ -57,9 +57,9 @@ namespace lrender
         /**
         @brief bufferにロード。bufferがNULLの場合、width、height、formatを設定して返る
         */
-        static bool read(lcore::istream& is, Color4* buffer, u32& width, u32& height, bool transpose = false);
+        static bool read(lcore::istream& is, Color4* buffer, s32& width, s32& height, bool transpose = false);
 
-        static bool write(lcore::ostream& os, const Color4* buffer, u32 width, u32 height, WriteFormat format);
+        static bool write(lcore::ostream& os, const Color4* buffer, s32 width, s32 height, WriteFormat format);
     };
 }
 #endif //INC_LRENDER_IOBMP_H__

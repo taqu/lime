@@ -27,7 +27,7 @@ namespace lrender
             const Vector3& p1, f32 eps1);
 
         void setRay(
-            const Vector3& p, f32 eps,
+            const Vector3& p, f32 eps, f32 tmax,
             const Vector3& w);
 
         bool unoccluded(const Scene& scene) const;

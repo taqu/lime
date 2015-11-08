@@ -34,7 +34,8 @@ namespace lrender
 #define TONEMAPPING_DELTA (1.0e-5f)
 #define DOT_EPSILON (1.0e-6f)
 #define PDF_EPSILON (1.0e-6f)
-#define SHADOW_EPSILON (1.0e-5f)
+#define SHADOW_EPSILON (1.0e-7f)
+#define RAY_MAX_RATIO_OF_WORLD_SIZE (1.01f)
 
     struct Align16Allocator
     {

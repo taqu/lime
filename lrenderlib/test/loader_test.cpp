@@ -33,36 +33,26 @@ namespace
     void initScene()
     {
         filter_ = LIME_NEW lrender::GaussianFilter(0.5f);
-        //filter_ = LIME_NEW lrender::BoxFilter();
+
         screen_ = LIME_NEW lrender::Screen(width, height, filter_);
         lrender::PerspectiveCamera* camera = LIME_NEW lrender::PerspectiveCamera();
         camera->setResolution(screen_->getWidth(), screen_->getHeight());
         camera->perspective(static_cast<lrender::f32>(screen_->getWidth())/screen_->getHeight(), PI*60.0f/180.0f);
 
-        camera->lookAt(lrender::Vector3(0.0f, 6.0f, -10.0f), lrender::Vector3(0.0f, 2.0f, 0.0f), lrender::Vector3(0.0f, 1.0f, 0.0f));
-        //camera->lookAt(lrender::Vector3(10.0f, 2.0f, 0.0f), lrender::Vector3(0.0f, 2.0f, 0.0f), lrender::Vector3(0.0f, 1.0f, 0.0f));
-        //camera->lookAt(lrender::Vector3(0.0f, 2.0f, -6.0f), lrender::Vector3(0.0f, 2.0f, 1.0f), lrender::Vector3(0.0f, 1.0f, 0.0f));
+        //camera->lookAt(lrender::Vector3(0.0f, 6.0f, -10.0f), lrender::Vector3(0.0f, 2.0f, 0.0f), lrender::Vector3(0.0f, 1.0f, 0.0f));
+        camera->lookAt(lrender::Vector3(0.0f, 1.0f, 2.0f), lrender::Vector3(0.0f, 1.0f, 0.0f), lrender::Vector3(0.0f, 1.0f, 0.0f));
 
         camera_ = camera;
 
         lrender::u32 seed = lcore::getDefaultSeed();
         lcore::Log("seed %d", seed);
-        static const lrender::s32 numSamples = 1024;
+        static const lrender::s32 numSamples = 8;
         sampler_ = LIME_NEW lrender::LowDiscrepancySampler(numSamples, seed, 4);
-        //sampler_ = LIME_NEW lrender::RandomSampler(numSamples, seed, 4);
-        //emitter_ = LIME_NEW lrender::DistantLight(lmath::Vector3(0.7071067f, 1.4142134f, 0.0f), lrender::Color3(1.0f));
         emitter_ = LIME_NEW lrender::DistantLight(lmath::Vector3(0.25f, 1.0f, 0.0f), lrender::Color3(1.0f));
 
         scene_ = LIME_NEW lrender::Scene();
         scene_->setCamera(camera_);
         scene_->add(emitter_);
-
-        //lcore::ofstream file("sample.csv", lcore::ios::binary);
-        //for(lrender::s32 i=0; i<sampler_->getNumSamples(); ++i){
-        //    lrender::f32 v0, v1;
-        //    lcore::sobol02(v0, v1, i, seed, seed);
-        //    file.print("%f, %f\n", v0, v1);
-        //}
     }
 
     void termScene()
@@ -87,7 +77,8 @@ int main(int argc, char** argv)
 
     {
         lrender::LoaderObj loaderObj(false);
-        lrender::s32 numMeshes = loaderObj.loadFromFile(shapes, "data/testscene/TestScene.obj");
+        //lrender::s32 numMeshes = loaderObj.loadFromFile(shapes, "data/testscene/TestScene.obj");
+        lrender::s32 numMeshes = loaderObj.loadFromFile(shapes, "data/bunny.obj");
         //lrender::s32 numMeshes = loaderObj.loadFromFile(shapes, "data/sponza/sponza.obj");
         //lrender::s32 numMeshes = loaderObj.loadFromFile(shapes, "data/sponza/sponza_uv_maya.obj.obj");
         if(numMeshes<=0){

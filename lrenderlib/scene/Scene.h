@@ -38,7 +38,7 @@ namespace lrender
         void clearEmitters();
         const Emitter::EmitterVector& getEmitters() const{ return emitters_;}
 
-
+        inline f32 getWorldMaxSize() const;
         inline const AABB& getWorldBound() const;
 
         inline const Image& getSkySphereImage() const;
@@ -60,6 +60,7 @@ namespace lrender
         Scene& operator=(const Scene&);
 
         AABB worldBound_;
+        f32 worldMaxSize_;
         Camera::pointer camera_;
         Shape::ShapeVector shapes_;
         Emitter::EmitterVector emitters_;
@@ -91,6 +92,11 @@ namespace lrender
     inline void Scene::setCamera(Camera::pointer& camera)
     {
         camera_ = camera;
+    }
+
+    inline f32 Scene::getWorldMaxSize() const
+    {
+        return worldMaxSize_;
     }
 
     inline const AABB& Scene::getWorldBound() const

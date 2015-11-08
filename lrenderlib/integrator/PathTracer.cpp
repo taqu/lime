@@ -17,7 +17,7 @@ namespace lrender
     PathTracer::PathTracer(s32 russianRouletteDepth, s32 maxDepth)
         :russianRouletteDepth_(russianRouletteDepth)
         ,maxDepth_(maxDepth)
-        ,strictNormal_(true)
+        ,strictNormal_(false)
     {
     }
 
@@ -46,6 +46,7 @@ namespace lrender
             if(!insect.isIntersect()){
                 break;
             }
+
             emitterSample = query.sampler_->next2D();
             emitterBsdfSample = BSDFSample(query.sampler_->next2D(), query.sampler_->next1D());
             bsdfBsdfSample = BSDFSample(query.sampler_->next2D(), query.sampler_->next1D());
@@ -72,7 +73,7 @@ namespace lrender
             }
             
             beta *= f * lcore::absolute(wiw.dot(insect.shadingNormal_))/bsdfPdf;
-            ray = insect.nextRay(wiw);
+            ray = insect.nextRay(wiw, query.scene_->getWorldMaxSize());
 
             ++query.depth_;
 
