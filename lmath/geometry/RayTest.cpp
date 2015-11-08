@@ -98,7 +98,7 @@ namespace lmath
 
     //-----------------------------------------------------------
     // 線分と三角形の交差判定
-    bool testRayTriangleUnstableFront(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    bool testRayTriangleFront(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
         Vector3 d0, d1;
         d0.sub(v1, v0);
@@ -138,7 +138,7 @@ namespace lmath
     }
 
     // 線分と三角形の交差判定
-    bool testRayTriangleUnstableBoth(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    bool testRayTriangleBoth(f32& t, f32& u, f32& v, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
         Vector3 d0, d1;
         d0.sub(v1, v0);
