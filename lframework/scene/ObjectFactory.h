@@ -22,7 +22,7 @@ namespace lscene
         ObjectFactory();
         virtual ~ObjectFactory();
 
-        virtual Resource* create(s32 type, const Char* path, lfile::SharedFile& file);
+        virtual Resource* create(s32 type, const Char* path, lfile::SharedFile& file, const SceneParam& param);
 
     private:
         ObjectFactory(const ObjectFactory&);

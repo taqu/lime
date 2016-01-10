@@ -488,12 +488,12 @@ namespace lcore
         typedef fstream_base<istream> super_type;
         
         ifstream(){}
-        ifstream(const Char* filepath, int mode=ios::in)
+        ifstream(const Char* filepath, int mode=ios::in|ios::binary)
             :super_type(filepath, mode|ios::in)
         {
         }
         
-        bool open(const Char* filepath, int mode=ios::in)
+        bool open(const Char* filepath, int mode=ios::in|ios::binary)
         {
             return super_type::open(filepath, mode|ios::in);
         }
@@ -517,12 +517,12 @@ namespace lcore
         typedef fstream_base<ostream> super_type;
     
         ofstream(){}
-        ofstream(const Char* filepath, int mode=ios::out)
+        ofstream(const Char* filepath, int mode=ios::out|ios::binary)
             :super_type(filepath, mode|ios::out)
         {
         }
         
-        bool open(const Char* filepath, int mode=ios::out)
+        bool open(const Char* filepath, int mode=ios::out|ios::binary)
         {
             return super_type::open(filepath, mode|ios::out);
         }

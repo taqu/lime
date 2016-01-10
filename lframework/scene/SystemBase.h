@@ -16,8 +16,9 @@
 #include "TransientBuffer.h"
 #include "DynamicBuffer.h"
 #include "RenderQueue.h"
-#include "SceneManager.h"
 #include "render/ShaderID.h"
+#include "render/AnimObject.h"
+#include "render/Object.h"
 
 namespace lscene
 {
@@ -141,6 +142,8 @@ namespace lfile
         bool initialize(const InitParam& param);
         void terminate();
 
+        inline SceneParam& getDefaultParameter();
+
         inline void begin(lgraphics::ContextRef& context);
         inline void end(lgraphics::ContextRef& context);
 
@@ -149,7 +152,6 @@ namespace lfile
         inline ObjectFactoryBase* getObjectFactory();
 
         inline Scene& getScene();
-        inline SceneManager& getSceneManager();
         inline FrameSyncQueryType& getFrameSync();
         inline ConstantBuffer& getConstantBuffer();
         inline TransientVertexBuffer& getVertexBuffer();
@@ -170,6 +172,10 @@ namespace lfile
         template<class T>
         inline T* getResourceTyped(s32 category, const Char* path);
 
+        Resource* getResource(s32 category, s32 type, const Char* path, const SceneParam& param);
+        template<class T>
+        inline T* getResourceTyped(s32 category, const Char* path, const SceneParam& param);
+
         void removeResource(s32 category, Resource* resource);
     protected:
         SystemBase();
@@ -179,12 +185,15 @@ namespace lfile
         void destroyAll();
         void initializeDefaultRenderPath(RenderQueue& queue);
 
+        void initializeSceneManager();
+        void terminateSceneManager();
+
+        SceneParam defaultParameter_;
         lfile::FileSystemBase* fileSystem_;
         ObjectFactoryBase* objectFactory_;
         Resources* resources_;
 
         Scene scene_;
-        SceneManager sceneManager_;
         FrameSyncQueryType frameSync_;
         ConstantBuffer constantBuffer_;
 
@@ -194,6 +203,11 @@ namespace lfile
         s32 wcsSize_;
         WChar* wcsSharedBuffer_;
     };
+
+    inline SceneParam& SystemBase::getDefaultParameter()
+    {
+        return defaultParameter_;
+    }
 
     inline void SystemBase::begin(lgraphics::ContextRef& context)
     {
@@ -223,11 +237,6 @@ namespace lfile
         return scene_;
     }
 
-    inline SceneManager& SystemBase::getSceneManager()
-    {
-        return sceneManager_;
-    }
-
     inline FrameSyncQueryType& SystemBase::getFrameSync()
     {
         return frameSync_;
@@ -251,7 +260,13 @@ namespace lfile
     template<class T>
     inline T* SystemBase::getResourceTyped(s32 category, const Char* path)
     {
-        Resource* resource = getResource(category, T::type_id, path);
+        return getResourceTyped<T>(category, path, defaultParameter_);
+    }
+
+    template<class T>
+    inline T* SystemBase::getResourceTyped(s32 category, const Char* path, const SceneParam& param)
+    {
+        Resource* resource = getResource(category, T::type_id, path, param);
         LASSERT(resource->getType() == T::type_id);
         return reinterpret_cast<T*>(resource);
     }

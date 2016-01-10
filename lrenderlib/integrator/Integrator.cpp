@@ -58,7 +58,7 @@ namespace lrender
         const Vector3& ng,
         const Vector3& wow,
         const EmitterSample& emitterSample,
-        const BSDFSample& bsdfSample,
+        const BSDFSample& /*bsdfSample*/,
         s32 bsdfType) const
     {
         const BSDF::pointer& bsdf = intersection_.shape_->getBSDF();
@@ -82,7 +82,7 @@ namespace lrender
                     Vector3 wo = intersection_.worldToLocal(wow);
                     Vector3 wi = intersection_.worldToLocal(wiw);
                     bsdfPdf = bsdf->getPdf(wo, wi, (BSDF::Type)bsdfType);
-                    f32 weight = powerHeuristic(1.0f, lightPdf, 1.0f, bsdfPdf);
+                    f32 weight = powerHeuristic(1, lightPdf, 1, bsdfPdf);
                     Ld += f * Li * (lcore::absolute(wi.dot(ns)*weight)/lightPdf);
                 }
             }
@@ -95,7 +95,7 @@ namespace lrender
         return Ld;
     }
 
-    Color3 Integrator::specularReflectDirect(const Ray& ray, const Intersection& intersection, IntegratorQuery& query)
+    Color3 Integrator::specularReflectDirect(const Ray& /*ray*/, const Intersection& /*intersection*/, IntegratorQuery& /*query*/)
     {
         //const BSDF::pointer& bsdf = intersection.shape_->getBSDF();
 

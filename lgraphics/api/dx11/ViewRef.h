@@ -156,6 +156,13 @@ namespace lgraphics
         u32 numCubes_;
     };
 
+    struct BufferExSRV
+    {
+        s32 firstElement_;
+        u32 numElements_;
+        u32 flags_;
+    };
+
     struct SRVDesc
     {
         DataFormat format_;
@@ -173,6 +180,8 @@ namespace lgraphics
 
             TextureCubeSRV texCube_;
             TextureCubeArraySRV texCubeArray_;
+
+            BufferExSRV bufferEx_;
         };
 
         static bool copy(D3D11_SHADER_RESOURCE_VIEW_DESC& viewDesc, const SRVDesc& desc);
@@ -448,6 +457,7 @@ namespace lgraphics
 
     struct View
     {
+        static ShaderResourceViewRef View::createSRView(const SRVDesc& desc, ID3D11Resource* resource);
         static UnorderedAccessViewRef View::createUAView(const UAVDesc& desc, ID3D11Resource* resource);
     };
 }

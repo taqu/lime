@@ -39,7 +39,7 @@ namespace io
         return (0 == png_sig_cmp(data, 0, SigSize));
     }
 
-    bool IOPNG::read(lcore::istream& is, u8* buffer, u32& width, u32& height, u32& rowBytes, DataFormat& format, SwapRGB swap)
+    bool IOPNG::read(lcore::istream& is, u8* buffer, u32& width, u32& height, u32& rowBytes, DataFormat& format, bool sRGB, SwapRGB swap)
     {
         s32 startPos = is.tellg();
 
@@ -153,6 +153,19 @@ namespace io
             png_destroy_read_struct(&png_ptr, &info_ptr, (png_infopp)NULL);
             return false;
         };
+
+        if(!sRGB){
+            switch(format)
+            {
+            case Data_B8G8R8A8_UNorm_SRGB:
+                format = Data_B8G8R8A8_UNorm;
+                break;
+            case Data_R8G8B8A8_UNorm_SRGB:
+                format = Data_R8G8B8A8_UNorm;
+                break;
+            }
+        }
+
         //png_set_interlace_handling(png_ptr);
         png_read_update_info(png_ptr, info_ptr);
 
@@ -194,16 +207,17 @@ namespace io
         CPUAccessFlag access,
         ResourceMisc misc,
         u32& width, u32& height, u32& rowBytes, DataFormat& format,
+        bool sRGB,
         SwapRGB swap)
     {
-        if(false == read(is, NULL, width, height, rowBytes, format, swap)){
+        if(false == read(is, NULL, width, height, rowBytes, format, sRGB, swap)){
             return false;
         }
 
         u32 size = rowBytes * height;
         u8* buffer = LIME_NEW u8[size];
 
-        if(false == read(is, buffer, width, height, rowBytes, format, swap)){
+        if(false == read(is, buffer, width, height, rowBytes, format, sRGB, swap)){
             LIME_DELETE_ARRAY(buffer);
             return false;
         }

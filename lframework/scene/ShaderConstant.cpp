@@ -11,7 +11,17 @@ namespace lscene
 {
 namespace
 {
+    inline void copy(s32* dst, const s32* src)
+    {
+        _mm_store_ps((f32*)dst, _mm_load_ps((f32*)src));
+    }
+
     inline void copy(lmath::Vector4& dst, const lmath::Vector4& src)
+    {
+        _mm_store_ps(&dst.x_, _mm_load_ps(&src.x_));
+    }
+
+    inline void copy(lmath::Vector3& dst, const lmath::Vector3& src)
     {
         _mm_store_ps(&dst.x_, _mm_load_ps(&src.x_));
     }
@@ -29,7 +39,7 @@ namespace
     {
         const lscene::Camera& camera = scene.getCamera();
 
-        //copy(dst.v_, camera.getViewMatrix());
+        copy(dst.v_, camera.getViewMatrix());
         //copy(dst.p_, camera.getProjMatrix());
         copy(dst.vp0_, camera.getPrevViewProjMatrix());
         copy(dst.vp1_, camera.getViewProjMatrix());
@@ -60,12 +70,25 @@ namespace
         copy(dst.dlDirection_, dlight.getDirection());
         copy(dst.dlColor_, dlight.getColor());
         dst.cameraPos_ = camera.getEyePosition();
+        //dst.cameraNear_ = camera.getZNear();
+        //dst.cameraFar_ = camera.getZFar();
+        //f32 range = camera.getZFar() - camera.getZNear();
+        //dst.cameraRange_ = range;
+        //dst.cameraInvRange_ = 1.0f/range;
+
+        copy(&dst.screenWidth_, &src.screenWidth_);
     }
 
-    void setSceneConstantPS(SceneConstantPS& dst, const ShadowMap& shadowMap, f32 specularMapMipLevels, f32 shadowMapMomentBias, f32 shadowMapDepthBias, f32 lightBleedingBias)
+    void setSceneConstantPS(
+        SceneConstantPS& dst,
+        const ShadowMap& shadowMap,
+        f32 specularMapMipLevels,
+        f32 shadowMapMomentBias,
+        f32 shadowMapDepthBias,
+        f32 lightBleedingBias)
     {
         dst.specularMapMipLevels_ = specularMapMipLevels;
-        dst.shadowMapSize_ = shadowMap.getResolution();
+        dst.shadowMapSize_ = static_cast<f32>( shadowMap.getResolution() );
         dst.invShadowMapSize_ = shadowMap.getInvResolution();
         dst.shadowMapUVToTexel_ = shadowMap.getResolution()-1;
         dst.shadowMapMomentBias_ = shadowMapMomentBias;

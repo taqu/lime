@@ -12,7 +12,16 @@ namespace lscene
 {
 namespace lfile
 {
-    class FileDesc;
+    class FileDesc
+    {
+    public:
+        FileDesc()
+            :refCount_(0)
+        {}
+
+        lcore::ifstream file_;
+        s32 refCount_;
+    };
 
     //------------------------------------------------
     //---

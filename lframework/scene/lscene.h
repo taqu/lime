@@ -56,9 +56,6 @@ namespace lscene
 
     static const u32 MaxFileNameBufferSize = 64;
 
-#define LSCENE_ADDREF(ptr) if(ptr){(ptr)->addRef();}
-#define LSCENE_RELEASE(ptr) if(ptr){(ptr)->release();(ptr)=NULL;}
-
     template<class T>
     void move(T*& dst, T*& src)
     {
@@ -133,6 +130,9 @@ namespace lscene
 #define LSCENE_DELETE_NO_NULL(ptr) delete (ptr)
 #define LSCENE_DELETE_ARRAY(ptr) {delete[] (ptr); (ptr) = NULL;}
 #endif
+
+#define LSCENE_ADDREF(node) if(NULL != (node)) (node)->addRef()
+#define LSCENE_RELEASE(node) if(NULL != (node)){ (node)->release(); (node)=NULL;}
 
     struct NullObject
     {
@@ -232,11 +232,17 @@ namespace lscene
         NodeType_User =1000,
     };
 
+    enum Group
+    {
+        Group_None = 0,
+    };
+
     static const s32 DefaultSceneConstantVSAttachIndex = 0;
     static const s32 DefaultSceneConstantHSAttachIndex = 0;
     static const s32 DefaultSceneConstantDSAttachIndex = 0;
     static const s32 DefaultSceneConstantGSAttachIndex = 0;
     static const s32 DefaultSceneConstantPSAttachIndex = 0;
+    static const s32 DefaultLightClusterConstantPSAttachIndex = 1;
 
     //static const s32 DefaultMaterialConstantPSAttachIndex = 1;
     //static const s32 DefaultNodeConstantVSAttachIndex = 1;
@@ -269,6 +275,19 @@ namespace lscene
         NodeFlag_Solid = (0x01U<<17),
         NodeFlag_Transparent = (0x01U<<18),
         NodeFlag_RenderAttributes = NodeFlag_CastShadow|NodeFlag_Solid|NodeFlag_Transparent,
+    };
+
+    struct SceneParam
+    {
+        SceneParam()
+            :linear_(true)
+        {}
+
+        SceneParam(bool linear)
+            :linear_(linear)
+        {}
+
+        bool linear_;
     };
 }
 #endif //INC_LSCENE_H__

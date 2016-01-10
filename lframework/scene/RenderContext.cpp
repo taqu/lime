@@ -26,6 +26,7 @@ namespace lscene
         ,sceneConstantBufferVS_(NULL)
         ,sceneConstantBufferDS_(NULL)
         ,sceneConstantBufferPS_(NULL)
+        ,lightClusterConstantBufferPS_(NULL)
         ,blendState_(lgraphics::ContextRef::BlendState_Num)
     {
         for(s32 i=0; i<Shader_Num; ++i){
@@ -152,7 +153,7 @@ namespace lscene
         }
     }
 
-    void RenderContext::setSceneConstantPS(const SceneConstantPS& src, const Scene& scene)
+    void RenderContext::setSceneConstantPS(const SceneConstantPS& src, const Scene& scene, const LightClusterConstantPS& lightCluster)
     {
         sceneConstantBufferPS_ = createConstantBuffer(sizeof(lscene::SceneConstantPS));
 
@@ -162,6 +163,14 @@ namespace lscene
             lscene::setSceneConstantPS(*sceneConstantPS, src, scene);
             sceneConstantBufferPS_->unmap(*context_, 0);
             setSystemConstantBuffer(lscene::RenderContext::Shader_PS, lscene::DefaultSceneConstantPSAttachIndex, sceneConstantBufferPS_);
+        }
+
+        lightClusterConstantBufferPS_ = createConstantBuffer(sizeof(lscene::LightClusterConstantPS));
+
+        if(lightClusterConstantBufferPS_->map(*context_, 0, lgraphics::MapType_WriteDiscard, mapped)){
+            lscene::copyAlign16Size16Times(mapped.data_, &lightCluster, sizeof(LightClusterConstantPS));
+            lightClusterConstantBufferPS_->unmap(*context_, 0);
+            setSystemConstantBuffer(lscene::RenderContext::Shader_PS, lscene::DefaultLightClusterConstantPSAttachIndex, lightClusterConstantBufferPS_);
         }
     }
 
@@ -321,7 +330,7 @@ namespace lscene
             numPathConstants_[Shader_HS] = 1;
             numPathConstants_[Shader_DS] = 1;
             numPathConstants_[Shader_GS] = 0;
-            numPathConstants_[Shader_PS] = 1;
+            numPathConstants_[Shader_PS] = 2;
             numPathConstants_[Shader_CS] = 0;
             break;
 

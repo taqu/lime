@@ -69,7 +69,7 @@ namespace lanim
     const Joint* Skeleton::findJoint(const Char* name) const
     {
         LASSERT(NULL != name);
-        u32 hash = lcore::calc_hash_string(reinterpret_cast<const u8*>(name));
+        //u32 hash = lcore::calc_hash_string(reinterpret_cast<const u8*>(name));
 
         for(s32 i=0; i<numJoints_; ++i){
             if(jointNames_[i] == name){

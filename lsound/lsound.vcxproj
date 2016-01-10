@@ -11,101 +11,83 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Context.h" />
-    <ClInclude Include="src\dsp\dsp.h" />
-    <ClInclude Include="src\dsp\Resampler.h" />
-    <ClInclude Include="src\lsound.h" />
-    <ClInclude Include="src\lsound_api.h" />
-    <ClInclude Include="src\OpenAL\Context.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="src\OpenAL\Player.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="src\OpenAL\UserPlayer.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClInclude>
-    <ClInclude Include="src\OpenSL\Context.h">
+    <ClInclude Include="Context.h" />
+    <ClInclude Include="dsp\dsp.h" />
+    <ClInclude Include="dsp\Resampler.h" />
+    <ClInclude Include="lsound.h" />
+    <ClInclude Include="lsound_api.h" />
+    <ClInclude Include="OpenAL\Context.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="src\OpenSL\Player.h">
+    <ClInclude Include="OpenAL\Player.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="src\OpenSL\UserPlayer.h">
+    <ClInclude Include="OpenAL\UserPlayer.h">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="src\opus\Pack.h" />
-    <ClInclude Include="src\opus\PackReader.h" />
-    <ClInclude Include="src\opus\PackWriter.h" />
-    <ClInclude Include="src\opus\Resource.h" />
-    <ClInclude Include="src\opus\Stream.h" />
-    <ClInclude Include="src\Player.h" />
-    <ClInclude Include="src\UserPlayer.h" />
-    <ClInclude Include="src\Wasapi\Context.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    <ClInclude Include="OpenSL\Context.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="src\Wasapi\Device.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    <ClInclude Include="OpenSL\Player.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="src\Wasapi\Player.h">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    <ClInclude Include="OpenSL\UserPlayer.h">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClInclude>
-    <ClInclude Include="src\Wasapi\UserPlayer.h" />
+    <ClInclude Include="opus\Pack.h" />
+    <ClInclude Include="opus\PackReader.h" />
+    <ClInclude Include="opus\PackWriter.h" />
+    <ClInclude Include="opus\Resource.h" />
+    <ClInclude Include="opus\Stream.h" />
+    <ClInclude Include="Player.h" />
+    <ClInclude Include="UserPlayer.h" />
+    <ClInclude Include="Wasapi\Context.h" />
+    <ClInclude Include="Wasapi\Device.h" />
+    <ClInclude Include="Wasapi\Player.h" />
+    <ClInclude Include="Wasapi\UserPlayer.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\dsp\dsp.cpp" />
-    <ClCompile Include="src\dsp\Resampler.cpp" />
-    <ClCompile Include="src\OpenAL\Context.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="src\OpenAL\Player.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="src\OpenAL\UserPlayer.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
-    </ClCompile>
-    <ClCompile Include="src\OpenSL\Context.cpp">
+    <ClCompile Include="dsp\dsp.cpp" />
+    <ClCompile Include="dsp\Resampler.cpp" />
+    <ClCompile Include="OpenAL\Context.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\OpenSL\Player.cpp">
+    <ClCompile Include="OpenAL\Player.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\OpenSL\UserPlayer.cpp">
+    <ClCompile Include="OpenAL\UserPlayer.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\opus\Pack.cpp" />
-    <ClCompile Include="src\opus\PackReader.cpp" />
-    <ClCompile Include="src\opus\PackWriter.cpp" />
-    <ClCompile Include="src\opus\Resource.cpp" />
-    <ClCompile Include="src\opus\Stream.cpp" />
-    <ClCompile Include="src\Wasapi\Context.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    <ClCompile Include="OpenSL\Context.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\Wasapi\Device.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    <ClCompile Include="OpenSL\Player.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\Wasapi\Player.cpp">
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</ExcludedFromBuild>
-      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">false</ExcludedFromBuild>
+    <ClCompile Include="OpenSL\UserPlayer.cpp">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="src\Wasapi\UserPlayer.cpp" />
+    <ClCompile Include="opus\Pack.cpp" />
+    <ClCompile Include="opus\PackReader.cpp" />
+    <ClCompile Include="opus\PackWriter.cpp" />
+    <ClCompile Include="opus\Resource.cpp" />
+    <ClCompile Include="opus\Stream.cpp" />
+    <ClCompile Include="Wasapi\Context.cpp" />
+    <ClCompile Include="Wasapi\Device.cpp" />
+    <ClCompile Include="Wasapi\Player.cpp" />
+    <ClCompile Include="Wasapi\UserPlayer.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{A9429921-D3BA-411C-BC24-1AD2E45F9EF4}</ProjectGuid>
@@ -140,15 +122,15 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <OutDir>$(ProjectDir)..\lib\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir)..\;$(ProjectDir)\ext\include\;$(ProjectDir)\ext\include\opus\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)ext\lib\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\;$(ProjectDir)..\ext\win32\include\;$(ProjectDir)..\ext\win32\include\opus\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\ext\win32\lib\;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)_vc120_d</TargetName>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <OutDir>$(ProjectDir)..\lib\</OutDir>
     <IntDir>$(Configuration)\</IntDir>
-    <IncludePath>$(ProjectDir)..\;$(ProjectDir)\ext\include\;$(ProjectDir)\ext\include\opus\;$(IncludePath)</IncludePath>
-    <LibraryPath>$(ProjectDir)ext\lib\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(ProjectDir)..\;$(ProjectDir)..\ext\win32\include\;$(ProjectDir)..\ext\win32\include\opus\;$(IncludePath)</IncludePath>
+    <LibraryPath>$(ProjectDir)..\ext\win32\lib\;$(LibraryPath)</LibraryPath>
     <TargetName>$(ProjectName)_vc120</TargetName>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -167,7 +149,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Lib>
-      <AdditionalDependencies>libspeexdsp_d.lib;celt_d.lib;silk_common_d.lib;silk_float_d.lib;opus_d.lib;opusfile_d.lib;libogg_static_d.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libspeexdsp_d.lib;celt_d.lib;silk_common_d.lib;silk_float_d.lib;opus_d.lib;opusfile_d.lib;libogg_static_d.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(TargetName).lib</OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>
@@ -187,7 +169,7 @@
       <ExceptionHandling>false</ExceptionHandling>
     </ClCompile>
     <Lib>
-      <AdditionalDependencies>libspeexdsp.lib;celt.lib;silk_common.lib;silk_float.lib;opus.lib;opusfile.lib;libogg_static.lib;OpenAL32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>libspeexdsp.lib;celt.lib;silk_common.lib;silk_float.lib;opus.lib;opusfile.lib;libogg_static.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <OutputFile>$(OutDir)$(ProjectName)_vc120.lib</OutputFile>
       <AdditionalLibraryDirectories>%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Lib>

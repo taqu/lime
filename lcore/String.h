@@ -5,6 +5,7 @@
 @author t-sakai
 @date 2009/09/10 create
 */
+#include <stdio.h>
 #include <stdarg.h>
 #include "lcore.h"
 #include "Hash.h"
@@ -101,13 +102,13 @@ namespace lcore
 
         Char& operator[](u32 index)
         {
-            LASSERT(0<=index && index=<size_);
+            LASSERT(0<=index && index<=size_);
             return buffer_[index];
         }
 
         const Char& operator[](u32 index) const
         {
-            LASSERT(0<=index && index=<size_);
+            LASSERT(0<=index && index<=size_);
             return buffer_[index];
         }
 
@@ -250,9 +251,11 @@ namespace lcore
 
         va_list ap;
         va_start(ap, format);
-
+#if defined(_WIN32) || defined(_WIN64)
+        int ret = vsnprintf_s(buffer_, SIZE-1, format, ap);
+#else
         int ret = vsnprintf(buffer_, SIZE-1, format, ap);
-
+#endif
         va_end(ap);
 
         if(ret<0){
@@ -383,13 +386,13 @@ namespace lcore
 
         Char& operator[](u32 index)
         {
-            LASSERT(0<=index && index=<size_);
+            LASSERT(0<=index && index<=size_);
             return buffer_[index];
         }
 
         const Char& operator[](u32 index) const
         {
-            LASSERT(0<=index && index=<size_);
+            LASSERT(0<=index && index<=size_);
             return buffer_[index];
         }
 
@@ -547,8 +550,11 @@ namespace lcore
         va_list ap;
         va_start(ap, format);
 
+#if defined(_WIN32) || defined(_WIN64)
+        int ret = vsnprintf_s(buffer_, SIZE-1, format, ap);
+#else
         int ret = vsnprintf(buffer_, SIZE-1, format, ap);
-
+#endif
         va_end(ap);
 
         if(ret<0){
@@ -637,10 +643,37 @@ namespace lcore
         const_iterator end() const{ return data_+length_;}
 
         DynamicString& operator=(const DynamicString& rhs);
+
+        lcore::ostream& write(lcore::ostream& os);
+
+        inline Char& operator[](s32 index);
+        inline const Char& operator[](s32 index) const;
+
+        /// 書式付出力
+        int print(const Char* format, ... );
     private:
         static Char null_[4];
         s32 length_;
         Char* data_;
+    };
+
+    inline Char& DynamicString::operator[](s32 index)
+    {
+        LASSERT(0<=index && index<=length_);
+        return data_[index];
+    }
+
+    inline const Char& DynamicString::operator[](s32 index) const
+    {
+        LASSERT(0<=index && index<=length_);
+        return data_[index];
+    }
+
+    //----------------------------------------------------------
+    template<>
+    struct hasher<DynamicString>
+    {
+        static u32 calc(const DynamicString& t);
     };
 
     //---------------------------------------------

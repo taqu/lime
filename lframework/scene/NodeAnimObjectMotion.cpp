@@ -22,8 +22,8 @@
 
 namespace lscene
 {
-    NodeAnimObjectMotion::NodeAnimObjectMotion(const Char* name)
-        :NodeAnimObject(name)
+    NodeAnimObjectMotion::NodeAnimObjectMotion(const Char* name, u16 group, u16 type)
+        :NodeAnimObject(name, group, type)
         ,prevSkinningMatrices_(NULL)
     {
         prevMatrix_.identity();
@@ -32,11 +32,6 @@ namespace lscene
     NodeAnimObjectMotion::~NodeAnimObjectMotion()
     {
         releaseMatrices();
-    }
-
-    s32 NodeAnimObjectMotion::getType() const
-    {
-        return NodeType_AnimObjectMotion;
     }
 
     void NodeAnimObjectMotion::update()

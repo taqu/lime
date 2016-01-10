@@ -23,10 +23,9 @@ namespace lscene
     class NodeAnimObjectMotion : public NodeAnimObject
     {
     public:
-        explicit NodeAnimObjectMotion(const Char* name = NULL);
+        explicit NodeAnimObjectMotion(const Char* name = NULL, u16 group=Group_None, u16 type=NodeType_AnimObjectMotion);
         virtual ~NodeAnimObjectMotion();
 
-        virtual s32 getType() const;
         virtual void update();
 
         inline virtual const lmath::Matrix44& getPrevMatrix() const;

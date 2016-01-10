@@ -154,7 +154,7 @@ namespace
             if(c == '#'){
                 comment = true;
             }else if(!comment){
-                line_.push_back(c);
+                line_.push_back((Char)c);
             }
             c = file_.get();
         }
@@ -242,7 +242,7 @@ namespace
     void LoaderObj::LoaderMtl::load(f32& f)
     {
         if(1<elements_.size()){
-            f = atof(elements_[1]);
+            f = static_cast<f32>( atof(elements_[1]) );
         }else{
             f = 0.0f;
         }
@@ -253,7 +253,7 @@ namespace
         v.zero();
         s32 numElements =  0;
         for(s32 i=1; i<elements_.size(); ++i){
-            v[numElements] = atof(elements_[i]);
+            v[numElements] = static_cast<f32>( atof(elements_[i]) );
             ++numElements;
             if(3<=numElements){
                 break;
@@ -268,7 +268,7 @@ namespace
 
         s32 numElements =  0;
         for(s32 i=1; i<elements_.size(); ++i){
-            rgb[numElements] = atof(elements_[i]);
+            rgb[numElements] = static_cast<f32>( atof(elements_[i]) );
             ++numElements;
             if(3<=numElements){
                 break;
@@ -321,7 +321,7 @@ namespace
 
         s32 numElements =  0;
         for(s32 i=1; i<elements_.size(); ++i){
-            rgb[numElements] = atof(elements_[i]);
+            rgb[numElements] = static_cast<f32>( atof(elements_[i]) );
             ++numElements;
             if(3<=numElements){
                 break;
@@ -588,6 +588,7 @@ namespace
             adjustGeometryNormals(triangles, normals, points);
         }
 
+        BufferVector4 colors;
         Mesh::create(
             *mesh_,
             totalBBox.bmin_,
@@ -595,6 +596,7 @@ namespace
             points,
             normals,
             texcoords,
+            colors,
             triangles);
 
         file_.close();
@@ -636,12 +638,12 @@ namespace
             if(c == '#'){
                 comment = true;
             }else if(!comment){
-                line_.push_back(c);
+                line_.push_back((Char)c);
             }
             c = file_.get();
         }
         if(0!=c){
-            line_.push_back(c);
+            line_.push_back((Char)c);
         }
         return (comment || 0<line_.size());
     }
@@ -718,7 +720,7 @@ namespace
     {
         s32 numElements =  0;
         for(s32 i=1; i<elements_.size(); ++i){
-            felems[numElements] = atof(elements_[i]);
+            felems[numElements] = static_cast<f32>( atof(elements_[i]) );
             ++numElements;
             if(4<=numElements){
                 break;
@@ -832,7 +834,7 @@ namespace
 
                     i1 = vertices_.size();
                     vertices_.push_back(v);
-                    ++lastNumTriangles_;;
+                    ++lastNumTriangles_;
                 }
             }
             return true;

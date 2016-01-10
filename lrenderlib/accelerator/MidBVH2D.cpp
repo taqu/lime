@@ -65,7 +65,7 @@ namespace lrender
         //Šeprimitive‚Ìcentroid, bbox‚ðŽ–‘OŒvŽZ
         f32* centroidX = &primitiveCentroids_[0];
         f32* centroidY = centroidX + numPrimitives;
-        f32* centroidZ = centroidY + numPrimitives;
+        //f32* centroidZ = centroidY + numPrimitives;
         for(s32 i=0; i<numPrimitives; ++i){
             primitives_[i].index_ = i;
 

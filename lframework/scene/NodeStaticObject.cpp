@@ -7,18 +7,13 @@
 
 namespace lscene
 {
-    NodeStaticObject::NodeStaticObject(const Char* name)
-        :NodeObject(name)
+    NodeStaticObject::NodeStaticObject(const Char* name, u16 group, u16 type)
+        :NodeObject(name, group, type)
     {
     }
 
     NodeStaticObject::~NodeStaticObject()
     {
-    }
-
-    s32 NodeStaticObject::getType() const
-    {
-        return NodeType_StaticObject;
     }
 
     void NodeStaticObject::update()

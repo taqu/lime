@@ -16,7 +16,7 @@ namespace lcore
     {
     }
 
-    void ThreadPool::WorkerThread::proc(void* data)
+    void ThreadPool::WorkerThread::proc(u32 /*threadId*/, void* data)
     {
         WorkerThread* thread = reinterpret_cast<WorkerThread*>(data);
         ThreadPool* threadPool = thread->threadPool_;

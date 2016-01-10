@@ -11,7 +11,7 @@
 
 namespace lscene
 {
-    class NodeBase;
+    class Collidable;
 }
 
 namespace lcollide
@@ -24,20 +24,20 @@ namespace lcollide
     class Collider : public lcollide::ColliderBase3
     {
     public:
-        lscene::NodeBase* getNode()
+        lscene::Collidable* getCollidable()
         {
-            return reinterpret_cast<lscene::NodeBase*>(data_);
+            return reinterpret_cast<lscene::Collidable*>(data_);
         }
     protected:
         inline Collider();
-        inline Collider(lscene::NodeBase* node, u16 group, u16 type);
+        inline Collider(lscene::Collidable* collidable, u16 group, u16 type);
     };
 
     inline Collider::Collider()
     {}
 
-    inline Collider::Collider(lscene::NodeBase* node, u16 group, u16 type)
-        :ColliderBase3(node, group, type)
+    inline Collider::Collider(lscene::Collidable* collidable, u16 group, u16 type)
+        :ColliderBase3(collidable, group, type)
     {}
 
     //-------------------------------------------------------
@@ -49,7 +49,7 @@ namespace lcollide
     {
     public:
         inline ColliderSphere();
-        inline ColliderSphere(lscene::NodeBase* node, u16 group);
+        inline ColliderSphere(lscene::Collidable* collidable, u16 group);
 
         virtual bool test(const lmath::Ray& ray, f32& t) const;
         virtual void getBoundingBox(lmath::Vector4& bmin, lmath::Vector4& bmax);
@@ -60,8 +60,8 @@ namespace lcollide
     inline ColliderSphere::ColliderSphere()
     {}
 
-    inline ColliderSphere::ColliderSphere(lscene::NodeBase* node, u16 group)
-        :Collider(node, group, CollisionType_Sphere)
+    inline ColliderSphere::ColliderSphere(lscene::Collidable* collidable, u16 group)
+        :Collider(collidable, group, CollisionType_Sphere)
     {}
 
     //-------------------------------------------------------
@@ -73,7 +73,7 @@ namespace lcollide
     {
     public:
         inline ColliderRay();
-        inline ColliderRay(lscene::NodeBase* node, u16 group);
+        inline ColliderRay(lscene::Collidable* collidable, u16 group);
 
         virtual bool test(const lmath::Ray& ray, f32& t) const;
         virtual void getBoundingBox(lmath::Vector4& bmin, lmath::Vector4& bmax);
@@ -84,8 +84,8 @@ namespace lcollide
     inline ColliderRay::ColliderRay()
     {}
 
-    inline ColliderRay::ColliderRay(lscene::NodeBase* node, u16 group)
-        :Collider(node, group, CollisionType_Ray)
+    inline ColliderRay::ColliderRay(lscene::Collidable* collidable, u16 group)
+        :Collider(collidable, group, CollisionType_Ray)
     {}
 
     //-------------------------------------------------------
@@ -97,7 +97,7 @@ namespace lcollide
     {
     public:
         inline ColliderAABB();
-        inline ColliderAABB(lscene::NodeBase* node, u16 group);
+        inline ColliderAABB(lscene::Collidable* collidable, u16 group);
 
         virtual bool test(const lmath::Ray& ray, f32& t) const;
         virtual void getBoundingBox(lmath::Vector4& bmin, lmath::Vector4& bmax);
@@ -109,8 +109,8 @@ namespace lcollide
     inline ColliderAABB::ColliderAABB()
     {}
 
-    inline ColliderAABB::ColliderAABB(lscene::NodeBase* node, u16 group)
-        :Collider(node, group, CollisionType_AABB)
+    inline ColliderAABB::ColliderAABB(lscene::Collidable* collidable, u16 group)
+        :Collider(collidable, group, CollisionType_AABB)
     {}
 }
 #endif //INC_LCOLLIDE_COLLIDER_H__

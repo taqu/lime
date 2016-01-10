@@ -63,6 +63,7 @@ namespace io
             BindFlag bindFlag,
             CPUAccessFlag access,
             ResourceMisc misc,
+            bool sRGB,
             u32& width, u32& height, DataFormat& format);
 
     };

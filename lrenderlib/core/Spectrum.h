@@ -386,6 +386,8 @@ namespace lrender
         inline Color3(const parent_type& rhs);
         inline ~Color3();
 
+        inline void set(f32 r, f32 g, f32 b);
+
         f32 getLuminance() const;
         void getRGB(u8& r, u8& g, u8& b) const;
         void setRGB(u8 r, u8 g, u8 b);
@@ -437,6 +439,13 @@ namespace lrender
     {
     }
 
+    inline void Color3::set(f32 r, f32 g, f32 b)
+    {
+        values_[0] = r;
+        values_[1] = g;
+        values_[2] = b;
+    }
+
     inline Color3 Color3::clear()
     {
         return Color3(0.0f);
@@ -475,6 +484,8 @@ namespace lrender
         inline Color4(const Color4& rhs);
         inline Color4(const parent_type& rhs);
         inline ~Color4();
+
+        inline void set(f32 r, f32 g, f32 b, f32 a);
 
         f32 getLuminance() const;
         void getRGBA(u8& r, u8& g, u8& b, u8& a) const;
@@ -526,6 +537,14 @@ namespace lrender
 
     inline Color4::~Color4()
     {
+    }
+
+    inline void Color4::set(f32 r, f32 g, f32 b, f32 a)
+    {
+        values_[0] = r;
+        values_[1] = g;
+        values_[2] = b;
+        values_[3] = a;
     }
 
     inline Color4 Color4::clear()

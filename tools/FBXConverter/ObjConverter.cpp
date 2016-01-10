@@ -1,9 +1,11 @@
 #include "ObjConverter.h"
 
-#include <stdarg.h>
 #include <iostream>
+#include <vector>
 
 #include <lcore/liostream.h>
+#include <lmath/geometry/AABB.h>
+
 #include <lframework/scene/load/load_node.h>
 #include <lframework/scene/load/load_mesh.h>
 #include <lframework/scene/load/load_geometry.h>
@@ -51,9 +53,9 @@ namespace
         va_end(ap);
     }
 
-    void LogElements(const std::vector<Char*>& elements)
+    void LogElements(const lcore::vector_arena<Char*>& elements)
     {
-        for(std::vector<Char*>::const_iterator itr = elements.begin();
+        for(lcore::vector_arena<Char*>::const_iterator itr = elements.begin();
             itr != elements.end();
             ++itr)
         {
@@ -66,90 +68,152 @@ namespace
 #define LOG(str, ...) Log((str), __VA_ARGS__)
 }
 
-    LoaderObj::LoaderObj()
+
+    //------------------------------------------------------
+    //---
+    //--- WorkMaterial
+    //---
+    //------------------------------------------------------
+    void LoaderObj::WorkMaterial::clear()
+    {
+        name_[0] = '\0';
+
+        material_.diffuse_.one();
+        material_.specular_.one();
+        material_.ambient_.set(0.0f, 0.0f, 0.0f, 1.33f);
+        material_.shadow_.zero();
+        material_.flags_ = Material::Flag_CastShadow | Material::Flag_RecieveShadow | Material::Flag_RefractiveIndex;
+        material_.texColor_ = -1;
+        material_.texNormal_ = -1;
+    }
+
+    void LoaderObj::WorkMaterial::setName(const Char* name)
+    {
+        lcore::strncpy(name_, MaxNameSize, name, lcore::strlen(name));
+    }
+
+    //------------------------------------------------------
+    //---
+    //--- MaterialPack
+    //---
+    //------------------------------------------------------
+    s32 LoaderObj::MaterialPack::findMaterialIndex(const Char* name) const
+    {
+        for(s32 i=0; i<materials_.size(); ++i){
+            if(0 == lcore::strncmp(name, materials_[i].name_, WorkMaterial::MaxNameSize)){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    s32 LoaderObj::MaterialPack::findTextureIndex(const Char* name) const
+    {
+        for(s32 i=0; i<textures_.size(); ++i){
+            if(0 == lcore::strncmp(name, textures_[i].name_, MaxFileNameSize)){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    //------------------------------------------------------
+    //---
+    //--- LoaderMtl
+    //---
+    //------------------------------------------------------
+    LoaderObj::LoaderMtl::LoaderMtl()
         :directory_(NULL)
-        ,currentMaterialId_(0)
+        ,material_(NULL)
     {
     }
 
-    LoaderObj::~LoaderObj()
+    LoaderObj::LoaderMtl::~LoaderMtl()
     {
-        LIME_DELETE_ARRAY(directory_);
     }
 
-    bool LoaderObj::load(const Char* filepath)
+    s32 LoaderObj::LoaderMtl::loadFromFile(MaterialPack& materialPack, const Char* directory, const Char* filename)
     {
-        LASSERT(NULL != filepath);
-        std::ifstream input(filepath, std::ios::in|std::ios::binary);
-        if(false == input.is_open()){
-            return false;
+        directory_ = directory;
+
+        s32 len = 0;
+        s32 dlen = 0;
+        if(NULL != directory){
+            dlen = lcore::strlen(directory);
+            len += dlen;
+        }
+        len += lcore::strlen(filename) + 1;
+
+        Char* path = LIME_NEW Char[len];
+        path[0] = '\0';
+        if(NULL != directory){
+            lcore::strcat(path, len, directory);
+            //len -= dlen;
+        }
+        lcore::strcat(path, len, filename);
+
+        file_.open(path, lcore::ios::binary);
+        LIME_DELETE(path);
+
+        if(!file_.is_open()){
+            return 0;
         }
 
-        s32 len = lcore::strlen(filepath);
-        LIME_DELETE_ARRAY(directory_);
-        directory_ = LIME_NEW Char[len + 2];
-        s32 dlen = lcore::extractDirectoryPath(directory_, filepath, len);
-        convDelimiter(directory_);
-        if(0<dlen && directory_[dlen-1] != '/'){
-            directory_[dlen] = '/';
-            directory_[dlen+1] = '\0';
-        }
+        material_ = NULL;
 
-        currentMaterialId_ = 0;
-        currentMaterial_.clear();
-
-        vertices_.clear();
-
-        while(readLine(input));
-        return true;
+        while(readLine(materialPack));
+        return materialPack.materials_.size();
     }
 
-    void LoaderObj::skip(std::ifstream& input)
+    void LoaderObj::LoaderMtl::skip()
     {
-        s32 c = input.peek();
+        s32 pos = file_.tellg();
+        s32 c = file_.get();
+
         while(isspace(c)
             || c == '\n'
             || c == '\r')
         {
-            input.get();
-            if(input.eof()
-                || input.bad())
+            if(file_.eof()
+                || !file_.good())
             {
                 return;
             }
-            c = input.peek();
+            ++pos;
+            c = file_.get();
         }
+        file_.seekg(pos, lcore::ios::beg);
     }
 
-    bool LoaderObj::getLine(std::ifstream& input)
+    bool LoaderObj::LoaderMtl::getLine()
     {
-        skip(input);
+        skip();
         line_.clear();
         
         bool comment = false;
-        s32 c = input.get();
-        while(!input.eof()
-            && input.good()
+        s32 c = file_.get();
+        while(!file_.eof()
+            && file_.good()
             && c != '\n'
             && c != '\r')
         {
             if(c == '#'){
                 comment = true;
             }else if(!comment){
-                line_.push_back(c);
+                line_.push_back((Char)c);
             }
-            c = input.get();
+            c = file_.get();
         }
         return (comment || 0<line_.size());
     }
 
-    void LoaderObj::split()
+    void LoaderObj::LoaderMtl::split()
     {
-        elems_.clear();
+        elements_.clear();
 
-        u32 i=0;
+        s32 i=0;
         while(i<line_.size()){
-            elems_.push_back(&line_[i]);
+            elements_.push_back(&line_[i]);
             for(;i<line_.size(); ++i){
                 if(isspace(line_[i])){
                     break;
@@ -165,11 +229,91 @@ namespace
         line_.push_back('\0');
     }
 
-    void LoaderObj::getFElems(f32 felems[4])
+    LoaderObj::LoaderMtl::CodeMtl LoaderObj::LoaderMtl::decodeLine()
     {
+        if(file_.eof() || !file_.good()){
+            return CodeMtl_EOF;
+        }
+
+        if(false == getLine()){
+            return CodeMtl_EOF;
+        }
+
+        split();
+
+        if(elements_.size()<=0){
+            return CodeMtl_None;
+        }
+
+        if(0 == strncmp(elements_[0], "newmtl", 6)){
+            return CodeMtl_NewMtl;
+
+        }else if(0 == strncmp(elements_[0], "map_Kd", 6)){
+            return CodeMtl_MapDiffuse;
+
+        }else if(0 == strncmp(elements_[0], "map_bump", 8)){
+            return CodeMtl_MapBump;
+
+        }else if(0 == strncmp(elements_[0], "illum", 5)){
+            return CodeMtl_Illumination;
+
+        }else if(0 == strncmp(elements_[0], "Ns", 2)){
+            return CodeMtl_SpecularExponent;
+
+        }else if(0 == strncmp(elements_[0], "Ni", 2)){
+            return CodeMtl_RefracttionIndex;
+
+        }else if(0 == strncmp(elements_[0], "Ka", 2)){
+            return CodeMtl_Ambient;
+
+        }else if(0 == strncmp(elements_[0], "Kd", 2)){
+            return CodeMtl_Diffuse;
+
+        }else if(0 == strncmp(elements_[0], "Ks", 2)){
+            return CodeMtl_Specular;
+
+        }else if(0 == strncmp(elements_[0], "Tf", 2)){
+            return CodeMtl_Transmission;
+
+        }else if(0 == strncmp(elements_[0], "Ke", 2)){
+            return CodeMtl_Emission;
+
+        }else if(0 == strncmp(elements_[0], "d", 1)){
+            return CodeMtl_Dissolve;
+
+        }
+        return CodeMtl_None;
+    }
+
+    void LoaderObj::LoaderMtl::load(f32& f)
+    {
+        if(1<elements_.size()){
+            f = static_cast<f32>( atof(elements_[1]) );
+        }else{
+            f = 0.0f;
+        }
+    }
+
+    void LoaderObj::LoaderMtl::load(lmath::Vector3& v)
+    {
+        v.zero();
         s32 numElements =  0;
-        for(s32 i=1; i<elems_.size(); ++i){
-            felems[numElements] = atof(elems_[i]);
+        for(s32 i=1; i<elements_.size(); ++i){
+            v[numElements] = static_cast<f32>( atof(elements_[i]) );
+            ++numElements;
+            if(3<=numElements){
+                break;
+            }
+        }
+    }
+
+
+    void LoaderObj::LoaderMtl::load(lmath::Vector4& v)
+    {
+        v.zero();
+        s32 numElements =  0;
+        for(s32 i=1; i<elements_.size(); ++i){
+            v[numElements] = static_cast<f32>( atof(elements_[i]) );
             ++numElements;
             if(4<=numElements){
                 break;
@@ -177,14 +321,359 @@ namespace
         }
     }
 
+    Texture LoaderObj::LoaderMtl::loadTexture(const Char* filename)
+    {
+        Texture texture;
+        lcore::strncpy(texture.name_, MaxFileNameSize, filename, lcore::strlen(filename));
+        return texture;
+    }
+
+    bool LoaderObj::LoaderMtl::readLine(MaterialPack& materialPack)
+    {
+        CodeMtl code = decodeLine();
+
+        if(CodeMtl_EOF == code){
+            return false;
+
+        }else if(CodeMtl_NewMtl == code){
+            if(1<elements_.size()){
+                s32 index = materialPack.findMaterialIndex(elements_[1]);
+                if(0<=index){
+                    material_ = &materialPack.materials_[index];
+
+                } else{
+                    WorkMaterial tmp;
+                    tmp.clear();
+                    tmp.setName(elements_[1]);
+                    materialPack.materials_.push_back(tmp);
+                    material_ = &materialPack.materials_[materialPack.materials_.size() - 1];
+                }
+            }
+            return true;
+        }
+
+        if(NULL == material_){
+            return true;
+        }
+
+        switch(code)
+        {
+        case CodeMtl_None:
+            return true;
+
+        //case CodeMtl_NewMtl:
+        //    return true;
+
+        case CodeMtl_Model:
+            return true;
+
+        case CodeMtl_Dissolve:
+            return true;
+
+        case CodeMtl_SpecularExponent:
+            {
+                f32 specularExponent = 0.0f;
+                load(specularExponent);
+                specularExponent = lcore::clamp01(specularExponent*(1.0f/255.0f));
+                f32 alpha = 1.0f - specularExponent;
+                material_->material_.specular_.w_ = alpha;
+            }
+            return true;
+
+        case CodeMtl_RefracttionIndex:
+            {
+                f32 refractiveIndex = 1.01f;
+                load(refractiveIndex);
+                material_->material_.ambient_.w_ = refractiveIndex;
+            }
+            return true;
+
+        case CodeMtl_Ambient:
+            {
+                lmath::Vector3 ambient;
+                load(ambient);
+                material_->material_.ambient_.x_ = ambient.x_;
+                material_->material_.ambient_.y_ = ambient.y_;
+                material_->material_.ambient_.z_ = ambient.z_;
+            }
+            return true;
+
+        case CodeMtl_Diffuse:
+            {
+                lmath::Vector3 diffuse;
+                load(diffuse);
+                material_->material_.diffuse_.x_ = diffuse.x_;
+                material_->material_.diffuse_.y_ = diffuse.y_;
+                material_->material_.diffuse_.z_ = diffuse.z_;
+            }
+            return true;
+
+        case CodeMtl_Specular:
+            {
+                lmath::Vector3 specular;
+                load(specular);
+                material_->material_.specular_.x_ = specular.x_;
+                material_->material_.specular_.y_ = specular.y_;
+                material_->material_.specular_.z_ = specular.z_;
+            }
+            return true;
+
+        case CodeMtl_Transmission:
+            {
+            }
+            return true;
+
+        case CodeMtl_Emission:
+            {
+            }
+            return true;
+
+        case CodeMtl_MapDiffuse:
+            {
+                if(1<elements_.size()){
+                    s32 index = materialPack.findTextureIndex(elements_[1]);
+                    if(0<=index){
+                        material_->material_.texColor_ = index;
+
+                    }else{
+                        Texture texture = loadTexture(elements_[1]);
+                        texture.type_ = TexType_Albedo;
+                        material_->material_.texColor_ = materialPack.textures_.size();
+                        materialPack.textures_.push_back(texture);
+                    }
+                }
+            }
+            return true;
+
+        case CodeMtl_MapBump:
+            {
+                //if(1<elems_.size()){
+                //    convDelimiter(elems_[1]);
+                //    loadTexture(elems_[1]);
+                //    s32 id = getTexture(elems_[1]);
+                //    material.texNormal_ = (0<=id)? static_cast<s16>(id) : -1;
+                //}
+            }
+            return true;
+
+        case CodeMtl_Illumination:
+            return true;
+
+        case CodeMtl_EOF:
+            return false;
+
+        default:
+            return false;
+        }
+    }
+
+    //------------------------------------------------------
+    //---
+    //--- LoaderObj
+    //---
+    //------------------------------------------------------
+    LoaderObj::LoaderObj(bool generateNormals)
+        :directory_(NULL)
+        ,generateNormals_(generateNormals)
+        ,lastNumTriangles_(0)
+        ,currentMaterial_(0)
+    {
+    }
+
+    LoaderObj::~LoaderObj()
+    {
+        LIME_DELETE_ARRAY(directory_);
+    }
+
+    bool LoaderObj::load(const Char* filepath)
+    {
+        LASSERT(NULL != filepath);
+        if(false == file_.open(filepath)){
+            return false;
+        }
+
+        s32 len = lcore::strlen(filepath);
+        LIME_DELETE_ARRAY(directory_);
+        directory_ = LIME_NEW Char[len + 2];
+        s32 dlen = lcore::extractDirectoryPath(directory_, filepath, len);
+        convDelimiter(directory_);
+        if(0<dlen && directory_[dlen-1] != '/'){
+            directory_[dlen] = '/';
+            directory_[dlen+1] = '\0';
+        }
+
+        lastNumTriangles_ = 0;
+
+        currentMaterial_ = 0;
+        materialPack_.materials_.clear();
+        materialPack_.textures_.clear();
+
+        positions_.clear();
+        normals_.clear();
+        texcoords_.clear();
+        vertices_.clear();
+
+        meshes_.clear();
+
+        line_.reserve(1024);
+        elements_.clear();
+
+        while(readLine());
+        file_.close();
+
+        if(materialPack_.materials_.size()<=0){
+            //マテリアルがない
+            WorkMaterial tmpMaterial;
+            tmpMaterial.clear();
+            materialPack_.materials_.push_back(tmpMaterial);
+        }
+        if(meshes_.size()<=0){
+            //メッシュがない
+            WorkMesh tmpMesh;
+            tmpMesh.geometry_ = 0;
+            tmpMesh.material_ = 0;
+            tmpMesh.indexOffset_ = 0;
+            tmpMesh.numIndices_ = 0;
+            meshes_.push_back(tmpMesh);
+        }
+        meshes_[meshes_.size()-1].numIndices_ = lastNumTriangles_ * 3;
+        lastNumTriangles_ = 0;
+
+        return true;
+    }
+
+    void LoaderObj::skip()
+    {
+        s32 pos = file_.tellg();
+        s32 c = file_.get();
+
+        while(isspace(c)
+            || c == '\n'
+            || c == '\r')
+        {
+            if(file_.eof()
+                || !file_.good())
+            {
+                return;
+            }
+            ++pos;
+            c = file_.get();
+        }
+        file_.seekg(pos, lcore::ios::beg);
+    }
+
+    bool LoaderObj::getLine()
+    {
+        skip();
+        line_.clear();
+        
+        s32 c = file_.get();
+        bool comment = false;
+        while(!file_.eof()
+            && file_.good()
+            && c != '\n'
+            && c != '\r')
+        {
+            if(c == '#'){
+                comment = true;
+            }else if(!comment){
+                line_.push_back((Char)c);
+            }
+            c = file_.get();
+        }
+        if(0!=c){
+            line_.push_back((Char)c);
+        }
+        return (comment || 0<line_.size());
+    }
+
+    void LoaderObj::split()
+    {
+        elements_.clear();
+
+        u32 i=0;
+        while(i<line_.size()){
+            elements_.push_back(&line_[i]);
+            for(;i<line_.size(); ++i){
+                if(isspace(line_[i])){
+                    break;
+                }
+            }
+            for(;i<line_.size(); ++i){
+                if(!isspace(line_[i])){
+                    break;
+                }
+                line_[i] = '\0';
+            }
+        }
+        line_.push_back('\0');
+    }
+
+    LoaderObj::Code LoaderObj::decodeLine()
+    {
+        if(file_.eof() || !file_.good()){
+            return Code_EOF;
+        }
+
+        if(false == getLine()){
+            return Code_EOF;
+        }
+
+        split();
+        if(elements_.size()<=0){
+            return Code_None;
+        }
+
+        if(0 == strncmp(elements_[0], "mtllib", 6)){
+            return Code_MtlLib;
+
+        }else if(0 == strncmp(elements_[0], "usemtl", 6)){
+            return Code_UseMtl;
+
+        }else if(0 == strncmp(elements_[0], "vn", 2)){
+            return Code_Normal;
+
+        }else if(0 == strncmp(elements_[0], "vt", 2)){
+            return Code_Texcoord;
+
+        }else if(0 == strncmp(elements_[0], "v", 1)){
+            return Code_Position;
+
+        }else if(0 == strncmp(elements_[0], "f", 1)){
+            return Code_Face;
+
+        }else if(0 == strncmp(elements_[0], "o", 1)){
+            return Code_Object;
+
+        }else if(0 == strncmp(elements_[0], "g", 1)){
+            return Code_Group;
+
+        }else if(0 == strncmp(elements_[0], "s", 1)){
+            return Code_Smooth;
+
+        }
+        return Code_None;
+    }
+
+    s32 LoaderObj::getFaceElements(f32 felems[4])
+    {
+        s32 numElements =  0;
+        for(s32 i=1; i<elements_.size(); ++i){
+            felems[numElements] = static_cast<f32>( atof(elements_[i]) );
+            ++numElements;
+            if(4<=numElements){
+                break;
+            }
+        }
+        return numElements;
+    }
+
     void LoaderObj::getFaceVertex(Char* str, Vertex& v)
     {
         v.position_ = -1;
         v.normal_ = -1;
         v.texcoord_ = -1;
-        v.material_ = currentMaterialId_;
-
-        s32* vp = reinterpret_cast<s32*>(&v);
+        v.material_ = currentMaterial_;
 
         s32 numElements = 1;
         Char* e[3] = {NULL, NULL, NULL};
@@ -205,8 +694,22 @@ namespace
             if(e[i][0] == '\0'){
                 continue;
             }
-            s32 id = atoi(e[i]) - 1;
-            vp[i] = id;
+            s32 id = atoi(e[i]);
+            if(0 == id){
+                continue;
+            }
+            switch(i)
+            {
+            case 0:
+                v.position_ = (0<id)? id-1 : (positions_.size() + id);
+                break;
+            case 1:
+                v.texcoord_ = (0<id)? id-1 : (texcoords_.size() + id);
+                break;
+            case 2:
+                v.normal_ = (0<id)? id-1 : (normals_.size() + id);
+                break;
+            }
         }
 
         if(0<=v.normal_ && 0<=v.texcoord_){
@@ -220,56 +723,11 @@ namespace
         }
     }
 
-    LoaderObj::Code LoaderObj::decodeLine(std::ifstream& input)
+    bool LoaderObj::readLine()
     {
-        if(input.eof() || input.bad()){
-            return Code_EOF;
-        }
-
-        if(false == getLine(input)){
-            return Code_EOF;
-        }
-
-        split();
-        if(elems_.size()<=0){
-            return Code_None;
-        }
-
-        if(0 == strncmp(elems_[0], "mtllib", 6)){
-            return Code_MtlLib;
-
-        }else if(0 == strncmp(elems_[0], "usemtl", 6)){
-            return Code_UseMtl;
-
-        }else if(0 == strncmp(elems_[0], "vn", 2)){
-            return Code_Normal;
-
-        }else if(0 == strncmp(elems_[0], "vt", 2)){
-            return Code_Texcoord;
-
-        }else if(0 == strncmp(elems_[0], "v", 1)){
-            return Code_Position;
-
-        }else if(0 == strncmp(elems_[0], "f", 1)){
-            return Code_Face;
-
-        }else if(0 == strncmp(elems_[0], "o", 1)){
-            return Code_Object;
-
-        }else if(0 == strncmp(elems_[0], "g", 1)){
-            return Code_Group;
-
-        }else if(0 == strncmp(elems_[0], "s", 1)){
-            return Code_Smooth;
-
-        }
-        return Code_None;
-    }
-
-    bool LoaderObj::readLine(std::ifstream& input)
-    {
-        LoaderObj::Code code = decodeLine(input);
+        LoaderObj::Code code = decodeLine();
         f32 felems[4] = {0.0f, 0.0f, 0.0f, 0.0f};
+        s32 numElements;
 
         switch(code)
         {
@@ -279,83 +737,90 @@ namespace
 
         case Code_Position:
             {
-                getFElems(felems);
+                numElements = getFaceElements(felems);
                 positions_.push_back(lmath::Vector3(felems[0], felems[1], felems[2]));
             }
             return true;
 
         case Code_Normal:
             {
-                getFElems(felems);
-                normals_.push_back(lmath::Vector3(felems[0], felems[1], felems[2]));
+                numElements = getFaceElements(felems);
+                lmath::Vector3 n(felems[0], felems[1], felems[2]);
+                n.normalizeChecked();
+                normals_.push_back(n);
             }
             return true;
 
         case Code_Texcoord:
             {
-                getFElems(felems);
+                numElements = getFaceElements(felems);
                 texcoords_.push_back(lmath::Vector2(felems[0], felems[1]));
             }
             return true;
 
         case Code_Face:
             {
-                if(elems_.size()<=3){
+                if(elements_.size()<=3){
                     return true;
                 }
 
-                VertexVector& vertices = vertices_;
-                u32 i0 = vertices.size();
+                u32 i0 = vertices_.size();
                 Vertex v;
                 for(s32 i=1; i<4; ++i){
-                    getFaceVertex(elems_[i], v);
-                    vertices.push_back(v);
+                    getFaceVertex(elements_[i], v);
+                    vertices_.push_back(v);
+                    //LASSERT(0<v.position_ && v.position_<=positions_.size());
+                    //LASSERT(0<v.normal_ && v.normal_<=normals_.size());
+                    //LASSERT(0<v.texcoord_ && v.texcoord_<=texcoords_.size());
                 }
+                //lcore::swap(vertices_[i0+1], vertices_[i0+2]);
+                ++lastNumTriangles_;
 
-                u32 i1 = vertices.size()-1;
-                for(s32 i=4; i<elems_.size(); ++i){
-                    getFaceVertex(elems_[i], v);
-                    vertices.push_back(vertices[i0]);
-                    vertices.push_back(vertices[i1]);
+                u32 i1 = vertices_.size()-1;
+                for(s32 i=4; i<elements_.size(); ++i){
+                    getFaceVertex(elements_[i], v);
+                    vertices_.push_back(vertices_[i0]);
+                    vertices_.push_back(vertices_[i1]);
 
-                    i1 = vertices.size();
-                    vertices.push_back(v);
+                    i1 = vertices_.size();
+                    vertices_.push_back(v);
+                    ++lastNumTriangles_;
                 }
             }
             return true;
 
         case Code_MtlLib:
             LOG("Code_MtlLib");
-            LOGELEMENTS(elems_);
-            if(1<elems_.size()){
-                loadMtl(elems_[1]);
+            LOGELEMENTS(elements_);
+            if(1<elements_.size()){
+                LoaderMtl loaderMtl;
+                loaderMtl.loadFromFile(materialPack_, directory_, elements_[1]);
             }
             return true;
 
         case Code_UseMtl:
             LOG("Code_UseMtl");
-            LOGELEMENTS(elems_);
-            if(1<elems_.size()){
-                currentMaterial_ = elems_[1];
-                currentMaterialId_ = getMaterial(currentMaterial_);
+            LOGELEMENTS(elements_);
+            if(1<elements_.size()){
+                currentMaterial_ = materialPack_.findMaterialIndex(elements_[1]);
             }
             return true;
 
         case Code_Object:
             LOG("Code_Object");
-            LOGELEMENTS(elems_);
+            LOGELEMENTS(elements_);
             return true;
         case Code_Group:
             LOG("Code_Group");
-            LOGELEMENTS(elems_);
+            LOGELEMENTS(elements_);
             return true;
         case Code_Smooth:
             LOG("Code_Smooth");
-            LOGELEMENTS(elems_);
+            LOGELEMENTS(elements_);
             return true;
         case Code_Comment:
             LOG("Code_Comment");
-            LOGELEMENTS(elems_);
+            LOGELEMENTS(elements_);
             return true;
         case Code_EOF:
             LOG("Code_EOF");
@@ -366,279 +831,19 @@ namespace
         };
     }
 
-    void LoaderObj::getInt(s32& dst)
+    void LoaderObj::pushMesh()
     {
-        if(1<elems_.size()){
-            dst = atoi(elems_[1]);
-        }else{
-            dst = 0;
+        if(0<meshes_.size()){
+            WorkMesh& mesh = meshes_[meshes_.size()-1];
+            mesh.numIndices_ = lastNumTriangles_ * 3;
+            lastNumTriangles_ = 0;
         }
-    }
-
-    void LoaderObj::getFloat(f32& dst)
-    {
-        if(1<elems_.size()){
-            dst = atof(elems_[1]);
-        }else{
-            dst = 0.0f;
-        }
-    }
-
-    void LoaderObj::getFloat3(lmath::Vector3& dst)
-    {
-        dst.zero();
-        s32 numElements =  0;
-        for(s32 i=1; i<elems_.size(); ++i){
-            dst[numElements] = atof(elems_[i]);
-            ++numElements;
-            if(3<=numElements){
-                break;
-            }
-        }
-    }
-
-    s32 LoaderObj::addMaterial(const std::string& name)
-    {
-        NameToMaterialMap::iterator itr = materials_.find(name);
-        if(materials_.end() != itr){
-            return itr->second;
-        }
-
-        Material material;
-        material.diffuse_.zero();
-        material.specular_.zero();
-        material.shadow_.zero();
-        material.shadow_.w_ = 1.0f;
-        material.flags_ = Material::Flag_CastShadow | Material::Flag_RecieveShadow;
-        material.texColor_ = -1;
-        material.texNormal_ = -1;
-
-        s32 id = static_cast<s32>(materialVector_.size());
-        materialVector_.push_back(material);
-        materials_[name] = id;
-        return id;
-    }
-
-    s32 LoaderObj::getMaterial(const std::string& name)
-    {
-        return addMaterial(name);
-    }
-
-    void LoaderObj::loadTexture(const Char* name)
-    {
-        NameToTextureMap::iterator itr = textures_.find(name);
-        if(textures_.end() != itr){
-            return;
-        }
-
-        LASSERT(NULL != name);
-        s32 len = lcore::strlen(name);
-        len = (MaxFileNameSize<=len)? MaxFileNameSize-1 : len;
-        Texture texture;
-        lcore::memcpy(texture.name_, name, len);
-        texture.name_[len] = '\0';
-
-        s32 id = static_cast<s32>(textureVector_.size());
-        textureVector_.push_back(texture);
-        textures_[std::string(name)] = id;
-
-    }
-
-    s32 LoaderObj::getTexture(const Char* name)
-    {
-        LASSERT(NULL != name);
-        NameToTextureMap::iterator itr = textures_.find(name);
-        if(textures_.end() != itr){
-            return itr->second;
-        }
-        return -1;
-    }
-
-    bool LoaderObj::loadMtl(const Char* filepath)
-    {
-        std::string path;
-        if(NULL != directory_){
-            path.append(directory_);
-        }
-        path.append(filepath);
-        std::ifstream input(path.c_str(), std::ios::in|std::ios::binary);
-        if(false == input.is_open()){
-            return false;
-        }
-
-        while(readLineMtl(input));
-        return true;
-    }
-
-    LoaderObj::CodeMtl LoaderObj::decodeLineMtl(std::ifstream& input)
-    {
-        if(input.eof() || input.bad()){
-            return CodeMtl_EOF;
-        }
-
-        if(false == getLine(input)){
-            return CodeMtl_EOF;
-        }
-
-        split();
-
-        if(elems_.size()<=0){
-            return CodeMtl_None;
-        }
-
-        if(0 == strncmp(elems_[0], "newmtl", 6)){
-            return CodeMtl_NewMtl;
-
-        }else if(0 == strncmp(elems_[0], "map_Kd", 6)){
-            return CodeMtl_MapDiffuse;
-
-        }else if(0 == strncmp(elems_[0], "map_bump", 8)){
-            return CodeMtl_MapBump;
-
-        }else if(0 == strncmp(elems_[0], "illum", 5)){
-            return CodeMtl_Illumination;
-
-        }else if(0 == strncmp(elems_[0], "Ns", 2)){
-            return CodeMtl_SpecularExponent;
-
-        }else if(0 == strncmp(elems_[0], "Ni", 2)){
-            return CodeMtl_RefracttionIndex;
-
-        }else if(0 == strncmp(elems_[0], "Ka", 2)){
-            return CodeMtl_Ambient;
-
-        }else if(0 == strncmp(elems_[0], "Kd", 2)){
-            return CodeMtl_Diffuse;
-
-        }else if(0 == strncmp(elems_[0], "Ks", 2)){
-            return CodeMtl_Specular;
-
-        }else if(0 == strncmp(elems_[0], "Tf", 2)){
-            return CodeMtl_Transmission;
-
-        }else if(0 == strncmp(elems_[0], "d", 1)){
-            return CodeMtl_Dissolve;
-
-        }
-        return CodeMtl_None;
-    }
-
-    bool LoaderObj::readLineMtl(std::ifstream& input)
-    {
-        LoaderObj::CodeMtl code = decodeLineMtl(input);
-
-        if(CodeMtl_EOF == code){
-            return false;
-
-        }else if(CodeMtl_NewMtl == code){
-            currentMaterial_.clear();
-            if(1<elems_.size()){
-                currentMaterial_ = elems_[1];
-
-            }
-        }
-
-        if(currentMaterial_.size()<=0){
-            return true;
-        }
-
-        Material& material = materialVector_[ getMaterial(currentMaterial_) ];
-
-        switch(code)
-        {
-        case CodeMtl_None:
-            return true;
-
-        case CodeMtl_NewMtl:
-            return true;
-
-        case CodeMtl_Model:
-            return true;
-
-        case CodeMtl_Dissolve:
-            getFloat(material.diffuse_.w_);
-            return true;
-
-        case CodeMtl_SpecularExponent:
-            {
-                getFloat(material.specular_.w_);
-            }
-            return true;
-
-        case CodeMtl_RefracttionIndex:
-            {
-                getFloat(material.shadow_.w_);
-                material.ambient_.w_ = lcore::calcFresnelTerm(material.shadow_.w_);
-                material.flags_ |= Material::Flag_RefractiveIndex;
-            }
-            return true;
-
-        case CodeMtl_Ambient:
-            {
-                lmath::Vector3 ambient;
-                getFloat3(ambient);
-                material.ambient_.x_ = ambient.x_;
-                material.ambient_.y_ = ambient.y_;
-                material.ambient_.z_ = ambient.z_;
-            }
-            return true;
-
-        case CodeMtl_Diffuse:
-            {
-                lmath::Vector3 diffuse;
-                getFloat3(diffuse);
-                material.diffuse_.x_ = diffuse.x_;
-                material.diffuse_.y_ = diffuse.y_;
-                material.diffuse_.z_ = diffuse.z_;
-            }
-            return true;
-
-        case CodeMtl_Specular:
-            {
-                lmath::Vector3 specular;
-                getFloat3(specular);
-                material.specular_.x_ = specular.x_;
-                material.specular_.y_ = specular.y_;
-                material.specular_.z_ = specular.z_;
-            }
-            return true;
-
-        case CodeMtl_Transmission:
-            {
-            }
-            return true;
-
-        case CodeMtl_MapDiffuse:
-            {
-                if(1<elems_.size()){
-                    convDelimiter(elems_[1]);
-                    loadTexture(elems_[1]);
-                    s32 id = getTexture(elems_[1]);
-                    material.texColor_ = (0<=id)? static_cast<s16>(id) : -1;
-                }
-            }
-            return true;
-
-        case CodeMtl_MapBump:
-            {
-                if(1<elems_.size()){
-                    convDelimiter(elems_[1]);
-                    loadTexture(elems_[1]);
-                    s32 id = getTexture(elems_[1]);
-                    material.texNormal_ = (0<=id)? static_cast<s16>(id) : -1;
-                }
-            }
-            return true;
-
-        case CodeMtl_Illumination:
-            return true;
-
-        case CodeMtl_EOF:
-            return false;
-
-        default:
-            return false;
-        }
+        WorkMesh tmp;
+        tmp.geometry_ = 0;
+        tmp.material_ = currentMaterial_;
+        tmp.indexOffset_ = vertices_.size();
+        tmp.numIndices_ = 0;
+        meshes_.push_back(tmp);
     }
 
     void LoaderObj::setVertexProperty(Geometry& geometry)
@@ -693,7 +898,7 @@ namespace
         }
 
         LASSERT(NULL != filepath);
-        lcore::ofstream file(filepath, lcore::ios::binary|lcore::ios::out);
+        lcore::ofstream file(filepath);
         if(!file.is_open()){
             return;
         }
@@ -705,13 +910,13 @@ namespace
         std::vector< std::vector<S32Map> > indexToIndex[VType_Num];
 
         for(s32 i=0; i<VType_Num; ++i){
-            tmpPositions[i].resize( materialVector_.size() );
-            tmpNormals[i].resize( materialVector_.size() );
-            tmpTexcoords[i].resize( materialVector_.size() );
-            tmpIndices[i].resize( materialVector_.size() );
-            indexToIndex[i].resize( materialVector_.size() );
+            tmpPositions[i].resize( materialPack_.materials_.size() );
+            tmpNormals[i].resize( materialPack_.materials_.size() );
+            tmpTexcoords[i].resize( materialPack_.materials_.size() );
+            tmpIndices[i].resize( materialPack_.materials_.size() );
+            indexToIndex[i].resize( materialPack_.materials_.size() );
 
-            for(u32 j=0; j<materialVector_.size(); ++j){
+            for(u32 j=0; j<materialPack_.materials_.size(); ++j){
                 tmpPositions[i][j].push_back(Vector3Vector());
                 tmpNormals[i][j].push_back(U16Vector4Vector());
                 tmpTexcoords[i][j].push_back(U16Vector2Vector());
@@ -776,7 +981,7 @@ namespace
         }
 
         std::vector<Geometry> geometries;
-        std::vector<Mesh> meshes;
+        std::vector<lload::Mesh> meshes;
         for(s32 i=0; i<VType_Num; ++i){
             Geometry geometry;
             switch(i)
@@ -802,7 +1007,7 @@ namespace
                 break;
             };
 
-            for(u32 j=0; j<materialVector_.size(); ++j){
+            for(u32 j=0; j<materialPack_.materials_.size(); ++j){
 
                 for(u32 k=0; k<tmpPositions[i][j].size(); ++k){
                     if(tmpIndices[i][j][k].size()<=0){
@@ -813,12 +1018,12 @@ namespace
                     U16Vector2Vector& tecoords = tmpTexcoords[i][j][k];
                     S32Vector& indices = tmpIndices[i][j][k];
 
-                    Mesh mesh;
+                    lload::Mesh mesh;
                     mesh.geometry_ = static_cast<s16>(geometries.size());
                     mesh.material_ = static_cast<s32>(j);
                     mesh.indexOffset_ = 0;
                     mesh.numIndices_ = indices.size();
-                    mesh.sphere_.calcMiniSphere(&positions[0], positions.size());
+                    mesh.sphere_ = lmath::Sphere::calcMiniSphere(&positions[0], positions.size());
                     meshes.push_back(mesh);
 
                     geometry.numVertices_ = positions.size();
@@ -840,13 +1045,13 @@ namespace
         header.elems_[Elem_Geometry].offset_ = offset;
         offset += sizeof(Geometry) * geometries.size();
 
-        header.elems_[Elem_Material].number_ = materials_.size();
+        header.elems_[Elem_Material].number_ = materialPack_.materials_.size();
         header.elems_[Elem_Material].offset_ = offset;
-        offset += sizeof(Material) * materials_.size();
+        offset += sizeof(Material) * materialPack_.materials_.size();
 
         header.elems_[Elem_Mesh].number_ = meshes.size();
         header.elems_[Elem_Mesh].offset_ = offset;
-        offset += sizeof(Mesh) * meshes.size();
+        offset += sizeof(lload::Mesh) * meshes.size();
 
         header.elems_[Elem_Node].number_ = 1;
         header.elems_[Elem_Node].offset_ = offset;
@@ -856,9 +1061,9 @@ namespace
         header.elems_[Elem_Joint].offset_ = offset;
         offset += sizeof(Joint) * 0;
 
-        header.elems_[Elem_Texture].number_ = textureVector_.size();
+        header.elems_[Elem_Texture].number_ = materialPack_.textures_.size();
         header.elems_[Elem_Texture].offset_ = offset;
-        offset += sizeof(Texture) * textureVector_.size();
+        offset += sizeof(Texture) * materialPack_.textures_.size();
 
         //-------------------------------------------
         lcore::io::write(file, header);
@@ -889,7 +1094,7 @@ namespace
                 break;
             };
 
-            for(u32 j=0; j<materialVector_.size(); ++j){
+            for(u32 j=0; j<materialPack_.materials_.size(); ++j){
 
                 for(u32 k=0; k<tmpPositions[i][j].size(); ++k){
                     if(tmpIndices[i][j][k].size()<=0){
@@ -944,8 +1149,8 @@ namespace
         }
 
 
-        for(u32 i=0; i<materialVector_.size(); ++i){
-            lcore::io::write(file, materialVector_[i]);
+        for(u32 i=0; i<materialPack_.materials_.size(); ++i){
+            lcore::io::write(file, materialPack_.materials_[i].material_);
         }
 
         for(u32 i=0; i<meshes.size(); ++i){
@@ -962,8 +1167,8 @@ namespace
         lcore::io::write(file, node);
 
 
-        for(u32 i=0; i<textureVector_.size(); ++i){
-            lcore::io::write(file, textureVector_[i]);
+        for(u32 i=0; i<materialPack_.textures_.size(); ++i){
+            lcore::io::write(file, materialPack_.textures_[i]);
         }
 
         file.close();

@@ -18,7 +18,7 @@ namespace lrender
         virtual void requestSamples(Sampler* sampler);
 
         virtual Color3 Li(const Ray& ray, IntegratorQuery& query);
-        virtual Color3 E(const ShadingGeometry& shadingGeometry, IntegratorQuery& query);
+        virtual Color4 E(IntegratorQuery& query);
     protected:
         PathTracer(const PathTracer&);
         PathTracer& operator=(const PathTracer&);

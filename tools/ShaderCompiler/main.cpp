@@ -269,6 +269,12 @@ int main(int argc, char** argv)
             lgraphics::Graphics::terminate();
             window.terminate();
             return -1;
+
+        }else{
+            if(error.valid()){
+                const lcore::Char* msg = (const lcore::Char*)error.getPointer();
+                std::cerr << msg;
+            }
         }
 
         lgraphics::ShaderCompresser compresser;

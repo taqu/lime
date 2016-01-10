@@ -16,7 +16,7 @@ namespace lmath
         static const u32 Align = 16;
         static const s32 MaxNumElements = 16;
         static const s32 MaxLevels = 8;
-        static const u16 Invalid = -1;
+        static const u16 Invalid = 0xFFFFU;
         static const u16 MaxNum = Invalid - 1;
 
         struct Vertex

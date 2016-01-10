@@ -57,6 +57,11 @@ namespace lrender
         specularSamplingWeight_ = 0.0f;
     }
 
+    Color3 Microfacet::albedo(const Intersection& intersection) const
+    {
+        return diffuseScale_->sample(intersection);
+    }
+
     Color3 Microfacet::f(const Vector3& wo, const Vector3& wi, const Intersection& intersection) const
     {
         f32 cosThetaO = LocalCoordinate::cosTheta(wo);
@@ -82,7 +87,6 @@ namespace lrender
 
         //f32 trans = transmittance_.evaluate(wo, wi, fresnel_, distribution_.getAlpha());
         Color3 diffReflectance = diffuseScale_->sample(intersection) * INV_PI;
-
         return (specReflectance + diffReflectance);
     }
 
@@ -192,7 +196,7 @@ namespace lrender
         return 0.0f;
     }
 
-    Color3 Microfacet::f_diffuse(const Vector3& wo, const Vector3& wi, const Intersection& intersection) const
+    Color3 Microfacet::f_diffuse(const Vector3& /*wo*/, const Vector3& /*wi*/, const Intersection& intersection) const
     {
         return diffuseScale_->sample(intersection) * INV_PI;
     }

@@ -39,10 +39,14 @@
 
 #include "clibrary.h"
 
+#if defined(_DEBUG) && !defined(ANDROID)
+#define LCORE_DEBUG_MEMORY_INFO
+#endif
+
 namespace
 {
 
-#if defined(_DEBUG) && !defined(ANDROID)
+#ifdef LCORE_DEBUG_MEMORY_INFO
     static const lcore::s32 DebugInfoMemorySize = 1024*1024;
     lcore::MemorySpace debugInfoMemorySpace_;
 
@@ -75,11 +79,15 @@ namespace
             MemoryInfo* prev_;
             MemoryInfo* next_;
             void* memory_;
+            lcore::u32 id_;
             lcore::s32 line_;
             lcore::Char file_[DebugInfoFileNameLength+1];
         };
 
         DebugMemory()
+            :id_(0)
+            ,breakAtMalloc_(false)
+            ,breakMallocId_(0)
         {
             memoryInfoTop_.reset();
         }
@@ -92,10 +100,15 @@ namespace
         void popMemoryInfo(void* ptr);
 
         void print();
+        void setMallocBreak(lcore::u32 id);
 
         lcore::CriticalSection debugCS_;
 
+        lcore::u32 id_;
         MemoryInfo memoryInfoTop_;
+
+        bool breakAtMalloc_;
+        lcore::u32 breakMallocId_;
     };
 
     void DebugMemory::pushMemoryInfo(void* ptr, const lcore::Char* file, lcore::s32 line)
@@ -105,9 +118,17 @@ namespace
             return;
         }
 
+        if(breakAtMalloc_ && breakMallocId_ == id_){
+            breakAtMalloc_ = false;
+#ifdef LCORE_DEBUG_MEMORY_BREAK
+            _CrtDbgBreak();
+#endif
+        }
+
         MemoryInfo* info = (MemoryInfo*)debugInfoMemorySpace_.allocate(sizeof(MemoryInfo));
         info->reset();
         info->memory_ = ptr;
+        info->id_ = id_++;
         info->line_ = line;
         info->file_[0] = '\0';
 
@@ -161,11 +182,17 @@ namespace
 
         MemoryInfo* info = memoryInfoTop_.next_;
         while(info != &memoryInfoTop_){
-            lcore::Log("%s (%d)", info->file_, info->line_);
+            lcore::Log("[%d] %s (%d)", info->id_, info->file_, info->line_);
             info = info->next_;
         }
 
         lcore::Log("-------------------");
+    }
+
+    void DebugMemory::setMallocBreak(lcore::u32 id)
+    {
+        breakMallocId_ = id;
+        breakAtMalloc_ = true;
     }
 
     DebugMemory* debugMemory_ = NULL;
@@ -192,7 +219,7 @@ void* lcore_malloc(std::size_t size, std::size_t alignment)
 
 void lcore_free(void* ptr)
 {
-#if defined(_DEBUG) && !defined(ANDROID)
+#ifdef LCORE_DEBUG_MEMORY_INFO
     if(NULL != debugMemory_){
         debugMemory_->popMemoryInfo(ptr);
     }
@@ -206,7 +233,7 @@ void lcore_free(void* ptr)
 
 void lcore_free(void* ptr, std::size_t /*alignment*/)
 {
-#if defined(_DEBUG) && !defined(ANDROID)
+#ifdef LCORE_DEBUG_MEMORY_INFO
     if(NULL != debugMemory_){
         debugMemory_->popMemoryInfo(ptr);
     }
@@ -226,7 +253,7 @@ void* lcore_malloc(std::size_t size, const char* file, int line)
     void* ptr = dlmalloc(size);
 #endif
 
-#if defined(_DEBUG) && !defined(ANDROID)
+#ifdef LCORE_DEBUG_MEMORY_INFO
     //lcore::Log("[0x%X] size:%d, file:%s (%d)",(uintptr_t)ptr, size, file, line);
     if(NULL != debugMemory_){
         debugMemory_->pushMemoryInfo(ptr, file, line);
@@ -243,7 +270,7 @@ void* lcore_malloc(std::size_t size, std::size_t alignment, const char* file, in
     void* ptr = dlmemalign(alignment, size);
 #endif
 
-#if defined(_DEBUG) && !defined(ANDROID)
+#ifdef LCORE_DEBUG_MEMORY_INFO
     if(NULL != debugMemory_){
         debugMemory_->pushMemoryInfo(ptr, file, line);
     }
@@ -251,6 +278,24 @@ void* lcore_malloc(std::size_t size, std::size_t alignment, const char* file, in
     return ptr;
 }
 
+void* lcore_realloc(void* ptr, std::size_t size)
+{
+#ifdef ANDROID
+    ptr = realloc(ptr, size);
+#else
+    ptr = dlrealloc(ptr, size);
+#endif
+    return ptr;
+}
+
+#ifdef LCORE_DEBUG_MEMORY_BREAK
+void lcore_setMallocBreak(lcore::u32 id)
+{
+    if(NULL != debugMemory_){
+        debugMemory_->setMallocBreak(id);
+    }
+}
+#endif
 
 namespace lcore
 {
@@ -340,6 +385,29 @@ namespace
             val -= total;
         }
         return val;
+    }
+
+    s32 roundUpPow2(s32 x)
+    {
+        --x;
+        x |= (x>>1);
+        x |= (x>>2);
+        x |= (x>>4);
+        x |= (x>>8);
+        x |= (x>>16);
+        return ++x;
+    }
+
+    s64 roundUpPow2(s64 x)
+    {
+         --x;
+        x |= (x>>1);
+        x |= (x>>2);
+        x |= (x>>4);
+        x |= (x>>8);
+        x |= (x>>16);
+        x |= (x>>32);
+        return ++x;
     }
 
     u32 roundUpPow2(u32 x)

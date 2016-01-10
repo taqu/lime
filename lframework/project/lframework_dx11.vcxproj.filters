@@ -415,9 +415,6 @@
     <ClInclude Include="..\scene\collide\CollideManager.h">
       <Filter>scene\collide</Filter>
     </ClInclude>
-    <ClInclude Include="..\scene\collide\Collider.h">
-      <Filter>scene\collide</Filter>
-    </ClInclude>
     <ClInclude Include="..\scene\render\Texture.h">
       <Filter>scene\render</Filter>
     </ClInclude>
@@ -429,6 +426,12 @@
     </ClInclude>
     <ClInclude Include="..\pack\lpacktree.h">
       <Filter>pack</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scene\collide\Collider.h">
+      <Filter>scene\collide</Filter>
+    </ClInclude>
+    <ClInclude Include="..\scene\Collidable.h">
+      <Filter>scene</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

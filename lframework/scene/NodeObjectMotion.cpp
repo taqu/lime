@@ -22,19 +22,14 @@
 
 namespace lscene
 {
-    NodeObjectMotion::NodeObjectMotion(const Char* name)
-        :NodeObject(name)
+    NodeObjectMotion::NodeObjectMotion(const Char* name, u16 group, u16 type)
+        :NodeObject(name, group, type)
     {
         prevMatrix_.identity();
     }
 
     NodeObjectMotion::~NodeObjectMotion()
     {
-    }
-
-    s32 NodeObjectMotion::getType() const
-    {
-        return NodeType_ObjectMotion;
     }
 
     void NodeObjectMotion::update()

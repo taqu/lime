@@ -9,7 +9,6 @@
 #include "sampler/Sampler.h"
 #include "scene/Scene.h"
 #include "integrator/Integrator.h"
-#include "core/ShadingGeometry.h"
 #include "image/ImageProcessing.h"
 
 namespace lrender
@@ -53,21 +52,17 @@ namespace lrender
         f32 invWidth = 1.0f/image_->getWidth();
         f32 invHeight = 1.0f/image_->getHeight();
 
-        ShadingGeometry shadingGeometry;
         Vector2 texcoord;
         for(s32 y=0; y<image_->getHeight(); ++y){
             for(s32 x=0; x<image_->getWidth(); ++x){
                 texcoord.x_ = (0.5f+x)*invWidth;
                 texcoord.y_ = (0.5f+y)*invHeight;
-                if(!testTexcoordInPrimitive(shadingGeometry, shapes, texcoord)){
+                if(!testTexcoordInPrimitive(integratorQuery.intersection_, shapes, texcoord)){
                     continue;
                 }
 
                 sampler_->generate();
-                Color3 Li = integrator_->E(shadingGeometry, integratorQuery);
-                //Color3 Li = Color3(mapperSample.b0_, mapperSample.b1_, mapperSample.b2_);
-                //Color3 Li = Color3(lcore::absolute(sg.shadingNormal_.x_), lcore::absolute(sg.shadingNormal_.y_), lcore::absolute(sg.shadingNormal_.z_));
-                //Color3 Li = Color3(shadingGeometry.uv_.x_, shadingGeometry.uv_.y_, 0.0f);
+                Color4 Li = integrator_->E(integratorQuery);
                 image_->set(Li[0], Li[1], Li[2], 1.0f, x, image_->getHeight()-y-1);
             }
         }
@@ -80,7 +75,7 @@ namespace lrender
         image_->swap(image);
     }
 
-    bool RenderMapBruteForceQuery::testTexcoordInPrimitive(ShadingGeometry& shadingGeometry, Shape::ShapeVector& shapes, const Vector2& p)
+    bool RenderMapBruteForceQuery::testTexcoordInPrimitive(Intersection& intersection, Shape::ShapeVector& shapes, const Vector2& p)
     {
 #if 1
         MidBVH2D::HitRecord hitRecord;
@@ -88,7 +83,7 @@ namespace lrender
         if(accelerator_.intersect(hitRecord, p)){
             PrimitiveSample primitiveSample;
             hitRecord.shape_->getPrimitive(primitiveSample, hitRecord.primitive_);
-            shadingGeometry = ShadingGeometry(primitiveSample, hitRecord.b0_, hitRecord.b1_, hitRecord.b2_);
+            intersection.create(hitRecord.shape_, hitRecord.primitive_, primitiveSample, hitRecord.b0_, hitRecord.b1_, hitRecord.b2_);
             return true;
         }
 #else

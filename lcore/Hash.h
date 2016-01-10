@@ -121,15 +121,6 @@ HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(double)
         }
     };
 
-    //template<>
-    //struct hasher<std::string>
-    //{
-    //    inline static size_t calc(const std::string& t)
-    //    {
-    //        return calc_hash_string(reinterpret_cast<const u8*>(t.c_str()));
-    //    }
-    //};
-
     namespace hash_detail
     {
         template<class T>
@@ -164,52 +155,53 @@ HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(double)
             }
         };
 
-        //template<typename T> struct PrimeList
-        //{
-        //    static size_t const value_[];
-        //    static ptrdiff_t const length_;
-        //};
+        template<typename T> struct PrimeList
+        {
+            static T const value_[];
+            static T const length_;
+        };
+
+        template<typename T>
+        T const PrimeList<T>::value_[] =
+        {
+            5ul, 11ul, 17ul, 29ul, 37ul, 53ul, 67ul, 79ul,
+            97ul, 131ul, 193ul, 257ul, 389ul, 521ul, 769ul,
+            1031ul, 1543ul, 2053ul, 3079ul, 6151ul, 12289ul, 24593ul,
+            49157ul, 98317ul, 196613ul, 393241ul, 786433ul,
+            1572869ul, 3145739ul, 6291469ul, 12582917ul, 25165843ul,
+            50331653ul, 100663319ul, 201326611ul, 402653189ul, 805306457ul,
+            1610612741ul, 3221225473ul, 4294967291ul,
+        };
+
+        template<typename T>
+        T const PrimeList<T>::length_ = 40;
+
+        typedef PrimeList<u32> prime_list;
 
 
-        //template<typename T>
-        //size_t const PrimeList<T>::value_[] =
-        //{
-        //    5ul, 11ul, 17ul, 29ul, 37ul, 53ul, 67ul, 79ul,
-        //    97ul, 131ul, 193ul, 257ul, 389ul, 521ul, 769ul,
-        //    1031ul, 1543ul, 2053ul, 3079ul, 6151ul, 12289ul, 24593ul,
-        //    49157ul, 98317ul, 196613ul, 393241ul, 786433ul,
-        //    1572869ul, 3145739ul, 6291469ul, 12582917ul, 25165843ul,
-        //    50331653ul, 100663319ul, 201326611ul, 402653189ul, 805306457ul,
-        //    1610612741ul, 3221225473ul, 4294967291ul,
-        //};
+        template<typename T>
+        inline T next_prime(T n)
+        {
+            const T * const prime_list_begin = PrimeList<T>::value_;
+            const T * const prime_list_end = prime_list_begin + PrimeList<T>::length_;
+            const T *bound = lower_bound(prime_list_begin, prime_list_end, n);
+            if(bound == prime_list_end){
+                --bound;
+            }
+            return *bound;
+        }
 
-        //template<typename T>
-        //ptrdiff_t const PrimeList<T>::length_ = 40;
-
-        //typedef PrimeList<size_t> prime_list;
-
-
-        //inline size_t next_prime(size_t n)
-        //{
-        //    const size_t * const prime_list_begin = prime_list::value_;
-        //    const size_t * const prime_list_end = prime_list_begin + prime_list::length_;
-        //    const size_t *bound = lower_bound(prime_list_begin, prime_list_end, n);
-        //    if(bound == prime_list_end){
-        //        --bound;
-        //    }
-        //    return *bound;
-        //}
-
-        //inline size_t prev_prime(size_t n)
-        //{
-        //    const size_t * const prime_list_begin = prime_list::value_;
-        //    const size_t * const prime_list_end = prime_list_begin + prime_list::length_;
-        //    const size_t *bound = upper_bound(prime_list_begin, prime_list_end, n);
-        //    if(bound == prime_list_begin){
-        //        --bound;
-        //    }
-        //    return *bound;
-        //}
+        template<typename T>
+        inline T prev_prime(T n)
+        {
+            const T * const prime_list_begin = PrimeList<T>::value_;
+            const T * const prime_list_end = prime_list_begin + PrimeList<T>::length_;
+            const T *bound = upper_bound(prime_list_begin, prime_list_end, n);
+            if(bound == prime_list_begin){
+                --bound;
+            }
+            return *bound;
+        }
 
         //------------------------------------------------------
         /// newによるメモリアロケータ
@@ -269,7 +261,7 @@ HASH_TYPE_TRAITS_PRIMITIVE_CREATOR(double)
             inline static void destruct(pointer ptr)
             {
                 LASSERT(NULL != ptr);
-                //*ptr;
+                *ptr;
                 ptr->~T();
             }
         };

@@ -22,8 +22,8 @@
 
 namespace lscene
 {
-    NodeObject::NodeObject(const Char* name)
-        :NodeTransform(name)
+    NodeObject::NodeObject(const Char* name, u16 group, u16 type)
+        :NodeTransform(name, group, type)
         ,object_(NULL)
     {
     }
@@ -31,11 +31,6 @@ namespace lscene
     NodeObject::~NodeObject()
     {
         LSCENE_RELEASE(object_);
-    }
-
-    s32 NodeObject::getType() const
-    {
-        return NodeType_Object;
     }
 
     lrender::Object* NodeObject::getObject()

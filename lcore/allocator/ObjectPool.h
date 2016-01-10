@@ -31,7 +31,7 @@ namespace lcore
         ObjectPool();
         ~ObjectPool();
 
-        void initialize(u32 pageSize, initializer_type initializer);
+        void initialize(u32 pageSize, initializer_type initializer = initializer_type());
         void terminate();
 
         value_type* pop();
@@ -81,7 +81,6 @@ namespace lcore
     {
         LASSERT(sizeof(PageEntry)*2 <= pageSize);
         LASSERT(NULL == page_);
-
         pageSize_ = pageSize;
         initializer_ = initializer;
     }
@@ -96,7 +95,7 @@ namespace lcore
 
         while(NULL != page_){
             PageEntry* next = page_->next_;
-            allocator_type::free_(page_);
+            allocator_type::free(page_);
             page_ = next;
         }
     }
@@ -134,7 +133,7 @@ namespace lcore
     template<class T, typename Allocator, typename Initializer>
     void ObjectPool<T, Allocator, Initializer>::createEntries()
     {
-        PageEntry* page = (PageEntry*)allocator_type::malloc_(pageSize_);
+        PageEntry* page = (PageEntry*)allocator_type::malloc(pageSize_);
         s32 numEntries = (pageSize_-sizeof(PageEntry))/sizeof(PageEntry);
 
         value_type* ptr = NULL;

@@ -171,7 +171,7 @@ namespace io
     //マジックナンバー
     const u16 IOBMP::BMP_MAGIC = 'MB';
 
-    bool IOBMP::read(lcore::istream& is, u8* buffer, u32& width, u32& height, DataFormat& format, bool transpose)
+    bool IOBMP::read(lcore::istream& is, u8* buffer, u32& width, u32& height, DataFormat& format, bool sRGB, bool transpose)
     {
         s32 startPos = is.tellg();
 
@@ -201,7 +201,7 @@ namespace io
         height = static_cast<u32>(header.height_);
 
 
-        format = Data_R8G8B8A8_UNorm;
+        format = (sRGB)? Data_R8G8B8A8_UNorm_SRGB : Data_R8G8B8A8_UNorm;
         if(NULL == buffer){
             is.seekg(startPos, lcore::ios::beg); //ファイルポインタを元の位置に戻す
             return true;
@@ -242,9 +242,10 @@ namespace io
         CPUAccessFlag access,
         ResourceMisc misc,
         u32& width, u32& height, DataFormat& format,
+        bool sRGB, 
         bool transpose)
     {
-        if(false == read(is, NULL, width, height, format, transpose)){
+        if(false == read(is, NULL, width, height, format, sRGB, transpose)){
             return false;
         }
 
@@ -252,7 +253,7 @@ namespace io
         u32 size = rowBytes * height;
         u8* buffer = LIME_NEW u8[size];
 
-        if(false == read(is, buffer, width, height, format, transpose)){
+        if(false == read(is, buffer, width, height, format, sRGB, transpose)){
             LIME_DELETE_ARRAY(buffer);
             return false;
         }

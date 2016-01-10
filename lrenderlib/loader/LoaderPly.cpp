@@ -201,12 +201,14 @@ namespace
         Mesh* mesh =  LIME_NEW Mesh();
 
         BufferVector2 uvs;
+        BufferVector4 colors;
         Mesh::create(*mesh,
             bbox.bmin_,
             bbox.bmax_,
             points,
             normals,
             uvs,
+            colors,
             triangles);
         shapes.push_back(Shape::pointer(mesh));
         return 1;

@@ -36,7 +36,7 @@ namespace mixin
     class NodeModule : public Base
     {
     public:
-        typedef lscene::vector_arena<Module*, 2> ModuleVector;
+        typedef lscene::vector_arena<Module*> ModuleVector;
 
         explicit NodeModule(const Char* name = NULL);
         virtual ~NodeModule();

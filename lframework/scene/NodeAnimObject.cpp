@@ -22,8 +22,8 @@
 
 namespace lscene
 {
-    NodeAnimObject::NodeAnimObject(const Char* name)
-        :NodeTransform(name)
+    NodeAnimObject::NodeAnimObject(const Char* name, u16 group, u16 type)
+        :NodeTransform(name, group, type)
         ,object_(NULL)
         ,numSkinningMatrices_(0)
         ,skinningMatrices_(NULL)
@@ -34,11 +34,6 @@ namespace lscene
     {
         releaseMatrices();
         LSCENE_RELEASE(object_);
-    }
-
-    s32 NodeAnimObject::getType() const
-    {
-        return NodeType_AnimObject;
     }
 
     lrender::AnimObject* NodeAnimObject::getAnimObject()
@@ -98,7 +93,7 @@ namespace lscene
         }
 
         createMatrix(matrix_);
-        matrix_.mul(parent_->getMatrix(), matrix_);
+        matrix_.mul(getParentMatrix(), matrix_);
         //bsphere_.setPosition(position_.x_, position_.y_, position_.z_);
 
         if(NULL == object_){

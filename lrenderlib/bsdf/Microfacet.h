@@ -20,6 +20,7 @@ namespace lrender
 
         virtual void initialize();
 
+        virtual Color3 albedo(const Intersection& intersection) const;
         virtual Color3 f(const Vector3& wo, const Vector3& wi, const Intersection& intersection) const;
 
         virtual Color3 sample_f(const Vector3& wo, Vector3& wi, f32& pdf, const BSDFSample& sample, Type& sampledType, const Intersection& intersection) const;

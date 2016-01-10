@@ -20,7 +20,6 @@ namespace lrender
         ,cameraDx_(1.0f)
         ,cameraDy_(1.0f)
     {
-        position_.zero();
     }
 
     PerspectiveCamera::~PerspectiveCamera()

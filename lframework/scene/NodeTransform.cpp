@@ -10,8 +10,8 @@
 
 namespace lscene
 {
-    NodeTransform::NodeTransform(const Char* name)
-        :NodeBase(name)
+    NodeTransform::NodeTransform(const Char* name, u16 group, u16 type)
+        :NodeBase(name, group, type)
     {
         setFlag(NodeFlag_Transform);
         position_.zero();
@@ -24,11 +24,6 @@ namespace lscene
     {
     }
 
-    s32 NodeTransform::getType() const
-    {
-        return NodeType_Transform;
-    }
-
     void NodeTransform::update()
     {
         updateTransform();
@@ -37,8 +32,8 @@ namespace lscene
     void NodeTransform::traverseUpdateTransform()
     {
         updateTransform();
-        for(NodeVector::iterator itr = children_.begin();
-            itr != children_.end();
+        for(NodeVector::iterator itr = childBegin();
+            itr != childEnd();
             ++itr)
         {
             (*itr)->traverseUpdateTransform();

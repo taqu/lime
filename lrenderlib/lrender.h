@@ -35,7 +35,7 @@ namespace lrender
 #define DOT_EPSILON (1.0e-6f)
 #define PDF_EPSILON (1.0e-6f)
 #define SHADOW_EPSILON (1.0e-7f)
-#define RAY_MAX_RATIO_OF_WORLD_SIZE (1.01f)
+#define RAY_MAX_RATIO_OF_WORLD_SIZE (1.5f)
 
     struct Align16Allocator
     {
@@ -147,25 +147,37 @@ namespace lrender
     Vector3 cross(const Vector3& v0, const Vector3& v1);
     Vector4 cross(const Vector4& v0, const Vector4& v1);
 
+    /**
+    @brief v0ÇÃå¸Ç´Çv1Ç…çáÇÌÇπÇÈ
+    */
+    Vector3 faceForward(const Vector3& v0, const Vector3& v1);
+    Vector4 faceForward(const Vector4& v0, const Vector4& v1);
+
     void orthonormalBasis(Vector3& binormal0, Vector3& binormal1, const Vector3& normal);
     void orthonormalBasis(Vector4& binormal0, Vector4& binormal1, const Vector4& normal);
-
-    bool solveLinearSystem2x2(const f32 A[2][2], const f32 B[2], f32& x0, f32& x1);
 
     Vector2 weightAverage(f32 w0, f32 w1, f32 w2, const Vector2& v0, const Vector2& v1, const Vector2& v2);
     Vector3 weightAverage(f32 w0, f32 w1, f32 w2, const Vector3& v0, const Vector3& v1, const Vector3& v2);
 
+    s32 octreeChildIndex(AABB& childBBox, const Vector3& point, const Vector3& center, const AABB& parentBBox);
+    AABB octreeChildBound(s32 childIndex, const Vector3& center, const AABB& bbox);
+
     //fresnel
     //------------------------------------------------------------------------------
-    f32 fresnelForDielectic(f32 csI, f32 csT, f32 ri_int, f32 ri_ext);
+    f32 fresnelForDielectic(f32 csI, f32 csT, f32 intIOR, f32 extIOR);
 
     /**
     @param
     @param
-    @param ri_int ... refractive index
-    @param ri_ext ... refractive index
+    @param intIOR ... internal index of refraction
+    @param extIOR ... external index of refraction
     */
-    f32 fresnelForDielecticRefract(f32& csOut, f32 cs, f32 ri_int, f32 ri_ext);
+    f32 fresnelForDielecticRefract(f32& csOut, f32 cs, f32 intIOR, f32 extIOR);
+
+    /**
+    @param eta ... (internal index of refraction)/(external index of refraction)
+    */
+    f32 fresnelDiffuseReflectance(f32 eta);
 
     //Monte Carlo
     //------------------------------------------------------------------------------
@@ -306,6 +318,14 @@ namespace sh
 
         f32 u0_;
         f32 u1_;
+    };
+
+    struct VertexSample
+    {
+        Vector3 position_;
+        Vector3 normal_;
+        Vector2 uv_;
+        Vector4 color_;
     };
 
     struct PrimitiveSample

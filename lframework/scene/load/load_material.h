@@ -25,12 +25,12 @@ namespace lload
 #ifdef LIME_NPBR
         lmath::Vector4 diffuse_; //rgba
         lmath::Vector4 specular_; //rgb shininess
-        lmath::Vector4 ambient_; //rgb refractive index or fresnel
+        lmath::Vector4 ambient_; //rgb refractive refractive index of fresnel
         lmath::Vector4 shadow_; //rgb roughness
 #else
         lmath::Vector4 diffuse_; //rgba
         lmath::Vector4 specular_; //rgb roughness
-        lmath::Vector4 ambient_; //rgb ambient shadow
+        lmath::Vector4 ambient_; //rgb ambient refractive index of fresnel
         lmath::Vector4 shadow_; //rgb metalic
 #endif
         u32 flags_;

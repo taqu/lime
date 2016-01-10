@@ -104,8 +104,6 @@ namespace lcore
 
     void cpuid(s32 func, s32& a, s32& b, s32& c, s32& d);
 
-    bool isWin2000();
-
     /**
     @brief 論理プロセッサ数取得
     @return 論理プロセッサ数

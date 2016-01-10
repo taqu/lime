@@ -27,9 +27,9 @@ namespace lrender
     Color3 DistantLight::sample_L(
         const Vector3& p,
         const Vector3& ng,
-        const Vector3& ns,
+        const Vector3& /*ns*/,
         f32 tmax,
-        const EmitterSample& sample,
+        const EmitterSample& /*sample*/,
         Vector3& wiw,
         f32& pdf,
         Visibility& visibility) const
@@ -76,10 +76,10 @@ namespace lrender
     }
 
     Color3 DistantLight::sample_L(
-        const Vector3& p,
-        const Vector3& n,
-        f32 tmax,
-        const EmitterSample& sample,
+        const Vector3& /*p*/,
+        const Vector3& /*n*/,
+        f32 /*tmax*/,
+        const EmitterSample& /*sample*/,
         Vector3& wiw,
         f32& pdf) const
     {

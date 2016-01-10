@@ -154,7 +154,13 @@ namespace lload
         FileType type,
         u32 usage,
         u32 filterType,
-        u32 address);
+        u32 address,
+        bool sRGB);
+
+
+    class Material;
+
+    Material* loadMaterials(s32& numMaterials, u8* memory);
 }
 }
 #endif //INC_LSCENE_LLOAD_LOAD_H__

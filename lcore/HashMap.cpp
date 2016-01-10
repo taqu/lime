@@ -7,5 +7,5 @@
 #include "HashMap.h"
 namespace lcore
 {
-StringWrapper StringWrapper::empty_;
+    StringWrapper StringWrapper::empty_;
 }

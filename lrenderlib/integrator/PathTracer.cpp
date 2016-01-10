@@ -10,7 +10,6 @@
 #include "scene/Scene.h"
 #include "bsdf/Microfacet.h"
 #include "core/Visibility.h"
-#include "core/ShadingGeometry.h"
 
 namespace lrender
 {
@@ -25,7 +24,7 @@ namespace lrender
     {
     }
 
-    void PathTracer::requestSamples(Sampler* sampler)
+    void PathTracer::requestSamples(Sampler* /*sampler*/)
     {
     }
 
@@ -58,7 +57,7 @@ namespace lrender
             if(strictNormal_ && 0.0f<=ray.direction_.dot(insect.geometricNormal_) * LocalCoordinate::cosTheta(wo)){
                 break;
             }
-
+            
             L += query.sampleEmitterDirect(wow, emitterSample, emitterBsdfSample) * beta;
 
             Vector3 wi, wiw;
@@ -90,8 +89,8 @@ namespace lrender
         return L;
     }
 
-    Color3 PathTracer::E(const ShadingGeometry& shadingGeometry, IntegratorQuery& query)
+    Color4 PathTracer::E(IntegratorQuery& /*query*/)
     {
-        return Color3::black();
+        return Color4::black();
     }
 }

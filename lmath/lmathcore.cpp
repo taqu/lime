@@ -334,6 +334,18 @@ namespace lmath
         }
     }
 
+    f32 smooth2(f32 x)
+    {
+        return ((6.0f*x -15.0f)*x+10.0f)*x*x*x;
+    }
+
+    f32 smoothstep2(f32 x, f32 e0, f32 e1)
+    {
+        x = lcore::clamp01((x - e0) / (e1 - e0));
+
+        return ((6.0f*x -15.0f)*x+10.0f)*x*x*x;
+    }
+
     f32 cubicPulse(f32 center, f32 width, f32 x)
     {
         x = lcore::absolute(x - center);
@@ -791,6 +803,18 @@ namespace lmath
     void normalToSphericalCoordinate(f32& theta, f32& phi, const Vector4& normal)
     {
         normalToSphericalCoordinate(theta, phi, normal.x_, normal.y_, normal.z_);
+    }
+
+    // v0の向きをv1に合わせる
+    void faceForward(Vector3& dst, const Vector3& v0, const Vector3& v1)
+    {
+        dst = (v0.dot(v1)<0.0f)? -v0 : v0;
+    }
+
+    // v0の向きをv1に合わせる
+    void faceForward(Vector4& dst, const Vector4& v0, const Vector4& v1)
+    {
+        dst = (v0.dot(v1)<0.0f)? -v0 : v0;
     }
 
     //from Jeppe Revall Frisvad, "Building an Orthonormal Basis from a 3D Unit Vector Without Normalization"

@@ -4,10 +4,10 @@
 @date 2014/10/08 create
 */
 #include "SystemBase.h"
-#include "SceneManager.h"
 #include "ObjectFactory.h"
 #include "Resource.h"
 #include "Resources.h"
+#include "SceneManager.h"
 #include "file/FileSystem.h"
 #include "./render/InputLayoutManager.h"
 #include "./render/ShaderManager.h"
@@ -64,7 +64,6 @@ namespace lscene
         constantBuffer_.initialize(param.numConstantTables_);
         transientVertexBuffer_.initialize();
         transientIndexBuffer_.initialize();
-        sceneManager_.initialize();
 
         //Shader Manager
         lrender::ShaderManager::initialize(param.numVS_, param.numGS_, param.numPS_, param.numCS_, param.numDS_, param.numHS_);
@@ -76,8 +75,6 @@ namespace lscene
     {
         //Shader Manager
         lrender::ShaderManager::terminate();
-
-        sceneManager_.terminate();
 
         transientIndexBuffer_.terminate();
         transientVertexBuffer_.terminate();
@@ -92,9 +89,10 @@ namespace lscene
 
         wcsSize_ = 0;
         LSCENE_FREE(wcsSharedBuffer_);
+        SystemInstance::set(NULL);
+
         SceneAllocator::malloc_ = NULL;
         SceneAllocator::free_ = NULL;
-        SystemInstance::set(NULL);
     }
 
     bool SystemBase::openFileSystem(const Char* path, bool isVirtual)
@@ -148,6 +146,11 @@ namespace lscene
 
     Resource* SystemBase::getResource(s32 category, s32 type, const Char* path)
     {
+        return getResource(category, type, path, defaultParameter_);
+    }
+
+    Resource* SystemBase::getResource(s32 category, s32 type, const Char* path, const SceneParam& param)
+    {
         LASSERT(0<=category && category<NumResourceCategory);
         LASSERT(NULL != path);
         LASSERT(NULL != objectFactory_);
@@ -161,7 +164,7 @@ namespace lscene
         if(NULL != resource){
             return resource;
         }
-        resource = objectFactory_->create(type, path, file);
+        resource = objectFactory_->create(type, path, file, param);
         if(NULL == resource){
             return NULL;
         }
@@ -193,5 +196,15 @@ namespace lscene
         queue.setPathToIndex(Path_MotionVelocity, 3);
         queue.setPathToIndex(Path_Effect, 4);
         queue.setPathToIndex(Path_2D, 5);
+    }
+
+    void SystemBase::initializeSceneManager()
+    {
+        SceneManager::getInstance().initialize();
+    }
+
+    void SystemBase::terminateSceneManager()
+    {
+        SceneManager::getInstance().terminate();
     }
 }

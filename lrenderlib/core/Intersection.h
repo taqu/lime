@@ -29,8 +29,8 @@ namespace lrender
             ,shape_(NULL)
         {}
 
-        //binormal0_ = normalize(dpdu_);
-        //binormal1_.cross(shadingNormal_, binormal0_);
+        void create(const Shape* shape, s32 primitive, const PrimitiveSample& primitiveSample, f32 b0, f32 b1, f32 b2);
+        void create(const Vector3& position, const Vector3& normal, const Vector2& uv);
 
         inline bool isIntersect() const;
         inline s32 getPrimitive() const;
@@ -44,6 +44,8 @@ namespace lrender
         Vector3 worldToLocal(const Vector3& v) const;
         Vector3 localToWorld(const Vector3& v) const;
         Ray nextRay(const Vector3& direction, f32 tmax) const;
+        Ray nextCosineWeightedHemisphere(f32 u0, f32 u1, f32 tmax) const;
+        Ray nextHemisphere(f32 u0, f32 u1, f32 tmax) const;
 
         Vector3 point_;
         Vector3 shadingNormal_;

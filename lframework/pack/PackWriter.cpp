@@ -34,15 +34,18 @@ namespace lpacktree
     bool PackWriter::push_back(const Char* name, u32 size, s32 type, s32 numChildren, const void* buffer)
     {
         LASSERT(NULL != name);
+        LASSERT(size<=0xFFFFU);
+        LASSERT(type<=0xFFFFU);
+        LASSERT(numChildren<=0xFFFFU);
 
         FileEntry entry;
 
         lcore::strncpy(entry.name_, MaxFileNameBufferSize, name, MaxFileNameLength);
         entry.name_[MaxFileNameLength] = '\0';
 
-        entry.size_ = size;
-        entry.type_ = type;
-        entry.numChildren_ = numChildren;
+        entry.size_ = static_cast<u16>(size);
+        entry.type_ = static_cast<u16>(type);
+        entry.numChildren_ = static_cast<u16>(numChildren);
 
         entries_.push_back(entry);
         

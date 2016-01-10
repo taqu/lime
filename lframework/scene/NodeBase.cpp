@@ -4,19 +4,15 @@
 @date 2014/10/08 create
 */
 #include "NodeBase.h"
-#include "SystemBase.h"
+
 #include <lmath/Matrix44.h>
+#include "SceneManager.h"
 
 namespace lscene
 {
-    const lmath::Matrix44 NodeBase::identity_ = lmath::Matrix44(
-        1.0f, 0.0f, 0.0f, 0.0f,
-        0.0f, 1.0f, 0.0f, 0.0f,
-        0.0f, 0.0f, 1.0f, 0.0f,
-        0.0f, 0.0f, 0.0f, 1.0f);
-
-    NodeBase::NodeBase(const Char* name)
-        :parent_(NULL)
+    NodeBase::NodeBase(const Char* name, u16 group, u16 type)
+        :Collidable(group, type)
+        ,parent_(NULL)
         ,flags_(NodeFlag_Update|NodeFlag_Render)
     {
         if(NULL != name){
@@ -29,11 +25,6 @@ namespace lscene
         clearChildren();
     }
 
-    s32 NodeBase::getType() const
-    {
-        return NodeType_Base;
-    }
-
     NodeBase* NodeBase::getParent()
     {
         return parent_;
@@ -42,12 +33,17 @@ namespace lscene
     void NodeBase::setParent(NodeBase* parent)
     {
         parent_ = parent;
+        if(NULL != parent){
+            parent->addChild(this);
+        }
     }
 
     void NodeBase::removeFromParent()
     {
-        if(parent_){
-            parent_->removeChild(this);
+        NodeBase* oldParent = parent_;
+        parent_ = NULL;
+        if(NULL != oldParent){
+            oldParent->removeChild(this);
         }
     }
 
@@ -56,16 +52,17 @@ namespace lscene
         LASSERT(NULL != child);
         LASSERT(this != child);
 
-        if(0<=children_.find(child)){
-            return;
+        for(s32 i=0; i<children_.size(); ++i){
+            if(child == children_[i]){
+                return;
+            }
         }
+        SceneManager::getInstance().setUpdated();
 
         child->addRef();
-        if(child->getParent()){
-            child->getParent()->removeChild(child);
-        }
-        child->setParent(this);
+        child->removeFromParent();
         children_.push_back(child);
+        child->parent_ = this;
         child->onAttach();
     }
 
@@ -74,26 +71,31 @@ namespace lscene
         LASSERT(NULL != child);
         LASSERT(this != child);
 
-        s32 ret = children_.find(child);
-        if(ret<0){
+        s32 count;
+        for(count=0; count<children_.size(); ++count){
+            if(child == children_[count]){
+                break;
+            }
+        }
+        if(children_.size()<=count){
             return;
         }
 
         child->onDetach();
-        child->setParent(NULL);
-        children_.removeAt(ret);
+        SceneManager::getInstance().removeFromUpdate(child);
+        child->parent_ = NULL;
         child->release();
+        children_.removeAt(count);
     }
 
     void NodeBase::clearChildren()
     {
-        for(NodeVector::iterator itr = children_.begin();
-            itr != children_.end();
-            ++itr)
-        {
-            (*itr)->onDetach();
-            (*itr)->setParent(NULL);
-            (*itr)->release();
+        for(s32 i=0; i<children_.size(); ++i){
+            NodeBase* child = children_[i];
+            child->onDetach();
+            SceneManager::getInstance().removeFromUpdate(child);
+            child->parent_ = NULL;
+            child->release();
         }
         children_.clear();
     }
@@ -140,8 +142,22 @@ namespace lscene
     {
     }
 
-    void NodeBase::onCollide(NodeBase* opposite, lcollide::CollisionInfo& info)
+    void NodeBase::onCollide(Collidable* /*opposite*/, lcollide::CollisionInfo& /*info*/)
     {
+    }
+
+    void NodeBase::visitUpdate(UpdateVisitor& visitor)
+    {
+        s32 index = visitor.push(this);
+
+        for(NodeVector::iterator itr = children_.begin();
+            itr != children_.end();
+            ++itr)
+        {
+            (*itr)->visitUpdate(visitor);
+        }
+
+        visitor.setNumUpdates(index);
     }
 
     void NodeBase::update()
@@ -171,6 +187,11 @@ namespace lscene
 
     const lmath::Matrix44& NodeBase::getMatrix() const
     {
-        return (NULL == parent_)? identity_ : parent_->getMatrix();
+        return lmath::Matrix44::identity_;
+    }
+
+    const lmath::Matrix44& NodeBase::getParentMatrix() const
+    {
+        return (NULL == parent_)? lmath::Matrix44::identity_ : parent_->getMatrix();
     }
 }

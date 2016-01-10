@@ -4,7 +4,6 @@
 @date 2015/10/06 create
 */
 #include "AmbientOcclusion.h"
-#include "core/ShadingGeometry.h"
 #include "scene/Scene.h"
 
 namespace lrender
@@ -52,7 +51,7 @@ namespace lrender
         return L;
     }
 
-    Color3 AmbientOcclusion::E(const ShadingGeometry& shadingGeometry, IntegratorQuery& query)
+    Color4 AmbientOcclusion::E(IntegratorQuery& query)
     {
         Color3 L(0.0f);
 
@@ -63,12 +62,12 @@ namespace lrender
         f32 tmax = (rayLength_<0.0f)? query.scene_->getWorldBound().getBSphereRadius() : rayLength_;
         for(s32 i=0; i<numSamples_; ++i){
             
-            Ray r = shadingGeometry.nextCosineWeightedHemisphere(sample2D[i].x_, sample2D[i].y_, tmax);
+            Ray r = query.intersection_.nextCosineWeightedHemisphere(sample2D[i].x_, sample2D[i].y_, tmax);
             if(!query.intersect(r)){
                 L += Color3::white();
             }
         }
         L /= static_cast<f32>(numSamples_);
-        return L;
+        return Color4(L[0], L[1], L[2], 1.0f);
     }
 }

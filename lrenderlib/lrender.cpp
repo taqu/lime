@@ -75,6 +75,17 @@ namespace lrender
         normal.normalizeChecked();
     }
 
+    // v0‚ÌŒü‚«‚ğv1‚É‡‚í‚¹‚é
+    Vector3 faceForward(const Vector3& v0, const Vector3& v1)
+    {
+        return (v0.dot(v1)<0.0f)? -v0 : v0;
+    }
+
+    Vector4 faceForward(const Vector4& v0, const Vector4& v1)
+    {
+        return (v0.dot(v1)<0.0f)? -v0 : v0;
+    }
+
     void orthonormalBasis(Vector3& binormal0, Vector3& binormal1, const Vector3& normal)
     {
         if(lcore::absolute(normal.y_)<lcore::absolute(normal.x_)){
@@ -116,31 +127,58 @@ namespace lrender
         return Vector3(x, y, z);
     }
 
+    s32 octreeChildIndex(AABB& childBBox, const Vector3& point, const Vector3& center, const AABB& parentBBox)
+    {
+        s32 index[3];
+        index[0] = (point.x_<center.x_)? 0 : 4;
+        index[1] = (point.y_<center.y_)? 0 : 2;
+        index[2] = (point.z_<center.z_)? 0 : 1;
+
+        s32 childIndex = index[0] + index[1] + index[2];
+        for(s32 i=0; i<3; ++i){
+            childBBox.bmin_[i] = (index[i])? parentBBox.bmin_[i] : center[i];
+            childBBox.bmax_[i] = (index[i])? center[i] : parentBBox.bmax_[i];
+        }
+        return childIndex;
+    }
+
+    AABB octreeChildBound(s32 childIndex, const Vector3& center, const AABB& bbox)
+    {
+        AABB childBound;
+        childBound.bmin_.x_ = (childIndex & 4) ? center.x_ : bbox.bmin_.x_;
+        childBound.bmax_.x_ = (childIndex & 4) ? bbox.bmax_.x_ : center.x_;
+        childBound.bmin_.y_ = (childIndex & 2) ? center.y_ : bbox.bmin_.y_;
+        childBound.bmax_.y_ = (childIndex & 2) ? bbox.bmax_.y_ : center.y_;
+        childBound.bmin_.z_ = (childIndex & 1) ? center.z_ : bbox.bmin_.z_;
+        childBound.bmax_.z_ = (childIndex & 1) ? bbox.bmax_.z_ : center.z_;
+        return childBound;
+    }
+
     //fresnel
     //------------------------------------------------------------------------------
-    f32 fresnelForDielectic(f32 csI, f32 csT, f32 ri_int, f32 ri_ext)
+    f32 fresnelForDielectic(f32 csI, f32 csT, f32 intIOR, f32 extIOR)
     {
-        if(lmath::isEqual(ri_int, ri_ext)){
+        if(lmath::isEqual(intIOR, extIOR)){
             return 0.0f;
         }
-        f32 ri_int_csI = ri_int*csI;
-        f32 ri_ext_csT = ri_ext*csT;
-        f32 ri_int_csT = ri_int*csT;
-        f32 ri_ext_csI = ri_ext*csI;
+        f32 intIOR_csI = intIOR*csI;
+        f32 extIOR_csT = extIOR*csT;
+        f32 intIOR_csT = intIOR*csT;
+        f32 extIOR_csI = extIOR*csI;
 
-        f32 rp = (ri_int_csI - ri_ext_csT)/(ri_int_csI + ri_ext_csT);
-        f32 rs = (ri_ext_csI - ri_int_csT)/(ri_ext_csI + ri_int_csT);
+        f32 rp = (intIOR_csI - extIOR_csI)/(intIOR_csI + extIOR_csI);
+        f32 rs = (extIOR_csT - intIOR_csT)/(extIOR_csT + intIOR_csT);
 
         return 0.5f*(rs*rs + rp*rp);
     }
 
-    f32 fresnelForDielecticRefract(f32& csOut, f32 cs, f32 ri_int, f32 ri_ext)
+    f32 fresnelForDielecticRefract(f32& csOut, f32 cs, f32 intIOR, f32 extIOR)
     {
-        if(lmath::isEqual(ri_int, ri_ext)){
+        if(lmath::isEqual(intIOR, extIOR)){
             csOut = -cs;
             return 0.0f;
         }
-        f32 relativeRefractive = (0.0f<cs)? ri_int/ri_ext : ri_ext/ri_int;
+        f32 relativeRefractive = (0.0f<cs)? intIOR/extIOR : extIOR/intIOR;
         f32 sqrCsOut = 1.0f - (1.0f-cs*cs)*relativeRefractive*relativeRefractive;
         if(sqrCsOut<=0.0f){
             csOut = 0.0f;
@@ -150,16 +188,37 @@ namespace lrender
         f32 csI = lcore::absolute(cs);
         f32 csT = lmath::sqrt(sqrCsOut);
 
-        f32 ri_int_csI = ri_int*csI;
-        f32 ri_ext_csT = ri_ext*csT;
-        f32 ri_int_csT = ri_int*csT;
-        f32 ri_ext_csI = ri_ext*csI;
+        f32 intIOR_csI = intIOR*csI;
+        f32 extIOR_csT = extIOR*csT;
+        f32 intIOR_csT = intIOR*csT;
+        f32 extIOR_csI = extIOR*csI;
 
-        f32 rp = (ri_int_csI - ri_ext_csT)/(ri_int_csI + ri_ext_csT);
-        f32 rs = (ri_ext_csI - ri_int_csT)/(ri_ext_csI + ri_int_csT);
+        f32 rp = (intIOR_csI - extIOR_csT)/(intIOR_csI + extIOR_csT);
+        f32 rs = (extIOR_csI - intIOR_csT)/(extIOR_csI + intIOR_csT);
 
         csOut = (0.0f<cs)? -csT : csT;
         return 0.5f*(rs*rs + rp*rp);
+    }
+
+    // eta ... (internal index of refraction)/(external index of refraction)
+    f32 fresnelDiffuseReflectance(f32 eta)
+    {
+        if(1.0f<eta){
+            f32 ieta = 1.0f/eta;
+            return -1.4399f * (ieta*ieta) + 0.7099f * ieta + 0.6681f + 0.0636f * eta;
+        }else{
+            f32 eta2 = eta*eta;
+            f32 eta3 = eta*eta2;
+            f32 eta4 = eta2*eta2;
+            f32 eta5 = eta*eta4;
+
+            return 0.919317f
+                - 3.4793f *eta
+                + 6.75335f*eta2
+                - 7.80989f*eta3
+                + 4.98554f*eta4
+                - 1.36881f*eta5;
+        }
     }
 
     void directionToLightProbeCoord(f32& u, f32& v, f32 x, f32 y, f32 z)

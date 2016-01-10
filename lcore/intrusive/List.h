@@ -23,6 +23,9 @@ namespace intrusive
         typedef Derived* pointer_type;
         typedef const Derived* const_pointer_type;
 
+        ~ListNodeBase()
+        {}
+
         pointer_type getPrev() { return static_cast<pointer_type>(prev_);}
         const_pointer_type getPrev() const{ return static_cast<pointer_type>(prev_);}
         pointer_type getNext() { return static_cast<pointer_type>(next_);}
@@ -36,9 +39,6 @@ namespace intrusive
             ,next_(this)
         {
         }
-
-        ~ListNodeBase()
-        {}
 
         void reset()
         {
@@ -57,6 +57,32 @@ namespace intrusive
             prev_ = node->prev_;
             next_ = node;
             prev_->next_ = node->prev_ = this;
+        }
+
+        void swap(this_type& rhs)
+        {
+            this_poitner_type prev = prev_;
+            this_poitner_type next = next_;
+
+            this_poitner_type rprev = rhs.prev_;
+            this_poitner_type rnext = rhs.next_;
+            if(&rhs != rnext){
+                prev_ = rprev;
+                next_ = rnext;
+                prev_->next_ = this;
+                next_->prev_ = this;
+            }else{
+                reset();
+            }
+
+            if(&rhs != rnext){
+                rhs.prev_ = prev;
+                rhs.next_ = next;
+                rhs.prev_->next_ = &rhs;
+                rhs.next_->prev_ = &rhs;
+            }else{
+                rhs.reset();
+            }
         }
 
         this_poitner_type prev_;
@@ -78,6 +104,9 @@ namespace intrusive
 
         ListNodeContainer(const T& value)
             :value_(value)
+        {}
+
+        ~ListNodeContainer()
         {}
 
         const reference_type operator*() const
@@ -129,6 +158,9 @@ namespace intrusive
 
         ListNodeContainer(T* value)
             :value_(value)
+        {}
+
+        ~ListNodeContainer()
         {}
 
         const reference_type operator*() const
@@ -205,6 +237,9 @@ namespace intrusive
 
         void swap(this_type& rhs);
     private:
+        this_type(const this_type&);
+        this_type& operator=(const this_type&);
+
         u32 size_;
         node_type top_;
     };
@@ -274,6 +309,7 @@ namespace intrusive
     void List<T>::push_front(pointer_type node)
     {
         LASSERT(NULL != node);
+        node->reset();
         node->link(top_.getNext());
         ++size_;
     }
@@ -282,6 +318,7 @@ namespace intrusive
     void List<T>::push_back(pointer_type node)
     {
         LASSERT(NULL != node);
+        node->reset();
         node->link(static_cast<pointer_type>(&top_));
         ++size_;
     }
@@ -318,7 +355,7 @@ namespace intrusive
     void List<T>::swap(this_type& rhs)
     {
         lcore::swap(size_, rhs.size_);
-        lcore::swap(top_, rhs.top_);
+        top_.swap(rhs.top_);
     }
 }
 }

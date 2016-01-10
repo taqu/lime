@@ -32,7 +32,7 @@ namespace lcollide
     //--- ColliderRay
     //---
     //-------------------------------------------------------
-    bool ColliderRay::test(const lmath::Ray& ray, f32& t) const
+    bool ColliderRay::test(const lmath::Ray& /*ray*/, f32& /*t*/) const
     {
         return false;
     }

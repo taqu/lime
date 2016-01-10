@@ -8,6 +8,9 @@
 #if defined(_WIN32) || defined(_WIN64)
 #include <windows.h>
 #include <intrin.h>
+
+#elif defined(__linux__)
+#include <unistd.h>
 #endif
 
 
@@ -79,6 +82,7 @@ namespace lcore
 #endif
     }
 
+#if 0
     bool isWin2000()
     {
         OSVERSIONINFOEX versionInfo;
@@ -89,14 +93,8 @@ namespace lcore
         DWORDLONG conditionMask = 0;
         VER_SET_CONDITION(conditionMask, VER_MAJORVERSION, VER_GREATER_EQUAL);
         return TRUE == VerifyVersionInfo(&versionInfo, VER_MAJORVERSION, conditionMask);
-
-        //OSVERSIONINFO versionInfo;
-        //ZeroMemory(&versionInfo, sizeof(OSVERSIONINFO));
-        //versionInfo.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
-        //GetVersionEx(&versionInfo);
-
-        //return (versionInfo.dwMajorVersion >= 5);
     }
+#endif
 
     /**
     @brief 論理プロセッサ数取得
@@ -104,35 +102,12 @@ namespace lcore
     */
     u32 getLogicalCPUCount()
     {
-        //OSバージョンチェック
-        if(false == isWin2000()){
-            return 1;
-        }
-
-#if 0
-        HANDLE process = GetCurrentProcess();
-        DWORD_PTR pmask, smask;
-
-        if(FALSE == GetProcessAffinityMask(process, &pmask, &smask)){
-            return 1;
-        }
-        if(pmask == 0){
-            return 1;
-        }
-
-        u32 cpuCount = 0;
-
-        while(pmask != 0){
-            pmask >>= 1;
-            ++cpuCount;
-        }
-
-        return cpuCount;
-
-#else
+#if defined(_WIN32) || defined(_WIN64)
         SYSTEM_INFO systemInfo;
         GetSystemInfo(&systemInfo);
         return systemInfo.dwNumberOfProcessors;
+#elif defined(__linux__)
+        return sysconf(_SC_NPROCESSORS_ONLN);
 #endif
     }
 #endif

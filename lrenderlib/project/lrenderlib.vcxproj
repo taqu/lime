@@ -25,11 +25,13 @@
     <ClInclude Include="..\core\AABB.h" />
     <ClInclude Include="..\core\Buffer.h" />
     <ClInclude Include="..\core\Coordinate.h" />
+    <ClInclude Include="..\core\DynamicPointOctree.h" />
     <ClInclude Include="..\core\Geometry.h" />
     <ClInclude Include="..\core\Intersection.h" />
     <ClInclude Include="..\core\Photon.h" />
+    <ClInclude Include="..\core\PointOctree.h" />
     <ClInclude Include="..\core\Ray.h" />
-    <ClInclude Include="..\core\ShadingGeometry.h" />
+    <ClInclude Include="..\core\SampleTable.h" />
     <ClInclude Include="..\core\Spectrum.h" />
     <ClInclude Include="..\core\Triangle.h" />
     <ClInclude Include="..\core\Visibility.h" />
@@ -44,9 +46,11 @@
     <ClInclude Include="..\image\Image.h" />
     <ClInclude Include="..\image\ImageProcessing.h" />
     <ClInclude Include="..\integrator\AmbientOcclusion.h" />
+    <ClInclude Include="..\integrator\DipoleIntegrator.h" />
     <ClInclude Include="..\integrator\Integrator.h" />
     <ClInclude Include="..\integrator\MapPathTracer.h" />
     <ClInclude Include="..\integrator\PathTracer.h" />
+    <ClInclude Include="..\integrator\TranslucencyMagnitudeIntegrator.h" />
     <ClInclude Include="..\loader\IOBMP.h" />
     <ClInclude Include="..\loader\IOPNG.h" />
     <ClInclude Include="..\loader\IOTGA.h" />
@@ -57,8 +61,8 @@
     <ClInclude Include="..\lrender.h" />
     <ClInclude Include="..\mapper\Mapper.h" />
     <ClInclude Include="..\render\RenderMapBruteForceQuery.h" />
-    <ClInclude Include="..\render\RenderMapQuery.h" />
     <ClInclude Include="..\render\RenderQuery.h" />
+    <ClInclude Include="..\render\RenderSurfacePointQuery.h" />
     <ClInclude Include="..\sampler\ImportanceResampler.h" />
     <ClInclude Include="..\sampler\LowDiscrepancySampler.h" />
     <ClInclude Include="..\sampler\RandomSampler.h" />
@@ -87,7 +91,7 @@
     <ClCompile Include="..\core\Geometry.cpp" />
     <ClCompile Include="..\core\Intersection.cpp" />
     <ClCompile Include="..\core\Ray.cpp" />
-    <ClCompile Include="..\core\ShadingGeometry.cpp" />
+    <ClCompile Include="..\core\SampleTable.cpp" />
     <ClCompile Include="..\core\Spectrum.cpp" />
     <ClCompile Include="..\core\Visibility.cpp" />
     <ClCompile Include="..\emitter\DistantLight.cpp" />
@@ -101,9 +105,11 @@
     <ClCompile Include="..\image\Image.cpp" />
     <ClCompile Include="..\image\ImageProcessing.cpp" />
     <ClCompile Include="..\integrator\AmbientOcclusion.cpp" />
+    <ClCompile Include="..\integrator\DipoleIntegrator.cpp" />
     <ClCompile Include="..\integrator\Integrator.cpp" />
     <ClCompile Include="..\integrator\MapPathTracer.cpp" />
     <ClCompile Include="..\integrator\PathTracer.cpp" />
+    <ClCompile Include="..\integrator\TranslucencyMagnitudeIntegrator.cpp" />
     <ClCompile Include="..\loader\IOBMP.cpp" />
     <ClCompile Include="..\loader\IOPNG.cpp" />
     <ClCompile Include="..\loader\IOTGA.cpp" />
@@ -113,8 +119,8 @@
     <ClCompile Include="..\lrender.cpp" />
     <ClCompile Include="..\mapper\Mapper.cpp" />
     <ClCompile Include="..\render\RenderMapBruteForceQuery.cpp" />
-    <ClCompile Include="..\render\RenderMapQuery.cpp" />
     <ClCompile Include="..\render\RenderQuery.cpp" />
+    <ClCompile Include="..\render\RenderSurfacePointQuery.cpp" />
     <ClCompile Include="..\sampler\ImportanceResampler.cpp" />
     <ClCompile Include="..\sampler\LowDiscrepancySampler.cpp" />
     <ClCompile Include="..\sampler\RandomSampler.cpp" />
@@ -182,7 +188,7 @@
     </Link>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)_sse_vc120_d$(TargetExt)</OutputFile>
-      <AdditionalDependencies>zlib.lib;libpng.lib;libjpeg.lib</AdditionalDependencies>
+      <AdditionalDependencies>zlib_d.lib;libpng16_d.lib;libjpeg.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -205,7 +211,7 @@
     </Link>
     <Lib>
       <OutputFile>$(OutDir)$(TargetName)_sse_vc120$(TargetExt)</OutputFile>
-      <AdditionalDependencies>zlib.lib;libpng.lib;libjpeg.lib</AdditionalDependencies>
+      <AdditionalDependencies>zlib.lib;libpng16.lib;libjpeg.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

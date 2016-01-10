@@ -25,18 +25,23 @@ namespace lrender
         virtual Color3 generateRayDifferential(RayDifferential& rayDifferential, f32 screenX, f32 screenY, f32 tmax) const=0;
 
         inline void setResolution(s32 width, s32 height);
+
+        inline const Vector3& getPosition() const;
     protected:
         Camera()
             :width_(0)
             ,height_(0)
             ,invHalfWidth_(1.0f)
             ,invHalfHeight_(1.0f)
+            ,position_(0.0f)
         {}
 
         s32 width_;
         s32 height_;
         f32 invHalfWidth_;
         f32 invHalfHeight_;
+
+        Vector3 position_;
     };
 
     inline void Camera::setResolution(s32 width, s32 height)
@@ -46,6 +51,11 @@ namespace lrender
 
         invHalfWidth_ = 2.0f/width_;
         invHalfHeight_ = 2.0f/height_;
+    }
+
+    inline const Vector3& Camera::getPosition() const
+    {
+        return position_;
     }
 }
 #endif //INC_LRENDER_CAMERA_H__

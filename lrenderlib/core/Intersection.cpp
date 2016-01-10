@@ -8,6 +8,79 @@
 
 namespace lrender
 {
+    void Intersection::create(const Shape* shape, s32 primitive, const PrimitiveSample& primitiveSample, f32 b0, f32 b1, f32 b2)
+    {
+        shape_ = shape;
+        primitive_ = primitive;
+
+        point_ = weightAverage(
+            b0, b1, b2,
+            primitiveSample.positions_[0], primitiveSample.positions_[1], primitiveSample.positions_[2]);
+
+        shadingNormal_ = weightAverage(
+            b0, b1, b2,
+            primitiveSample.normals_[0], primitiveSample.normals_[1], primitiveSample.normals_[2]);
+
+        uv_ = weightAverage(
+            b0, b1, b2,
+            primitiveSample.uvs_[0], primitiveSample.uvs_[1], primitiveSample.uvs_[2]);
+
+        Vector2 duv02; duv02.sub(primitiveSample.uvs_[0], primitiveSample.uvs_[2]);
+        Vector2 duv12; duv12.sub(primitiveSample.uvs_[1], primitiveSample.uvs_[2]);
+
+        Vector3 dp02, dp12;
+        dp02.sub(primitiveSample.positions_[0], primitiveSample.positions_[2]);
+        dp12.sub(primitiveSample.positions_[1], primitiveSample.positions_[2]);
+        f32 determinant = duv02[0]*duv12[1] - duv02[1]*duv12[0];
+
+        if(lmath::isZero(determinant)){
+            lrender::orthonormalBasis(dpdu_, dpdv_, shadingNormal_);
+
+        }else{
+            f32 invDet = 1.0f/determinant;
+            dpdu_.mul(duv12[1], dp02);
+            dpdu_.muladd(-duv02[1], dp12, dpdu_);
+            dpdu_ *= invDet;
+
+            dpdv_.mul(-duv12[0], dp02);
+            dpdv_.muladd(duv02[0], dp12, dpdv_);
+            dpdv_ *= invDet;
+        }
+
+        binormal0_ = normalizeChecked(dpdu_);
+        binormal1_.cross(binormal0_, shadingNormal_);
+
+        f32 l2 = binormal1_.lengthSqr();
+        if(DOT_EPSILON<l2){
+            binormal1_.normalize(l2);
+            binormal0_.cross(binormal1_, shadingNormal_);
+        }else{
+            lrender::orthonormalBasis(binormal0_, binormal1_, shadingNormal_);
+        }
+    }
+
+    void Intersection::create(const Vector3& position, const Vector3& normal, const Vector2& uv)
+    {
+        shape_ = NULL;
+        primitive_ = 0;
+
+        point_ = position;
+        shadingNormal_ = normal;
+        uv_ = uv;
+        lrender::orthonormalBasis(dpdu_, dpdv_, shadingNormal_);
+
+        binormal0_ = normalizeChecked(dpdu_);
+        binormal1_.cross(binormal0_, shadingNormal_);
+
+        f32 l2 = binormal1_.lengthSqr();
+        if(DOT_EPSILON<l2){
+            binormal1_.normalize(l2);
+            binormal0_.cross(binormal1_, shadingNormal_);
+        }else{
+            lrender::orthonormalBasis(binormal0_, binormal1_, shadingNormal_);
+        }
+    }
+
     void Intersection::computeDifferentials(const RayDifferential& ray)
     {
         if(!ray.hasDifferentials_){
@@ -81,5 +154,23 @@ namespace lrender
         Vector3 origin;
         origin.muladd(RAY_EPSILON, direction, point_);
         return Ray(origin, direction, 0.0f, tmax, RAY_EPSILON);
+    }
+
+    Ray Intersection::nextCosineWeightedHemisphere(f32 u0, f32 u1, f32 tmax) const
+    {
+        Vector3 d;
+        lmath::cosineWeightedRandomOnHemisphere(d.x_, d.y_, d.z_, u0, u1);
+        d = localToWorld(d);
+        d.normalize();
+        return nextRay(d, tmax);
+    }
+
+    Ray Intersection::nextHemisphere(f32 u0, f32 u1, f32 tmax) const
+    {
+        Vector3 d;
+        lmath::cosineWeightedRandomOnHemisphere(d.x_, d.y_, d.z_, u0, u1);
+        d = localToWorld(d);
+        d.normalize();
+        return nextRay(d, tmax);
     }
 }

@@ -49,17 +49,6 @@ namespace lfile
         s32 dataOffset_;
     };
 
-    class FileDesc
-    {
-    public:
-        FileDesc()
-            :refCount_(0)
-        {}
-
-        lcore::ifstream file_;
-        s32 refCount_;
-    };
-
 
     //------------------------------------------------
     //---

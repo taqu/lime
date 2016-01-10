@@ -15,7 +15,7 @@ namespace mixin
     class ReferenceCounted : public Base
     {
     public:
-        inline void addRef();
+        inline s32 addRef();
         inline void release();
         inline s32 getReferenceCount() const;
     protected:
@@ -37,15 +37,15 @@ namespace mixin
     }
 
     template<class Base>
-    inline void ReferenceCounted<Base>::addRef()
+    inline s32 ReferenceCounted<Base>::addRef()
     {
-        ++refCount_;
+        return ++refCount_;
     }
 
     template<class Base>
     inline void ReferenceCounted<Base>::release()
     {
-        if(0 == --refCount_){
+        if(--refCount_ <= 0){
             LSCENE_DELETE_NO_NULL(this);
         }
     }

@@ -31,6 +31,8 @@ namespace lrender
         inline Camera& getCamera();
         inline void setCamera(Camera::pointer& camera);
 
+        inline Shape::ShapeVector& getShapes();
+        inline const Shape::ShapeVector& getShapes() const;
         void add(Shape::ShapeVector& shapes);
         void clearShapes();
 
@@ -92,6 +94,16 @@ namespace lrender
     inline void Scene::setCamera(Camera::pointer& camera)
     {
         camera_ = camera;
+    }
+
+    inline Shape::ShapeVector& Scene::getShapes()
+    {
+        return shapes_;
+    }
+
+    inline const Shape::ShapeVector& Scene::getShapes() const
+    {
+        return shapes_;
     }
 
     inline f32 Scene::getWorldMaxSize() const

@@ -84,6 +84,9 @@ namespace lmath
         f32 distance3(const Vector3& v) const;
         f32 distance3(const Vector4& v) const;
 
+        f32 distanceSqr3(const Vector3& v) const;
+        f32 distanceSqr3(const Vector4& v) const;
+
         f32 manhattanDistance(const Vector4& v) const;
         f32 manhattanDistance3(const Vector3& v) const;
         f32 manhattanDistance3(const Vector4& v) const;

@@ -41,6 +41,11 @@ namespace lgraphics
 
         void copy(ContextRef& context, BufferRefBase& src);
 
+        ShaderResourceViewRef createSRView(const SRVDesc& desc)
+        {
+            return View::createSRView(desc, buffer_);
+        }
+
         UnorderedAccessViewRef createUAView(const UAVDesc& desc)
         {
             return View::createUAView(desc, buffer_);

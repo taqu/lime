@@ -73,11 +73,11 @@ namespace lcore
         }
     };
 
-    template<class T, class Allocator=DefaultAllocator, class IncSize=vector_arena_static_inc_size<16> >
+    template<class T, class IncSize=vector_arena_static_inc_size<16>, class Allocator=DefaultAllocator>
     class vector_arena : public IncSize
     {
     public:
-        typedef vector_arena<T, Allocator, IncSize> this_type;
+        typedef vector_arena<T, IncSize, Allocator> this_type;
         typedef s32 size_type;
         typedef T* iterator;
         typedef const T* const_iterator;
@@ -154,28 +154,28 @@ namespace lcore
         T *items_;
     };
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T, Allocator, IncSize>::vector_arena()
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T, IncSize, Allocator>::vector_arena()
         :capacity_(0)
         ,size_(0)
         ,items_(NULL)
     {
     }
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T, Allocator, IncSize>::vector_arena(const this_type& rhs)
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T, IncSize, Allocator>::vector_arena(const this_type& rhs)
         :inc_size_type(rhs)
         ,capacity_(rhs.capacity_)
         ,size_(rhs.size_)
     {
-        items_ = reinterpret_cast<T*>(allocator_type::malloc(capacity_*sizeof(T)));
+        items_ = reinterpret_cast<T*>( LIME_ALLOCATOR_MALLOC(allocator_type, capacity_*sizeof(T)) );
         for(s32 i=0; i<size_; ++i){
             LIME_PLACEMENT_NEW(&items_[i]) T(rhs.items_[i]);
         }
     }
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T, Allocator, IncSize>::vector_arena(s32 incSize)
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T, IncSize, Allocator>::vector_arena(s32 incSize)
         :inc_size_type(incSize)
         ,capacity_(0)
         ,size_(0)
@@ -184,23 +184,23 @@ namespace lcore
         LASSERT(incSize>0);
     }
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T, Allocator, IncSize>::vector_arena(s32 size, s32 incSize)
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T, IncSize, Allocator>::vector_arena(s32 size, s32 incSize)
         :inc_size_type(incSize)
         ,capacity_( (size>incSize)? size : incSize )
         ,size_(size)
     {
         LASSERT(incSize>0);
 
-        items_ = reinterpret_cast<T*>(allocator_type::malloc(capacity_*sizeof(T)));
+        items_ = reinterpret_cast<T*>( LIME_ALLOCATOR_MALLOC(allocator_type, capacity_*sizeof(T)) );
 
         for(s32 i=0; i<size_; ++i){
             LIME_PLACEMENT_NEW(&items_[i]) T();
         }
     }
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T, Allocator, IncSize>::~vector_arena()
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T, IncSize, Allocator>::~vector_arena()
     {
         for(s32 i=0; i<size_; ++i){
             items_[i].~T();
@@ -209,13 +209,13 @@ namespace lcore
         items_ = NULL;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T, Allocator, IncSize>::push_back(const T& t)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T, IncSize, Allocator>::push_back(const T& t)
     {
         if(size_ >= capacity_){
             //新しいバッファ確保
             s32 newCapacity = inc_size_type::getNewCapacity(capacity_);
-            T *newItems = reinterpret_cast<T*>( allocator_type::malloc(newCapacity*sizeof(T)) );
+            T *newItems = reinterpret_cast<T*>( LIME_ALLOCATOR_MALLOC(allocator_type, newCapacity*sizeof(T)) );
 
             //コピーコンストラクタでコピー。古い要素のデストラクト
             for(s32 i=0; i<size_; ++i){
@@ -237,15 +237,15 @@ namespace lcore
         }
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T, Allocator, IncSize>::pop_back()
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T, IncSize, Allocator>::pop_back()
     {
         --size_;
         items_[size_].~T();
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T, Allocator, IncSize>::clear()
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T, IncSize, Allocator>::clear()
     {
         for(s32 i=0; i<size_; ++i){
             items_[i].~T();
@@ -253,8 +253,8 @@ namespace lcore
         size_ = 0;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T, Allocator, IncSize>::swap(this_type& rhs)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T, IncSize, Allocator>::swap(this_type& rhs)
     {
         inc_size_type::swap(rhs);
         lcore::swap(capacity_, rhs.capacity_);
@@ -262,15 +262,15 @@ namespace lcore
         lcore::swap(items_, rhs.items_);
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T, Allocator, IncSize>::reserve(s32 capacity)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T, IncSize, Allocator>::reserve(s32 capacity)
     {
         if(capacity<=capacity_){
             return;
         }
 
         //新しいバッファ確保
-        T* newItems = reinterpret_cast<T*>( allocator_type::malloc(capacity*sizeof(T)) );
+        T* newItems = reinterpret_cast<T*>( LIME_ALLOCATOR_MALLOC(allocator_type, capacity*sizeof(T)) );
 
         //コピーコンストラクタでコピー。古い要素のデストラクト
         for(s32 i=0; i<size_; ++i){
@@ -285,8 +285,8 @@ namespace lcore
         capacity_ = capacity;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T, Allocator, IncSize>::resize(s32 size)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T, IncSize, Allocator>::resize(s32 size)
     {
         if(size < size_){
             //デストラクト
@@ -303,8 +303,8 @@ namespace lcore
         size_ = size;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T, Allocator, IncSize>::removeAt(s32 index)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T, IncSize, Allocator>::removeAt(s32 index)
     {
         LASSERT(0<=index && index<size_);
         for(s32 i=index+1; i<size_; ++i){
@@ -314,8 +314,8 @@ namespace lcore
         items_[size_].~T();
     }
 
-    template<class T, class Allocator, class IncSize>
-    s32 vector_arena<T, Allocator, IncSize>::find(const T& ptr) const
+    template<class T, class IncSize, class Allocator>
+    s32 vector_arena<T, IncSize, Allocator>::find(const T& ptr) const
     {
         for(s32 i=0; i<size_; ++i){
             if(ptr == items_[i]){
@@ -330,12 +330,12 @@ namespace lcore
     //--- vector_arena ポインタ特殊化
     //---
     //-----------------------------------------------------------------
-    template<class T, class Allocator, class IncSize>
-    class vector_arena<T*, Allocator, IncSize> : public IncSize
+    template<class T, class IncSize, class Allocator>
+    class vector_arena<T*, IncSize, Allocator> : public IncSize
     {
     public:
 
-        typedef vector_arena<T*, Allocator, IncSize> this_type;
+        typedef vector_arena<T*, IncSize, Allocator> this_type;
         typedef s32 size_type;
         typedef T** iterator;
         typedef const T** const_iterator;
@@ -412,16 +412,16 @@ namespace lcore
         T** items_;
     };
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T*, Allocator, IncSize>::vector_arena()
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T*, IncSize, Allocator>::vector_arena()
         :capacity_(0)
         ,size_(0)
         ,items_(NULL)
     {
     }
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T*, Allocator, IncSize>::vector_arena(const this_type& rhs)
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T*, IncSize, Allocator>::vector_arena(const this_type& rhs)
         :inc_size_type(rhs)
         ,capacity_(rhs.capacity_)
         ,size_(rhs.size_)
@@ -433,8 +433,8 @@ namespace lcore
         }
     }
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T*, Allocator, IncSize>::vector_arena(s32 incSize)
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T*, IncSize, Allocator>::vector_arena(s32 incSize)
         :inc_size_type(incSize)
         ,capacity_(0)
         ,size_(0)
@@ -443,8 +443,8 @@ namespace lcore
         LASSERT(incSize>0);
     }
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T*, Allocator, IncSize>::vector_arena(s32 size, s32 incSize)
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T*, IncSize, Allocator>::vector_arena(s32 size, s32 incSize)
         :inc_size_type(incSize)
         ,capacity_( (size>incSize)? size : incSize )
         ,size_(size)
@@ -457,20 +457,20 @@ namespace lcore
         }
     }
 
-    template<class T, class Allocator, class IncSize>
-    vector_arena<T*, Allocator, IncSize>::~vector_arena()
+    template<class T, class IncSize, class Allocator>
+    vector_arena<T*, IncSize, Allocator>::~vector_arena()
     {
         allocator_type::free(items_);
         items_ = NULL;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T*, Allocator, IncSize>::push_back(T* const t)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T*, IncSize, Allocator>::push_back(T* const t)
     {
         if(size_ >= capacity_){
             //新しいバッファ確保
             s32 newCapacity = inc_size_type::getNewCapacity(capacity_);
-            T** newItems = reinterpret_cast<T**>(allocator_type::malloc(newCapacity*sizeof(T*)));
+            T** newItems = reinterpret_cast<T**>( LIME_ALLOCATOR_MALLOC(allocator_type, newCapacity*sizeof(T*)) );
 
             //コピー
             for(s32 i=0; i<size_; ++i){
@@ -487,21 +487,21 @@ namespace lcore
         ++size_;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T*, Allocator, IncSize>::pop_back()
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T*, IncSize, Allocator>::pop_back()
     {
         LASSERT(size_>0);
         --size_;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T*, Allocator, IncSize>::clear()
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T*, IncSize, Allocator>::clear()
     {
         size_ = 0;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T*, Allocator, IncSize>::swap(this_type& rhs)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T*, IncSize, Allocator>::swap(this_type& rhs)
     {
         inc_size_type::swap(rhs);
         lcore::swap(capacity_, rhs.capacity_);
@@ -509,15 +509,15 @@ namespace lcore
         lcore::swap(items_, rhs.items_);
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T*, Allocator, IncSize>::reserve(s32 capacity)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T*, IncSize, Allocator>::reserve(s32 capacity)
     {
         if(capacity<=capacity_){
             return;
         }
 
         //新しいバッファ確保
-        T** newItems = reinterpret_cast<T**>(allocator_type::malloc(capacity*sizeof(T*)));
+        T** newItems = reinterpret_cast<T**>( LIME_ALLOCATOR_MALLOC(allocator_type, capacity*sizeof(T*)) );
 
         //コピー
         for(s32 i=0; i<size_; ++i){
@@ -531,8 +531,8 @@ namespace lcore
         capacity_ = capacity;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T*, Allocator, IncSize>::resize(s32 size)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T*, IncSize, Allocator>::resize(s32 size)
     {
         if(size > size_){
             reserve(size);
@@ -540,8 +540,8 @@ namespace lcore
         size_ = size;
     }
 
-    template<class T, class Allocator, class IncSize>
-    void vector_arena<T*, Allocator, IncSize>::removeAt(s32 index)
+    template<class T, class IncSize, class Allocator>
+    void vector_arena<T*, IncSize, Allocator>::removeAt(s32 index)
     {
         LASSERT(0<=index && index<size_);
         for(s32 i=index+1; i<size_; ++i){
@@ -551,8 +551,8 @@ namespace lcore
         items_[size_] = NULL;
     }
 
-    template<class T, class Allocator, class IncSize>
-    s32 vector_arena<T*, Allocator, IncSize>::find(const T* ptr) const
+    template<class T, class IncSize, class Allocator>
+    s32 vector_arena<T*, IncSize, Allocator>::find(const T* ptr) const
     {
         for(s32 i=0; i<size_; ++i){
             if(ptr == items_[i]){

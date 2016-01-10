@@ -15,7 +15,6 @@ namespace lrender
     class Image;
     class Sampler;
     class Integrator;
-    class ShadingGeometry;
 
     class RenderMapBruteForceQuery
     {
@@ -29,7 +28,7 @@ namespace lrender
         RenderMapBruteForceQuery(const RenderMapBruteForceQuery&);
         RenderMapBruteForceQuery& operator=(const RenderMapBruteForceQuery&);
 
-        bool testTexcoordInPrimitive(ShadingGeometry& shadingGeometry, Shape::ShapeVector& shapes, const Vector2& p);
+        bool testTexcoordInPrimitive(Intersection& intersection, Shape::ShapeVector& shapes, const Vector2& p);
 
         const Scene* scene_;
         Sampler* sampler_;

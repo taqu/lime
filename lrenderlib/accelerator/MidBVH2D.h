@@ -109,7 +109,7 @@ namespace lrender
         typedef lcore::vector_arena<AABB2D> AABBVector;
 
         lcore::vector_arena<const Shape*> shapes_;
-        lcore::vector_arena<Node, Align16Allocator> nodes_;
+        lcore::vector_arena<Node, lcore::vector_arena_static_inc_size<16>, Align16Allocator> nodes_;
 
         VectorShapePrimitive primitives_;
         F32Vector primitiveCentroids_;

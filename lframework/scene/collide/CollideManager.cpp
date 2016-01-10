@@ -251,7 +251,7 @@ namespace lcollide
         statistics_.numCollides_ = 0;
 
         CollisionInfo info;
-        for(u32 i=0; i<collisions_.size(); ++i){
+        for(s32 i=0; i<collisions_.size(); ++i){
 
             Collider* node0 = reinterpret_cast<Collider*>(collisions_[i].node0_);
             Collider* node1 = reinterpret_cast<Collider*>(collisions_[i].node1_);
@@ -263,14 +263,16 @@ namespace lcollide
                     LASSERT(NULL != node0->getData());
                     LASSERT(NULL != node1->getData());
                     ++statistics_.numCollides_;
-                    node0->getNode()->onCollide(node1->getNode(), info);
+                    node0->getCollidable()->onCollide(node1->getCollidable(), info);
                     if(info.type_ == CollisionInfoType_NormalDepth){
                         info.info_ = -info.info_;
                         info.info_.w_ = -info.info_.w_;
                     }
-                    node1->getNode()->onCollide(node0->getNode(), info);
+                    node1->getCollidable()->onCollide(node0->getCollidable(), info);
                 }
             }
         }
+
+        octree_.clear();
     }
 }

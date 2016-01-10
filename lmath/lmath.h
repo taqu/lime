@@ -1,9 +1,9 @@
 ﻿#ifndef INC_LMATH_H__
 #define INC_LMATH_H__
 /*!
-\filelmath.h
-\author t-sakai
-\date 2008/06/30 create
+@filelmath.h
+@author t-sakai
+@date 2008/06/30 create
 */
 #include "lmathcore.h"
 #include "Vector2.h"

@@ -7,6 +7,11 @@
 */
 #include "../lrender.h"
 
+namespace lmath
+{
+    class Sphere;
+}
+
 namespace lrender
 {
     class Ray;
@@ -40,9 +45,11 @@ namespace lrender
     @param v1 ... 
     @param v2 ... 
     */
-    bool testRayTriangle(f32& t, f32& v, f32& w, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    bool testRayTriangleFront(f32& t, f32& v, f32& w, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    bool testRayTriangleBack(f32& t, f32& v, f32& w, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    bool testRayTriangleBoth(f32& t, f32& v, f32& w, bool& front, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2);
 
-    s32 testRayTriangle(
+    s32 testRayTriangleFront(
         __m128& t,
         __m128& u,
         __m128& v,
@@ -73,6 +80,16 @@ namespace lrender
     //-----------------------------------------------------------
     // 線分とスラブ（平行な平面の組の間）の交差判定
     bool testRaySlab(f32& tmin, f32& tmax, const Ray& ray, f32 slabMin, f32 slabMax, s32 axis);
+
+    //-----------------------------------------------------------
+    /**
+    @brief 線分と球の交差判定
+    @return 交差するか
+    @param t ... 交差点の陰関数パラメータ。交差点 = t*ray.direction_ + ray.origin_
+    @param ray ... 
+    @param sphere ... 
+    */
+    bool testRaySphere(f32& t, const Ray& ray, const lmath::Sphere& sphere);
 
 
     //-----------------------------------------------------------

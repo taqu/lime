@@ -1,14 +1,16 @@
 #ifndef INC_LOAD_LOADEROBJ_H__
 #define INC_LOAD_LOADEROBJ_H__
+
+#include <map>
+
+#include <lcore/liostream.h>
+#include <lcore/String.h>
+#include <lcore/Vector.h>
+#include <lcore/HashMap.h>
 #include <lmath/lmath.h>
 #include <lframework/scene/load/load.h>
 #include <lframework/scene/load/load_material.h>
 #include <lframework/scene/load/load_texture.h>
-
-#include <fstream>
-#include <vector>
-#include <map>
-#include <string>
 
 namespace lcore
 {
@@ -24,7 +26,29 @@ namespace lload
     class LoaderObj
     {
     public:
-        LoaderObj();
+        struct Vertex
+        {
+            s32 position_;
+            s32 texcoord_;
+            s32 normal_;
+            s16 type_;
+            s16 material_;
+        };
+
+        struct Triangle
+        {
+            s32 indices_[3];
+        };
+
+        struct WorkMesh
+        {
+            s16 geometry_;
+            s16 material_;
+            s32 indexOffset_;
+            s32 numIndices_;
+        };
+
+        LoaderObj(bool generateNormals=true);
         ~LoaderObj();
 
         bool load(const Char* filepath);
@@ -56,15 +80,46 @@ namespace lload
             u16 w_;
         };
 
-        typedef std::vector<lmath::Vector3> Vector3Vector;
-        typedef std::vector<lmath::Vector2> Vector2Vector;
-        typedef std::vector<U16Vector4> U16Vector4Vector;
-        typedef std::vector<U16Vector2> U16Vector2Vector;
-        typedef std::vector<u16> U16Vector;
-        typedef std::vector<s32> S32Vector;
+        typedef lcore::vector_arena<Char> String;
+        typedef lcore::vector_arena<lmath::Vector2, lcore::vector_arena_static_inc_size<1024> > Vector2Vector;
+        typedef lcore::vector_arena<lmath::Vector3, lcore::vector_arena_static_inc_size<1024> > Vector3Vector;
+        typedef lcore::vector_arena<lmath::Vector4, lcore::vector_arena_static_inc_size<1024> > Vector4Vector;
+        typedef lcore::vector_arena<U16Vector2, lcore::vector_arena_static_inc_size<1024> > U16Vector2Vector;
+        typedef lcore::vector_arena<U16Vector4, lcore::vector_arena_static_inc_size<1024> > U16Vector4Vector;
+        typedef lcore::vector_arena<u16, lcore::vector_arena_static_inc_size<1024> > U16Vector;
+        typedef lcore::vector_arena<s32, lcore::vector_arena_static_inc_size<1024> > S32Vector;
+
+        typedef lcore::vector_arena<Triangle, lcore::vector_arena_static_inc_size<1024> > TriangleVector;
+        typedef lcore::vector_arena<Vertex, lcore::vector_arena_static_inc_size<1024> > VertexVector;
+
+        typedef lcore::vector_arena<lload::Texture> TextureVector;
+        typedef lcore::vector_arena<WorkMesh> MeshVector;
+
         typedef std::map<s32, s32> S32Map;
-        typedef std::map<std::string, s32> NameToMaterialMap;
-        typedef std::map<std::string, s32> NameToTextureMap;
+
+        //typedef lcore::HopscotchHashMap<lcore::DynamicString, s32> NameToMaterialMap;
+        //typedef lcore::HopscotchHashMap<lcore::DynamicString, s32> NameToTextureMap;
+
+        struct WorkMaterial
+        {
+            static const s32 MaxNameSize = 256;
+            Char name_[MaxNameSize];
+            Material material_;
+
+            void clear();
+            void setName(const Char* name);
+        };
+
+        typedef lcore::vector_arena<WorkMaterial> MaterialVector;
+
+        struct MaterialPack
+        {
+            MaterialVector materials_;
+            TextureVector textures_;
+
+            s32 findMaterialIndex(const Char* name) const;
+            s32 findTextureIndex(const Char* name) const;
+        };
 
         enum Code
         {
@@ -82,58 +137,67 @@ namespace lload
             Code_EOF,
         };
 
-        enum CodeMtl
+        //------------------------------------------------------
+        //---
+        //--- LoaderMtl
+        //---
+        //------------------------------------------------------
+        class LoaderMtl
         {
-            CodeMtl_None,
-            CodeMtl_NewMtl,
-            CodeMtl_Model,
-            CodeMtl_Dissolve,
-            CodeMtl_SpecularExponent,
-            CodeMtl_RefracttionIndex,
-            CodeMtl_Ambient,
-            CodeMtl_Diffuse,
-            CodeMtl_Specular,
-            CodeMtl_Transmission,
-            CodeMtl_MapDiffuse,
-            CodeMtl_MapBump,
-            CodeMtl_Illumination,
-            CodeMtl_EOF,
+        public:
+            enum CodeMtl
+            {
+                CodeMtl_None,
+                CodeMtl_NewMtl,
+                CodeMtl_Model,
+                CodeMtl_Dissolve,
+                CodeMtl_SpecularExponent,
+                CodeMtl_RefracttionIndex,
+                CodeMtl_Ambient,
+                CodeMtl_Diffuse,
+                CodeMtl_Specular,
+                CodeMtl_Transmission,
+                CodeMtl_Emission,
+                CodeMtl_MapDiffuse,
+                CodeMtl_MapBump,
+                CodeMtl_Illumination,
+                CodeMtl_EOF,
+            };
+
+            LoaderMtl();
+            ~LoaderMtl();
+
+            s32 loadFromFile(MaterialPack& materialPack, const Char* directory, const Char* filename);
+
+            void skip();
+            bool getLine();
+            void split();
+            CodeMtl decodeLine();
+            void load(f32& f);
+            void load(lmath::Vector3& v);
+            void load(lmath::Vector4& v);
+
+            Texture loadTexture(const Char* filename);
+
+            bool readLine(MaterialPack& materialPack);
+
+            const Char* directory_;
+            lcore::ifstream file_;
+            String line_;
+            lcore::vector_arena<Char*> elements_;
+            WorkMaterial* material_;
         };
 
-        struct Vertex
-        {
-            s32 position_;
-            s32 texcoord_;
-            s32 normal_;
-            s16 material_;
-            s16 type_;
-        };
-
-        void skip(std::ifstream& input);
-
-        bool getLine(std::ifstream& input);
-
+        void skip();
+        bool getLine();
         void split();
-
-        void getFElems(f32 felems[4]);
+        Code decodeLine();
+        s32 getFaceElements(f32 felems[4]);
         void getFaceVertex(Char* str, Vertex& v);
 
-        Code decodeLine(std::ifstream& input);
-        bool readLine(std::ifstream& input);
+         bool readLine();
 
-        bool loadMtl(const Char* filepath);
-        CodeMtl decodeLineMtl(std::ifstream& input);
-        bool readLineMtl(std::ifstream& input);
-
-        void getInt(s32& dst);
-
-        void getFloat(f32& dst);
-        void getFloat3(lmath::Vector3& dst);
-        s32 addMaterial(const std::string& name);
-        s32 getMaterial(const std::string& name);
-
-        void loadTexture(const Char* name);
-        s32 getTexture(const Char* name);
+        void pushMesh();
 
         void setVertexProperty(Geometry& geometry);
 
@@ -141,24 +205,23 @@ namespace lload
         void push_back(U16Vector4Vector& v, const lmath::Vector3& n);
         void push_back(U16Vector2Vector& v, const lmath::Vector2& t);
 
+        bool generateNormals_;
         Char* directory_;
-        std::vector<Char> line_;
-        std::vector<Char*> elems_;
+        lcore::ifstream file_;
+        String line_;
+        lcore::vector_arena<Char*> elements_;
 
-        s32 currentMaterialId_;
         Vector3Vector positions_;
         Vector3Vector normals_;
         Vector2Vector texcoords_;
 
-        typedef std::vector<Vertex> VertexVector;
         VertexVector vertices_;
+        s32 lastNumTriangles_;
 
-        std::string currentMaterial_;
-        NameToMaterialMap materials_;
-        std::vector<Material> materialVector_;
+        MeshVector meshes_;
 
-        NameToTextureMap textures_;
-        std::vector<Texture> textureVector_;
+        s32 currentMaterial_;
+        MaterialPack materialPack_;
     };
 }
 }

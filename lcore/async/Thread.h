@@ -20,7 +20,7 @@ namespace lcore
     {
     public:
         static const u32 Infinite = lcore::thread::Infinite;
-        typedef void (*Proc)(void* data);
+        typedef void (*Proc)(u32 threadId, void* data);
 
         ThreadRaw();
         virtual ~ThreadRaw();

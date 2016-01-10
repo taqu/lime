@@ -239,11 +239,15 @@ namespace lrender
 
     void Scene::initRender()
     {
+        bvh_.clearShapes();
         for(s32 i=0; i<shapes_.size(); ++i){
             bvh_.addShape(shapes_[i]);
         }
         bvh_.build();
-        Vector3 extent = getWorldBound().extent();
+        AABB worldBound = getWorldBound();
+        worldBound.extend(camera_->getPosition());
+
+        Vector3 extent = worldBound.extent();
         worldMaxSize_ = extent.length() * RAY_MAX_RATIO_OF_WORLD_SIZE;
     }
 }

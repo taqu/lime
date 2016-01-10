@@ -86,6 +86,24 @@ namespace lcore
             return pointer_;
         }
 
+        template<class T>
+        T* get_static_cast() const
+        {
+            return static_cast<T*>(pointer_);
+        }
+
+        template<class T>
+        T* get_reinterpret_cast() const
+        {
+            return reinterpret_cast<T*>(pointer_);
+        }
+
+        template<class T>
+        T* get_dynamic_cast() const
+        {
+            return dynamic_cast<T*>(pointer_);
+        }
+
         //operator pointer_type()
         //{
         //    return pointer_;
@@ -186,6 +204,12 @@ namespace lcore
     inline intrusive_ptr<Dst> static_pointer_cast(const intrusive_ptr<Src>& pointer)
     {
         return static_cast<Dst*>(pointer.get());
+    }
+
+    template<class Dst, class Src>
+    inline intrusive_ptr<Dst> reinterpret_pointer_cast(const intrusive_ptr<Src>& pointer)
+    {
+        return reinterpret_cast<Dst*>(pointer.get());
     }
 
     template<class Dst, class Src>

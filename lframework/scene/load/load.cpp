@@ -10,6 +10,7 @@
 #include <lgraphics/io11/IOPNG.h>
 #include <lgraphics/io11/IOBMP.h>
 #include "../file/File.h"
+#include "load_material.h"
 
 namespace lscene
 {
@@ -79,12 +80,13 @@ namespace
         FileType type,
         u32 usage,
         u32 filterType,
-        u32 address)
+        u32 address,
+        bool sRGB)
     {
         u32 width = 0;
         u32 height = 0;
         u32 rowBytes = 0;
-        lgraphics::DataFormat format = lgraphics::Data_R8G8B8A8_UNorm_SRGB;
+        lgraphics::DataFormat format = (sRGB)? lgraphics::Data_R8G8B8A8_UNorm_SRGB : lgraphics::Data_R8G8B8A8_UNorm;
         sampler = lgraphics::SamplerState::create(
             (lgraphics::TextureFilterType)filterType,
             (lgraphics::TextureAddress)address,
@@ -108,6 +110,7 @@ namespace
                     lgraphics::BindFlag_ShaderResource,
                     lgraphics::CPUAccessFlag_None,
                     lgraphics::ResourceMisc_None,
+                    sRGB,
                     width, height, format);
                 LSCENE_FREE(buffer);
 
@@ -122,13 +125,13 @@ namespace
             break;
 
         case FileType_PNG:
-            if(false == lgraphics::io::IOPNG::read(file, NULL, width, height, rowBytes, format, lgraphics::io::IOPNG::Swap_BGR)){
+            if(false == lgraphics::io::IOPNG::read(file, NULL, width, height, rowBytes, format, sRGB, lgraphics::io::IOPNG::Swap_BGR)){
                 return false;
             }
             break;
 
         case FileType_BMP:
-            if(false == lgraphics::io::IOBMP::read(file, NULL, width, height, format)){
+            if(false == lgraphics::io::IOBMP::read(file, NULL, width, height, format, sRGB)){
                 return false;
             }
             rowBytes = 4*width;
@@ -141,11 +144,11 @@ namespace
         switch(type)
         {
         case FileType_PNG:
-            ret = lgraphics::io::IOPNG::read(file, buffer, width, height, rowBytes, format, lgraphics::io::IOPNG::Swap_BGR);
+            ret = lgraphics::io::IOPNG::read(file, buffer, width, height, rowBytes, format, sRGB, lgraphics::io::IOPNG::Swap_BGR);
             break;
 
         case FileType_BMP:
-            ret = lgraphics::io::IOBMP::read(file, buffer, width, height, format);
+            ret = lgraphics::io::IOBMP::read(file, buffer, width, height, format, sRGB);
             break;
         };
 
@@ -179,5 +182,13 @@ namespace
         return ret;
     }
 
+    Material* loadMaterials(s32& numMaterials, u8* memory)
+    {
+        Header& header = *reinterpret_cast<Header*>(memory);
+        numMaterials = header.elems_[Elem_Material].number_;
+
+        Material* materials = reinterpret_cast<Material*>(memory + header.elems_[Elem_Material].offset_);
+        return materials;
+    }
 }
 }

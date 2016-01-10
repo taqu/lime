@@ -30,10 +30,9 @@ namespace lrender
     class NodeStaticObject : public lscene::NodeObject
     {
     public:
-        explicit NodeStaticObject(const Char* name = NULL);
+        explicit NodeStaticObject(const Char* name = NULL, u16 group=Group_None, u16 type=NodeType_StaticObject);
         virtual ~NodeStaticObject();
 
-        virtual s32 getType() const;
         virtual void update();
     };
 }

@@ -26,6 +26,8 @@ namespace lmath
     class Matrix44
     {
     public:
+        static const Matrix44 identity_;
+
         Matrix44()
         {}
 

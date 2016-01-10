@@ -135,6 +135,7 @@ namespace lgraphics
         ViewSRVDimension_Texture3D = D3D11_SRV_DIMENSION_TEXTURE3D,
         ViewSRVDimension_Cube = D3D11_SRV_DIMENSION_TEXTURECUBE,
         ViewSRVDimension_CubeArray = D3D11_SRV_DIMENSION_TEXTURECUBEARRAY,
+        ViewSRVDimension_BufferEx = D3D11_SRV_DIMENSION_BUFFEREX,
     };
 
     //--------------------------------------------------------

@@ -183,6 +183,7 @@
     <ClInclude Include="..\scene\file\FileSystem.h" />
     <ClInclude Include="..\scene\FrameSyncQuery.h" />
     <ClInclude Include="..\scene\Frustum.h" />
+    <ClInclude Include="..\scene\Collidable.h" />
     <ClInclude Include="..\scene\LightEnvironment.h" />
     <ClInclude Include="..\scene\load\load.h" />
     <ClInclude Include="..\scene\load\load_geometry.h" />

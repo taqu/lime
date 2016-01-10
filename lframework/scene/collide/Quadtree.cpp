@@ -119,9 +119,8 @@ namespace lcollide
         invUnit_ = bmax_;
         invUnit_ -= bmin_;
 
-        invUnit_ /= numSplits_;
         for(s32 i=0; i<2; ++i){
-            invUnit_[i] = 1.0f/invUnit_[i];
+            invUnit_[i] = static_cast<f32>(numSplits_)/invUnit_[i];
         }
     }
 

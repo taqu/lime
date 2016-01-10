@@ -342,6 +342,7 @@ namespace
 
     Converter::Converter()
         :forceDDS_(false)
+        ,enableLog_(false)
         ,boneRootNode_(NULL)
     {
     }
@@ -753,22 +754,22 @@ namespace
             FbxLayer* layer = mesh->GetLayer(i);
             if(NULL != layer->GetNormals()){
                 getNormals(geometry, mesh, layer->GetNormals());
-                continue;
+                //continue;
             }
 
             if(NULL != layer->GetTangents()){
                 getTangents(geometry, mesh, layer->GetTangents());
-                continue;
+                //continue;
             }
 
             if(NULL != layer->GetBinormals()){
                 getBinormals(geometry, mesh, layer->GetBinormals());
-                continue;
+                //continue;
             }
 
             if(NULL != layer->GetVertexColors()){
                 getColors(geometry, mesh, layer->GetVertexColors());
-                continue;
+                //continue;
             }
         }
 
@@ -1331,8 +1332,9 @@ namespace
         int layerCount = mesh->GetLayerCount();
         for(int i=0; i<layerCount; ++i){
             FbxLayer* layer = mesh->GetLayer(i);
+            s32 materialCount = src->GetMaterialCount();
             if(NULL != layer->GetMaterials()){
-                ++numMaterialLayers;
+                numMaterialLayers += materialCount;
             }
         }
 
@@ -1401,10 +1403,19 @@ namespace
             }
 
             geometry.indices_.clear();
-            for(u32 i=0; i<materials_.size(); ++i){
+            for(s32 i=0; i<src->GetMaterialCount(); ++i){
                 if(indexVectors[i].size()<=0){
                     continue;
                 }
+                s32 materialIndex = 0;
+                FbxSurfaceMaterial* material = src->GetMaterial(i);
+                for(int j = 0; j < scene_->GetMaterialCount(); ++j){
+                    if(material == scene_->GetMaterial(j)){
+                        materialIndex = j;
+                        break;
+                    }
+                }
+
                 u32 indexOffset = geometry.indices_.size();
                 for(u32 j=0; j<indexVectors[i].size(); ++j){
                     geometry.indices_.push_back(indexVectors[i][j]);
@@ -1412,7 +1423,7 @@ namespace
 
                 Mesh meshCVT;
                 meshCVT.geometry_ = geometryIndex;
-                meshCVT.material_ = static_cast<s16>(i);
+                meshCVT.material_ = static_cast<s16>(materialIndex);
                 meshCVT.indexOffset_ = indexOffset;
                 meshCVT.numIndices_ = indexVectors[i].size();
                 calcSphere(meshCVT);
@@ -1470,7 +1481,13 @@ namespace
             if( surface->GetClassId().Is(FbxSurfacePhong::ClassId) ){
                 FbxSurfacePhong* phong = (FbxSurfacePhong*)surface;
 
-                //f32 reflectionFactor = static_cast<f32>(phong->ReflectionFactor.Get());
+                FbxDouble3 diffuse = phong->Diffuse.Get();
+
+                f32 bumpFactor = static_cast<f32>(phong->BumpFactor.Get());
+                f32 specularFactor = static_cast<f32>(phong->SpecularFactor.Get());
+                f32 shininess = static_cast<f32>(phong->Shininess.Get());
+                FbxDouble3 reflection = phong->Reflection.Get();
+                f32 reflectionFactor = static_cast<f32>(phong->ReflectionFactor.Get());
 
                 material.diffuse_.set(
                     static_cast<f32>(phong->Diffuse.Get()[0]),
@@ -1482,7 +1499,7 @@ namespace
                     static_cast<f32>(phong->Specular.Get()[0]),
                     static_cast<f32>(phong->Specular.Get()[1]),
                     static_cast<f32>(phong->Specular.Get()[2]),
-                    static_cast<f32>(phong->Shininess.Get()));
+                    shininess);
 
                 //material.transparent_.set(
                 //    static_cast<f32>(phong->TransparentColor.Get()[0]),
@@ -1838,7 +1855,9 @@ namespace
 
     void Converter::traverseAnimation()
     {
-        log_.open("log_animation.txt");
+        if(enableLog_){
+            log_.open("log_animation.txt");
+        }
 
         s32 animStackCount = scene_->GetSrcObjectCount<FbxAnimStack>();
         for(s32 i=0; i<animStackCount; ++i){

@@ -78,7 +78,7 @@ namespace lrender
         if(1.0f<=sint){
             return 1.0f;
         } else{
-            f32 cost = lmath::sqrt(lcore::maximum(1.0f-sint*sint, 0.0f));
+            f32 cost = lmath::sqrt(lcore::maximum(1.0f-sint*sint, 1.0e-4f));
             return fresnelDielectic(lcore::absolute(cosi), cost, ei, et);
         }
     }

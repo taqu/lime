@@ -30,10 +30,8 @@ namespace lrender
     class NodeObject : public lscene::NodeTransform
     {
     public:
-        explicit NodeObject(const Char* name = NULL);
+        explicit NodeObject(const Char* name = NULL, u16 group=Group_None, u16 type=NodeType_Object);
         virtual ~NodeObject();
-
-        virtual s32 getType() const;
 
         lrender::Object* getObject();
         void setObject(lrender::Object* obj);

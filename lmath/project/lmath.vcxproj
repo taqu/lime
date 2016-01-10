@@ -172,6 +172,8 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="..\Coordinate.h" />
+    <ClInclude Include="..\geometry\AABB.h" />
     <ClInclude Include="..\geometry\BVH.h" />
     <ClInclude Include="..\geometry\DepthCluster.h" />
     <ClInclude Include="..\geometry\KDTree.h" />
@@ -193,6 +195,8 @@
     <ClInclude Include="..\Vector4.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Coordinate.cpp" />
+    <ClCompile Include="..\geometry\AABB.cpp" />
     <ClCompile Include="..\geometry\DepthCluster.cpp" />
     <ClCompile Include="..\geometry\Plane.cpp" />
     <ClCompile Include="..\geometry\PrimitiveTest.cpp" />

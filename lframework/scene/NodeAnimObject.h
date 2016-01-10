@@ -31,10 +31,8 @@ namespace lrender
     class NodeAnimObject : public lscene::NodeTransform
     {
     public:
-        explicit NodeAnimObject(const Char* name = NULL);
+        explicit NodeAnimObject(const Char* name = NULL, u16 group=Group_None, u16 type=NodeType_AnimObject);
         virtual ~NodeAnimObject();
-
-        virtual s32 getType() const;
 
         lrender::AnimObject* getAnimObject();
         virtual void setAnimObject(lrender::AnimObject* obj);

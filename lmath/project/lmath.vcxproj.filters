@@ -43,6 +43,10 @@
     <ClInclude Include="..\geometry\DepthCluster.h">
       <Filter>geometry</Filter>
     </ClInclude>
+    <ClInclude Include="..\Coordinate.h" />
+    <ClInclude Include="..\geometry\AABB.h">
+      <Filter>geometry</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\geometry\Plane.cpp">
@@ -74,6 +78,10 @@
       <Filter>geometry</Filter>
     </ClCompile>
     <ClCompile Include="..\geometry\DepthCluster.cpp">
+      <Filter>geometry</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Coordinate.cpp" />
+    <ClCompile Include="..\geometry\AABB.cpp">
       <Filter>geometry</Filter>
     </ClCompile>
   </ItemGroup>

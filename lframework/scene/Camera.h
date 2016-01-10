@@ -139,6 +139,8 @@ namespace lscene
         f32 jitterWidth_;
         f32 jitterHeight_;
         s32 sampleIndex_;
+        s32 reserved_;
+
         Sample2D samples_[NumJitterSamples];
     };
 

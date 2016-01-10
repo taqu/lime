@@ -4,6 +4,7 @@
 @date 2015/09/15 create
 */
 #include "String.h"
+#include "Hash.h"
 
 namespace lcore
 {
@@ -147,6 +148,60 @@ namespace lcore
         DynamicString str(rhs);
         str.swap(*this);
         return *this;
+    }
+
+    lcore::ostream& DynamicString::write(lcore::ostream& os)
+    {
+        os.write(data_, length_);
+        return os;
+    }
+
+    /// 書式付出力
+    int DynamicString::print(const Char* format, ...)
+    {
+        LASSERT(format != NULL);
+        static const s32 MaxBuffer = 128;
+        Char buffer[MaxBuffer];
+
+        va_list ap;
+        va_start(ap, format);
+
+#if defined(_WIN32) || defined(_WIN64)
+        int ret = vsnprintf_s(buffer, MaxBuffer, format, ap);
+#else
+        int ret = vsnprintf(buffer, MaxBuffer, format, ap);
+#endif
+        if(ret<=0){
+            assign(buffer, buffer);
+
+        }else if(ret<MaxBuffer){
+            assign(buffer, buffer+ret);
+
+        }else{
+            s32 bufferSize = MaxBuffer;
+            Char* buff = NULL;
+            do{
+                LIME_DELETE_ARRAY(buff);
+                bufferSize += MaxBuffer;
+                buff = LIME_NEW Char[bufferSize];
+
+#if defined(_WIN32) || defined(_WIN64)
+                ret = vsnprintf_s(buff, bufferSize, bufferSize, format, ap);
+#else
+                ret = vsnprintf(buff, bufferSize, format, ap);
+#endif
+            }while(bufferSize<=ret);
+            assign(buff, buff+ret);
+            LIME_DELETE_ARRAY(buff);
+        }
+
+        va_end(ap);
+        return ret;
+    }
+
+    u32 hasher<DynamicString>::calc(const DynamicString& t)
+    {
+        return calc_hash(reinterpret_cast<const u8*>(t.c_str()), t.length());
     }
 
     //---------------------------------------------

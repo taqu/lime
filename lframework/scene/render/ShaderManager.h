@@ -60,7 +60,7 @@ namespace lrender
         ShaderManager(const ShaderManager&);
         ShaderManager& operator=(const ShaderManager&);
 
-        typedef lcore::vector_arena<ShaderSet*, lscene::SceneAllocator, lcore::vector_arena_static_inc_size<16> > ShaderSetVector;
+        typedef lcore::vector_arena<ShaderSet*, lcore::vector_arena_static_inc_size<16>, lscene::SceneAllocator> ShaderSetVector;
 
         struct CompFunc
         {

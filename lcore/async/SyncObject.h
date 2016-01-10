@@ -209,6 +209,46 @@ namespace thread
         HANDLE readersCleared_;
     };
 
+    class ScopedReaderLock
+    {
+    public:
+        ScopedReaderLock(ReadersWriterLock& lock)
+            :lock_(lock)
+        {
+            lock_.enterReader();
+        }
+
+        ~ScopedReaderLock()
+        {
+            lock_.leaveReader();
+        }
+    private:
+        ScopedReaderLock(const ScopedReaderLock&);
+        ScopedReaderLock& operator=(const ScopedReaderLock&);
+
+        ReadersWriterLock& lock_;
+    };
+
+    class ScopedWriterLock
+    {
+    public:
+        ScopedWriterLock(ReadersWriterLock& lock)
+            :lock_(lock)
+        {
+            lock_.enterWriter();
+        }
+
+        ~ScopedWriterLock()
+        {
+            lock_.leaveWriter();
+        }
+    private:
+        ScopedWriterLock(const ScopedWriterLock&);
+        ScopedWriterLock& operator=(const ScopedWriterLock&);
+
+        ReadersWriterLock& lock_;
+    };
+
     //-------------------------------------------------------
     //---
     //--- Semaphore

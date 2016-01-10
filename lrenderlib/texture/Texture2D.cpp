@@ -73,7 +73,7 @@ namespace lrender
     //    image_.
     //}
 
-    Color3 Texture2D::sample(const Vector2& uv, Vector2 d0, Vector2 d1) const
+    Color3 Texture2D::sample(const Vector2& uv, Vector2 /*d0*/, Vector2 /*d1*/) const
     {
         f32 u,v;
         Wrap2D::wrap(u, v, uv, wrapType_);

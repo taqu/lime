@@ -27,7 +27,7 @@ namespace lfile
         virtual ~ObjectFactoryBase()
         {}
 
-        virtual Resource* create(s32 type, const Char* path, lfile::SharedFile& file) = 0;
+        virtual Resource* create(s32 type, const Char* path, lfile::SharedFile& file, const SceneParam& param) = 0;
 
     protected:
         ObjectFactoryBase()

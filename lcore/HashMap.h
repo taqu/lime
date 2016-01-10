@@ -190,7 +190,6 @@ namespace lcore
             , emptyKey_(emptyKey)
             , deleteKey_(deleteKey)
         {
-            capacity = powerOfTwo(capacity);
             create(capacity);
         }
 
@@ -209,19 +208,18 @@ namespace lcore
             deleteKey_ = deleteKey;
         }
 
-        size_type powerOfTwo(size_type v)
-        {
-            size_type ret = 16;
-            while(ret<v){
-                ret <<= 1;
-            }
-            return ret;
-        }
+        //size_type powerOfTwo(size_type v)
+        //{
+        //    size_type ret = 16;
+        //    while(ret<v){
+        //        ret <<= 1;
+        //    }
+        //    return ret;
+        //}
 
         void initialize(size_type capacity, const_key_param_type emptyKey, const_key_param_type deleteKey)
         {
             destroy();
-            capacity = powerOfTwo(capacity);
             setEmptyKey(emptyKey);
             setDeleteKey(deleteKey);
             create(capacity);
@@ -357,7 +355,6 @@ namespace lcore
             }
             size_type pos = hash;
             size_type n = pos;
-            size_type mask = capacity_-1;
             do{
                 if(isEmpty(n)){
                     return n;
@@ -366,7 +363,7 @@ namespace lcore
                     return n;
                 }
                 ++n;
-                n &= mask;
+                n %= capacity_;
             } while(n != pos);
 
             return end();
@@ -378,7 +375,6 @@ namespace lcore
     {
             size_type pos = hash;
             size_type n = pos;
-            size_type mask = capacity_-1;
 
             do{
                 if(isEmpty(n)){
@@ -389,7 +385,7 @@ namespace lcore
                     return n;
                 }
                 ++n;
-                n &= mask;
+                n %= capacity_;
             } while(n != pos);
 
             return end();
@@ -473,9 +469,8 @@ namespace lcore
     template<class Key, class Value, class Hasher, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
     void HashMap<Key, Value, Hasher, KeyAllocator, ValueAllocator, KeyValueAllocator>::expand()
     {
-        size_type capacity = capacity_ << 1;
         this_type tmp(emptyKey_, deleteKey_);
-        tmp.create(capacity);
+        tmp.create(capacity_+1);
 
         size_type itr = begin();
         while(itr != end()){
@@ -494,7 +489,7 @@ namespace lcore
     {
         LASSERT(NULL == keyvalues_);
 
-        capacity_ = capacity;
+        capacity_ = hash_detail::next_prime(capacity);
         keyvalues_ = keyvalue_array_allocator::allocate(capacity_);
         for(size_type i=0; i<capacity_; ++i){
             key_allocator::construct(&keyvalues_[i].key_, emptyKey_);
@@ -605,7 +600,6 @@ namespace lcore
             ,hopinfoes_(NULL)
             ,keyvalues_(NULL)
         {
-            capacity = powerOfTwo(capacity);
             create(capacity);
         }
 
@@ -626,7 +620,6 @@ namespace lcore
         void initialize(size_type capacity)
         {
             destroy();
-            capacity = powerOfTwo(capacity);
             create(capacity);
         }
 
@@ -744,9 +737,9 @@ namespace lcore
         size_type pos = hash;
         size_type mask = capacity_-1;
 
-        bitmap_type info = hopinfoes_[pos].getHop();
+        bitmap_type info = (pos<capacity_)? hopinfoes_[pos].getHop() : 0;
 
-        while(0!=info){
+        while(0 != info){
             if(info & 0x01U){
                 LASSERT(isOccupy(pos));
                 if(keyvalues_[pos].key_ == key){
@@ -757,6 +750,7 @@ namespace lcore
             ++pos;
             pos &= mask;
         }
+
         return end();
     }
 
@@ -897,9 +891,8 @@ namespace lcore
     void HopscotchHashMap<Key, Value, Hasher, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::expand()
     {
         LASSERT(0<capacity_);
-        size_type capacity = capacity_ << 1;
         this_type tmp;
-        tmp.create(capacity);
+        tmp.create(capacity_<<1);
 
         size_type itr = begin();
         while(itr != end()){
@@ -919,7 +912,7 @@ namespace lcore
         LASSERT(NULL == hopinfoes_);
         LASSERT(NULL == keyvalues_);
 
-        capacity_ = capacity;
+        capacity_ = powerOfTwo(capacity);
         hopinfoes_ = hopinfo_array_allocator::allocate(capacity_);
         for(size_type i=0; i<capacity_; ++i){
             hopinfoes_[i].clear();

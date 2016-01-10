@@ -244,6 +244,22 @@ namespace lmath
         return lmath::sqrt( dx * dx + dy * dy + dz * dz );
     }
 
+    f32 Vector4::distanceSqr3(const Vector3& v) const
+    {
+        const f32 dx = x_ - v.x_;
+        const f32 dy = y_ - v.y_;
+        const f32 dz = z_ - v.z_;
+        return ( dx * dx + dy * dy + dz * dz );
+    }
+
+    f32 Vector4::distanceSqr3(const Vector4& v) const
+    {
+        const f32 dx = x_ - v.x_;
+        const f32 dy = y_ - v.y_;
+        const f32 dz = z_ - v.z_;
+        return ( dx * dx + dy * dy + dz * dz );
+    }
+
     f32 Vector4::manhattanDistance(const Vector4& v) const
     {
 #if defined(LMATH_USE_SSE)
@@ -401,7 +417,7 @@ namespace lmath
 
     void Vector4::mul(const Matrix44& m, const Vector4& v)
     {
-#if defined(LMATH_USE_SSE) && defined(LMATH_FORCE_SSE)
+#if defined(LMATH_USE_SSE)
         lm128 tm0 = _mm_loadu_ps(&m.m_[0][0]);
         lm128 tm1 = _mm_loadu_ps(&m.m_[1][0]);
         lm128 tm2 = _mm_loadu_ps(&m.m_[2][0]);
@@ -410,24 +426,42 @@ namespace lmath
         _MM_TRANSPOSE4_PS(tm0, tm1, tm2, tm3);
 
 
-        lm128 tv;
-        tv = _mm_load1_ps(&v.x_);
-        tm0 = _mm_mul_ps(tm0, tv);
+        lm128 tv0 = _mm_load1_ps(&v.x_);
+        lm128 tv1 = _mm_load1_ps(&v.y_);
+        lm128 tv2 = _mm_load1_ps(&v.z_);
+        lm128 tv3 = _mm_load1_ps(&v.w_);
 
-        tv = _mm_load1_ps(&v.y_);
-        tm1 = _mm_mul_ps(tm1, tv);
 
-        tv = _mm_load1_ps(&v.z_);
-        tm2 = _mm_mul_ps(tm2, tv);
-
-        tv = _mm_load1_ps(&v.w_);
-        tm3 = _mm_mul_ps(tm3, tv);
+        tm0 = _mm_mul_ps(tm0, tv0);
+        tm1 = _mm_mul_ps(tm1, tv1);
+        tm2 = _mm_mul_ps(tm2, tv2);
+        tm3 = _mm_mul_ps(tm3, tv3);
 
         tm0 = _mm_add_ps(tm0, tm1);
         tm0 = _mm_add_ps(tm0, tm2);
         tm0 = _mm_add_ps(tm0, tm3);
 
         store(*this, tm0);
+
+#elif defined(LMATH_USE_SSE)
+        lm128 tm0 = _mm_loadu_ps(&m.m_[0][0]);
+        lm128 tm1 = _mm_loadu_ps(&m.m_[1][0]);
+        lm128 tm2 = _mm_loadu_ps(&m.m_[2][0]);
+        lm128 tm3 = _mm_loadu_ps(&m.m_[3][0]);
+        lm128 tv = _mm_loadu_ps(&v.x_);
+
+        LIME_ALIGN16 f32 tmp[4];
+        _mm_store_ps(tmp, _mm_mul_ps(tv, tm0));
+        x_ = tmp[0] + tmp[1] + tmp[2] + tmp[3];
+
+        _mm_store_ps(tmp, _mm_mul_ps(tv, tm1));
+        y_ = tmp[0] + tmp[1] + tmp[2] + tmp[3];
+
+        _mm_store_ps(tmp, _mm_mul_ps(tv, tm2));
+        z_ = tmp[0] + tmp[1] + tmp[2] + tmp[3];
+
+        _mm_store_ps(tmp, _mm_mul_ps(tv, tm3));
+        w_ = tmp[0] + tmp[1] + tmp[2] + tmp[3];
 #else
         f32 x, y, z, w;
         x = v.x_ * m.m_[0][0] + v.y_ * m.m_[0][1] + v.z_ * m.m_[0][2] + v.w_ * m.m_[0][3];

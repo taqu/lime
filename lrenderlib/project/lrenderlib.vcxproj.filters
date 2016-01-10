@@ -151,12 +151,6 @@
     <ClInclude Include="..\mapper\Mapper.h">
       <Filter>src\mapper</Filter>
     </ClInclude>
-    <ClInclude Include="..\render\RenderMapQuery.h">
-      <Filter>src\render</Filter>
-    </ClInclude>
-    <ClInclude Include="..\core\ShadingGeometry.h">
-      <Filter>src\core</Filter>
-    </ClInclude>
     <ClInclude Include="..\integrator\AmbientOcclusion.h">
       <Filter>src\integrator</Filter>
     </ClInclude>
@@ -183,6 +177,24 @@
     </ClInclude>
     <ClInclude Include="..\sampler\RandomSampler.h">
       <Filter>src\sampler</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\SampleTable.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\PointOctree.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\render\RenderSurfacePointQuery.h">
+      <Filter>src\render</Filter>
+    </ClInclude>
+    <ClInclude Include="..\core\DynamicPointOctree.h">
+      <Filter>src\core</Filter>
+    </ClInclude>
+    <ClInclude Include="..\integrator\DipoleIntegrator.h">
+      <Filter>src\integrator</Filter>
+    </ClInclude>
+    <ClInclude Include="..\integrator\TranslucencyMagnitudeIntegrator.h">
+      <Filter>src\integrator</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -359,12 +371,6 @@
     <ClCompile Include="..\mapper\Mapper.cpp">
       <Filter>src\mapper</Filter>
     </ClCompile>
-    <ClCompile Include="..\render\RenderMapQuery.cpp">
-      <Filter>src\render</Filter>
-    </ClCompile>
-    <ClCompile Include="..\core\ShadingGeometry.cpp">
-      <Filter>src\core</Filter>
-    </ClCompile>
     <ClCompile Include="..\integrator\AmbientOcclusion.cpp">
       <Filter>src\integrator</Filter>
     </ClCompile>
@@ -391,6 +397,18 @@
     </ClCompile>
     <ClCompile Include="..\sampler\RandomSampler.cpp">
       <Filter>src\sampler</Filter>
+    </ClCompile>
+    <ClCompile Include="..\core\SampleTable.cpp">
+      <Filter>src\core</Filter>
+    </ClCompile>
+    <ClCompile Include="..\render\RenderSurfacePointQuery.cpp">
+      <Filter>src\render</Filter>
+    </ClCompile>
+    <ClCompile Include="..\integrator\DipoleIntegrator.cpp">
+      <Filter>src\integrator</Filter>
+    </ClCompile>
+    <ClCompile Include="..\integrator\TranslucencyMagnitudeIntegrator.cpp">
+      <Filter>src\integrator</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

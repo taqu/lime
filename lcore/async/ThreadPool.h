@@ -66,7 +66,7 @@ namespace lcore
 
             ThreadPool* threadPool_;
 
-            static void proc(void* data);
+            static void proc(u32 threadId, void* data);
         };
 
         friend class WorkerThread;

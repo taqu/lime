@@ -23,6 +23,8 @@ namespace lrender
 
         virtual ~Emitter();
 
+        inline s32 getNumSamples() const;
+
         virtual Color3 sample_L(
             const Vector3& p,
             const Vector3& ng,
@@ -61,6 +63,11 @@ namespace lrender
         lmath::Matrix44 localToWorld_;
         lmath::Matrix44 worldToLocal_;
     };
+
+    inline s32 Emitter::getNumSamples() const
+    {
+        return numSamples_;
+    }
 }
 
 #endif //INC_LRENDER_EMITTER_H__

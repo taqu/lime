@@ -17,9 +17,8 @@ namespace lscene
     class NodeTransform : public NodeBase
     {
     public:
-        explicit NodeTransform(const Char* name = NULL);
+        explicit NodeTransform(const Char* name = NULL, u16 group=Group_None, u16 type=NodeType_Transform);
         virtual ~NodeTransform();
-        virtual s32 getType() const;
 
         virtual void update();
         virtual void traverseUpdateTransform();
@@ -75,7 +74,7 @@ namespace lscene
     inline void NodeTransform::updateTransform()
     {
         createMatrix(matrix_);
-        matrix_.mul(parent_->getMatrix(), matrix_);
+        matrix_.mul(getParentMatrix(), matrix_);
     }
 }
 #endif //INC_LSCENE_NODETRANSFORM_H__

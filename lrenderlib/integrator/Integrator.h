@@ -19,7 +19,6 @@ namespace lrender
     struct EmitterSample;
     class BSDF;
     struct BSDFSample;
-    class ShadingGeometry;
 
 
     class IntegratorQuery
@@ -101,7 +100,7 @@ namespace lrender
 
         virtual void requestSamples(Sampler* sampler) =0;
         virtual Color3 Li(const Ray& ray, IntegratorQuery& query) =0;
-        virtual Color3 E(const ShadingGeometry& shadingGeometry, IntegratorQuery& query) =0;
+        virtual Color4 E(IntegratorQuery& query) =0;
     protected:
         Integrator()
         {}

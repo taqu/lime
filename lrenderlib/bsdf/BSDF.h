@@ -137,6 +137,11 @@ namespace lrender
 
         virtual void initialize() =0;
 
+        virtual Color3 albedo(const Intersection& intersection) const
+        {
+            return Color3::black();
+        }
+
         virtual Color3 f(const Vector3& wo, const Vector3& wi, const Intersection& intersection) const=0;
         Color3 f(const Vector3& wow, const Vector3& wiw, Type type, const Intersection& intersection) const;
 

@@ -64,12 +64,12 @@ namespace lrender
         virtual ~TextureConstant()
         {}
 
-        virtual Color3 sample(const Intersection& intersection) const
+        virtual Color3 sample(const Intersection& /*intersection*/) const
         {
             return value_;
         }
 
-        virtual Color3 sample(const Vector2& uv) const
+        virtual Color3 sample(const Vector2& /*uv*/) const
         {
             return value_;
         }

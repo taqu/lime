@@ -59,7 +59,29 @@ namespace lrender
         primitive += offset_;
 
         const Triangle& triangle = mesh_->triangles_[primitive];
-        return testRayTriangle(t, b1, b2, ray, mesh_->points_[triangle.indices_[0]], mesh_->points_[triangle.indices_[1]], mesh_->points_[triangle.indices_[2]]);
+        return testRayTriangleFront(t, b1, b2, ray,
+            mesh_->positions_[triangle.indices_[0]],
+            mesh_->positions_[triangle.indices_[1]],
+            mesh_->positions_[triangle.indices_[2]]);
+    }
+
+    bool MeshInstance::intersectBothSides(f32& t, f32& b1, f32& b2, s32 primitive, const Ray& ray) const
+    {
+        LASSERT(NULL != mesh_);
+
+        primitive += offset_;
+
+        bool front;
+        const Triangle& triangle = mesh_->triangles_[primitive];
+        return testRayTriangleBoth(t, b1, b2, front, ray,
+            mesh_->positions_[triangle.indices_[0]],
+            mesh_->positions_[triangle.indices_[1]],
+            mesh_->positions_[triangle.indices_[2]]);
+    }
+
+    void MeshInstance::getVertices(VectorVertexSample& vertices) const
+    {
+        mesh_->getVertices(vertices);
     }
 
     void MeshInstance::getTriangles(VectorShapePrimitive& triangles) const
@@ -89,6 +111,18 @@ namespace lrender
         mesh_->getPrimitive(sample, primitive);
     }
 
+    const Vector4& MeshInstance::getColor(s32 vindex) const
+    {
+        LASSERT(0<=vindex && vindex<mesh_->colors_.size());
+        return mesh_->colors_[vindex];
+    }
+
+    void MeshInstance::setColor(s32 vindex, const Vector4& color)
+    {
+        LASSERT(0<=vindex && vindex<mesh_->colors_.size());
+        mesh_->colors_[vindex] = color;
+    }
+
     Vector3 MeshInstance::getCentroid(s32 primitive) const
     {
         LASSERT(NULL != mesh_);
@@ -98,8 +132,8 @@ namespace lrender
         const Triangle& triangle = mesh_->triangles_[primitive];
 
         Vector3 p;
-        p.add(mesh_->points_[triangle.indices_[0]], mesh_->points_[triangle.indices_[1]]);
-        p += mesh_->points_[triangle.indices_[2]];
+        p.add(mesh_->positions_[triangle.indices_[0]], mesh_->positions_[triangle.indices_[1]]);
+        p += mesh_->positions_[triangle.indices_[2]];
         p *= (1.0f/3.0f);
         return p;
     }
@@ -112,10 +146,10 @@ namespace lrender
 
         const Triangle& triangle = mesh_->triangles_[primitive];
 
-        Vector3 bmin = mesh_->points_[triangle.indices_[0]];
-        Vector3 bmax = mesh_->points_[triangle.indices_[0]];
+        Vector3 bmin = mesh_->positions_[triangle.indices_[0]];
+        Vector3 bmax = mesh_->positions_[triangle.indices_[0]];
         for(s32 i=1; i<3; ++i){
-            const Vector3& p = mesh_->points_[triangle.indices_[i]];
+            const Vector3& p = mesh_->positions_[triangle.indices_[i]];
             bmin.x_ = lcore::minimum(bmin.x_, p.x_);
             bmin.y_ = lcore::minimum(bmin.y_, p.y_);
             bmin.z_ = lcore::minimum(bmin.z_, p.z_);
@@ -135,7 +169,7 @@ namespace lrender
 
         const Triangle& triangle = mesh_->triangles_[primitive];
         for(s32 i = 0; i < 3; ++i){
-            const Vector3& p = mesh_->points_[triangle.indices_[i]];
+            const Vector3& p = mesh_->positions_[triangle.indices_[i]];
             vx[i][index] = p.x_;
             vy[i][index] = p.y_;
             vz[i][index] = p.z_;
@@ -151,5 +185,15 @@ namespace lrender
     f32 MeshInstance::getSurfaceArea(s32 primitive) const
     {
         return mesh_->getSurfaceArea(primitive);
+    }
+
+    f32 MeshInstance::getSurfaceArea() const
+    {
+        s32 end = offset_ + numTriangles_;
+        f32 sum = 0.0f;
+        for(s32 i=offset_; i<end; ++i){
+            sum += mesh_->getSurfaceArea(i);
+        }
+        return sum;
     }
 }

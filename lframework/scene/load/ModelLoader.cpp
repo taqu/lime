@@ -449,7 +449,8 @@ namespace lload
             type,
             lgraphics::Usage_Immutable,
             lgraphics::TexFilter_MinMagMipLinear,
-            textureAddress_);
+            textureAddress_,
+            (loadTexture.type_ == TexType_Albedo));
     }
 
     //---------------------------------------------
@@ -569,8 +570,8 @@ namespace lload
         for(u32 i=0; i<obj.getNumMeshes(); ++i){
             lrender::Mesh& mesh = obj.getMesh(i);
 
-            loadMeshes[i].geometry_ = (mesh.getGeometry() - &obj.getGeometry(0));
-            loadMeshes[i].material_ = (mesh.getMaterial() - &obj.getMaterial(0));
+            loadMeshes[i].geometry_ = static_cast<s16>(mesh.getGeometry() - &obj.getGeometry(0));
+            loadMeshes[i].material_ = static_cast<s16>(mesh.getMaterial() - &obj.getMaterial(0));
             loadMeshes[i].indexOffset_ = mesh.getIndexOffset();
             loadMeshes[i].numIndices_ = mesh.getNumIndices();
             loadMeshes[i].sphere_ = mesh.getSphere();

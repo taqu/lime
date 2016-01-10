@@ -199,6 +199,7 @@ namespace lload
             FbxAnimCurve* animRotZCurve);
 
         bool forceDDS_; //テクスチャの拡張子をddsへ変換
+        bool enableLog_;
 
         FbxScene* scene_;
         FbxNodeVector skeletonNodes_;

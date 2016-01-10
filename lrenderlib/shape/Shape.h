@@ -23,12 +23,14 @@ namespace lrender
     public:
         typedef lcore::intrusive_ptr<Shape> pointer;
         typedef lcore::vector_arena<Shape::pointer> ShapeVector;
+        typedef Buffer<VertexSample> VectorVertexSample;
 
         enum Component
         {
             Component_None = 0,
             Component_Normal = (0x01<<0),
             Component_Texcoord = (0x01<<1),
+            Component_Color = (0x01<<2),
         };
 
         virtual ~Shape()
@@ -50,9 +52,15 @@ namespace lrender
         //virtual bool intersectP(const Ray& ray) =0;
 
         virtual bool intersect(f32& t, f32& b1, f32& b2, s32 primitive, const Ray& ray) const=0;
-        virtual void getTriangles(VectorShapePrimitive& triangles) const=0;
+        virtual bool intersectBothSides(f32& t, f32& b1, f32& b2, s32 primitive, const Ray& ray) const=0;
+
+        virtual void getVertices(VectorVertexSample& vertices) const =0;
+        virtual void getTriangles(VectorShapePrimitive& triangles) const =0;
         virtual void getTexcoord(Vector2 uvs[3], s32 primitive) const =0;
-        virtual void getPrimitive(PrimitiveSample& sample, s32 primitive) const=0;
+        virtual void getPrimitive(PrimitiveSample& sample, s32 primitive) const =0;
+
+        virtual const Vector4& getColor(s32 vindex) const =0;
+        virtual void setColor(s32 vindex, const Vector4& color) =0;
 
         virtual Vector3 getCentroid(s32 primitive) const=0;
         virtual AABB getBBox(s32 primitive) const=0;
@@ -60,7 +68,11 @@ namespace lrender
 
         virtual void getIntersection(Intersection& intersection, const RayDifferential& ray, f32 b1, f32 b2, s32 primitive) const=0;
 
-        virtual f32 getSurfaceArea(s32 primitive) const
+        virtual f32 getSurfaceArea(s32 /*primitive*/) const
+        {
+            return 0.0f;
+        }
+        virtual f32 getSurfaceArea() const
         {
             return 0.0f;
         }

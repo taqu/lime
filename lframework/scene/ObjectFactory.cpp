@@ -27,7 +27,7 @@ namespace lscene
     {
     }
 
-    Resource* ObjectFactory::create(s32 type, const Char* path, lfile::SharedFile& file)
+    Resource* ObjectFactory::create(s32 type, const Char* path, lfile::SharedFile& file, const SceneParam& param)
     {
         LASSERT(NULL != path);
 
@@ -90,7 +90,8 @@ namespace lscene
                     type,
                     lgraphics::Usage_Immutable,
                     lgraphics::TexFilter_MinMagMipLinear,
-                    lgraphics::TexAddress_Clamp)){
+                    lgraphics::TexAddress_Clamp,
+                    param.linear_)){
                     return NULL;
                 }
                 return LSCENE_NEW ResourceTexture2D(texture);
@@ -112,7 +113,8 @@ namespace lscene
                     type,
                     lgraphics::Usage_Immutable,
                     lgraphics::TexFilter_MinMagMipLinear,
-                    lgraphics::TexAddress_Clamp))
+                    lgraphics::TexAddress_Clamp,
+                    param.linear_))
                 {
                     return NULL;
                 }

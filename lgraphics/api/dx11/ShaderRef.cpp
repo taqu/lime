@@ -377,6 +377,96 @@ namespace lgraphics
     }
 
 
+namespace
+{
+    voidpf lzcalloc(voidpf opaque, unsigned items, unsigned size)
+    {
+        if(opaque){
+            items += size - size;
+        }
+
+        voidpf ptr = (voidpf)LIME_MALLOC(items*size);
+        if(2 < sizeof(uInt)){
+            return ptr;
+        }
+        lcore::memset(ptr, 0, items*size);
+    }
+
+    void lzcfree(voidpf opaque, voidpf ptr)
+    {
+        LIME_FREE(ptr);
+        if(opaque){
+            return;
+        }
+    }
+
+    int lcompress2(Bytef* dest, uLongf* destLen, const Bytef* source, uLong sourceLen, int level)
+    {
+        z_stream stream;
+        int err;
+
+        stream.next_in = (z_const Bytef *)source;
+        stream.avail_in = (uInt)sourceLen;
+#ifdef MAXSEG_64K
+        /* Check for source > 64K on 16-bit machine: */
+        if ((uLong)stream.avail_in != sourceLen) return Z_BUF_ERROR;
+#endif
+        stream.next_out = dest;
+        stream.avail_out = (uInt)*destLen;
+        if((uLong)stream.avail_out != *destLen) return Z_BUF_ERROR;
+
+        stream.zalloc = (alloc_func)lzcalloc;
+        stream.zfree = (free_func)lzcfree;
+        stream.opaque = (voidpf)0;
+
+        err = deflateInit(&stream, level);
+        if(err != Z_OK) return err;
+
+        err = deflate(&stream, Z_FINISH);
+        if(err != Z_STREAM_END) {
+            deflateEnd(&stream);
+            return err == Z_OK ? Z_BUF_ERROR : err;
+        }
+        *destLen = stream.total_out;
+
+        err = deflateEnd(&stream);
+        return err;
+    }
+
+    int luncompress(Bytef* dest, uLongf* destLen, const Bytef* source, uLong sourceLen)
+    {
+        z_stream stream;
+        int err;
+
+        stream.next_in = (z_const Bytef *)source;
+        stream.avail_in = (uInt)sourceLen;
+        /* Check for source > 64K on 16-bit machine: */
+        if((uLong)stream.avail_in != sourceLen) return Z_BUF_ERROR;
+
+        stream.next_out = dest;
+        stream.avail_out = (uInt)*destLen;
+        if((uLong)stream.avail_out != *destLen) return Z_BUF_ERROR;
+
+        stream.zalloc = (alloc_func)lzcalloc;
+        stream.zfree = (free_func)lzcfree;
+
+        err = inflateInit(&stream);
+        if(err != Z_OK) return err;
+
+        err = inflate(&stream, Z_FINISH);
+        if(err != Z_STREAM_END) {
+            inflateEnd(&stream);
+            if(err == Z_NEED_DICT || (err == Z_BUF_ERROR && stream.avail_in == 0))
+                return Z_DATA_ERROR;
+            return err;
+        }
+        *destLen = stream.total_out;
+
+        err = inflateEnd(&stream);
+        return err;
+    }
+}
+
     bool ShaderCompresser::compress(u32 codeLength, const u8* byteCode)
     {
         LASSERT(NULL != byteCode);
@@ -390,7 +480,7 @@ namespace lgraphics
         header[0] = compressedSize;
 
         uLongf size = compressedSize;
-        if(Z_OK != compress2(buffer+sizeof(u32), &size, byteCode, codeLength, Z_BEST_COMPRESSION)){
+        if(Z_OK != lcompress2(buffer+sizeof(u32), &size, byteCode, codeLength, Z_BEST_COMPRESSION)){
             LIME_DELETE_ARRAY(buffer);
             return false;
         }
@@ -432,7 +522,7 @@ namespace lgraphics
         LASSERT(NULL != dst);
 
         uLongf size = getDecompressedSize();
-        if(Z_OK != uncompress(dst, &size, compressed_+sizeof(u32), compressedSize_-sizeof(u32))){
+        if(Z_OK != luncompress(dst, &size, compressed_+sizeof(u32), compressedSize_-sizeof(u32))){
             return 0;
         }
         return size;

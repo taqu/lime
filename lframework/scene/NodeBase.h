@@ -7,6 +7,7 @@
 */
 #include "lscene.h"
 #include <lcore/Vector.h>
+#include "Collidable.h"
 #include "SceneRenderable.h"
 
 namespace lmath
@@ -14,23 +15,18 @@ namespace lmath
     class Matrix44;
 };
 
-namespace lcollide
-{
-    struct CollisionInfo;
-}
-
 namespace lscene
 {
     class RenderQueue;
+    class UpdateVisitor;
 
-    class NodeBase : public SceneRenderable
+    class NodeBase : public Collidable
     {
     public:
-        typedef lcore::vector_arena<NodeBase*, lscene::SceneAllocator, lcore::vector_arena_static_inc_size<4> > NodeVector;
+        typedef lcore::vector_arena<NodeBase*, lcore::vector_arena_static_inc_size<4>, lscene::SceneAllocator> NodeVector;
 
-        explicit NodeBase(const Char* name = NULL);
+        explicit NodeBase(const Char* name = NULL, u16 group=Group_None, u16 type=NodeType_Base);
         virtual ~NodeBase();
-        virtual s32 getType() const;
 
         inline bool checkFlag(u32 flag) const;
         inline void setFlag(u32 flag);
@@ -57,11 +53,17 @@ namespace lscene
         NodeBase* findChild(const Char* name);
         NodeBase* findChild(u32 length, const Char* name);
 
+        template<class T>
+        inline T* findChild(const Char* name);
+
+        template<class T>
+        inline T* findChild(u32 length, const Char* name);
+
         virtual void onAttach();
         virtual void onDetach();
-        virtual void onCollide(NodeBase* opposite, lcollide::CollisionInfo& info);
+        virtual void onCollide(Collidable* opposite, lcollide::CollisionInfo& info);
 
-        inline void updateBase();
+        void visitUpdate(UpdateVisitor& visitor);
 
         virtual void update();
         virtual void traverseUpdateTransform();
@@ -70,17 +72,20 @@ namespace lscene
         virtual void render(RenderContext& renderContext);
 
         virtual const lmath::Matrix44& getMatrix() const;
+        const lmath::Matrix44& getParentMatrix() const;
 
     protected:
         friend class SceneManager;
+
         NodeBase(const NodeBase&);
         NodeBase& operator=(const NodeBase&);
 
-        inline void updateChildren();
         inline void visitRenderQueueChildren(RenderContext& renderContext);
 
-        static const lmath::Matrix44 identity_;
+        inline NodeVector::iterator childBegin();
+        inline NodeVector::iterator childEnd();
 
+    private:
         u32 flags_;
         NameString name_;
         NodeBase* parent_;
@@ -118,22 +123,16 @@ namespace lscene
         return reinterpret_cast<T*>(this);
     }
 
-    inline void NodeBase::updateBase()
+    template<class T>
+    inline T* NodeBase::findChild(const Char* name)
     {
-        if(checkFlag(NodeFlag_Update)){
-            update();
-            updateChildren();
-        }
+        return reinterpret_cast<T*>(findChild(name));
     }
 
-    inline void NodeBase::updateChildren()
+    template<class T>
+    inline T* NodeBase::findChild(u32 length, const Char* name)
     {
-        for(NodeVector::iterator itr = children_.begin();
-            itr != children_.end();
-            ++itr)
-        {
-            (*itr)->updateBase();
-        }
+        return reinterpret_cast<T*>(findChild(length, name));
     }
 
     inline void NodeBase::visitRenderQueueChildren(RenderContext& renderContext)
@@ -144,6 +143,16 @@ namespace lscene
         {
             (*itr)->visitRenderQueue(renderContext);
         }
+    }
+
+    inline NodeBase::NodeVector::iterator NodeBase::childBegin()
+    {
+        return children_.begin();
+    }
+
+    inline NodeBase::NodeVector::iterator NodeBase::childEnd()
+    {
+        return children_.end();
     }
 }
 #endif //INC_LSCENE_NODEBASE_H__

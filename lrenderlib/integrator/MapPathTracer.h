@@ -12,16 +12,16 @@ namespace lrender
     class MapPathTracer : public PathTracer
     {
     public:
-        MapPathTracer(s32 russianRouletteDepth=5, s32 maxDepth=-1);
+        MapPathTracer(bool handleIndirect, s32 russianRouletteDepth=5, s32 maxDepth=-1);
         virtual ~MapPathTracer();
 
         virtual void requestSamples(Sampler* sampler);
 
-        //virtual Color3 Li(const Ray& ray, IntegratorQuery& query);
-        virtual Color3 E(const ShadingGeometry& shadingGeometry, IntegratorQuery& query);
+        virtual Color4 E(IntegratorQuery& query);
     protected:
         MapPathTracer(const MapPathTracer&);
         MapPathTracer& operator=(const MapPathTracer&);
+        bool handleIndirect_;
     };
 }
 #endif //INC_LRENDER_MAPPATHTRACER_H__

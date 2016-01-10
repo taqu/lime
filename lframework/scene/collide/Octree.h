@@ -20,7 +20,7 @@ namespace lcollide
         static const s32 LevelIndexStart[MaxTableLevels];
         static const s32 StackSize = MaxLevels;
 
-        typedef lcore::vector_arena<CollisionPair, lscene::SceneAllocator, lcore::vector_arena_static_inc_size<64> > CollisionPairVector;
+        typedef lcore::vector_arena<CollisionPair, lcore::vector_arena_static_inc_size<64>, lscene::SceneAllocator> CollisionPairVector;
 
         static u32 separateBy2(u32 x);
         static u32 mortonCode3(u32 x, u32 y, u32 z);

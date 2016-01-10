@@ -24,9 +24,6 @@
     <ClInclude Include="..\api\Enumerations.h">
       <Filter>api</Filter>
     </ClInclude>
-    <ClInclude Include="..\api\GeometryBuffer.h">
-      <Filter>api</Filter>
-    </ClInclude>
     <ClInclude Include="..\api\GraphicsDeviceRef.h">
       <Filter>api</Filter>
     </ClInclude>
@@ -150,6 +147,12 @@
       <Filter>api\dx11</Filter>
     </ClInclude>
     <ClInclude Include="..\api\ViewRef.h" />
+    <ClInclude Include="..\api\StructuredBufferRef.h">
+      <Filter>api</Filter>
+    </ClInclude>
+    <ClInclude Include="..\api\dx11\StructuredBufferRef.h">
+      <Filter>api\dx11</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\api\dx11\BlendStateRef.cpp">
@@ -221,6 +224,9 @@
       <Filter>api\dx11</Filter>
     </ClCompile>
     <ClCompile Include="..\api\dx11\BufferRefBase.cpp">
+      <Filter>api\dx11</Filter>
+    </ClCompile>
+    <ClCompile Include="..\api\dx11\StructuredBufferRef.cpp">
       <Filter>api\dx11</Filter>
     </ClCompile>
   </ItemGroup>

@@ -4,6 +4,8 @@
 @date 2015/10/07 create
 */
 #include "Geometry.h"
+#include <lmath/geometry/Sphere.h>
+
 #include "Ray.h"
 
 namespace lrender
@@ -43,8 +45,34 @@ namespace lrender
     }
 
     //-----------------------------------------------------------
+#define LRENDER_TEST_RAY_TRIAGNLE_HELPER_FRONT \
+    Vector3 tvec;\
+    tvec.sub(ray.origin_, v0);\
+    v = tvec.dot(c);\
+    if(v<0.0f || discr<v){\
+        return false;\
+    }\
+    qvec.cross(tvec, d0);\
+    w = qvec.dot(ray.direction_);\
+    if(w<0.0f || discr<(v+w)){\
+        return false;\
+    }\
+
+#define LRENDER_TEST_RAY_TRIAGNLE_HELPER_BACK \
+    Vector3 tvec;\
+    tvec.sub(ray.origin_, v0);\
+    v = tvec.dot(c);\
+    if(0.0f<v || v<discr){\
+        return false;\
+    }\
+    qvec.cross(tvec, d0);\
+    w = qvec.dot(ray.direction_);\
+    if(0.0f<w || (v+w)<discr){\
+        return false;\
+    }\
+
     // 線分と三角形の交差判定
-    bool testRayTriangle(f32& t, f32& v, f32& w, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    bool testRayTriangleFront(f32& t, f32& v, f32& w, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
         Vector3 d0;
         d0.sub(v1, v0);
@@ -60,33 +88,75 @@ namespace lrender
         Vector3 qvec;
         if(F32_EPSILON<discr){
             //表面
-            Vector3 tvec;
-            tvec.sub(ray.origin_, v0);
-            v = tvec.dot(c);
-            if(v<0.0f || discr<v){
-                return false;
-            }
+            LRENDER_TEST_RAY_TRIAGNLE_HELPER_FRONT
 
-            qvec.cross(tvec, d0);
-            w = qvec.dot(ray.direction_);
-            if(w<0.0f || discr<(v+w)){
-                return false;
-            }
+        }else{
+            return false;
+        }
 
-        //}else if(discr < -F32_EPSILON){
-        //    //裏面
-        //    Vector3 tvec;
-        //    tvec.sub(ray.origin_, v0);
-        //    u = tvec.dot(c);
-        //    if(u>0.0f || discr<u){
-        //        return false;
-        //    }
+        f32 invDiscr = 1.0f/discr;
 
-        //    qvec.cross(tvec, d0);
-        //    v = qvec.dot(ray.direction_);
-        //    if(0.0f<v || (u+v)<discr){
-        //        return false;
-        //    }
+        t = d1.dot(qvec);
+        t *= invDiscr;
+        v *= invDiscr;
+        w *= invDiscr;
+        return true;
+    }
+
+    bool testRayTriangleBack(f32& t, f32& v, f32& w, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    {
+        Vector3 d0;
+        d0.sub(v1, v0);
+
+        Vector3 d1;
+        d1.sub(v2, v0);
+
+        Vector3 c;
+        c.cross(ray.direction_, d1);
+
+        f32 discr = c.dot(d0);
+
+        Vector3 qvec;
+        if(discr < -F32_EPSILON){
+            //裏面
+            LRENDER_TEST_RAY_TRIAGNLE_HELPER_BACK
+
+        }else{
+            return false;
+        }
+
+        f32 invDiscr = 1.0f/discr;
+
+        t = d1.dot(qvec);
+        t *= invDiscr;
+        v *= invDiscr;
+        w *= invDiscr;
+        return true;
+    }
+
+    bool testRayTriangleBoth(f32& t, f32& v, f32& w, bool& front, const Ray& ray, const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    {
+        Vector3 d0;
+        d0.sub(v1, v0);
+
+        Vector3 d1;
+        d1.sub(v2, v0);
+
+        Vector3 c;
+        c.cross(ray.direction_, d1);
+
+        f32 discr = c.dot(d0);
+
+        Vector3 qvec;
+        if(F32_EPSILON<discr){
+            //表面
+            front = true;
+            LRENDER_TEST_RAY_TRIAGNLE_HELPER_FRONT
+
+        }else if(discr < -F32_EPSILON){
+            //裏面
+            front = false;
+            LRENDER_TEST_RAY_TRIAGNLE_HELPER_BACK
 
         }else{
             return false;
@@ -103,7 +173,7 @@ namespace lrender
 
     //-----------------------------------------------------------
     // 線分と三角形の交差判定
-    s32 testRayTriangle(
+    s32 testRayTriangleFront(
         __m128& t,
         __m128& u,
         __m128& v,
@@ -127,13 +197,12 @@ namespace lrender
             direction[0], direction[1], direction[2],
             dx20, dy20, dz20);
 
-        __m128 epsilon = _mm_set1_ps(F32_EPSILON);
         __m128 zero = _mm_setzero_ps();
 
         __m128 discr = dot4vec(cx, cy, cz, dx10, dy10, dz10);
-        __m128 disc0 = _mm_cmplt_ps(epsilon, discr);
-
         //表面判定
+        __m128 disc0 = _mm_cmplt_ps(_mm_set1_ps(F32_EPSILON), discr);
+
         __m128 tvecx = _mm_sub_ps(origin[0], vx[0]);
         __m128 tvecy = _mm_sub_ps(origin[1], vy[0]);
         __m128 tvecz = _mm_sub_ps(origin[2], vz[0]);
@@ -270,6 +339,36 @@ namespace lrender
             }
         }
         return true;
+    }
+
+    //-----------------------------------------------------------
+    // 線分と球の交差判定
+    bool testRaySphere(f32& t, const Ray& ray, const lmath::Sphere& sphere)
+    {
+        Vector3 m;
+        sphere.getPosition(m);
+        m.sub(ray.origin_, m);
+
+
+        f32 b = m.dot(ray.direction_);
+        f32 c = m.dot(m) - sphere.getRadius() * sphere.getRadius();
+
+        // 線分の起点が球の外で、向きが球の方向と逆
+        if(0.0f<c){
+            if(0.0f<b){// 線分の起点が球の外で、向きが球の方向と逆
+                return false;
+            }
+        }
+
+        f32 discr = b*b - c; //判別式
+        if(discr < 0.0f){
+            return false;
+        }
+
+        discr = lmath::sqrt(discr);
+        b = -b;
+        t = b+discr;
+        return (ray.tmin_<=t && t<=ray.tmax_);
     }
 
     //-----------------------------------------------------------

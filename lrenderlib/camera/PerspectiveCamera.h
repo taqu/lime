@@ -22,7 +22,6 @@ namespace lrender
         void lookAt(const Vector3& eye, const Vector3& at, const Vector3& up);
 
     protected:
-        Vector3 position_;
         Vector3 right_;
         Vector3 up_;
         Vector3 forward_;

@@ -89,7 +89,7 @@ namespace lcore
         ThreadRaw* thread = reinterpret_cast<ThreadRaw*>(args);
         LASSERT(NULL != thread);
         if(NULL != thread->proc_){
-            thread->proc_(thread->data_);
+            thread->proc_(thread->id_, thread->data_);
         }
         _endthreadex(0);
         return 0;

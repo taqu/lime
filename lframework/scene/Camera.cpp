@@ -83,10 +83,10 @@ namespace lscene
     // 透視投影
     void Camera::perspectiveLens(f32 focalLength, f32 frameHeight, f32 aspect, f32 znear, f32 zfar)
     {
-        if(frameHeight<0.00001f){
+        if(frameHeight<1.0e-5f){
             frameHeight = 0.024f;
         }
-        if(focalLength<0.00001f){
+        if(focalLength<1.0e-5f){
             focalLength = 0.05f;
         }
 

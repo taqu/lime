@@ -71,7 +71,7 @@ namespace
             return allocateLarge(size);
         }
 
-        u16 index = calcIndex(size);
+        u16 index = static_cast<u16>(calcIndex(size));
         LASSERT(0<=index && index<TableSize);
 
         TableEntry& tableEntry = entries_[index];

@@ -64,11 +64,18 @@ namespace io
             DXFOURCC_DXT3 = LIME_MAKE_FOURCC('D', 'X', 'T', '3'),
             DXFOURCC_DXT5 = LIME_MAKE_FOURCC('D', 'X', 'T', '5'),
 
+            DXFOURCC_ATI1 = LIME_MAKE_FOURCC('A', 'T', 'I', '1'),
             DXFOURCC_BC4U = LIME_MAKE_FOURCC('B', 'C', '4', 'U'),
             DXFOURCC_BC4S = LIME_MAKE_FOURCC('B', 'C', '4', 'S'),
 
-            DXFOURCC_BC5U = LIME_MAKE_FOURCC('A', 'T', 'I', '2'),
+            DXFOURCC_ATI2 = LIME_MAKE_FOURCC('A', 'T', 'I', '2'),
+            DXFOURCC_BC5U = LIME_MAKE_FOURCC('B', 'C', '5', 'U'),
             DXFOURCC_BC5S = LIME_MAKE_FOURCC('B', 'C', '5', 'S'),
+
+            DXFOURCC_BC6U = LIME_MAKE_FOURCC('B', 'C', '6', 'U'),
+            DXFOURCC_BC6S = LIME_MAKE_FOURCC('B', 'C', '6', 'S'),
+
+            DXFOURCC_BC7U = LIME_MAKE_FOURCC('B', 'C', '7', 'U'),
         };
 
         struct DDS_HEADER_DXT10
@@ -99,26 +106,26 @@ namespace io
 
         対応フォーマットはBufferFormatに入っているもののみ
         */
-        DataFormat selectFormat(const IODDS::DDS_PIXELFORMAT& ddpf)
+        DataFormat selectFormat(const IODDS::DDS_PIXELFORMAT& ddpf, bool sRGB)
         {
             if(ddpf.flags_ & DDPF_RGB){
                 switch (ddpf.RGBBitCount_)
                 {
                 case 32:
                     if( IsBitMask(0x00ff0000,0x0000ff00,0x000000ff,0xff000000) ){
-                        return Data_B8G8R8A8_UNorm_SRGB;
+                        return (sRGB)? Data_B8G8R8A8_UNorm_SRGB : Data_B8G8R8A8_UNorm;
                     }
 
                     if( IsBitMask(0x00ff0000,0x0000ff00,0x000000ff,0x00000000) ){
-                        return Data_B8G8R8X8_UNorm_SRGB;
+                        return (sRGB)? Data_B8G8R8X8_UNorm_SRGB : Data_B8G8R8X8_UNorm;
                     }
                     
                     if( IsBitMask(0x000000ff,0x0000ff00,0x00ff0000,0xff000000) ){
-                        return Data_R8G8B8A8_UNorm_SRGB;
+                        return (sRGB)? Data_R8G8B8A8_UNorm_SRGB : Data_R8G8B8A8_UNorm;
                     }
                     
                     if( IsBitMask(0x000000ff,0x0000ff00,0x00ff0000,0x00000000) ){
-                        return Data_R8G8B8A8_UNorm_SRGB;
+                        return (sRGB)? Data_R8G8B8A8_UNorm_SRGB : Data_R8G8B8A8_UNorm;
                     }
 
                     // Not support
@@ -214,25 +221,36 @@ namespace io
                 switch(ddpf.fourCC_)
                 {
                 case DXFOURCC_DXT1:
-                    return Data_BC1_UNorm_SRGB;
+                    return (sRGB)? Data_BC1_UNorm_SRGB : Data_BC1_UNorm;
 
                 case DXFOURCC_DXT3:
-                    return Data_BC2_UNorm_SRGB;
+                    return (sRGB)? Data_BC2_UNorm_SRGB : Data_BC2_UNorm;
 
                 case DXFOURCC_DXT5:
-                    return Data_BC3_UNorm_SRGB;
+                    return (sRGB)? Data_BC3_UNorm_SRGB : Data_BC3_UNorm;
 
+                case DXFOURCC_ATI1:
                 case DXFOURCC_BC4U:
                     return Data_BC4_UNorm;
 
                 case DXFOURCC_BC4S:
                     return Data_BC4_SNorm;
 
+                case DXFOURCC_ATI2:
                 case DXFOURCC_BC5U:
                     return Data_BC5_UNorm;
 
                 case DXFOURCC_BC5S:
                     return Data_BC5_SNorm;
+
+                case DXFOURCC_BC6U:
+                    return Data_BC6H_UF16;
+
+                case DXFOURCC_BC6S:
+                    return Data_BC6H_SF16;
+
+                case DXFOURCC_BC7U:
+                    return (sRGB)? Data_BC7_UNorm_SRGB : Data_BC7_UNorm;
 
                 case D3DFMT_A16B16G16R16:
                     return Data_R16G16B16A16_UNorm;
@@ -332,6 +350,7 @@ namespace io
         BindFlag bindFlag,
         CPUAccessFlag access,
         ResourceMisc misc,
+        bool sRGB,
         u32& width, u32& height, DataFormat& format)
     {
         static const u32 MaxNumSubResourceData = 256;
@@ -366,7 +385,7 @@ namespace io
             format = static_cast<DataFormat>(header10.format_);
             arraySize = header10.arraySize_;
         }else{
-            format = selectFormat(header.ddpf_);
+            format = selectFormat(header.ddpf_, sRGB);
 
             if((header.caps2_ & DDSCAPS2_CUBEMAP) != 0){
                 arraySize = 0;
@@ -393,7 +412,6 @@ namespace io
         if(format == Data_Unknown){
             return false;
         }
-
 
         u32 mipmapLevel = (header.mipmap_ > 0)? header.mipmap_ : 1;
 

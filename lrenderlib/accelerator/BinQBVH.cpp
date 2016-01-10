@@ -640,6 +640,7 @@ namespace lrender
         return (NULL != shape);
     }
 
+
 #if LRENDER_BINQBVH_SSEPACK
     void BinQBVH::pushPrimitives(Node& node, s32 index, s32 start, s32 num)
     {
@@ -803,7 +804,7 @@ namespace lrender
                 LASSERT(tv.m128_f32[j] == tv2.m128_f32[j]);
             }
 #else
-            s32 flag = testRayTriangle(
+            s32 flag = testRayTriangleFront(
                 tt, tu, tv,
                 origin, direction,
                 pack.x_, pack.y_, pack.z_);
@@ -859,7 +860,7 @@ namespace lrender
             }
 
 #else
-            s32 flag = testRayTriangle(
+            s32 flag = testRayTriangleFront(
                 tt, tu, tv,
                 origin, direction,
                 pack.x_, pack.y_, pack.z_);
@@ -886,5 +887,6 @@ namespace lrender
 
         tmaxSSE = _mm_set1_ps(ray.tmax_);
     }
+
 #endif
 }

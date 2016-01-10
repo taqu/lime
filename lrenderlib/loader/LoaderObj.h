@@ -44,11 +44,11 @@ namespace lrender
         };
 
         typedef lcore::vector_arena<Char> String;
-        typedef lcore::vector_arena<Vector2, lcore::DefaultAllocator, lcore::vector_arena_static_inc_size<1024> > Vector2Vector;
-        typedef lcore::vector_arena<Vector3, lcore::DefaultAllocator, lcore::vector_arena_static_inc_size<1024> > Vector3Vector;
-        typedef lcore::vector_arena<Vector4, lcore::DefaultAllocator, lcore::vector_arena_static_inc_size<1024> > Vector4Vector;
-        typedef lcore::vector_arena<Triangle, lcore::DefaultAllocator, lcore::vector_arena_static_inc_size<1024> > TriangleVector;
-        typedef lcore::vector_arena<Vertex, lcore::DefaultAllocator, lcore::vector_arena_static_inc_size<1024> > VertexVector;
+        typedef lcore::vector_arena<Vector2, lcore::vector_arena_static_inc_size<1024> > Vector2Vector;
+        typedef lcore::vector_arena<Vector3, lcore::vector_arena_static_inc_size<1024> > Vector3Vector;
+        typedef lcore::vector_arena<Vector4, lcore::vector_arena_static_inc_size<1024> > Vector4Vector;
+        typedef lcore::vector_arena<Triangle, lcore::vector_arena_static_inc_size<1024> > TriangleVector;
+        typedef lcore::vector_arena<Vertex, lcore::vector_arena_static_inc_size<1024> > VertexVector;
 
         typedef lcore::vector_arena<BSDF::pointer> BSDFVector;
 

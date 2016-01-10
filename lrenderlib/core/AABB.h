@@ -15,6 +15,11 @@ namespace lmath
 
 namespace lrender
 {
+    //--------------------------------------------------------------
+    //---
+    //--- AABB
+    //---
+    //--------------------------------------------------------------
     class AABB
     {
     public:
@@ -34,8 +39,16 @@ namespace lrender
 
         void setInvalid()
         {
-            bmin_.x_ = bmin_.y_ = bmin_.z_ = FLT_MAX;
-            bmax_.x_ = bmax_.y_ = bmax_.z_ = -FLT_MAX;
+            bmin_.x_ = bmin_.y_ = bmin_.z_ = lcore::numeric_limits<f32>::maximum();
+            bmax_.x_ = bmax_.y_ = bmax_.z_ = -lcore::numeric_limits<f32>::maximum();
+        }
+
+        Vector3 center() const
+        {
+            return Vector3(
+                (bmin_.x_ + bmax_.x_)*0.5f,
+                (bmin_.y_ + bmax_.y_)*0.5f,
+                (bmin_.z_ + bmax_.z_)*0.5f);
         }
 
         Vector3 extent() const
@@ -54,6 +67,8 @@ namespace lrender
                 bmax_.z_-bmin_.z_);
         }
 
+        void expand(f32 delta);
+
         void extend(const Vector3& point);
         void extend(const AABB& bbox);
 
@@ -68,12 +83,23 @@ namespace lrender
         }
 
         void getBSphere(lmath::Sphere& bsphere) const;
+        void setBSphere(const lmath::Sphere& bsphere);
         f32 getBSphereRadius() const;
+
+        bool contains(const Vector3& point) const;
+
+        bool contains(const AABB& rhs) const;
+        bool overlaps(const AABB& rhs) const;
 
         Vector3 bmin_;
         Vector3 bmax_;
     };
 
+    //--------------------------------------------------------------
+    //---
+    //--- AABB2D
+    //---
+    //--------------------------------------------------------------
     class AABB2D
     {
     public:
@@ -93,8 +119,8 @@ namespace lrender
 
         void setInvalid()
         {
-            bmin_.x_ = bmin_.y_ = FLT_MAX;
-            bmax_.x_ = bmax_.y_ = -FLT_MAX;
+            bmin_.x_ = bmin_.y_ = lcore::numeric_limits<f32>::maximum();
+            bmax_.x_ = bmax_.y_ = -lcore::numeric_limits<f32>::maximum();
         }
 
         Vector2 extent() const
@@ -118,6 +144,8 @@ namespace lrender
         f32 getMaxExtent() const;
 
         f32 halfArea() const;
+
+        bool contains(const Vector2& point) const;
 
         bool testPoint(const Vector2& point) const;
 

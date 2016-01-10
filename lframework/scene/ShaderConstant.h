@@ -17,7 +17,7 @@ namespace lscene
 
     struct LIME_ALIGN16 SceneConstantVS
     {
-        //lmath::Matrix44 v_;
+        lmath::Matrix44 v_;
         //lmath::Matrix44 p_;
         lmath::Matrix44 vp0_; //previous view projection
         lmath::Matrix44 vp1_; //current view projection
@@ -43,6 +43,12 @@ namespace lscene
         lmath::Vector4 dlDirection_;
         lmath::Vector4 dlColor_;
         lmath::Vector4 cameraPos_;
+
+        //f32 cameraNear_;
+        //f32 cameraFar_;
+        //f32 cameraRange_;
+        //f32 cameraInvRange_;
+
         f32 specularMapMipLevels_;
         f32 shadowMapSize_;
         f32 invShadowMapSize_;
@@ -51,7 +57,30 @@ namespace lscene
         f32 shadowMapMomentBias_;
         f32 shadowMapDepthBias_;
         f32 lightBreedingBias_;
-        f32 reserved_;
+        s32 reserved0_;
+
+        s32 screenWidth_;
+        s32 screenHeight_;
+        f32 screenInvWidth_;
+        f32 screenInvHeight_;
+    };
+
+    struct LIME_ALIGN16 LightClusterConstantPS
+    {
+        s32 width_;
+        s32 height_;
+        s32 depth_;
+        s32 depthPitch_;
+
+        lmath::Vector3 lightClusterScale_;
+        f32 reserved1_;
+        lmath::Vector3 lightClusterBias_;
+        f32 reserved2_;
+
+        s32 getCellIndex(s32 x, s32 y, s32 z) const
+        {
+            return (z*depthPitch_ + y*width_ + x);
+        }
     };
 
     struct LIME_ALIGN16 SceneConstantCameraMotionPS
@@ -96,7 +125,14 @@ namespace lscene
     void setSceneConstantVS(SceneConstantVS& dst, const Scene& scene, const ShadowMap& shadowMap);
     void setSceneConstantDS(SceneConstantDS& dst, const Scene& scene);
     void setSceneConstantPS(SceneConstantPS& dst, const SceneConstantPS& src, const Scene& scene);
-    void setSceneConstantPS(SceneConstantPS& dst, const ShadowMap& shadowMap, f32 specularMapMipLevels, f32 shadowMapMomentBias, f32 shadowMapDepthBias, f32 lightBleedingBias);
+    void setSceneConstantPS(
+        SceneConstantPS& dst,
+        const ShadowMap& shadowMap,
+        f32 specularMapMipLevels,
+        f32 shadowMapMomentBias,
+        f32 shadowMapDepthBias,
+        f32 lightBleedingBias);
+
     void setSceneConstantCameraMotionPS(SceneConstantCameraMotionPS& dst, const Scene& scene, f32 width, f32 height, f32 exposure, f32 maxMagnitude);
 }
 #endif //INC_LSCENE_SHADERCONSTANT_H__

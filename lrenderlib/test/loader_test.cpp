@@ -11,12 +11,15 @@
 #include <filter/BoxFilter.h>
 #include <emitter/DistantLight.h>
 #include <render/RenderQuery.h>
-#include <render/RenderMapQuery.h>
 #include <render/RenderMapBruteForceQuery.h>
+#include <render/RenderSurfacePointQuery.h>
 #include <integrator/PathTracer.h>
+#include <integrator/DipoleIntegrator.h>
+#include <integrator/TranslucencyMagnitudeIntegrator.h>
 #include <integrator/MapPathTracer.h>
 #include <integrator/AmbientOcclusion.h>
 #include <loader/IOPNG.h>
+#include <core/PointOctree.h>
 
 namespace
 {
@@ -40,13 +43,14 @@ namespace
         camera->perspective(static_cast<lrender::f32>(screen_->getWidth())/screen_->getHeight(), PI*60.0f/180.0f);
 
         //camera->lookAt(lrender::Vector3(0.0f, 6.0f, -10.0f), lrender::Vector3(0.0f, 2.0f, 0.0f), lrender::Vector3(0.0f, 1.0f, 0.0f));
-        camera->lookAt(lrender::Vector3(0.0f, 1.0f, 2.0f), lrender::Vector3(0.0f, 1.0f, 0.0f), lrender::Vector3(0.0f, 1.0f, 0.0f));
+        camera->lookAt(lrender::Vector3(0.0f, 0.0f, -4.0f), lrender::Vector3(0.0f, 2.0f, 0.0f), lrender::Vector3(0.0f, 1.0f, 0.0f));
+        //camera->lookAt(lrender::Vector3(0.0f, 1.0f, 2.0f), lrender::Vector3(0.0f, 1.0f, 0.0f), lrender::Vector3(0.0f, 1.0f, 0.0f));
 
         camera_ = camera;
 
         lrender::u32 seed = lcore::getDefaultSeed();
         lcore::Log("seed %d", seed);
-        static const lrender::s32 numSamples = 8;
+        static const lrender::s32 numSamples = 256;
         sampler_ = LIME_NEW lrender::LowDiscrepancySampler(numSamples, seed, 4);
         emitter_ = LIME_NEW lrender::DistantLight(lmath::Vector3(0.25f, 1.0f, 0.0f), lrender::Color3(1.0f));
 
@@ -71,6 +75,30 @@ inline __m128 load(float x0, float x1, float x2, float x3)
     return _mm_load_ps((float*)&v);
 }
 
+struct PointData
+{
+public:
+    void clear()
+    {
+        position_.zero();
+        power_.zero();
+    }
+
+    const lrender::Vector3& getPosition() const
+    {
+        return position_;
+    }
+
+    const lrender::Vector3& getPower() const
+    {
+        return power_;
+    }
+
+    lrender::Vector3 position_;
+    lrender::Vector3 power_;
+};
+
+
 int main(int argc, char** argv)
 {
     lrender::Shape::ShapeVector shapes;
@@ -91,6 +119,26 @@ int main(int argc, char** argv)
     scene_->initRender();
 
 #if 1
+    //lrender::Vector3 worldCenter = camera_->getPosition();
+    lrender::Vector3 worldCenter = scene_->getWorldBound().center();
+    lrender::DipoleIntegrator dipoleIntegrator(lrender::Vector3(14.266395f/100.0f, 7.227615f/100.0f, 2.036157f/100.0f), lrender::Vector3(0.0f), 4, 5, 0.25f, 0.01f, 0.1f);
+    //lrender::TranslucencyMagnitudeIntegrator dipoleIntegrator(lrender::Vector3(14.266395f/100.0f, 7.227615f/100.0f, 2.036157f/100.0f), lrender::Vector3(0.0f), 4, 5, 0.25f, 0.01f, 0.1f);
+    
+    dipoleIntegrator.preprocess(*scene_);
+
+    lrender::RenderQuery renderQuery(scene_, sampler_, screen_, &dipoleIntegrator);
+    renderQuery.initialize();
+
+    lcore::Timer<true> timer;
+    timer.begin();
+    renderQuery.render();
+    timer.end();
+    lcore::Log("time: render: %f", timer.getAverage());
+
+    screen_->linearToStandardRGB();
+    screen_->savePPM("out.ppm");
+
+#elif 1
     lrender::PathTracer pathtracer(5);
 
     lrender::RenderQuery renderQuery(scene_, sampler_, screen_, &pathtracer);
@@ -132,9 +180,9 @@ int main(int argc, char** argv)
             lrender::Sampler* mapSampler = LIME_NEW lrender::LowDiscrepancySampler(128, seed, 4);
 
             //lrender::AmbientOcclusion ambientOcclution(2, 1.0f);
-            lrender::MapPathTracer mapPathTracer;
+            lrender::MapPathTracer mapPathTracer(true);
 
-            lrender::Image image(1024, 1024);
+            lrender::Image image(512, 512);
             image.clear(lrender::Color4::clear());
             lrender::RenderMapBruteForceQuery renderMapQuery(scene_, mapSampler, &image, &mapPathTracer);
             renderMapQuery.initialize();

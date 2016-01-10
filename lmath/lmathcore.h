@@ -491,17 +491,23 @@ namespace lmath
         return lcore::clamp01((x-e0)/(e1-e0));
     }
 
+    //3t^2-2t^3
     inline f32 smooth(f32 x)
     {
         LASSERT(0<=x && x<=1.0f);
     	return x * x * (3.0f - 2.0f*x);
     }
+    
+    //6t^5-15t^4+10t^3
+    f32 smooth2(f32 x);
 
     inline f32 smoothstep(f32 x, f32 e0, f32 e1)
     {
         x = lcore::clamp01((x - e0) / (e1 - e0));
     	return x * x * (3.0f - 2.0f*x);
     }
+
+    f32 smoothstep2(f32 x, f32 e0, f32 e1);
 
     inline f32 expstep(f32 x, f32 a, f32 n)
     {
@@ -698,9 +704,20 @@ namespace lmath
     void normalToSphericalCoordinate(f32& theta, f32& phi, const Vector3& normal);
     void normalToSphericalCoordinate(f32& theta, f32& phi, const Vector4& normal);
 
+    /**
+    @brief v0の向きをv1に合わせる
+    */
+    void faceForward(Vector3& dst, const Vector3& v0, const Vector3& v1);
+
+    /**
+    @brief v0の向きをv1に合わせる
+    */
+    void faceForward(Vector4& dst, const Vector4& v0, const Vector4& v1);
 
     void orthonormalBasis(Vector3& binormal0, Vector3& binormal1, const Vector3& normal);
     void orthonormalBasis(Vector4& binormal0, Vector4& binormal1, const Vector4& normal);
+
+    bool solveLinearSystem2x2(const f32 A[2][2], const f32 B[2], f32& x0, f32& x1);
 
     /**
     @brief Z軸をnormal方向へ回転する行列

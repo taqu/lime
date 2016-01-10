@@ -16,6 +16,12 @@ namespace lmath
     //--- Matrix44
     //---
     //--------------------------------------------
+    const lmath::Matrix44 Matrix44::identity_ = lmath::Matrix44(
+        1.0f, 0.0f, 0.0f, 0.0f,
+        0.0f, 1.0f, 0.0f, 0.0f,
+        0.0f, 0.0f, 1.0f, 0.0f,
+        0.0f, 0.0f, 0.0f, 1.0f);
+
     Matrix44::Matrix44(const Matrix44& rhs)
     {
 #if defined(LMATH_USE_SSE)

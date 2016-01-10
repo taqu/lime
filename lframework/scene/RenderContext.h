@@ -31,6 +31,8 @@ namespace lscene
     class ShadowMap;
     class ConstantBuffer;
 
+    struct LightClusterConstantPS;
+
     class RenderContext
     {
     public:
@@ -62,8 +64,9 @@ namespace lscene
 
         inline s32 getPath() const;
         inline void setPath(s32 path);
+        inline Scene& getScene();
         inline const Scene& getScene() const;
-        inline void setScene(const Scene* scene);
+        inline void setScene(Scene* scene);
         inline const ShadowMap& getShadowMap();
         inline void setShadowMap(const ShadowMap* shadowMap);
         inline lgraphics::ContextRef& getContext();
@@ -74,7 +77,7 @@ namespace lscene
 
         void setSceneConstantVS(const Scene& scene, const ShadowMap& shadowMap);
         void setSceneConstantDS(const Scene& scene);
-        void setSceneConstantPS(const SceneConstantPS& src, const Scene& scene);
+        void setSceneConstantPS(const SceneConstantPS& src, const Scene& scene, const LightClusterConstantPS& lightCluster);
 
         inline lgraphics::ConstantBufferRef* getSceneConstantVS();
         inline lgraphics::ConstantBufferRef* getSceneConstantPS();
@@ -112,7 +115,7 @@ namespace lscene
         RenderContext& operator=(const RenderContext&);
 
         s32 path_;
-        const Scene* scene_;
+        Scene* scene_;
         const ShadowMap* shadowMap_;
         lgraphics::ContextRef* context_;
         ConstantBuffer* constantBuffer_;
@@ -120,6 +123,7 @@ namespace lscene
         lgraphics::ConstantBufferRef* sceneConstantBufferVS_;
         lgraphics::ConstantBufferRef* sceneConstantBufferDS_;
         lgraphics::ConstantBufferRef* sceneConstantBufferPS_;
+        lgraphics::ConstantBufferRef* lightClusterConstantBufferPS_;
 
         s32 numPathConstants_[Shader_Num];
         s32 blendState_;
@@ -139,12 +143,17 @@ namespace lscene
         path_ = path;
     }
 
+    inline Scene& RenderContext::getScene()
+    {
+        return *scene_;
+    }
+
     inline const Scene& RenderContext::getScene() const
     {
         return *scene_;
     }
 
-    inline void RenderContext::setScene(const Scene* scene)
+    inline void RenderContext::setScene(Scene* scene)
     {
         scene_ = scene;
     }

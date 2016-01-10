@@ -19,70 +19,95 @@ namespace lscene
         Scene();
         ~Scene();
 
-        const lmath::Matrix44& getViewMatrix() const
-        {
-            return camera_->getViewMatrix();
-        }
+        inline const lmath::Matrix44& getViewMatrix() const;
 
-        void setViewMatrix(const lmath::Matrix44& view)
-        {
-            camera_->setViewMatrix(view);
-        }
+        inline void setViewMatrix(const lmath::Matrix44& view);
 
-        const lmath::Matrix44& getProjMatrix() const
-        {
-            return camera_->getProjMatrix();
-        }
+        inline const lmath::Matrix44& getProjMatrix() const;
 
-        void setProjMatrix(const lmath::Matrix44& proj)
-        {
-            camera_->setProjMatrix(proj);
-        }
+        inline void setProjMatrix(const lmath::Matrix44& proj);
 
-        const lmath::Matrix44& getViewProjMatrix() const
-        {
-            return camera_->getViewProjMatrix();
-        }
+        inline const lmath::Matrix44& getViewProjMatrix() const;
 
-        const lmath::Matrix44& getPrevViewProjMatrix() const
-        {
-            return camera_->getPrevViewProjMatrix();
-        }
+        inline const lmath::Matrix44& getPrevViewProjMatrix() const;
 
-        const Camera& getCamera() const
-        {
-            return *camera_;
-        }
+        inline const Camera& getCamera() const;
 
-        Camera& getCamera()
-        {
-            return *camera_;
-        }
+        inline Camera& getCamera();
 
-        LightEnvironment& getLightEnv()
-        {
-            return *lightEnv_;
-        }
+        inline LightEnvironment& getLightEnv();
 
-        const LightEnvironment& getLightEnv() const
-        {
-            return *lightEnv_;
-        }
+        inline const LightEnvironment& getLightEnv() const;
 
-        void updateSceneMatrix()
-        {
-            camera_->updateMatrix();
-        }
+        inline void updateSceneMatrix();
 
-        void pushSceneMatrix()
-        {
-            camera_->pushMatrix();
-        }
+        inline void pushSceneMatrix();
+
     private:
         Camera* camera_;
         LightEnvironment* lightEnv_;
-        u8 buffer_[sizeof(Camera) + sizeof(LightEnvironment) + 16];
+        u8 buffer_[sizeof(Camera)+sizeof(LightEnvironment)+16];
     };
+
+    inline const lmath::Matrix44& Scene::getViewMatrix() const
+    {
+        return camera_->getViewMatrix();
+    }
+
+    inline void Scene::setViewMatrix(const lmath::Matrix44& view)
+    {
+        camera_->setViewMatrix(view);
+    }
+
+    inline const lmath::Matrix44& Scene::getProjMatrix() const
+    {
+        return camera_->getProjMatrix();
+    }
+
+    inline void Scene::setProjMatrix(const lmath::Matrix44& proj)
+    {
+        camera_->setProjMatrix(proj);
+    }
+
+    inline const lmath::Matrix44& Scene::getViewProjMatrix() const
+    {
+        return camera_->getViewProjMatrix();
+    }
+
+    inline const lmath::Matrix44& Scene::getPrevViewProjMatrix() const
+    {
+        return camera_->getPrevViewProjMatrix();
+    }
+
+    inline const Camera& Scene::getCamera() const
+    {
+        return *camera_;
+    }
+
+    inline Camera& Scene::getCamera()
+    {
+        return *camera_;
+    }
+
+    inline LightEnvironment& Scene::getLightEnv()
+    {
+        return *lightEnv_;
+    }
+
+    inline const LightEnvironment& Scene::getLightEnv() const
+    {
+        return *lightEnv_;
+    }
+
+    inline void Scene::updateSceneMatrix()
+    {
+        camera_->updateMatrix();
+    }
+
+    inline void Scene::pushSceneMatrix()
+    {
+        camera_->pushMatrix();
+    }
 }
 
 #endif //INC_LFRAMEWORK_SCENE_H__

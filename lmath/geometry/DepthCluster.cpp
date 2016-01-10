@@ -72,7 +72,7 @@ namespace lmath
         Iterator iterator;
         iterator.start_ = 0;
         iterator.end_ = 0;
-        iterator.size_ = size_;
+        iterator.size_ = static_cast<u16>(size_);
         iterator.material_ = (size_<=0)? Invalid : vertices_[0].material_;
         iterator.vertices_ = vertices_;
         ++iterator;

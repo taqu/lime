@@ -9,7 +9,7 @@
 #include <lmath/Vector4.h>
 #include <lmath/Matrix44.h>
 #include <lmath/Quaternion.h>
-#include "../SceneRenderable.h"
+
 namespace lmath
 {
     class DualQuaternion;

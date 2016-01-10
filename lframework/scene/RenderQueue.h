@@ -19,7 +19,7 @@ namespace lscene
     class RenderQueue
     {
     public:
-        typedef lcore::vector_arena<SceneRenderable*, lscene::SceneAllocator, lcore::vector_arena_static_inc_size<128> > RenderableVector;
+        typedef lcore::vector_arena<SceneRenderable*, lcore::vector_arena_static_inc_size<128>, lscene::SceneAllocator> RenderableVector;
 
         RenderQueue();
         RenderQueue(lgraphics::ContextRef* context, s32 numPaths);

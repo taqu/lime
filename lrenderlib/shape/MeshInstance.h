@@ -30,10 +30,15 @@ namespace lrender
         virtual void getBBox(AABB& bbox) const;
 
         virtual bool intersect(f32& t, f32& b1, f32& b2, s32 primitive, const Ray& ray) const;
+        virtual bool intersectBothSides(f32& t, f32& b1, f32& b2, s32 primitive, const Ray& ray) const;
 
+        virtual void getVertices(VectorVertexSample& vertices) const;
         virtual void getTriangles(VectorShapePrimitive& triangles) const;
         virtual void getTexcoord(Vector2 uvs[3], s32 primitive) const;
         virtual void getPrimitive(PrimitiveSample& sample, s32 primitive) const;
+
+        virtual const Vector4& getColor(s32 vindex) const;
+        virtual void setColor(s32 vindex, const Vector4& color);
 
         virtual Vector3 getCentroid(s32 primitive) const;
         virtual AABB getBBox(s32 primitive) const;
@@ -41,6 +46,7 @@ namespace lrender
 
         virtual void getIntersection(Intersection& intersection, const RayDifferential& ray, f32 b1, f32 b2, s32 primitive) const;
         virtual f32 getSurfaceArea(s32 primitive) const;
+        virtual f32 getSurfaceArea() const;
 
         inline s32 getPrimitiveOffset() const;
         inline void setPrimitiveCount(s32 num);

@@ -56,7 +56,7 @@ namespace lrender
             lgraphics::InputLayoutRef layout_;
         };
 
-        typedef lcore::vector_arena<Layout, lscene::SceneAllocator, lcore::vector_arena_static_inc_size<16> > LayoutVector;
+        typedef lcore::vector_arena<Layout, lcore::vector_arena_static_inc_size<16>, lscene::SceneAllocator> LayoutVector;
 
         struct CompFunc
         {

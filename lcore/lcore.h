@@ -56,6 +56,7 @@
 //-------------------
 void* lcore_malloc(std::size_t size);
 void* lcore_malloc(std::size_t size, std::size_t alignment);
+void* lcore_realloc(void* ptr, size_t size);
 
 void lcore_free(void* ptr);
 void lcore_free(void* ptr, std::size_t alignment);
@@ -130,6 +131,7 @@ static const uintptr_t LIME_ALIGN16_MASK = (0xFU);
 #define LIME_MALLOC(size) (lcore_malloc(size, __FILE__, __LINE__))
 #define LIME_MALLOC_DEBUG(size, file, line) (lcore_malloc(size, file, line))
 #define LIME_FREE(mem) lcore_free(mem); (mem)=NULL
+#define LIME_REALLOC(ptr, size) (lcore_realloc(ptr, size))
 
 /// アライメント指定malloc
 #define LIME_ALIGNED_MALLOC(size, align) (lcore_malloc(size, align, __FILE__, __LINE__))
@@ -150,6 +152,7 @@ static const uintptr_t LIME_ALIGN16_MASK = (0xFU);
 #define LIME_MALLOC(size) (lcore_malloc(size))
 #define LIME_MALLOC_DEBUG(size, file, line) (lcore_malloc(size))
 #define LIME_FREE(mem) lcore_free(mem); mem=NULL
+#define LIME_REALLOC(ptr, size) (lcore_realloc(ptr, size))
 
 /// アライメント指定malloc
 #define LIME_ALIGNED_MALLOC(size, align) (lcore_malloc(size, align))
@@ -182,7 +185,23 @@ static const uintptr_t LIME_ALIGN16_MASK = (0xFU);
 #endif
 
 
+// Memory Debug Break
+//-------------------
+#if defined(_WIN32) || defined(_WIN64)
+#if defined(_DEBUG)
+#define LCORE_DEBUG_MEMORY_BREAK
+#endif
+#endif
+
+#ifdef LCORE_DEBUG_MEMORY_BREAK
+void lcore_setMallocBreak(unsigned int id);
+#else
+#define lcore_setMallocBreak(id)
+#endif
+
+
 //ユーティリティ
+//-------------------
 #define LCORE_BIT(n) (0x00000001U<<n)
 
 namespace lcore
@@ -287,10 +306,15 @@ namespace lcore
 
     struct DefaultAllocator
     {
-        static inline void* malloc(u32 size)
-        {
-            return LIME_MALLOC(size);
-        }
+        //static inline void* malloc(u32 size)
+        //{
+        //    return LIME_MALLOC(size);
+        //}
+
+        //static inline void* malloc(u32 size, u32 alignment)
+        //{
+        //    return LIME_ALIGNED_MALLOC(size, alignment);
+        //}
 
 #if defined(_DEBUG)
         static inline void* malloc(u32 size, const char* file, int line)
@@ -317,17 +341,19 @@ namespace lcore
         {
             LIME_FREE(mem);
         }
-
-        static inline void* malloc(u32 size, u32 alignment)
-        {
-            return LIME_ALIGNED_MALLOC(size, alignment);
-        }
-
         static inline void free(void* mem, u32 alignment)
         {
             LIME_ALIGNED_FREE(mem, alignment);
         }
     };
+
+#if defined(_DEBUG)
+#define LIME_ALLOCATOR_MALLOC(allocator, size) allocator::malloc(size, __FILE__, __LINE__)
+#define LIME_ALLOCATOR_ALIGNED_MALLOC(allocator, size, alignment) allocator::malloc(size, alignment, __FILE__, __LINE__)
+#else
+#define LIME_ALLOCATOR_MALLOC(allocator, size) allocator::malloc(size, __FILE__, __LINE__)
+#define LIME_ALLOCATOR_ALIGNED_MALLOC(allocator, size, alignment) allocator::malloc(size, alignment, __FILE__, __LINE__)
+#endif
 
     //---------------------------------------------------------
     //---
@@ -484,6 +510,9 @@ namespace lcore
         u64 t = (*(u64*)&x0)^(*(u64*)&x1);
         return 0 == (t&mask);
     }
+
+    s32 roundUpPow2(s32 x);
+    s64 roundUpPow2(s64 x);
 
     u32 roundUpPow2(u32 x);
     u64 roundUpPow2(u64 x);
