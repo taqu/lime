@@ -32,7 +32,7 @@ namespace lcore
         void srand(u32 seed);
 
         /**
-        @brief 0 - 0xFFFFFFFFUの乱数生成
+        @brief 1 - 0xFFFFFFFFUの乱数生成
         */
         u32 rand();
 
@@ -59,6 +59,37 @@ namespace lcore
         u32 y_;
         u32 z_;
         u32 w_;
+    };
+
+    //---------------------------------------------
+    //---
+    //--- RandomXorshift128Plus
+    //---
+    //---------------------------------------------
+    class RandomXorshift128Plus
+    {
+    public:
+        RandomXorshift128Plus();
+        explicit RandomXorshift128Plus(u64 seed);
+        ~RandomXorshift128Plus();
+
+        /**
+        @brief 擬似乱数生成器初期化
+        @param seed
+        */
+        void srand(u64 seed);
+
+        /**
+        @brief 64bitの乱数生成
+        */
+        u64 rand();
+
+        void swap(RandomXorshift128Plus& rhs);
+    private:
+        u64 rand(u64 v, u64 i);
+
+        u64 s0_;
+        u64 s1_;
     };
 
     //---------------------------------------------

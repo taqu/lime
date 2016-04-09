@@ -21,17 +21,13 @@ namespace
     }
 }
 
-    //------------------------------------------------
-    //---
-    //--- Perlin
-    //---
-    //------------------------------------------------
-    inline s32 Perlin::fastFloor(f32 x)
+
+    inline s32 Noise::fastFloor(f32 x)
     {
         return (0.0f<x)? (s32)x : (s32)x-1;
     }
 
-    inline void Perlin::fastFloor2(s32* ret, f32 x, f32 y, f32 z)
+    inline void Noise::fastFloor2(s32* ret, f32 x, f32 y, f32 z)
     {
         __m128 v = _mm_set_ps(0.0f, z, y, x);
         __m128i x0 = _mm_cvttps_epi32(v);
@@ -47,26 +43,202 @@ namespace
         //_mm_store_si128((__m128i*)ret, r);
     }
 
-    inline f32 Perlin::dot2(const s8 grad[2], f32 x, f32 y)
+    inline f32 Noise::dot2(const s8 grad[2], f32 x, f32 y)
     {
         return (x*grad[0] + y*grad[1]);
     }
 
-    inline f32 Perlin::dot3(const s8 grad[3], f32 x, f32 y, f32 z)
+    inline f32 Noise::dot3(const s8 grad[3], f32 x, f32 y, f32 z)
     {
         return (x*grad[0] + y*grad[1] + z*grad[2]);
     }
 
-    inline f32 Perlin::dot4(const s8 grad[4], f32 x, f32 y, f32 z, f32 w)
+    inline f32 Noise::dot4(const s8 grad[4], f32 x, f32 y, f32 z, f32 w)
     {
         return (x*grad[0] + y*grad[1] + z*grad[2] + w*grad[3]);
     }
 
-    inline f32 Perlin::fade(f32 x)
+    inline f32 Noise::fade(f32 x)
     {
         return x*x*x*(x*(x*6.0f-15.0f)+10.0f);
     }
 
+
+    //------------------------------------------------
+    //---
+    //--- Value
+    //---
+    //------------------------------------------------
+    Value::Value()
+    {
+        s32 size = PermutationTableSize>>1;
+        for(s32 i=0; i<size; ++i){
+            permutation_[i] = static_cast<u8>(i);
+        }
+
+        random(1);
+    }
+
+    Value::~Value()
+    {
+    }
+
+    void Value::random(u32 seed)
+    {
+        lcore::RandomXorshift rand;
+        rand.srand(seed);
+
+        s32 size = PermutationTableSize>>1;
+        for(s32 i=0; i<size; ++i){
+            s32 index = lcore::random::range(rand, i, size-1);
+            lcore::swap(permutation_[i], permutation_[index]);
+        }
+
+        for(s32 i=size; i<PermutationTableSize; ++i){
+            permutation_[i] = permutation_[i-size];
+        }
+    }
+
+    f32 Value::operator()(f32 x) const
+    {
+        s32 ix0 = fastFloor(x);
+        f32 t = fade(x-ix0);
+        ix0 &= 0xFFU;
+        s32 ix1 = ix0+1;
+        f32 h0 = permutation_[ix0];
+        f32 h1 = permutation_[ix1];
+        return lcore::lerp(h0, h1, t) * (1.0f/0xFFU);
+    }
+
+    f32 Value::operator()(f32 x, f32 y) const
+    {
+        s32 ix0 = fastFloor(x);
+        s32 iy0 = fastFloor(y);
+        f32 tx = fade(x-ix0);
+        f32 ty = fade(y-iy0);
+        ix0 &= 0xFFU;
+        iy0 &= 0xFFU;
+        s32 ix1 = ix0+1;
+        s32 iy1 = iy0+1;
+
+        s32 h0 = permutation_[ix0];
+        s32 h1 = permutation_[ix1];
+        f32 h00 = permutation_[h0+iy0];
+        f32 h10 = permutation_[h1+iy0];
+        f32 h01 = permutation_[h0+iy1];
+        f32 h11 = permutation_[h1+iy1];
+
+        return lcore::lerp(lcore::lerp(h00, h10, tx), lcore::lerp(h01, h11, tx), ty) * (1.0f/0xFFU);
+    }
+
+    f32 Value::operator()(f32 x, f32 y, f32 z) const
+    {
+        s32 ix0 = fastFloor(x);
+        s32 iy0 = fastFloor(y);
+        s32 iz0 = fastFloor(z);
+        f32 tx = fade(x-ix0);
+        f32 ty = fade(y-iy0);
+        f32 tz = fade(z-iz0);
+        ix0 &= 0xFFU;
+        iy0 &= 0xFFU;
+        iz0 &= 0xFFU;
+        s32 ix1 = ix0+1;
+        s32 iy1 = iy0+1;
+        s32 iz1 = iz0+1;
+
+        s32 h0 = permutation_[ix0];
+        s32 h1 = permutation_[ix1];
+        s32 h00 = permutation_[h0+iy0];
+        s32 h10 = permutation_[h1+iy0];
+        s32 h01 = permutation_[h0+iy1];
+        s32 h11 = permutation_[h1+iy1];
+
+        f32 h000 = permutation_[h00+iz0];
+        f32 h100 = permutation_[h10+iz0];
+        f32 h010 = permutation_[h01+iz0];
+        f32 h110 = permutation_[h11+iz0];
+        f32 h001 = permutation_[h00+iz1];
+        f32 h101 = permutation_[h10+iz1];
+        f32 h011 = permutation_[h01+iz1];
+        f32 h111 = permutation_[h11+iz1];
+        return lcore::lerp(
+            lcore::lerp(lcore::lerp(h000, h100, tx), lcore::lerp(h010, h110, tx), ty),
+            lcore::lerp(lcore::lerp(h001, h101, tx), lcore::lerp(h011, h111, tx), ty),
+            tz) * (1.0f/0xFFU);
+    }
+
+
+    f32 Value::operator()(f32 x, f32 y, f32 z, f32 w) const
+    {
+        s32 ix0 = fastFloor(x);
+        s32 iy0 = fastFloor(y);
+        s32 iz0 = fastFloor(z);
+        s32 iw0 = fastFloor(w);
+        f32 tx = fade(x-ix0);
+        f32 ty = fade(y-iy0);
+        f32 tz = fade(z-iz0);
+        f32 tw = fade(w-iw0);
+        ix0 &= 0xFFU;
+        iy0 &= 0xFFU;
+        iz0 &= 0xFFU;
+        iw0 &= 0xFFU;
+        s32 ix1 = ix0+1;
+        s32 iy1 = iy0+1;
+        s32 iz1 = iz0+1;
+        s32 iw1 = iw0+1;
+
+        s32 h0 = permutation_[ix0];
+        s32 h1 = permutation_[ix1];
+        s32 h00 = permutation_[h0+iy0];
+        s32 h10 = permutation_[h1+iy0];
+        s32 h01 = permutation_[h0+iy1];
+        s32 h11 = permutation_[h1+iy1];
+
+        s32 h000 = permutation_[h00+iz0];
+        s32 h100 = permutation_[h10+iz0];
+        s32 h010 = permutation_[h01+iz0];
+        s32 h110 = permutation_[h11+iz0];
+        s32 h001 = permutation_[h00+iz1];
+        s32 h101 = permutation_[h10+iz1];
+        s32 h011 = permutation_[h01+iz1];
+        s32 h111 = permutation_[h11+iz1];
+
+        f32 h0000 = permutation_[h000+iw0];
+        f32 h1000 = permutation_[h100+iw0];
+        f32 h0100 = permutation_[h010+iw0];
+        f32 h1100 = permutation_[h110+iw0];
+        f32 h0010 = permutation_[h001+iw0];
+        f32 h1010 = permutation_[h101+iw0];
+        f32 h0110 = permutation_[h011+iw0];
+        f32 h1110 = permutation_[h111+iw0];
+        f32 h0001 = permutation_[h000+iw1];
+        f32 h1001 = permutation_[h100+iw1];
+        f32 h0101 = permutation_[h010+iw1];
+        f32 h1101 = permutation_[h110+iw1];
+        f32 h0011 = permutation_[h001+iw1];
+        f32 h1011 = permutation_[h101+iw1];
+        f32 h0111 = permutation_[h011+iw1];
+        f32 h1111 = permutation_[h111+iw1];
+
+        f32 hw0 = lcore::lerp(
+            lcore::lerp(lcore::lerp(h0000, h1000, tx), lcore::lerp(h0100, h1100, tx), ty),
+            lcore::lerp(lcore::lerp(h0010, h1010, tx), lcore::lerp(h0110, h1110, tx), ty),
+            tz);
+
+        f32 hw1 = lcore::lerp(
+            lcore::lerp(lcore::lerp(h0001, h1001, tx), lcore::lerp(h0101, h1101, tx), ty),
+            lcore::lerp(lcore::lerp(h0011, h1011, tx), lcore::lerp(h0111, h1111, tx), ty),
+            tz);
+
+        return lcore::lerp(hw0, hw1, tw) * (1.0f/0xFFU);
+    }
+
+
+    //------------------------------------------------
+    //---
+    //--- Perlin
+    //---
+    //------------------------------------------------
     s8 Perlin::grad3_[12][3] =
     {
         {1,1,0},{-1,1,0},{1,-1,0},
@@ -105,7 +277,7 @@ namespace
 
     void Perlin::random(u32 seed)
     {
-        lcore::RandomWELL rand;
+        lcore::RandomXorshift rand;
         rand.srand(seed);
 
         s32 size = PermutationTableSize>>1;
@@ -119,6 +291,7 @@ namespace
         }
     }
 
+#if 0
     f32 Perlin::operator()(f32 x, f32 y) const
     {
         const f32 F2 = 0.366025403f; //F2 = 0.5*(sqrt(3.0)-1.0)
@@ -628,12 +801,14 @@ namespace
         return 27.0f * (n0 + n1 + n2 + n3 + n4);
     }
 
+#endif
+
     //------------------------------------------------
     //---
     //--- Fractal
     //---
     //------------------------------------------------
-    f32 Fractal::fbm(const Perlin& noise, const Param& param, f32 x, f32 y)
+    f32 Fractal::fbm(const Noise& noise, const Param& param, f32 x, f32 y)
     {
         f32 total = 0.0f;
 
@@ -653,7 +828,7 @@ namespace
         return total/maxAmplitude;
     }
 
-    f32 Fractal::fbm(const Perlin& noise, const Param& param, f32 x, f32 y, f32 z)
+    f32 Fractal::fbm(const Noise& noise, const Param& param, f32 x, f32 y, f32 z)
     {
         f32 total = 0.0f;
 
@@ -693,7 +868,7 @@ namespace
     }
 
 
-    f32 Fractal::turbulence(const Perlin& noise, const Param& param, f32 x, f32 y)
+    f32 Fractal::turbulence(const Noise& noise, const Param& param, f32 x, f32 y)
     {
         f32 total = 0.0f;
 
@@ -713,7 +888,7 @@ namespace
         return total/maxAmplitude;
     }
 
-    f32 Fractal::turbulence(const Perlin& noise, const Param& param, f32 x, f32 y, f32 z)
+    f32 Fractal::turbulence(const Noise& noise, const Param& param, f32 x, f32 y, f32 z)
     {
         f32 total = 0.0f;
 
@@ -753,7 +928,7 @@ namespace
         return total/maxAmplitude;
     }
 
-    f32 Fractal::multiFractal(const Perlin& noise, const Param& param, f32 x, f32 y)
+    f32 Fractal::multiFractal(const Noise& noise, const Param& param, f32 x, f32 y)
     {
         f32 total = 1.0f;
 
@@ -773,7 +948,7 @@ namespace
         return total/maxAmplitude;
     }
 
-    f32 Fractal::multiFractal(const Perlin& noise, const Param& param, f32 x, f32 y, f32 z)
+    f32 Fractal::multiFractal(const Noise& noise, const Param& param, f32 x, f32 y, f32 z)
     {
         f32 total = 1.0f;
 
@@ -825,7 +1000,7 @@ namespace
         }
     }
 
-    f32 Fractal::ridgedMultiFractal(const Perlin& noise, const RidgedParam& param, f32 x, f32 y)
+    f32 Fractal::ridgedMultiFractal(const Noise& noise, const RidgedParam& param, f32 x, f32 y)
     {
         x *= param.frequency_;
         y *= param.frequency_;
@@ -849,7 +1024,7 @@ namespace
         return value * 1.25f - 1.0f;
     }
 
-    f32 Fractal::ridgedMultiFractal(const Perlin& noise, const RidgedParam& param, f32 x, f32 y, f32 z)
+    f32 Fractal::ridgedMultiFractal(const Noise& noise, const RidgedParam& param, f32 x, f32 y, f32 z)
     {
         x *= param.frequency_;
         y *= param.frequency_;

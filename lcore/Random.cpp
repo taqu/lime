@@ -84,6 +84,11 @@ namespace lcore
     }
 
 
+    //---------------------------------------------
+    //---
+    //--- RandomXorshift
+    //---
+    //---------------------------------------------
 #define LCORE_RANDOM_XORSHIFT_PROC \
     u32 t = x_^(x_<<11);\
     x_ = y_;\
@@ -163,6 +168,65 @@ LCORE_RANDOM_XORSHIFT_PROC
     }
 
 
+    //---------------------------------------------
+    //---
+    //--- RandomXorshift128Plus
+    //---
+    //---------------------------------------------
+#define LCORE_RANDOM_XORSHIFT128PLUS_PROC \
+    u64 s1 = s0_;\
+    u64 s0 = s1_;\
+    s0_ = s0;\
+    s1 ^= s1<<23;\
+    s1_ = s1^s0^(s1>>18)^(s0>>5);\
+    u64 r = s1_+s0;\
+
+    RandomXorshift128Plus::RandomXorshift128Plus()
+        :s0_(0x8a5cd789635d2dff)
+        ,s1_(0x121fd2155c472f96)
+    {
+    }
+
+    RandomXorshift128Plus::RandomXorshift128Plus(u64 seed)
+    {
+        srand(seed);
+    }
+
+    RandomXorshift128Plus::~RandomXorshift128Plus()
+    {
+    }
+
+    void RandomXorshift128Plus::srand(u64 seed)
+    {
+        s0_ = seed;
+        s1_ = rand(s0_, 1);
+    }
+
+    u64 RandomXorshift128Plus::rand()
+    {
+LCORE_RANDOM_XORSHIFT128PLUS_PROC
+        return r;
+    }
+
+    u64 RandomXorshift128Plus::rand(u64 v, u64 i)
+    {
+        return (1812433253 * (v^(v >> 41)) + i);
+    }
+#undef LCORE_RANDOM_XORSHIFT128PLUS_PROC
+
+
+    void RandomXorshift128Plus::swap(RandomXorshift128Plus& rhs)
+    {
+        lcore::swap(s0_, rhs.s0_);
+        lcore::swap(s1_, rhs.s1_);
+    }
+
+
+    //---------------------------------------------
+    //---
+    //--- RandomWELL
+    //---
+    //---------------------------------------------
     RandomWELL::RandomWELL()
         :index_(0)
     {

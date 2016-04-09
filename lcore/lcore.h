@@ -355,6 +355,12 @@ namespace lcore
 #define LIME_ALLOCATOR_ALIGNED_MALLOC(allocator, size, alignment) allocator::malloc(size, alignment, __FILE__, __LINE__)
 #endif
 
+    template<class T>
+    inline T* construct(void* ptr)
+    {
+        return LIME_PLACEMENT_NEW(ptr) T();
+    }
+
     //---------------------------------------------------------
     //---
     //--- numeric_limits
@@ -1097,6 +1103,74 @@ namespace lcore
     {
         v0 = radicalInverseVanDerCorput(i, scramble0);
         v1 = radicalInverseSobol(i, scramble1);
+    }
+
+    //---------------------------------------------------------
+    //---
+    //--- Hash Functions
+    //---
+    //---------------------------------------------------------
+    inline u32 hash_bernstein(const u8* v, u32 count)
+    {
+        u32 hash = 5381U;
+
+        for(u32 i=0; i<count; ++i){
+            //hash = 33*hash + v[i];
+            hash = ((hash<<5)+hash) + v[i];
+        }
+        return hash;
+    }
+
+    /**
+    */
+    inline u32 hash_FNV1(const u8* v, u32 count)
+    {
+        u32 hash = 2166136261U;
+
+        for(u32 i=0; i<count; ++i){
+            hash *= 16777619U;
+            hash ^= v[i];
+        }
+        return hash;
+    }
+
+    /**
+    */
+    inline u32 hash_FNV1a(const u8* v, u32 count)
+    {
+        u32 hash = 2166136261U;
+
+        for(u32 i=0; i<count; ++i){
+            hash ^= v[i];
+            hash *= 16777619U;
+        }
+        return hash;
+    }
+
+    /**
+    */
+    inline u64 hash_FNV1_64(const u8* v, u32 count)
+    {
+        u64 hash = 14695981039346656037ULL;
+
+        for(u32 i=0; i<count; ++i){
+            hash *= 1099511628211ULL;
+            hash ^= v[i];
+        }
+        return hash;
+    }
+
+    /**
+    */
+    inline u64 hash_FNV1a_64(const u8* v, u32 count)
+    {
+        u64 hash = 14695981039346656037ULL;
+
+        for(u32 i=0; i<count; ++i){
+            hash ^= v[i];
+            hash *= 1099511628211ULL;
+        }
+        return hash;
     }
 }
 

@@ -714,86 +714,72 @@ namespace
     val = (val & 0x00FF00FFU) + ((val>>8) & 0x00FF00FFU);\
     return (val & 0x0000FFFFU) + ((val>>16) & 0x0000FFFFU)
 
-    u32 populationCount(u32 val)
+    u32 populationCount(u32 v)
     {
-        LCORE_POPULATIONCOUNT(val);
+        LCORE_POPULATIONCOUNT(v);
     }
 
-    //u32 mostSignificantBit(u32 v)
-    //{
-    //    static const u32 shifttable[] =
-    //    {
-    //        0, 1, 2, 2, 3, 3, 3, 3,
-    //        4, 4, 4, 4, 4, 4, 4, 4,
-    //    };
-    //    u32 ret = 0;
-
-    //    if(v & 0xFFFF0000U){
-    //        ret += 16;
-    //        v >>= 16;
-    //    }
-
-    //    if(v & 0xFF00U){
-    //        ret += 8;
-    //        v >>= 8;
-    //    }
-
-    //    if(v & 0xF0U){
-    //        ret += 4;
-    //        v >>= 4;
-    //    }
-    //    return ret + shifttable[v];
-    //}
-
-    u32 mostSiginificantBit(u32 val)
+    u32 mostSiginificantBit(u32 v)
     {
 #if defined(_MSC_VER)
         unsigned long index;
-#if defined(_WIN64)
-        return (_BitScanReverse64(&index, val))? (u32)index : 0;
-#else
-        return (_BitScanReverse(&index, val))? (u32)index : 0;
-#endif
+        return (_BitScanReverse(&index, v))? (u32)index : 0;
 
 #elif defined(__GNUC__)
-        return (0!=val)? (__builtin_clzl(val) ^ 0x3FU) : 0;
+        return (0!=v)? (__builtin_clzl(v) ^ 0x3FU) : 0;
 #else
-        val = (~val) & (val-1);
-        LCORE_POPULATIONCOUNT(val);
+        static const u32 shifttable[] =
+        {
+            0, 1, 2, 2, 3, 3, 3, 3,
+            4, 4, 4, 4, 4, 4, 4, 4,
+        };
+        u32 ret = 0;
+
+        if(v & 0xFFFF0000U){
+            ret += 16;
+            v >>= 16;
+        }
+
+        if(v & 0xFF00U){
+            ret += 8;
+            v >>= 8;
+        }
+
+        if(v & 0xF0U){
+            ret += 4;
+            v >>= 4;
+        }
+        return ret + shifttable[v];
 #endif
     }
 
-    u32 leastSignificantBit(u32 val)
+    u32 leastSignificantBit(u32 v)
     {
 #if defined(_MSC_VER)
         unsigned long index;
-#if defined(_WIN64)
-        return (_BitScanForward64(&index, val))? (u32)index : 0;
-#else
-        return (_BitScanForward(&index, val))? (u32)index : 0;
-#endif
+        return _BitScanForward(&index, v)? (u32)index : 0;
 
 #elif defined(__GNUC__)
-        return (0!=val)? (__builtin_ctzl(val)) : 0;
+        return (0!=v)? (__builtin_ctzl(v)) : 0;
 #else
-        if(0 == val){
+        if(0 == v){
             return 32U;
         }
-        u32 count = (val&0xAAAAAAAAU)? 0x01U:0;
+        u32 count = (v&0xAAAAAAAAU)? 0x01U:0;
 
-        if(val&0xCCCCCCCCU){
+        if(v&0xCCCCCCCCU){
             count |= 0x02U;
         }
 
-        if(val&0xF0F0F0F0U){
+        if(v&0xF0F0F0F0U){
             count |= 0x04U;
         }
 
-        if(val&0xFF00FF00U){
+        if(v&0xFF00FF00U){
             count |= 0x08U;
         }
 
-        return 31U-((val&0xFFFF0000U)? count|0x10U:count);
+        return 31U-((v&0xFFFF0000U)? count|0x10U:count);
 #endif
     }
 

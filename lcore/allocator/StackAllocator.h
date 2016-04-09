@@ -137,7 +137,7 @@ namespace lcore
         LASSERT(NULL == chunk_);
 
         //ページ作成・リンク
-        Page* newPage = reinterpret_cast<Page*>( allocator_type::malloc(pageSize_) );
+        Page* newPage = reinterpret_cast<Page*>( LIME_ALLOCATOR_MALLOC(allocator_type, pageSize_) );
         if(NULL == page_){
             newPage->next_ = NULL;
             page_ = newPage;
