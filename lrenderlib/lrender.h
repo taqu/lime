@@ -159,6 +159,7 @@ namespace lrender
     Vector2 weightAverage(f32 w0, f32 w1, f32 w2, const Vector2& v0, const Vector2& v1, const Vector2& v2);
     Vector3 weightAverage(f32 w0, f32 w1, f32 w2, const Vector3& v0, const Vector3& v1, const Vector3& v2);
 
+    s32 octreeChildIndex(const Vector3& point, const Vector3& center);
     s32 octreeChildIndex(AABB& childBBox, const Vector3& point, const Vector3& center, const AABB& parentBBox);
     AABB octreeChildBound(s32 childIndex, const Vector3& center, const AABB& bbox);
 

@@ -127,12 +127,21 @@ namespace lrender
         return Vector3(x, y, z);
     }
 
+    s32 octreeChildIndex(const Vector3& point, const Vector3& center)
+    {
+        s32 index = (center.x_ < point.x_)? 4 : 0;
+        index += (center.y_ < point.y_)? 2 : 0;
+        index += (center.z_ < point.z_)? 1 : 0;
+        return index;
+    }
+
     s32 octreeChildIndex(AABB& childBBox, const Vector3& point, const Vector3& center, const AABB& parentBBox)
     {
         s32 index[3];
-        index[0] = (point.x_<center.x_)? 0 : 4;
-        index[1] = (point.y_<center.y_)? 0 : 2;
-        index[2] = (point.z_<center.z_)? 0 : 1;
+
+        index[0] = (center.x_ < point.x_)? 4 : 0;
+        index[1] = (center.y_ < point.y_)? 2 : 0;
+        index[2] = (center.z_ < point.z_)? 1 : 0;
 
         s32 childIndex = index[0] + index[1] + index[2];
         for(s32 i=0; i<3; ++i){
@@ -145,12 +154,12 @@ namespace lrender
     AABB octreeChildBound(s32 childIndex, const Vector3& center, const AABB& bbox)
     {
         AABB childBound;
-        childBound.bmin_.x_ = (childIndex & 4) ? center.x_ : bbox.bmin_.x_;
-        childBound.bmax_.x_ = (childIndex & 4) ? bbox.bmax_.x_ : center.x_;
-        childBound.bmin_.y_ = (childIndex & 2) ? center.y_ : bbox.bmin_.y_;
-        childBound.bmax_.y_ = (childIndex & 2) ? bbox.bmax_.y_ : center.y_;
-        childBound.bmin_.z_ = (childIndex & 1) ? center.z_ : bbox.bmin_.z_;
-        childBound.bmax_.z_ = (childIndex & 1) ? bbox.bmax_.z_ : center.z_;
+        childBound.bmin_.x_ = (childIndex & 0x04U) ? center.x_ : bbox.bmin_.x_;
+        childBound.bmax_.x_ = (childIndex & 0x04U) ? bbox.bmax_.x_ : center.x_;
+        childBound.bmin_.y_ = (childIndex & 0x02U) ? center.y_ : bbox.bmin_.y_;
+        childBound.bmax_.y_ = (childIndex & 0x02U) ? bbox.bmax_.y_ : center.y_;
+        childBound.bmin_.z_ = (childIndex & 0x01U) ? center.z_ : bbox.bmin_.z_;
+        childBound.bmax_.z_ = (childIndex & 0x01U) ? bbox.bmax_.z_ : center.z_;
         return childBound;
     }
 
@@ -203,7 +212,7 @@ namespace lrender
     // eta ... (internal index of refraction)/(external index of refraction)
     f32 fresnelDiffuseReflectance(f32 eta)
     {
-        if(1.0f<eta){
+        if(1.0f<=eta){
             f32 ieta = 1.0f/eta;
             return -1.4399f * (ieta*ieta) + 0.7099f * ieta + 0.6681f + 0.0636f * eta;
         }else{
