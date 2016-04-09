@@ -50,6 +50,7 @@
     <ClInclude Include="..\integrator\Integrator.h" />
     <ClInclude Include="..\integrator\MapPathTracer.h" />
     <ClInclude Include="..\integrator\PathTracer.h" />
+    <ClInclude Include="..\integrator\PointOctree.h" />
     <ClInclude Include="..\integrator\TranslucencyMagnitudeIntegrator.h" />
     <ClInclude Include="..\loader\IOBMP.h" />
     <ClInclude Include="..\loader\IOPNG.h" />

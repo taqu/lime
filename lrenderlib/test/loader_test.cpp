@@ -50,7 +50,7 @@ namespace
 
         lrender::u32 seed = lcore::getDefaultSeed();
         lcore::Log("seed %d", seed);
-        static const lrender::s32 numSamples = 256;
+        static const lrender::s32 numSamples = 64;
         sampler_ = LIME_NEW lrender::LowDiscrepancySampler(numSamples, seed, 4);
         emitter_ = LIME_NEW lrender::DistantLight(lmath::Vector3(0.25f, 1.0f, 0.0f), lrender::Color3(1.0f));
 
@@ -121,9 +121,21 @@ int main(int argc, char** argv)
 #if 1
     //lrender::Vector3 worldCenter = camera_->getPosition();
     lrender::Vector3 worldCenter = scene_->getWorldBound().center();
-    lrender::DipoleIntegrator dipoleIntegrator(lrender::Vector3(14.266395f/100.0f, 7.227615f/100.0f, 2.036157f/100.0f), lrender::Vector3(0.0f), 4, 5, 0.25f, 0.01f, 0.1f);
-    //lrender::TranslucencyMagnitudeIntegrator dipoleIntegrator(lrender::Vector3(14.266395f/100.0f, 7.227615f/100.0f, 2.036157f/100.0f), lrender::Vector3(0.0f), 4, 5, 0.25f, 0.01f, 0.1f);
-    
+    lrender::DipoleIntegrator dipoleIntegrator(
+        lrender::Vector3(18.205200f, 20.382601f, 22.369801f),
+        lrender::Vector3(0.001530f, 0.004600f, 0.019930f),
+        lrender::Vector3(0.0f, 0.0f, 0.0f),
+        1.33f,
+        4, 5, 0.2f, 0.01f, 1.0f);
+
+    //lrender::TranslucencyMagnitudeIntegrator dipoleIntegrator(
+    //    lrender::Vector3(0.069176f, 0.035243f, 0.015288f),
+    //    lrender::Vector3(0.001530f, 0.004600f, 0.019930f),
+    //    lrender::Vector3(18.205200f, 20.382601f, 22.369801f),
+    //    lrender::Vector3(0.0f, 0.0f, 0.0f),
+    //    1.33f,
+    //    4, 5, 0.2f, 0.01f, 1.0f);
+
     dipoleIntegrator.preprocess(*scene_);
 
     lrender::RenderQuery renderQuery(scene_, sampler_, screen_, &dipoleIntegrator);

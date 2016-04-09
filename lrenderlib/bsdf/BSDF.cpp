@@ -83,6 +83,30 @@ namespace lrender
         }
     }
 
+    f32 Fresnel::dielectricExt(f32 cosi, f32 eta)
+    {
+        if(lmath::isEqual(eta, 1.0f)){
+            return 0.0f;
+        }
+
+        f32 scale = (1.0e-5f<cosi)? 1.0f/eta : eta;
+        f32 sqrCost = 1.0f - (1.0f-cosi*cosi) * (scale * scale);
+        if(sqrCost < 1.0e-5f){
+            return 1.0f;
+        }
+        f32 cosThetaI = lcore::absolute(cosi);
+        f32 cosThetaT = lmath::sqrt(sqrCost);
+
+        f32 rs = (cosThetaI - eta * cosThetaT)/(cosThetaI + eta * cosThetaT);
+        f32 rp = (eta * cosThetaI - cosThetaT)/(eta*cosThetaI + cosThetaT);
+        return 0.5f * (rs*rs + rp*rp);
+    }
+
+    Color3 Fresnel::conductorExt(f32 cosi, const Color3& eta, const Color3& k)
+    {
+        return fresnelConductor(cosi, eta, k);
+    }
+
     //---------------------------------------------------------------------
     //---
     //--- BSDF

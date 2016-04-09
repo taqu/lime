@@ -91,6 +91,8 @@ namespace lrender
         bool contains(const AABB& rhs) const;
         bool overlaps(const AABB& rhs) const;
 
+        f32 sqrDistance(const Vector3& point) const;
+
         Vector3 bmin_;
         Vector3 bmax_;
     };

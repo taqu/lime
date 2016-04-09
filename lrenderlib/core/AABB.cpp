@@ -158,6 +158,28 @@ namespace lrender
         return true;
     }
 
+    f32 AABB::sqrDistance(const Vector3& point) const
+    {
+        Vector3 center = this->center();
+        Vector3 half = this->extent();
+        half *= 0.5f;
+
+        Vector3 d;
+        d.sub(point, center);
+
+        for(s32 i=0; i<3; ++i){
+            if(d[i] <= -half[i]){
+                d[i] += half[i];
+            } else if(half[i] <= d[i]){
+                d[i] -= half[i];
+            } else{
+                d[i] = 0.0f;
+            }
+        }
+
+        return d.dot(d);
+    }
+
     void AABB2D::extend(const Vector2& point)
     {
         bmin_.x_ = lcore::minimum(bmin_.x_, point.x_);

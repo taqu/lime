@@ -196,6 +196,9 @@
     <ClInclude Include="..\integrator\TranslucencyMagnitudeIntegrator.h">
       <Filter>src\integrator</Filter>
     </ClInclude>
+    <ClInclude Include="..\integrator\PointOctree.h">
+      <Filter>src\integrator</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="src">

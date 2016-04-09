@@ -9,6 +9,7 @@
 #include "core/AABB.h"
 #include "core/SampleTable.h"
 #include "core/Buffer.h"
+#include "PointOctree.h"
 
 namespace lrender
 {
@@ -73,119 +74,57 @@ namespace lrender
 
         struct DiffusionReflectance
         {
-            Color3 operator()(f32 sqrDistance) const;
+            Color3 operator()(f32 distance) const;
 
             void set(
-                f32 internalIOR,
-                f32 externalIOR,
-                const Vector3& diffuseMeanFreePath);
+                const Vector3& sigmaS,
+                const Vector3& sigmaA,
+                const Vector3& g,
+                f32 eta);
 
-            /**
-            @param albedo ... [0 1]
-            @param diffuseMeanFreePath ...
-            */
-            void setVertexParameter(
-                const Vector3& position,
-                const Color3& albedo,
-                const Vector3& diffuseMeanFreePath);
+            f32 computeBSSDF(
+                f32 distance,
+                f32 sigmaTr,
+                f32 alphaPrime,
+                f32 meanFreePath,
+                f32 zr,
+                f32 zv) const;
 
-            //f32 internalIOR_;
-            //f32 externalIOR_;
+            //Vector3 diffuseMeanFreePath_;
+            Vector3 sigmaA_;
+            Vector3 sigmaT_;
             f32 eta_;
-            f32 maxSolidAngle_; //default 0.2
 
             f32 Fdr_; //fresnel diffuse reflectance
-            f32 Fdt_; //fresnel diffuse transmittance
+            //f32 Fdt_; //fresnel diffuse transmittance
             f32 A_; //(1.0f+Fdr_)/(1.0f-Fdr_);
 
-            SampleTable alphaPrimeTable_;
+            Vector3 meanFreePath_;
+            //SampleTable alphaPrimeTable_;
+            Vector3 alphaPrime_;
 
             Vector3 sigmaTr_;
-            Vector3 sigmaTrPrime_;
             Vector3 zr_;
             Vector3 zv_;
-            Vector3 meanFreePath_;
-
-            Vector3 position_;
-            Vector3 mo_;
+            f32 radius_;
         };
 
         /**
         @brief ポイントクラウドの八分木
         */
-        class PointOctree
-        {
-        public:
-            static const f32 Epsilon;
-            static const s32 MaxNumNodePoints = 16;
+        typedef PointOctreeNode<IrradiancePoint, DiffusionReflectance> PointOctree;
 
-            typedef IrradiancePoint value_type;
-
-            //--------------------------------------------
-            //--- Node
-            //--------------------------------------------
-            struct Node
-            {
-            public:
-                inline void clear();
-
-                inline s32 getOffset() const;
-                inline void setOffset(s32 offset);
-
-                inline s32 getNum() const;
-                inline void setNum(s32 num);
-
-                inline bool isLeaf() const;
-                inline void setLeaf(bool leaf);
-
-                u32 num_;
-                s32 offset_;
-                Vector3 point_;
-                Color3 E_;
-                f32 area_;
-                s32 children_[8];
-            };
-
-            PointOctree();
-            PointOctree(IrradiancePointVector& values);
-            ~PointOctree();
-
-            const IrradiancePointVector& getValues() const;
-
-            Color3 Mo(const Vector3& point, const DiffusionReflectance& diffusion, f32 maxSolidAngle) const;
-
-            void swap(PointOctree& rhs);
-
-        protected:
-            PointOctree(const PointOctree&);
-            PointOctree& operator=(const PointOctree&);
-
-            typedef lcore::vector_arena<Node, lcore::vector_arena_dynamic_inc_size, lcore::DefaultAllocator> NodeVector;
-
-            void clear();
-            void build();
-            void initialize();
-
-            void initialize(s32 nodeIndex);
-            void split(s32 nodeIndex);
-            void split(
-                s32& numLeft,
-                s32& numRight,
-                s32& offsetRight,
-                s32 offset,
-                s32 num,
-                value_type* values,
-                s32 axis,
-                const Vector3& pivot);
-
-            Color3 Mo(s32 nodeIndex, const AABB& bbox, const Vector3& point, const DiffusionReflectance& diffusion, f32 maxSolidAngle) const;
-
-            AABB bbox_;
-            NodeVector nodes_;
-            IrradiancePointVector values_;
-        };
-
-        DipoleIntegrator(const Vector3& diffuseMeanFreePath, const Vector3& g, s32 russianRouletteDepth=4, s32 maxDepth=5, f32 maxSolidAngle=0.1f, f32 minSampleDistance=0.01f, f32 maxSampleDistance=1.0f, s32 maxSamples=10000000);
+        DipoleIntegrator(
+            const Vector3& sigmaS,
+            const Vector3& sigmaA,
+            const Vector3& g,
+            f32 eta,
+            s32 russianRouletteDepth=4,
+            s32 maxDepth=5,
+            f32 maxSolidAngle=0.1f,
+            f32 minSampleDistance=0.01f,
+            f32 maxSampleDistance=1.0f,
+            s32 maxSamples=10000000);
         virtual ~DipoleIntegrator();
 
         virtual void requestSamples(Sampler* sampler);
@@ -199,64 +138,17 @@ namespace lrender
         DipoleIntegrator(const DipoleIntegrator&);
         DipoleIntegrator& operator=(const DipoleIntegrator&);
 
-        Vector3 diffuseMeanFreePath_;
-        Vector3 g_;
         s32 russianRouletteDepth_;
         s32 maxDepth_;
         f32 maxSolidAngle_;
         f32 minSampleDistance_;
         f32 maxSampleDistance_;
         s32 maxSamples_;
-        PointOctree octree_;
+        IrradiancePointVector irradiancePoints_;
+        PointOctree::NodeAllocator octreeNodeAllocator_;
+        AABB octreeBound_;
+        PointOctree* octree_;
         DiffusionReflectance diffusion_;
     };
-
-
-    //--------------------------------------------
-    //--- DipoleIntegrator::PointOctree::Node
-    //--------------------------------------------
-    inline void DipoleIntegrator::PointOctree::Node::clear()
-    {
-        point_.zero();
-        E_ = Color3::black();
-        area_ = 0.0f;
-        for(s32 i = 0; i < 8; ++i){
-            children_[i] = 0;
-        }
-    }
-
-    inline s32 DipoleIntegrator::PointOctree::Node::getOffset() const
-    {
-        return offset_;
-    }
-
-    inline void DipoleIntegrator::PointOctree::Node::setOffset(s32 offset)
-    {
-        offset_ = offset;
-    }
-
-    inline s32 DipoleIntegrator::PointOctree::Node::getNum() const
-    {
-        return static_cast<s32>(num_ & 0x7FFFFFFFU);
-    }
-
-    inline void DipoleIntegrator::PointOctree::Node::setNum(s32 num)
-    {
-        num_ = (num_ & 0x80000000U) | (num & 0x7FFFFFFFU);
-    }
-
-    inline bool DipoleIntegrator::PointOctree::Node::isLeaf() const
-    {
-        return 0 != (num_ & 0x80000000U);
-    }
-
-    inline void DipoleIntegrator::PointOctree::Node::setLeaf(bool leaf)
-    {
-        if(leaf){
-            num_ |= 0x80000000U;
-        } else{
-            num_ &= 0x7FFFFFFFU;
-        }
-    }
 }
 #endif //INC_LRENDER_DIPOLEINTEGRATOR_H__

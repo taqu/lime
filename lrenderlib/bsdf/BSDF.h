@@ -46,6 +46,9 @@ namespace lrender
         f32 evalDielectic(f32 cosi) const;
         inline f32 getEtaI() const{ return eta_i_;}
         inline f32 getEtaT() const{ return eta_t_;}
+
+        static f32 dielectricExt(f32 cosi, f32 eta);
+        static Color3 conductorExt(f32 cosi, const Color3& eta, const Color3& k);
     private:
         s32 type_;
         Color3 eta_;

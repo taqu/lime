@@ -16,6 +16,7 @@
 
 namespace lrender
 {
+    //name, sigmaS, sigmaA, g, albedo, eta, diffuseMeanFreePath
     const DipoleIntegrator::MeasuredMaterial DipoleIntegrator::MeasuredMaterialData[] =
     {
         //Henrik Wann Jensen, Stephen R. Marschner, Marc Levoy and Pat Hanrahan: "A Practical Model for Subsurface Light Transport". Proceedings of SIGGRAPH'2001. 
@@ -73,351 +74,100 @@ namespace lrender
         {NULL, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}, 0.0f, {0.0f, 0.0f, 0.0f}, {0.0f, 0.0f, 0.0f}},
     };
 
-    void DipoleIntegrator::DiffusionReflectance::set(f32 internalIOR, f32 externalIOR, const Vector3& diffuseMeanFreePath)
+    void DipoleIntegrator::DiffusionReflectance::set(
+        const Vector3& sigmaS,
+        const Vector3& sigmaA,
+        const Vector3& g,
+        f32 eta)
     {
-        Vector3 ld;
-        ld.x_ = lcore::maximum(diffuseMeanFreePath.x_, 1.0e-5f);
-        ld.y_ = lcore::maximum(diffuseMeanFreePath.y_, 1.0e-5f);
-        ld.z_ = lcore::maximum(diffuseMeanFreePath.z_, 1.0e-5f);
-        sigmaTr_ = Vector3(1.0f/ld.x_, 1.0f/ld.y_, 1.0f/ld.z_);
+        Vector3 sigmaSPrime;
+        for(s32 i=0; i<3; ++i){
+            sigmaSPrime[i] = sigmaS[i] * (1.0f - g[i]);
+        }
 
-        eta_ = internalIOR/externalIOR;
+        sigmaA_ = sigmaA;
+        sigmaT_.add(sigmaSPrime, sigmaA_);
+
+        //f32 eta = internalIOR/externalIOR;
+        eta_ = eta;
         Fdr_ = lrender::fresnelDiffuseReflectance(eta_);
-        Fdt_ = 1.0f - Fdr_;
-        A_ = (1.0f+Fdr_)/Fdt_;
+        //Fdt_ = 1.0f - Fdr_;
+        A_ = (1.0f+Fdr_)/(1.0f-Fdr_);
 
-        alphaPrimeTable_.create<ClacDiffuseReflectance>(128, ClacDiffuseReflectance(A_), 0.0f, 1.0f, 1.0e-5f);
-    }
-
-    void DipoleIntegrator::DiffusionReflectance::setVertexParameter(
-        const Vector3& position,
-        const Color3& albedo,
-        const Vector3& diffuseMeanFreePath)
-    {
-        position_ = position;
-        mo_.zero();
-
-        Vector3 rd;
-        rd.x_ = lcore::minimum(albedo[0], 0.999f);
-        rd.y_ = lcore::minimum(albedo[1], 0.999f);
-        rd.z_ = lcore::minimum(albedo[2], 0.999f);
-
-        Vector3 alphaPrime;
-        alphaPrime.x_ = alphaPrimeTable_.interpolateLinear(rd.x_);
-        alphaPrime.y_ = alphaPrimeTable_.interpolateLinear(rd.y_);
-        alphaPrime.z_ = alphaPrimeTable_.interpolateLinear(rd.z_);
-
+        radius_ = lcore::numeric_limits<f32>::maximum();
         for(s32 i=0; i<3; ++i){
-            meanFreePath_[i] = diffuseMeanFreePath[i] * lmath::sqrt(3.0f*(1.0f-alphaPrime[i]));
+            meanFreePath_[i] = 1.0f/sigmaT_[i];
+            radius_ = lcore::minimum(radius_, meanFreePath_[i]);
 
-            f32 sigmaTPrime = 1.0f/meanFreePath_[i];
-            f32 sigmaSPrime = alphaPrime[i] * sigmaTPrime;
-            f32 sigmaA = sigmaTPrime - sigmaSPrime;
-
-            sigmaTrPrime_[i] = lmath::sqrt(3.0f*sigmaA*sigmaTPrime);
+            sigmaTr_[i] = lmath::sqrt(3.0f*sigmaA_[i]*sigmaT_[i]);
+            alphaPrime_[i] = sigmaSPrime[i]/sigmaT_[i];
+            zr_[i] = meanFreePath_[i];
+            zv_[i] = meanFreePath_[i]*(1.0f + (4.0f/3.0f)*A_);
         }
 
-        zr_ = meanFreePath_;
-        zv_.mul(1.0f+4.0f/3.0f*A_, zr_);
+        //alphaPrimeTable_.create<ClacDiffuseReflectance>(128, ClacDiffuseReflectance(A_), 0.0f, 1.0f, 1.0e-5f);
     }
 
-    Color3 DipoleIntegrator::DiffusionReflectance::operator()(f32 sqrDistance) const
+    Color3 DipoleIntegrator::DiffusionReflectance::operator()(f32 distance) const
     {
-        //f32 sqrDmpf = meanFreePath_.lengthSqr();
-        //sqrDistance = (sqrDistance<sqrDmpf)? sqrDmpf : sqrDistance;
-
-        Color3 dr, dv, idr, idv;
-        for(s32 i=0; i<3; ++i){
-            dr[i] = lmath::sqrt(sqrDistance + zr_[i]*zr_[i]);
-            dv[i] = lmath::sqrt(sqrDistance + zv_[i]*zv_[i]);
-
-            idr[i] = 1.0f/dr[i];
-            idv[i] = 1.0f/dv[i];
-        }
-
         Color3 Rd;
         for(s32 i=0; i<3; ++i){
-            f32 c0 = zr_[i] * (sigmaTrPrime_[i] + idr[i]) * lmath::exp(-sigmaTrPrime_[i] * dr[i]) * (idr[i] * idr[i]);
-            f32 c1 = zv_[i] * (sigmaTrPrime_[i] + idv[i]) * lmath::exp(-sigmaTrPrime_[i] * dv[i]) * (idv[i] * idv[i]);
-            Rd[i] = lcore::maximum(1.0f/(4.0f*PI)*(c0+c1), 0.0f);
+            Rd[i] = computeBSSDF(distance, sigmaTr_[i], alphaPrime_[i], meanFreePath_[i], zr_[i], zv_[i]);
         }
         return Rd;
     }
 
-    //--------------------------------------------------------------
-    //--- DipoleIntegrator::PointOctree
-    //--------------------------------------------------------------
-    const f32 DipoleIntegrator::PointOctree::Epsilon = 1.0e-6f;
-
-    DipoleIntegrator::PointOctree::PointOctree()
+    f32 DipoleIntegrator::DiffusionReflectance::computeBSSDF(
+        f32 distance,
+        f32 sigmaTr,
+        f32 alphaPrime,
+        f32 meanFreePath,
+        f32 zr,
+        f32 zv) const
     {
-        clear();
+        if(distance<meanFreePath){
+            distance = meanFreePath;
+        }
+
+        f32 sqrDistance = distance*distance;
+        f32 dr = lmath::sqrt(sqrDistance + zr*zr);
+        f32 dv = lmath::sqrt(sqrDistance + zv*zv);
+        LASSERT(0.0f<dr && 0.0f<dv);
+
+        f32 invDr = 1.0f/dr;
+        f32 invDv = 1.0f/dv;
+
+        f32 c0 = (zr * (sigmaTr + invDr)) * lmath::exp(-sigmaTr * dr) * (invDr*invDr);
+        f32 c1 = (zv * (sigmaTr + invDv)) * lmath::exp(-sigmaTr * dv) * (invDv*invDv);
+
+        static const f32 InvFourPI = 1.0f/(4.0f*PI);
+        f32 rd = (c0+c1) * (InvFourPI);
+        LASSERT(!lcore::isNan(rd));
+        return rd;
     }
 
-    DipoleIntegrator::PointOctree::PointOctree(IrradiancePointVector& values)
-    {
-        clear();
-        values_.swap(values);
-        build();
-        initialize();
-    }
 
-    DipoleIntegrator::PointOctree::~PointOctree()
-    {
-    }
-
-    const DipoleIntegrator::IrradiancePointVector&
-        DipoleIntegrator::PointOctree::getValues() const
-    {
-        return values_;
-    }
-
-    void DipoleIntegrator::PointOctree::clear()
-    {
-        nodes_.clear();
-        Node root;
-        root.num_ = 0;
-        root.offset_ = 0;
-        nodes_.push_back(root);
-    }
-
-    void DipoleIntegrator::PointOctree::swap(PointOctree& rhs)
-    {
-        lcore::swap(bbox_, rhs.bbox_);
-        values_.swap(rhs.values_);
-        nodes_.swap(rhs.nodes_);
-    }
-
-    void DipoleIntegrator::PointOctree::initialize()
-    {
-        initialize(0);
-    }
-
-    Color3 DipoleIntegrator::PointOctree::Mo(const Vector3& point, const DiffusionReflectance& diffusion, f32 maxSolidAngle) const
-    {
-        return Mo(0, bbox_, point, diffusion, maxSolidAngle);
-    }
-
-    void DipoleIntegrator::PointOctree::build()
-    {
-        if(128 < values_.size()){
-            nodes_.reserve(values_.size() >> 1);
-            nodes_.setIncSize(values_.size() >> 2);
-        } else{
-            nodes_.setIncSize(128);
-        }
-
-        bbox_.setInvalid();
-        for(s32 i=0; i<values_.size(); ++i){
-            bbox_.extend(values_[i].getPosition());
-        }
-        Node& root = nodes_[0];
-        root.offset_ = 0;
-        root.setNum(values_.size());
-        split(0);
-    }
-
-    void DipoleIntegrator::PointOctree::initialize(s32 nodeIndex)
-    {
-        Node& node = nodes_[nodeIndex];
-        node.point_.zero();
-        node.E_ = Color3::black();
-        node.area_ = 0.0f;
-
-        f32 sumWeight = 0.0f;
-
-        if(node.isLeaf()){
-            s32 start = node.getOffset();
-            s32 num = node.getNum();
-            s32 end = start + num;
-            for(s32 i=start; i<end; ++i){
-                const IrradiancePoint& sp = values_[i];
-                node.E_ += sp.E_ * sp.area_;
-                node.area_ += sp.area_;
-
-                f32 weight = sp.E_.getLuminance() * sp.area_;
-                node.point_.muladd(weight, sp.point_, node.point_);
-                sumWeight += weight;
-            }
-
-        } else{
-            for(s32 i=0; i<8; ++i){
-                if(0 == node.children_[i]){
-                    continue;
-                }
-
-                initialize(node.children_[i]);
-                Node& childNode = nodes_[node.children_[i]];
-
-                node.E_ += childNode.E_ * childNode.area_;
-                node.area_ += childNode.area_;
-
-                f32 weight = childNode.E_.getLuminance() * childNode.area_;
-                node.point_.muladd(weight, childNode.point_, node.point_);
-
-                sumWeight += weight;
-            }
-        }
-
-        if(PDF_EPSILON<sumWeight){
-            node.point_ /= sumWeight;
-        }
-        if(PDF_EPSILON<node.area_){
-            node.E_ /= node.area_;
-        }
-    }
-
-    void DipoleIntegrator::PointOctree::split(s32 nodeIndex)
-    {
-        Node& node = nodes_[nodeIndex];
-        node.clear();
-
-        s32 num = node.getNum();
-        s32 offset = node.offset_;
-
-        s32 end = offset + num;
-        AABB bbox;
-        bbox.setInvalid();
-        for(s32 i=offset; i<end; ++i){
-            bbox.extend(values_[i].getPosition());
-        }
-
-        Vector3 extent = bbox.extent();
-        bool degenerate = (extent.x_ < Epsilon && extent.y_ < Epsilon && extent.z_ < Epsilon);
-        bbox.expand(Epsilon);
-
-        if(num <= MaxNumNodePoints || degenerate){
-            node.setLeaf(true);
-            return;
-        }
-        node.setLeaf(false);
-        node.setNum(0);
-
-        s32 numPoints[8];
-        s32 offsets[8];
-        Vector3 pivot = bbox.center();
-        value_type* values = &values_[0];
-
-        offsets[0] = offset;
-        split(numPoints[0], numPoints[4], offsets[4], offsets[0], num, values, 0, pivot);
-        split(numPoints[0], numPoints[2], offsets[2], offsets[0], numPoints[0], values, 1, pivot);
-        split(numPoints[0], numPoints[1], offsets[1], offsets[0], numPoints[0], values, 2, pivot);
-        split(numPoints[2], numPoints[3], offsets[3], offsets[2], numPoints[2], values, 2, pivot);
-
-        split(numPoints[4], numPoints[6], offsets[6], offsets[4], numPoints[4], values, 1, pivot);
-        split(numPoints[4], numPoints[5], offsets[5], offsets[4], numPoints[4], values, 2, pivot);
-        split(numPoints[6], numPoints[7], offsets[7], offsets[6], numPoints[6], values, 2, pivot);
-
-        for(s32 i = 0; i < 8; ++i){
-            if(numPoints[i] <= 0){
-                continue;
-            }
-            Node child;
-            child.setOffset(offsets[i]);
-            child.setNum(numPoints[i]);
-
-            nodes_[nodeIndex].children_[i] = nodes_.size();
-            nodes_.push_back(child);
-        }
-        for(s32 i=0; i<8; ++i){
-            if(numPoints[i]<=0){
-                continue;
-            }
-            split(nodes_[nodeIndex].children_[i]);
-        }
-    }
-
-    void DipoleIntegrator::PointOctree::split(
-        s32& numLeft,
-        s32& numRight,
-        s32& offsetRight,
-        s32 offset,
-        s32 num,
-        value_type* values,
-        s32 axis,
-        const Vector3& pivot)
-    {
-        values += offset;
-        s32 i0 = 0;
-        s32 i1 = num - 1;
-
-        for(;;){
-            while(i0 < num && values[i0].getPosition()[axis] < pivot[axis]){
-                ++i0;
-            }
-
-            while(0 <= i1 && pivot[axis] < values[i1].getPosition()[axis]){
-                --i1;
-            }
-
-            if(i1 <= i0){
-                break;
-            }
-            lcore::swap(values[i0], values[i1]);
-            ++i0;
-            --i1;
-        }
-
-        numLeft = lcore::minimum(i0, num);
-        numRight = num - numLeft;
-        offsetRight = offset + numLeft;
-
-#if 1
-        for(s32 i = 0; i < numLeft; ++i){
-            if(pivot[axis] < values[i].getPosition()[axis]){
-                lcore::Log("error");
-            }
-        }
-        for(s32 i = numLeft; i < num; ++i){
-            if(values[i].getPosition()[axis] < pivot[axis]){
-                lcore::Log("error");
-            }
-        }
-#endif
-    }
-
-    Color3 DipoleIntegrator::PointOctree::Mo(s32 nodeIndex, const AABB& bbox, const Vector3& point, const DiffusionReflectance& diffusion, f32 maxSolidAngle) const
-    {
-        const Node& node = nodes_[nodeIndex];
-
-        f32 sqrDistance = point.distanceSqr(node.point_);
-        f32 solidAngle = node.area_ / sqrDistance;
-
-        if(!bbox.contains(point) && solidAngle<maxSolidAngle){
-            return diffusion(sqrDistance) * node.E_ * node.area_;
-        }
-
-        Color3 mo = Color3::black();
-        if(node.isLeaf()){
-            s32 start = node.offset_;
-            s32 end = start + node.getNum();
-            for(s32 i=start; i<end; ++i){
-                mo += diffusion(point.distanceSqr(values_[i].point_)) * values_[i].E_ * values_[i].area_;
-            }
-
-        } else{
-            Vector3 pivot = bbox.center();
-            for(s32 i=0; i<8; ++i){
-                if(0 == node.children_[i]){
-                    continue;
-                }
-                AABB childBBox = octreeChildBound(i, pivot, bbox);
-                mo += Mo(node.children_[i], childBBox, point, diffusion, maxSolidAngle);
-            }
-        }
-        return mo;
-    }
-
-    DipoleIntegrator::DipoleIntegrator(const Vector3& diffuseMeanFreePath, const Vector3& g, s32 russianRouletteDepth, s32 maxDepth, f32 maxSolidAngle, f32 minSampleDistance, f32 maxSampleDistance, s32 maxSamples)
-        :diffuseMeanFreePath_(diffuseMeanFreePath)
-        ,g_(g)
-        ,russianRouletteDepth_(russianRouletteDepth)
+    DipoleIntegrator::DipoleIntegrator(
+        const Vector3& sigmaS,
+        const Vector3& sigmaA,
+        const Vector3& g,
+        f32 eta,
+        s32 russianRouletteDepth,
+        s32 maxDepth,
+        f32 maxSolidAngle,
+        f32 minSampleDistance,
+        f32 maxSampleDistance,
+        s32 maxSamples)
+        :russianRouletteDepth_(russianRouletteDepth)
         ,maxDepth_(maxDepth)
         ,maxSolidAngle_(maxSolidAngle)
         ,minSampleDistance_(minSampleDistance)
         ,maxSampleDistance_(maxSampleDistance)
         ,maxSamples_(maxSamples)
+        ,octreeNodeAllocator_(sizeof(PointOctree))
+        ,octree_(NULL)
     {
+        diffusion_.set(sigmaS, sigmaA, g, eta);
     }
 
     DipoleIntegrator::~DipoleIntegrator()
@@ -434,15 +184,10 @@ namespace lrender
             return;
         }
 
-        diffusion_.set(1.3f, 1.0f, diffuseMeanFreePath_);
-
         const AABB& worldBound = scene.getWorldBound();
         lrender::Vector3 worldCenter = worldBound.center();
 
-        f32 sampleDistance = lcore::numeric_limits<f32>::maximum();
-        for(s32 i=0; i<3; ++i){
-            sampleDistance = lcore::minimum(sampleDistance, diffuseMeanFreePath_[i] * 0.70710678118f);
-        }
+        f32 sampleDistance = diffusion_.radius_;
         sampleDistance = lcore::clamp(sampleDistance, minSampleDistance_, maxSampleDistance_);
         lrender::RenderSurfacePointQuery renderSurfacePointQuery(&scene, worldCenter, sampleDistance, maxSamples_);
 
@@ -453,8 +198,8 @@ namespace lrender
 
         const Emitter::EmitterVector& emitters = scene.getEmitters();
         const lrender::RenderSurfacePointQuery::SurfacePointVector& surfacePoints = renderSurfacePointQuery.getSurfacePoints();
-        IrradiancePointVector irradiancePoints;
-        irradiancePoints.reserve(surfacePoints.size());
+
+        irradiancePoints_.reserve(surfacePoints.size());
         for(s32 i=0; i<surfacePoints.size(); ++i){
             const SurfacePoint& sp = surfacePoints[i];
 
@@ -487,34 +232,43 @@ namespace lrender
                 E += e/numSamples;
 
             } //for(s32 j=0;
-
-            irradiancePoints.push_back(IrradiancePoint(sp.point_, sp.normal_, E, sp.area_));
+            irradiancePoints_.push_back(IrradiancePoint(sp.point_, sp.normal_, E, sp.area_));
         } //for(s32 i=0;
 
-        //lcore::ofstream filePoints("points.ply");
-        //filePoints.print(
-        //    "ply\n"
-        //    "format ascii 1.0\n"
-        //    "element vertex %d\n"
-        //    "property double x\n"
-        //    "property double y\n"
-        //    "property double z\n"
-        //    "property uchar red\n"
-        //    "property uchar green\n"
-        //    "property uchar blue\n"
-        //    "end_header\n\n", surfacePoints.size());
+#if 0
+        lcore::ofstream filePoints("points.ply");
+        filePoints.print(
+            "ply\n"
+            "format ascii 1.0\n"
+            "element vertex %d\n"
+            "property double x\n"
+            "property double y\n"
+            "property double z\n"
+            "property uchar red\n"
+            "property uchar green\n"
+            "property uchar blue\n"
+            "end_header\n\n", surfacePoints.size());
 
-        //for(lrender::s32 i=0; i<irradiancePoints.size(); ++i){
-        //    u8 r = static_cast<u8>(irradiancePoints[i].E_[0]*255);
-        //    u8 g = static_cast<u8>(irradiancePoints[i].E_[1]*255);
-        //    u8 b = static_cast<u8>(irradiancePoints[i].E_[2]*255);
-        //    filePoints.print("%f %f %f %d %d %d\n", irradiancePoints[i].point_.x_, irradiancePoints[i].point_.y_, irradiancePoints[i].point_.z_, r, g, b);
-        //}
-        //filePoints.close();
+        for(lrender::s32 i=0; i<irradiancePoints.size(); ++i){
+            u8 r = static_cast<u8>(irradiancePoints[i].E_[0]*255);
+            u8 g = static_cast<u8>(irradiancePoints[i].E_[1]*255);
+            u8 b = static_cast<u8>(irradiancePoints[i].E_[2]*255);
+            filePoints.print("%f %f %f %d %d %d\n", irradiancePoints[i].point_.x_, irradiancePoints[i].point_.y_, irradiancePoints[i].point_.z_, r, g, b);
+        }
+        filePoints.close();
+#endif
 
-        PointOctree ocree(irradiancePoints);
-
-        octree_.swap(ocree);
+        octreeNodeAllocator_.clear();
+        octree_ = lcore::construct<PointOctree>(octreeNodeAllocator_.allocate());
+        
+        octreeBound_.setInvalid();
+        for(s32 i=0; i<irradiancePoints_.size(); ++i){
+            octreeBound_.extend(irradiancePoints_[i].point_);
+        }
+        for(s32 i=0; i<irradiancePoints_.size(); ++i){
+            octree_->insert(octreeBound_, &irradiancePoints_[i], octreeNodeAllocator_);
+        }
+        octree_->initialize();
     }
 
     Color3 DipoleIntegrator::Li(const Ray& r, IntegratorQuery& query)
@@ -548,16 +302,10 @@ namespace lrender
             }
 
             {
-                diffusion_.setVertexParameter(insect.point_, bsdf->albedo(insect), diffuseMeanFreePath_);
-                Color3 mo = octree_.Mo(insect.point_, diffusion_, maxSolidAngle_);
+                Color3 mo = octree_->Mo(octreeBound_, insect.point_, diffusion_, maxSolidAngle_);
 
-                Fresnel fresnel(1.0f, diffusion_.eta_);
-                Color3 Ft = Color3::white() - fresnel.evaluate(lcore::absolute(wow.dot(insect.shadingNormal_)));
-                f32 Fdt = 1.0f - diffusion_.Fdr_;
-
-                //L += (INV_PI * Ft * Fdt * mo);
-                L += Fdt * mo;
-                //L += mo;
+                f32 Ft = 1.0f - Fresnel::dielectricExt( lcore::absolute(wow.dot(insect.shadingNormal_)), diffusion_.eta_);
+                L += INV_PI * Ft * mo;
             }
 
             L += query.sampleEmitterDirect(wow, emitterSample, emitterBsdfSample) * beta;
