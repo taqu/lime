@@ -187,8 +187,10 @@
     <ClInclude Include="..\lmath.h" />
     <ClInclude Include="..\lmathcore.h" />
     <ClInclude Include="..\lmathutil.h" />
+    <ClInclude Include="..\Matrix.h" />
     <ClInclude Include="..\Matrix34.h" />
     <ClInclude Include="..\Matrix44.h" />
+    <ClInclude Include="..\NMF.h" />
     <ClInclude Include="..\Quaternion.h" />
     <ClInclude Include="..\Vector2.h" />
     <ClInclude Include="..\Vector3.h" />
@@ -207,8 +209,10 @@
     <ClCompile Include="..\DualQuaternion.cpp" />
     <ClCompile Include="..\lmathcore.cpp" />
     <ClCompile Include="..\lmathutil.cpp" />
+    <ClCompile Include="..\Matrix.cpp" />
     <ClCompile Include="..\Matrix34.cpp" />
     <ClCompile Include="..\Matrix44.cpp" />
+    <ClCompile Include="..\NMF.cpp" />
     <ClCompile Include="..\Quaternion.cpp" />
     <ClCompile Include="..\utility_DualQuaternion.cpp" />
     <ClCompile Include="..\Vector2.cpp" />

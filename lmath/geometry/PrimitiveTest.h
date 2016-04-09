@@ -11,6 +11,7 @@
 
 namespace lmath
 {
+    class Vector2;
     class Plane;
     class Sphere;
 
@@ -137,6 +138,10 @@ namespace lmath
         s32& numTriangles,
         Triangle* triangles,
         const Plane& plane);
+
+
+    //---------------------------------------------------------------------------------
+    bool testPointInPolygon(const lmath::Vector2& point, const lmath::Vector2* points, s32 n);
 }
 
 #endif //INC_LMATH_PRIMITIVETEST_H__

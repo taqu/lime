@@ -47,6 +47,8 @@
     <ClInclude Include="..\geometry\AABB.h">
       <Filter>geometry</Filter>
     </ClInclude>
+    <ClInclude Include="..\Matrix.h" />
+    <ClInclude Include="..\NMF.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\geometry\Plane.cpp">
@@ -84,5 +86,7 @@
     <ClCompile Include="..\geometry\AABB.cpp">
       <Filter>geometry</Filter>
     </ClCompile>
+    <ClCompile Include="..\Matrix.cpp" />
+    <ClCompile Include="..\NMF.cpp" />
   </ItemGroup>
 </Project>

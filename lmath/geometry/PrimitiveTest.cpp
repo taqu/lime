@@ -6,6 +6,7 @@
 #include "PrimitiveTest.h"
 #include "Plane.h"
 #include "Sphere.h"
+#include "../Vector2.h"
 
 namespace lmath
 {
@@ -296,5 +297,26 @@ namespace lmath
             break;
         };
 
+    }
+
+    bool testPointInPolygon(const lmath::Vector2& point, const lmath::Vector2* points, s32 n)
+    {
+        LASSERT(2<n);
+        s32 i0=n-1,i1=0;
+        bool yflag0 = (point.y_ <= points[i0].y_);
+
+        bool flag = false;
+        for(; i1<n; i0=i1,++i1){
+            bool yflag1 = (point.y_ <= points[i1].y_);
+            if(yflag0 != yflag1){
+                if(yflag0 != yflag1) {
+                    if(((point.x_-points[i0].x_)*(points[i1].y_ - points[i0].y_) <= (points[i1].x_ - points[i0].x_) * (point.y_ - points[i0].y_)) == yflag1) {
+                        flag = !flag;
+                    }
+                }
+            }
+            yflag0 = yflag1;
+        }
+        return flag;
     }
 }
