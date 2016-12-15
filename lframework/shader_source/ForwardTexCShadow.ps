@@ -1,0 +1,83 @@
+#include "Common.ps"
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float3 normal : TEXCOORD0;
+    float2 uv : TEXCOORD1;
+    float3 worldPos : TEXCOORD2;
+    float3 viewPos : TEXCOORD3;
+    float4 texS[NUM_CASCADES] : TEXCOORD4;
+};
+
+struct PSOutput
+{
+    float4 color : SV_TARGET0;
+};
+
+PSOutput main(VSOutput input)
+{
+    float3 L = dlDir.xyz;
+    float3 N = normalize(input.normal);
+    float3 E = normalize(cameraPos.xyz - input.worldPos.xyz); //視線ベクトル
+    float3 H = normalize(L+E); //ハーフベクトル
+
+    //Irradiance
+    float shadowInfluence = calcShadowInfluence(texShadow, input.texS);
+
+    float cosLH = saturate(dot(L,H));
+    float cosNL = saturate(dot(N,L));
+    float cosNH = saturate(dot(N,H));
+    float cosNE = saturate(dot(N,E));
+
+    float3 irradiance = dlColor.xyz * shadowInfluence * cosNL;
+
+    //BRDF
+#ifdef NPBR
+    float4 albedo = texAlbedo.Sample(samAlbedo, input.uv) * diffuse;
+
+    float rd, rs;
+    calcFresnel(rd, rs, ambient.w, cosLH);
+    float3 kd = albedo.xyz * rd * INV_PI;
+    float3 ks = specular.xyz * rs * pow(cosNH, specular.w) / max(cosNL, cosNE);
+    ks *= specular.w*0.039662 + 0.090587;
+    float4 color;
+    color.xyz = (kd + ks)*irradiance;
+    color.w = diffuse.w;
+
+#else
+    float metalic = shadow.w;
+    float4 albedo = texAlbedo.Sample(samAlbedo, input.uv) * diffuse;
+    albedo.xyz *= (1-metalic);
+
+    float alpha = specular.w*specular.w;
+
+    float mipLevel = alpha * specularMapMipLevels;
+    float3 envSpecular = texSpecular.SampleLevel(samSpecular, reflect(-E,N), mipLevel).xyz;
+    float3 envIrradiance = texIrradiance.Sample(samIrradiance, N).xyz;
+
+    float3 rd, rs;
+    calcFresnel(rd, rs, specular.xyz, cosLH);
+    float3 envF = envFresnel(specular.xyz, cosNE, alpha) * metalic;
+
+    float D = NDF(cosNH, alpha);
+    float V = Visibility(cosNL, cosNE, alpha);
+    float3 kd = albedo.xyz * rd * INV_PI;
+    float3 ks = specular.xyz * D * V * rs;
+
+    float envShadowInfluence = lerp(1, shadowInfluence, ambient.w);
+
+    float3 diffuseAmbient = ambient.xyz * envIrradiance * envShadowInfluence;
+    float3 specularAmbient = envF * envSpecular * envShadowInfluence;
+
+    float3 Li = gatherLights(input.worldPos, input.viewPos, N);
+
+    float4 color;
+    color.xyz = kd*(irradiance + diffuseAmbient) + ks*irradiance + specularAmbient + Li;
+    color.w = diffuse.w;
+#endif
+
+    PSOutput output;
+    output.color = color;
+    return output;
+}

@@ -1,0 +1,26 @@
+#include "Common.ps"
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float3 normal : TEXCOORD0;
+    float2 uv : TEXCOORD1;
+    float3 worldPos : TEXCOORD2;
+    float3 viewPos : TEXCOORD3;
+    float2 velocity : TEXCOORD4;
+};
+
+DeferredOutput main(VSOutput input)
+{
+    float4 albedo = texAlbedo.Sample(samAlbedo, input.uv) * diffuse;
+    float metalic = shadow.w;
+
+    DeferredOutput output;
+    output.albedo.xyz = albedo.xyz * (1-metalic);
+    output.albedo.w = albedo.w;
+    output.specular = specular;
+    output.normal.xyz = normalize(input.normal);
+    output.normal.w = shadow.x;
+    output.velocity = input.velocity;
+    return output;
+}

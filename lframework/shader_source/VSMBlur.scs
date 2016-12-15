@@ -1,0 +1,33 @@
+#include "Common.scs"
+#define R (4)
+
+cbuffer ConstantBuffer0 : register(b0)
+{
+    float sizeToUV;
+    float pixelSize;
+    int2 axis;
+    float4 cascadeBlurSize;
+}
+
+static const float gaussian[R+1] = {0.224174, 0.192116, 0.120921, 0.0558982, 0.0189781,};
+
+Texture2DArray<float4> texIn : register(t0);
+SamplerState samLinear : register(s0);
+RWTexture2DArray<float4> texOut : register(u0);
+
+[numthreads(NUMTHREADS, NUMTHREADS, 1)]
+void main(uint3 threadID : SV_DispatchThreadID)
+{
+    float halfPixelSize = 0.5*pixelSize;
+    float2 origin = threadID.xy * sizeToUV + float2(halfPixelSize, halfPixelSize);
+    float2 pixelSize = 2*halfPixelSize*axis;
+    for(uint i=0; i<NUM_CASCADES; ++i){
+        float4 c = (float4)0;
+        [unroll]
+        for(int r=-R; r<=R; ++r){
+            float2 uv = cascadeBlurSize[i]*r*pixelSize + origin;
+            c += texIn.SampleLevel(samLinear, float3(uv, i), 0) * gaussian[abs(r)];
+        }
+        texOut[uint3(threadID.xy, i)] = c;
+    }
+}

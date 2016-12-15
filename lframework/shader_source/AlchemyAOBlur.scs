@@ -1,0 +1,63 @@
+#include "Common.scs"
+#define EdgeSharpness (1.0)
+#define Scale (2)
+#define R (4)
+#define Epsilon (0.0001)
+
+static const float gaussian[R+1] = {0.224174, 0.192116, 0.120921, 0.0558982, 0.0189781,};
+
+
+cbuffer ConstantBuffer0 : register(b0)
+{
+    int2 size : packoffset(c0.x); //width, height
+    float2 axis : packoffset(c0.z);
+}
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+Texture2D<float2> texIn : register(t0);
+RWTexture2D<float2> texOut : register(u0);
+
+[numthreads(NUMTHREADS, NUMTHREADS, 1)]
+void main(uint3 threadID : SV_DispatchThreadID)
+{
+    int2 screenSpace = threadID.xy;
+    
+    float2 c = texIn[screenSpace];
+
+    float2 color;
+    color.g = c.g;
+
+    float key = c.g;
+    float sum = c.r;
+    if(key == 1.0){
+        texOut[screenSpace] = c;
+        return;
+    }
+
+    float base = gaussian[0];
+    float totalWeight = base;
+    sum *= totalWeight;
+
+    [unroll]
+    for(int r=-R; r<=R; ++r){
+        if(0 != r){
+            int2 p = clamp(int2(screenSpace + axis * (r*Scale)), int2(0,0), size);
+            c = texIn[p];
+            float tapKey = c.g;
+            float value = c.r;
+
+            float weight = 0.3 + gaussian[abs(r)];
+            weight *= max(0.0, 1.0 - (2000.0*EdgeSharpness) * abs(tapKey - key));
+            sum += value * weight;
+            totalWeight += weight;
+        }
+    }
+
+    color.r = sum/(totalWeight + Epsilon);
+    texOut[screenSpace] = color;
+}

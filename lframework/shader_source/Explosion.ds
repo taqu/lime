@@ -1,0 +1,87 @@
+#include "Common.ds"
+#include "Explosion.inc"
+
+#define OUTPUT_PATCH_SIZE 4
+#define DOMAIN "quad"
+
+cbuffer VolumeConstantDS : register(b1)
+{
+    VolumeConstant g_volumeConstants;
+}
+
+cbuffer SceneConstant2 : register(b2)
+{
+    float3 g_cameraFoward;
+    float reserved;
+}
+
+#include "SignedDistance.inc"
+
+struct HSConstantOutput
+{
+    float edgeFactor[4] : SV_TessFactor;
+    float insideFactor[2] : SV_InsideTessFactor;
+};
+
+
+float3 hemiSphere(float2 uv)
+{
+    float2 tuv0 = uv * 2.0 - 1.0;
+    float2 tuv1 = abs(tuv0);
+    float len = max(tuv1.x, tuv1.y);
+    return normalize(float3(tuv0.xy, len-1));
+}
+
+[domain(DOMAIN)]
+DSOutput main(HSConstantOutput hsConstant, float2 uv : SV_DomainLocation, const OutputPatch<InOut, OUTPUT_PATCH_SIZE> patches)
+{
+    float3 worldPos = patches[0].position;
+    float time = patches[0].timescale.x;
+    float scale = patches[0].timescale.y;
+
+    float3 dir = hemiSphere(uv);
+    
+    const VolumeConstant volumeConstant = g_volumeConstants;
+
+    float radius = scale*volumeConstant.radius_;
+    float innerRadius = radius - scale*volumeConstant.displacement_;
+
+    float3 frontNormal = dir;
+    float3 frontPosW = mul(frontNormal, (float3x3)miv) * radius + worldPos;
+    float3 frontDirW = normalize(frontPosW);
+    //for(int i=0; i<volumeConstant.hullSteps_; ++i){
+    {
+        float dispOut;
+        float distance = signedDistancePrimitiveDisplaced(frontPosW, worldPos, innerRadius, volumeConstant.hullOctaves_, time, volumeConstant, dispOut);
+        frontPosW -= frontDirW * distance;
+    }
+
+    frontPosW += frontDirW * volumeConstant.skinThickness_;
+    float4 frontPosV = mul(float4(frontPosW, 1), mv);
+    float4 frontPosP = mul(float4(frontPosW, 1), mvp1);
+
+    float3 backNormal = float3(dir.x, dir.y, -dir.z);
+    float3 backPosW = mul(backNormal, (float3x3)miv) * radius + worldPos;
+    float3 backDirW = normalize(backPosW);
+    //for(int j=0; j<volumeConstant.hullSteps_; ++j){
+    {
+        float dispOut;
+        float distance = signedDistancePrimitiveDisplaced(backPosW, worldPos, innerRadius, volumeConstant.hullOctaves_, time, volumeConstant, dispOut);
+        backPosW -= backDirW * distance;
+    }
+
+    backPosW += backDirW * volumeConstant.skinThickness_;
+    float4 backPosV = mul(float4(backPosW, 1), mv);
+    //float4 backPosP = mul(float4(backPosW, 1), mvp1);
+
+    float3 cameraVec = frontPosW - cameraPos.xyz;
+    float3 cameraRay = cameraVec/dot(cameraVec, g_cameraFoward.xyz);
+
+    DSOutput output= (DSOutput)0;
+    output.position = frontPosP;
+    output.worldPos = worldPos;
+    output.timescale = patches[0].timescale;
+    output.rayHitNearFar = float2(frontPosV.z, backPosV.z);
+    output.rayDirection = cameraRay;
+    return output;
+}

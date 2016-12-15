@@ -1,0 +1,36 @@
+#include "Common.ps"
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float3 normal : TEXCOORD0;
+    float3 tangent : TEXCOORD1;
+    float3 binormal : TEXCOORD2;
+    float2 uv : TEXCOORD3;
+    float3 worldPos : TEXCOORD4;
+    float3 viewPos : TEXCOORD5;
+    float2 velocity : TEXCOORD6;
+};
+
+DeferredOutput main(VSOutput input)
+{
+    float3 N = normalize(input.normal);
+    float3 T = normalize(input.tangent);
+    float3 B = normalize(input.binormal);
+
+    //tangent to world normal
+    float3x3 tangentToWorld = float3x3(T,B,N);
+    N = mul(texNormal.Sample(samNormal, input.uv).xyz, tangentToWorld);
+
+    float4 albedo = texAlbedo.Sample(samAlbedo, input.uv) * diffuse;
+    float metalic = shadow.w;
+
+    DeferredOutput output;
+    output.albedo.xyz = albedo.xyz * (1-metalic);
+    output.albedo.w = albedo.w;
+    output.specular = specular;
+    output.normal.xyz = normalize(N);
+    output.normal.w = shadow.x;
+    output.velocity = input.velocity;
+    return output;
+}

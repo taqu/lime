@@ -1,0 +1,220 @@
+#define NumSamples (11)
+#define LogMaxOffset (3)
+#define MaxMipLevel (5)
+#define FarPlaneZ (300.0)
+#define NumSpiralTurns (7)
+#define Epsilon (0.01)
+
+cbuffer ConstantBuffer0 : register(b0)
+{
+    int2 size : packoffset(c0.x); //width, height
+    float radius : packoffset(c0.z);
+    float radius2 : packoffset(c0.w);
+    float4 proj : packoffset(c1.x);
+    float scale : packoffset(c2.x);
+    float bias : packoffset(c2.y);
+    float intensity : packoffset(c2.z);
+    float padding0 : packoffset(c2.w);
+}
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+#if 1
+#define NumHalton (64)
+#define NumHaltonMask (NumHalton - 1)
+static const float4 halton[NumHalton] =
+{
+{0, 2.0944, 4.18879, 0.698132, },
+{2.79253, 4.88692, 1.39626, 3.49066, },
+{5.58505, 0.232711, 2.32711, 4.4215, },
+{0.930842, 3.02524, 5.11963, 1.62897, },
+{3.72337, 5.81776, 0.465421, 2.55982, },
+{4.65421, 1.16355, 3.25795, 5.35234, },
+{1.86168, 3.95608, 6.05047, 0.0775702, },
+{2.17197, 4.26636, 0.775702, 2.8701, },
+{4.96449, 1.47383, 3.56823, 5.66262, },
+{0.310281, 2.40468, 4.49907, 1.00841, },
+{3.10281, 5.1972, 1.70654, 3.80094, },
+{5.89533, 0.542991, 2.63739, 4.73178, },
+{1.24112, 3.33552, 5.42991, 1.93925, },
+{4.03365, 6.12805, 0.15514, 2.24954, },
+{4.34393, 0.853272, 2.94767, 5.04206, },
+{1.5514, 3.6458, 5.74019, 0.387851, },
+{2.48225, 4.57664, 1.08598, 3.18038, },
+{5.27477, 1.78411, 3.87851, 5.9729, },
+{0.620562, 2.71496, 4.80935, 1.31869, },
+{3.41309, 5.50748, 2.01682, 4.11122, },
+{6.20562, 0.0258567, 2.12025, 4.21465, },
+{0.723988, 2.81838, 4.91278, 1.42212, },
+{3.51652, 5.61091, 0.258567, 2.35296, },
+{4.44736, 0.956699, 3.05109, 5.14549, },
+{1.65483, 3.74923, 5.84362, 0.491278, },
+{2.58567, 4.68007, 1.18941, 3.2838, },
+{5.3782, 1.88754, 3.98194, 6.07633, },
+{0.103427, 2.19782, 4.29222, 0.801559, },
+{2.89595, 4.99035, 1.49969, 3.59409, },
+{5.68848, 0.336138, 2.43053, 4.52493, },
+{1.03427, 3.12866, 5.22306, 1.7324, },
+{3.8268, 5.92119, 0.568848, 2.66324, },
+{4.75764, 1.26698, 3.36137, 5.45577, },
+{1.96511, 4.05951, 6.1539, 0.180997, },
+{2.27539, 4.36979, 0.879129, 2.97352, },
+{5.06792, 1.57726, 3.67166, 5.76605, },
+{0.413708, 2.5081, 4.6025, 1.11184, },
+{3.20623, 5.30063, 1.80997, 3.90437, },
+{5.99876, 0.646418, 2.74081, 4.83521, },
+{1.34455, 3.43894, 5.53334, 2.04268, },
+{4.13708, 6.23147, 0.0517135, 2.14611, },
+{4.2405, 0.749845, 2.84424, 4.93864, },
+{1.44798, 3.54237, 5.63677, 0.284424, },
+{2.37882, 4.47321, 0.982556, 3.07695, },
+{5.17135, 1.68069, 3.77508, 5.86948, },
+{0.517135, 2.61153, 4.70592, 1.21527, },
+{3.30966, 5.40406, 1.9134, 4.00779, },
+{6.10219, 0.129284, 2.22368, 4.31807, },
+{0.827415, 2.92181, 5.01621, 1.52555, },
+{3.61994, 5.71434, 0.361994, 2.45639, },
+{4.55078, 1.06013, 3.15452, 5.24892, },
+{1.75826, 3.85265, 5.94705, 0.594705, },
+{2.6891, 4.78349, 1.29284, 3.38723, },
+{5.48163, 1.99097, 4.08536, 6.17976, },
+{0.206854, 2.30125, 4.39564, 0.904986, },
+{2.99938, 5.09378, 1.60312, 3.69751, },
+{5.79191, 0.439564, 2.53396, 4.62835, },
+{1.1377, 3.23209, 5.32649, 1.83583, },
+{3.93022, 6.02462, 0.672275, 2.76667, },
+{4.86107, 1.37041, 3.4648, 5.5592, },
+{2.06854, 4.16293, 6.25733, 0.00861891, },
+{2.10301, 4.19741, 0.706751, 2.80115, },
+{4.89554, 1.40488, 3.49928, 5.59367, },
+{0.241329, 2.33572, 4.43012, 0.939461, },
+};
+#endif
+
+Texture2D texDepth : register(t0);
+Texture2D texAccum : register(t1);
+Texture2D texVelocity : register(t2);
+SamplerState samVelocity : register(s2);
+
+float3 reconstructCameraSpace(float2 screenSpace, float z)
+{
+    return float3((screenSpace.xy * proj.xy + proj.zw) * z, z);
+}
+
+float3 reconstructCameraSpaceNormal(float3 cameraSpace)
+{
+    return normalize(cross(ddy(cameraSpace), ddx(cameraSpace)));
+}
+
+float3 sampleCameraSpace(int2 screenSpace)
+{
+    float z = texDepth.Load(int3(screenSpace, 0)).r;
+    return reconstructCameraSpace(float2(screenSpace) + float2(0.5, 0.5), z);
+}
+
+float cameraSpaceTo01(float z)
+{
+    return saturate(z*(1.0/FarPlaneZ));
+}
+
+float3 sampleOffset(int2 screenSpace, float2 offset, float ssR)
+{
+    int mipLevel = clamp((int)floor(log2(ssR)) - LogMaxOffset, 0, MaxMipLevel);
+    int2 ssP = int2(ssR*offset) + screenSpace;
+
+    float z = texDepth.Load(int3(ssP>>mipLevel, mipLevel)).r;
+    return reconstructCameraSpace(float2(ssP) + float2(0.5, 0.5), z);
+}
+
+float sampleAOHalton(in int2 screenSpace, in float3 cameraSpace, in float3 cameraSpaceN, in float discRadius, in float2 offset)
+{
+    float ssR = length(offset);
+    ssR *= discRadius;
+
+    float3 Q = sampleOffset(screenSpace, offset, ssR);
+    float3 v = Q - cameraSpace;
+    float vv = dot(v,v);
+    float vn = dot(v, cameraSpaceN);
+    float f = max(radius2 - vv, 0.0);
+    return f*f*f * max((vn-bias)/(Epsilon+vv), 0.0);
+}
+
+float2 tapLocation(int sampleNumber, float spinAngle, out float ssR)
+{
+    float alpha = float(sampleNumber + 0.5) * (1.0/NumSamples);
+    float angle = alpha * (NumSpiralTurns * 6.28) + spinAngle;
+    ssR = alpha;
+
+    float cs, sn;
+    sincos(angle, sn, cs);
+    return float2(cs, sn);
+}
+
+
+float sampleAO(in int2 screenSpace, in float3 cameraSpace, in float3 cameraSpaceN, in float discRadius, in int tapIndex, in float randomPatternRotationAngle)
+{
+    float ssR;
+    float2 offset = tapLocation(tapIndex, randomPatternRotationAngle, ssR);
+    ssR *= discRadius;
+
+    float3 Q = sampleOffset(screenSpace, offset, ssR);
+    float3 v = Q - cameraSpace;
+    float vv = dot(v,v);
+    float vn = dot(v, cameraSpaceN);
+    float f = max(radius2 - vv, 0.0);
+    return f*f*f * max((vn-bias)/(Epsilon+vv), 0.0);
+}
+
+float4 main(VSOutput input) : SV_Target
+{
+    float2 prevTex = saturate(input.tex - texVelocity.Sample(samVelocity, input.tex).xy);
+    int2 prevScreenSpace = prevTex * size.xy;
+    int2 screenSpace = input.tex * size.xy;
+
+    float4 accum = texAccum.Load(int3(prevScreenSpace, 0));
+
+    float3 cameraSpace = sampleCameraSpace(screenSpace);
+
+    float linearZ = cameraSpaceTo01(cameraSpace.z); //bilateral key
+
+    float3 cameraSpaceN = reconstructCameraSpaceNormal(cameraSpace);
+
+    float screenSpaceDiscRadius = scale * radius / cameraSpace.z;
+
+    float sum = 0;
+
+    uint startIndex = asuint(accum.a);
+    uint haltonIndex = (startIndex + (screenSpace.x ^ screenSpace.y + 3 * screenSpace.x & screenSpace.y));
+    uint arrayIndex = haltonIndex & 3;
+    haltonIndex = haltonIndex & NumHaltonMask;
+
+    float randomPatternRotationAngle = halton[haltonIndex][arrayIndex];
+    for(int i=0; i<NumSamples; ++i){
+        sum += sampleAO(screenSpace, cameraSpace, cameraSpaceN, screenSpaceDiscRadius, i, randomPatternRotationAngle);
+    }
+
+    float visibility = max(0.0, 1.0-sum * intensity*(5.0/NumSamples));
+#if 1
+    if(abs(ddx(cameraSpace.z))<0.02){
+        visibility -= ddx(visibility) * ((screenSpace.x & 1) - 0.5);
+    }
+    if(abs(ddy(cameraSpace.z))<0.02){
+        visibility -= ddy(visibility) * ((screenSpace.y & 1) - 0.5);
+    }
+#endif
+    //disocclusion
+    accum.b *= 1-step(0.2, abs(linearZ-accum.g));
+
+    float4 color;
+    color.r = (accum.b*accum.r + NumSamples*visibility)/(accum.b + NumSamples);
+    color.g = linearZ;
+    color.b = min(accum.b+NumSamples, 2*NumSamples);
+
+    color.a = asfloat((startIndex+1) & NumHaltonMask);
+
+    return color;
+}

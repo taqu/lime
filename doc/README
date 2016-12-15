@@ -1,0 +1,31 @@
+﻿本ソフトウェアのライセンスについては、LICENSEを確認してください。
+
+=================================================
+=== Additional Licenses
+このソフトウェアは、以下のソフトウェアを利用しています。
+これら素晴らしいソフトウェア、及び開発者の皆様に深く感謝致します。
+
+zlib 1.2.8 <http://www.zlib.net/>
+libpng 1.6.26 <http://www.libpng.org/pub/png/libpng.html>
+libjpeg 9 <http://www.ijg.org/>
+lz4 r131 <https://github.com/lz4/lz4>
+jemalloc 4.2.1 <http://jemalloc.net/>
+
+各ソフトウェアのライセンスは以下を確認してください。
+zlib              zlib/README
+libjpeg           libjpeg/README
+libpng            libpng/LICENSE
+lz4               lz4/LICENSE
+jemalloc          jemalloc/COPYING
+
+=================================================
+=== Copyright
+libjpeg:
+This software is based in part on the work of the Independent JPEG Group.
+Copyright (C) 1991-2013, Thomas G. Lane, Guido Vollbeding.
+
+=================================================
+=== 免責条項
+・本ソフトウェアの利用によって生じた損害について、
+作者は責任を負わないものとします。
+各自の責任において利用してください。

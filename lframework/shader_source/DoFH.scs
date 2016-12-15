@@ -1,0 +1,84 @@
+#include "Common.scs"
+#define R (6)
+#define GRIDSIZE (256)
+#ifdef NUMTHREADS
+#undef NUMTHREADS
+#endif
+#define NUMTHREADS (GRIDSIZE+R*2)
+
+cbuffer ConstantBuffer0 : register(b0)
+{
+    float bleedingMult;
+    float bleedingBias;
+    float reserved0;
+    float reserved1;
+}
+
+Texture2D<float4> texColor : register(t0);
+Texture2D<float2> texDepthBlur : register(t1);
+RWTexture2D<float4> texOut : register(u0);
+SamplerState samPoint : register(s0);
+
+struct DOFSample
+{
+    float3 color_;
+    float depth_;
+    float blur_;
+};
+
+//in D3D10 the maximum total size of all variables with the groupshared storage class is 16kb, in D3D11 the maximum size is 32kb
+groupshared DOFSample sharedSamples[NUMTHREADS];
+
+[numthreads(NUMTHREADS, 1, 1)]
+void main(uint3 groupID : SV_GroupID, uint3 groupThreadID : SV_GroupThreadID)
+{
+    int width, height;
+    texColor.GetDimensions(width, height);
+
+    const int gridStartX = groupID.x * GRIDSIZE;
+    const int gridX = (int)groupThreadID.x - R;
+
+    const int sampleX = gridStartX + gridX;
+    const int sampleY = groupID.y;
+    int2 samplePosition = int2(sampleX, sampleY);
+
+    float2 texcoord = saturate((samplePosition+0.5f)/float2(width,height));
+    float4 color = texColor.SampleLevel(samPoint, texcoord, 0);
+	float2 depthBlur = texDepthBlur.SampleLevel(samPoint, texcoord, 0);
+    float depth = depthBlur.x;
+    float blur = depthBlur.y;
+    float cocSize = blur * R;
+
+    sharedSamples[groupThreadID.x].color_ = color.xyz;
+    sharedSamples[groupThreadID.x].depth_ = depth;
+    sharedSamples[groupThreadID.x].blur_ = blur;
+
+    GroupMemoryBarrierWithGroupSync();
+    if(0<=gridX && gridX<GRIDSIZE && sampleX<width){
+        if(0<cocSize){
+            int groupThreadIDX = (int)groupThreadID.x; //[r GRIDSIZE)
+            float3 totalColor = (float3)0;
+            float totalWeight = 0;
+            //[unroll]
+            for(int r=-R; r<=R; ++r){
+                int tap = groupThreadIDX + r;
+                DOFSample sample = sharedSamples[tap];
+#if 0
+                float cocWeight = saturate(cocSize + 1 - abs(r));
+                float depthWeight = (depth<=sample.depth_);
+                float weight = cocWeight * saturate(depthWeight + sample.blur_);
+#else
+                float cocWeight = saturate(cocSize + 1 - abs(r));
+                float depthWeight = (sample.depth_<depth)? sample.blur_ * bleedingMult : 1;
+                float blurWeight = ((sample.blur_+bleedingBias)<blur)? depthWeight : 1; 
+                float weight = cocWeight * saturate(blurWeight);
+#endif
+                totalColor += sample.color_ * weight;
+                totalWeight += weight;
+            }
+            texOut[samplePosition] = float4(totalColor/totalWeight, color.w);
+        } else {//if(0<cocSize){
+            texOut[samplePosition] = color;
+        }
+    }
+}

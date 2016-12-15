@@ -1,0 +1,38 @@
+//static const float3 RGB2Y  = float3( 0.299, 0.587, 0.114);
+//static const float3 RGB2Cb = float3(-0.16874, -0.33126, 0.5);
+//static const float3 RGB2Cr = float3( 0.5, -0.41869, -0.08131);
+
+//static const float3 YCbCr2R = float3(1, 0,        1.402);
+//static const float3 YCbCr2G = float3(1,-0.34414, -0.71414);
+//static const float3 YCbCr2B = float3(1, 1.772,    0);
+
+cbuffer ConstantBuffer : register(b0)
+{
+    float4 coefficient;
+}
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float2 tex0 : TEXCOORD0;
+};
+
+Texture2D texAlbedo : register( t0 );
+SamplerState samLinear : register( s0 );
+
+float4 main(VSOutput input) : SV_Target
+{
+    float4 c = texAlbedo.Sample(samLinear, input.tex0);
+
+    //float3 YCbCr;
+    //YCbCr.r = coefficient.x * dot(RGB2Y, c.rgb);
+    //YCbCr.g = dot(RGB2Cb, c.rgb);
+    //YCbCr.b = dot(RGB2Cr, c.rgb);
+
+    //c.r = dot(YCbCr2R, YCbCr);
+    //c.g = dot(YCbCr2G, YCbCr);
+    //c.b = dot(YCbCr2B, YCbCr);
+    c.rgb *= coefficient.x;
+    //c.rgb /= (1.0f + c.rgb);
+    return c;
+}

@@ -1,0 +1,37 @@
+#include "Common.scs"
+
+cbuffer ConstantBuffer0 : register(b0)
+{
+    float4 clipInfo0;
+    float4 clipInfo1;
+    float4 proj;
+    float2 invDepthSize;
+    float2 ratioSize;
+    float4 dofRange;
+    float2 cocMax;
+    float2 reserved;
+}
+
+float reconstruct(float d)
+{
+#if 0
+    //z-nonlinear to z-linear[znear,zfar]
+    return clipInfo0[0]/(clipInfo0[1]*d + clipInfo0[2]);
+#else
+    //z-nonlinear to z-linear[-1,1]
+    return clipInfo0[0]/(clipInfo0[1]*d + clipInfo0[2]) - clipInfo0[3];
+#endif
+}
+
+Texture2D texDepth : register(t0);
+RWTexture2D<float2> texOut : register(u0);
+
+[numthreads(NUMTHREADS, NUMTHREADS, 1)]
+void main(uint3 threadID : SV_DispatchThreadID)
+{
+    //CHECKSIZE_RETURN(threadID, texOut);
+
+    float d = texDepth[threadID.xy].x;
+    d = reconstruct(d);
+    texOut[threadID.xy] = float2(d, calcBlurFactor(d, dofRange, cocMax));
+}

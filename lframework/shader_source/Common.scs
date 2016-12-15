@@ -1,0 +1,137 @@
+#define NUMTHREADS 8
+#define CHECKSIZE_RETURN(th,tex) uint width, height; (tex).GetDimensions(width,height); if(width<=(th).x || height<=(th).y){return;}
+
+#define MAX_CASCADES 4
+#define NUM_CASCADES 2
+
+static const float PI = 3.14159265;
+static const float PI2 = 6.2831853;
+static const float INV_PI = 0.31830988618379067153;
+
+SamplerState samPoint : register(s0);
+SamplerState samLinear : register(s1);
+
+struct BokehPoint
+{
+	float3 position_;
+	float blur_;
+	float3 color_;
+};
+
+float2 uvToScreen(float2 uv)
+{
+    return uv*float2(2.0,-2.0)+float2(-1.0,1.0); 
+}
+
+float3 screenToView(float3 screen, float4x4 invproj)
+{
+    float4 view = mul(float4(screen, 1), invproj);
+    return view.xyz/view.w;
+}
+
+float3 viewToWorld(float3 view, float4x4 invview)
+{
+    return mul(float4(view,1), invview).xyz;
+}
+
+float RGBToLum(float3 v)
+{
+    return dot(v, float3(0.299, 0.587, 0.114));
+}
+
+float RGBToLum(float4 v)
+{
+    return dot(v.rgb, float3(0.299, 0.587, 0.114));
+}
+
+//ToneMap
+static const float ToneMapA = 0.10;//0.15 //ShoulderStrength
+static const float ToneMapB = 0.50; //LinearStrength
+static const float ToneMapC = 0.10; //LinearAngle
+static const float ToneMapD = 0.20; //ToeStrength
+static const float ToneMapE = 0.02; //ToeNumerator
+static const float ToneMapF = 0.30; //ToeDenominator
+static const float ToneMapW = 1.6;//11.2; //LinearWhitePoint
+
+float3 tonemap(float3 x)
+{
+    return ((x*(ToneMapA*x + ToneMapC*ToneMapB) + ToneMapD*ToneMapE)/(x*(ToneMapA*x+ToneMapB) + ToneMapD*ToneMapF)) - ToneMapE/ToneMapF;
+}
+
+float tonemapLum(float x)
+{
+    return ((x*(ToneMapA*x + ToneMapC*ToneMapB) + ToneMapD*ToneMapE)/(x*(ToneMapA*x+ToneMapB) + ToneMapD*ToneMapF)) - ToneMapE/ToneMapF;
+}
+
+float tonemap1()
+{
+    return ((ToneMapW*(ToneMapA*ToneMapW + ToneMapC*ToneMapB) + ToneMapD*ToneMapE)/(ToneMapW*(ToneMapA*ToneMapW+ToneMapB) + ToneMapD*ToneMapF)) - ToneMapE/ToneMapF;
+}
+
+float calcExposure(float luminance, float keyvalue, float threshold)
+{
+    float exposure = log2(keyvalue/luminance) - threshold;
+    return exp2(exposure);
+}
+
+float3 ToneMap(float3 color, float exposure)
+{
+    float3 exposed = color * exposure;
+
+    return tonemap(exposed)/tonemap1();
+}
+
+float3 simpleToneMap(float3 color)
+{
+    return color/(1+RGBToLum(color));
+}
+
+float3 simpleToneMap(float3 color, float luminance)
+{
+    return color/(1+luminance);
+}
+
+float3 simpleInvToneMap(float3 color)
+{
+    return color/(1-RGBToLum(color));
+}
+
+float2 encodeVelocity(float2 velocity)
+{
+    return velocity;
+}
+
+float2 decodeVelocity(float2 encoded)
+{
+    return encoded;
+}
+
+float4 encodeOptimizedMoments(in float depth)
+{
+    float square = depth * depth;
+    float4 moments = float4(depth, square, square * depth, square * square);
+    float4 optimized = mul(moments, float4x4(-2.07224649f,    13.7948857237f,  0.105877704f,   9.7924062118f,
+                                              32.23703778f,  -59.4683975703f, -1.9077466311f, -33.7652110555f,
+                                             -68.571074599f,  82.0359750338f,  9.3496555107f,  47.9456096605f,
+                                              39.3703274134f,-35.364903257f,  -6.6543490743f, -23.9728048165f));
+    optimized[0] += 0.035955884801f;
+    return optimized;
+}
+
+float3 reconstructNormalFromXY(float2 n)
+{
+    float d = dot(n, n);
+    return (1.5<d)? (float3)0 : float3(n, -sqrt(1.0-d));
+}
+
+//cocRatio: aperture * (focal length/(focus depth - focal length)) * 1/frameHeight
+float calcBlurFactor(
+    in float linearDepth,
+    in float focus,
+    in float cocRatio,
+    in float maxCoC)
+{
+    float coc = abs(focus-linearDepth)/linearDepth * cocRatio;
+    return clamp(coc, 0, maxCoC);
+}
+

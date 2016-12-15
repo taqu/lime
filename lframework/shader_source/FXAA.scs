@@ -1,0 +1,29 @@
+#include "Common.scs"
+
+#define FXAA_LINEAR 0
+#define FXAA_PC_CONSOLE 1
+#define FXAA_HLSL_5 1
+#include "Fxaa3_8.h"
+
+cbuffer ConstantBuffer0 : register(b0)
+{
+    float4 rcpFrame; //(1/width, 1/height, width-1, height-1)
+    float4 rcpFrameOpt; //(2/width, 2/height, 0.5/width, 0.5/height)
+}
+
+Texture2D texColor : register( t0 );
+SamplerState samLinear : register( s0 );
+RWTexture2D<float4> texOut : register(u0);
+
+[numthreads(NUMTHREADS, NUMTHREADS, 1)]
+void main(uint3 threadID : SV_DispatchThreadID)
+{
+    int width, height;
+    texColor.GetDimensions(width, height);
+    float2 tex = threadID.xy/float2(width-1,height-1);
+    float4 posPos;
+    posPos.xy = tex;
+    posPos.zw = tex + rcpFrame.xy;
+    FxaaTex fxaaTex = {samLinear, texColor};
+    texOut[threadID.xy] = FxaaPixelShader(tex, posPos, fxaaTex, rcpFrame.xy, rcpFrameOpt);
+}

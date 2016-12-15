@@ -1,0 +1,36 @@
+#include "Common.scs"
+
+cbuffer SceneConstant : register(b0)
+{
+    float4x4 vp0;
+    float4x4 ivp1;
+    float2 size;
+    float exposure;
+    float maxMagnitude;
+}
+
+Texture2D<float> texDepth : register(t0);
+
+RWTexture2D<float2> texOut : register(u0);
+
+[numthreads(NUMTHREADS, NUMTHREADS, 1)]
+void main(uint3 threadID : SV_DispatchThreadID)
+{
+    //CHECKSIZE_RETURN(threadID, texOut);
+    uint width, height;
+    texOut.GetDimensions(width,height);
+    float depth = texDepth[threadID.xy].x;
+
+    float2 t = (float2)threadID.xy/float2(width, height)*float2(2,-2) + float2(-1, 1);
+    float4 screenSpacePosition1 = float4(t, depth, 1);
+
+    float4 worldPos1 = mul(screenSpacePosition1, ivp1); worldPos1 /= worldPos1.w;
+    float4 screenSpacePosition0 = mul(worldPos1, vp0); screenSpacePosition0 /= screenSpacePosition0.w;
+
+    float2 screenSpaceMov = (screenSpacePosition1.xy-screenSpacePosition0.xy) * size;
+
+    float mag = length(screenSpaceMov);
+    screenSpaceMov = screenSpaceMov * min(mag, maxMagnitude) / (mag + 0.0001);
+
+    texOut[threadID.xy] = encodeVelocity(screenSpaceMov);
+}

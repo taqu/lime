@@ -1,0 +1,26 @@
+#include "Common.scs"
+#include "DoF.inc"
+
+Texture2D<float4> texColor : register(t0);
+Texture2D<float2> texDepthCoC : register(t2);
+RWTexture2D<float4> texOut : register(u0);
+SamplerState samPoint : register(s0);
+
+cbuffer ConstantBuffer0 : register(b0)
+{
+    float bleedingBias;
+    float bleedingScale;
+    float reserved0;
+    float reserved1;
+    float4 offsets[NumBokehSamples/2];
+}
+
+[numthreads(NUMTHREADS, NUMTHREADS, 1)]
+void main(uint3 threadID : SV_DispatchThreadID)
+{
+    int width, height;
+    texDepthCoC.GetDimensions(width, height);
+    float2 uv = threadID.xy/float2(width-1,height-1);
+
+    texOut[threadID.xy] = dofFilter(texColor, texDepthCoC, samPoint, uv, bleedingBias, bleedingScale, offsets);
+}

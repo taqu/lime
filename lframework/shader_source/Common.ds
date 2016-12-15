@@ -1,0 +1,14 @@
+#define MAX_CASCADES 4
+#define NUM_CASCADES 2
+
+#define NumMatrices (240)
+
+cbuffer SceneConstant : register(b0)
+{
+    float4x4 mv;
+    float4x4 miv;
+    float4x4 mvp0; //previous vew projection
+    float4x4 mvp1; //current view projection
+    float4 cameraPos;
+}
+

@@ -1,0 +1,50 @@
+#include "Common.scs"
+
+cbuffer ReconsturctConstant : register(b0)
+{
+    float2 invSize;
+    float lowFreqThreshold;
+    float hiFreqThreshold;
+    float tonemapExposure;
+    float bloomThreshold;
+    float bloomFactor;
+    float reserved0;
+}
+
+
+Texture2D<float4> texColor : register(t0);
+Texture2D<float4> texGlare : register(t1);
+Texture2D<float4> texSAO : register(t2);
+
+SamplerState samPoint : register(s0);
+SamplerState samLinear : register(s1);
+
+RWTexture2D<float4> texOut : register(u0);
+
+float3 applyGlare(float3 rgb, in float3 glare)
+{
+    return rgb + simpleInvToneMap(glare) * bloomFactor;
+}
+
+#define MIN_AMBIENT_LIGHT (0.001)
+#define AOINTENSITY (1.2)
+
+float3 applyAO(float3 rgb, float ao)
+{
+    ao = (saturate(1.0 - (1.0 - ao) * AOINTENSITY) + MIN_AMBIENT_LIGHT) /  (1.0 + MIN_AMBIENT_LIGHT);
+    //return ao;
+    return rgb * ao;
+}
+
+[numthreads(NUMTHREADS, NUMTHREADS, 1)]
+void main(uint3 threadID : SV_DispatchThreadID)
+{
+    //CHECKSIZE_RETURN(threadID, texOut);
+
+    float2 tex = invSize*threadID.xy;
+    float4 color = texColor[threadID.xy];
+    //color.rgb = applyAO(color.rgb, texSAO.SampleLevel(samLinear, tex, 0).r);
+    color.rgb = applyGlare(color.rgb, texGlare.SampleLevel(samLinear, tex, 0).rgb);
+
+    texOut[threadID.xy] = color;
+}

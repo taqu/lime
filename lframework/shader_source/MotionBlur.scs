@@ -1,0 +1,264 @@
+#include "Common.scs"
+#define RandomSize (64)
+#define RandomMask (RandomSize-1)
+
+cbuffer ReconsturctConstant : register(b0)
+{
+    float2 invSize;
+    float lowFreqThreshold;
+    float hiFreqThreshold;
+    float tonemapExposure;
+    float bloomThreshold;
+    float bloomFactor;
+    float reserved0;
+}
+
+cbuffer MotionBlurConstant : register(b1)
+{
+    float2 filterRatio;
+    int blurSamples;
+    float centerWeight;
+    float directionThreshold;
+    float sampleJitter;
+    float reserved1;
+    float reserved2;
+}
+
+Texture2D<float4> texColor : register(t0);
+
+Texture2D<float2> texNeighborMax : register(t1);
+Texture2D<float> texAngularVariance : register(t2);
+Texture2D<float2> texVelocity : register(t3);
+Texture2D<float2> texDepth : register(t4);
+
+SamplerState samPoint : register(s0);
+SamplerState samLinear : register(s1);
+
+RWTexture2D<float4> texOut : register(u0);
+
+
+#define SOFT_Z_EXTENT (0.01*2)
+#define EPSILON (0.00001)
+#define NumHalton (64)
+#define NumHaltonMask (NumHalton - 1)
+#define NumHaltonBitShift (6)
+static const float4 halton[NumHalton] =
+{
+{-1, -0.333333, 0.333333, -0.777778},
+{-0.111111, 0.555556, -0.555556, 0.111111},
+{0.777778, -0.925926, -0.259259, 0.407407},
+{-0.703704, -0.037037, 0.62963, -0.481481},
+{0.185185, 0.851852, -0.851852, -0.185185},
+{0.481482, -0.62963, 0.037037, 0.703704},
+{-0.407407, 0.259259, 0.925926, -0.975309},
+{-0.308642, 0.358025, -0.753086, -0.0864198},
+{0.580247, -0.530864, 0.135803, 0.802469},
+{-0.901235, -0.234568, 0.432099, -0.679012},
+{-0.0123457, 0.654321, -0.45679, 0.209877},
+{0.876543, -0.82716, -0.160494, 0.506173},
+{-0.604938, 0.0617284, 0.728395, -0.382716},
+{0.283951, 0.950617, -0.950617, -0.283951},
+{0.382716, -0.728395, -0.0617284, 0.604938},
+{-0.506173, 0.160494, 0.82716, -0.876543},
+{-0.209877, 0.45679, -0.654321, 0.0123457},
+{0.679012, -0.432099, 0.234568, 0.901235},
+{-0.802469, -0.135803, 0.530864, -0.580247},
+{0.0864197, 0.753086, -0.358025, 0.308642},
+{0.975309, -0.99177, -0.325103, 0.341564},
+{-0.769547, -0.102881, 0.563786, -0.547325},
+{0.119342, 0.786008, -0.917695, -0.251029},
+{0.415638, -0.695473, -0.0288066, 0.63786},
+{-0.473251, 0.193416, 0.860082, -0.843621},
+{-0.176955, 0.489712, -0.621399, 0.0452675},
+{0.711934, -0.399177, 0.26749, 0.934156},
+{-0.967078, -0.300412, 0.366255, -0.744856},
+{-0.0781893, 0.588477, -0.522634, 0.144033},
+{0.8107, -0.893004, -0.226337, 0.440329},
+{-0.670782, -0.00411522, 0.662551, -0.44856},
+{0.218107, 0.884774, -0.81893, -0.152263},
+{0.514403, -0.596708, 0.0699588, 0.736626},
+{-0.374486, 0.292181, 0.958848, -0.942387},
+{-0.27572, 0.390947, -0.720165, -0.0534979},
+{0.613169, -0.497942, 0.168724, 0.835391},
+{-0.868313, -0.201646, 0.465021, -0.646091},
+{0.0205761, 0.687243, -0.423868, 0.242798},
+{0.909465, -0.794239, -0.127572, 0.539095},
+{-0.572016, 0.0946501, 0.761317, -0.349794},
+{0.316872, 0.983539, -0.983539, -0.316872},
+{0.349794, -0.761317, -0.0946502, 0.572016},
+{-0.539095, 0.127572, 0.794239, -0.909465},
+{-0.242798, 0.423868, -0.687243, -0.0205761},
+{0.646091, -0.465021, 0.201646, 0.868313},
+{-0.835391, -0.168724, 0.497942, -0.613169},
+{0.0534979, 0.720165, -0.390947, 0.27572},
+{0.942387, -0.958848, -0.292181, 0.374486},
+{-0.736626, -0.0699589, 0.596708, -0.514403},
+{0.152263, 0.81893, -0.884774, -0.218107},
+{0.44856, -0.662551, 0.00411522, 0.670782},
+{-0.440329, 0.226337, 0.893004, -0.8107},
+{-0.144033, 0.522634, -0.588477, 0.0781893},
+{0.744856, -0.366255, 0.300412, 0.967078},
+{-0.934156, -0.26749, 0.399177, -0.711934},
+{-0.0452675, 0.621399, -0.489712, 0.176955},
+{0.843621, -0.860082, -0.193416, 0.473251},
+{-0.63786, 0.0288066, 0.695473, -0.415638},
+{0.251029, 0.917695, -0.786008, -0.119342},
+{0.547325, -0.563786, 0.102881, 0.769547},
+{-0.341564, 0.325103, 0.99177, -0.997257},
+{-0.33059, 0.336077, -0.775034, -0.108368},
+{0.558299, -0.552812, 0.113855, 0.780521},
+{-0.923182, -0.256516, 0.410151, -0.70096},
+};
+
+#if 0
+float cone(uint2 X, uint2 Y, float2 V)
+{
+    return saturate(1-distance(X,Y)/length(V));
+}
+
+float cylinder(uint2 X, uint2 Y, float2 V)
+{
+    float l = length(V);
+    return 1 - smoothstep(0.95*l,1.05*l,distance(X,Y));
+}
+
+float softDepthCompare(float z0, float z1)
+{
+    return saturate(1.0 - (z1-z0)/SOFT_Z_EXTENT);
+}
+
+#elif 0
+float cone(float distanceXY, float2 V)
+{
+    return saturate(1-distanceXY/length(V));
+}
+
+float cylinder(float distanceXY, float2 V)
+{
+    float l = length(V);
+    return 1 - smoothstep(0.95*l,1.05*l,distanceXY);
+}
+
+float softDepthCompare(float z0, float z1)
+{
+    return saturate(1.0 - (z1-z0)/SOFT_Z_EXTENT);
+}
+
+#else
+float cone(float d, float v)
+{
+    return saturate(1-d*v);
+}
+
+float cylinder(float d, float v)
+{
+    return 1 - smoothstep(0.95*v,1.05*v,d);
+}
+
+float zCompare(float z0, float z1)
+{
+    return saturate(1.0 - (z1-z0)/min(z0, z1));
+}
+#endif
+
+
+float4 motionBlur(
+    in uint2 X,
+    float4 color,
+    in Texture2D<float4> texColor,
+    in Texture2D<float2> texNeighborMax,
+    in Texture2D<float> texAngularVariance,
+    in Texture2D<float2> texVelocity,
+    //in Texture2D<float> texRandom,
+    in Texture2D<float2> texDepth)
+{
+    uint2 tilePos = uint2(floor(filterRatio*X));
+    float2 Vn = texNeighborMax[tilePos];
+    float lenVn = dot(Vn,Vn);
+    if(lenVn<=(0.5*0.5)){
+        return color;
+    }
+    lenVn = sqrt(lenVn);
+    uint xorv = X.x ^ X.y;
+#if 0
+    uint2 index = (uint2(xorv, xorv) * uint2(3, 7) + X) & uint2(RandomMask, RandomMask);
+    float j = texRandom[index] * 0.5;
+#else
+    uint index = (xorv*3) & NumHaltonMask;
+    float j = halton[index][(X.x|X.y)&3] * sampleJitter;
+#endif
+
+    float2 Wn = normalize(Vn);
+    float2 Vc = decodeVelocity(texVelocity[X]);
+    float2 Wp = float2(-Wn.y, Wn.x);
+    if(dot(Wp,Vc)<0){
+        Wp = -Wp;
+    }
+    float lenVc = length(Vc);
+    float invLenVc = 1.0/lenVc;
+
+    float2 Wc = lerp(Wp, Vc*invLenVc, (lenVc-0.5)*directionThreshold);
+
+    float weight = centerWeight*min(invLenVc,1);
+    float4 sum = color * weight;
+
+    float angularVariance = texAngularVariance[tilePos];
+    float depthX = texDepth[X].x;
+    for(int i=0; i<blurSamples; ++i){
+
+        //Jitter sample
+        float t = lerp(-1, 1, (i+j+1.0)/(1.0+blurSamples));
+
+        float2 d = lerp(Vn, Vc, angularVariance);//(0 == (i&1))? Vn : Vc;
+        float T = t*lenVn;
+        uint2 Y = (uint2)floor(d*t+0.5) + X;
+
+        float distanceXY = distance(X, Y);
+        float depthY = texDepth[Y].x;
+        float2 Vs = decodeVelocity(texVelocity[Y]);
+        float lenVs = length(Vs);
+        float invLenVs = 1.0/lenVs;
+        Vs *= invLenVs;
+
+        //Background classification with depth
+        float f = zCompare(depthX, depthY);
+        float b = zCompare(depthY, depthX);
+
+        float wa = dot(Wc,d);
+        float wb = dot(Vs,d);
+
+        float w = f*wa*cone(T, invLenVs);
+        w += b*wb*cone(T, invLenVc);
+        w += 2.0*max(wa,wb)*cylinder(T, min(lenVs, lenVc));
+#if 0
+        //Case 1: blurry Y in front of any X
+        float a = f * cone(distanceXY, velocityY)
+
+        //Case 2: any Y behind blurry X; estimate background
+            + b * cone(distanceXY, velocityX)
+
+        //Case 3: Simultanuously blurry X and Y
+            + cylinder(distanceXY, velocityY) * cylinder(distanceXY, velocityX) * 2;
+#endif
+        w = saturate(w);
+        weight += w;
+        sum += w * texColor.SampleLevel(samLinear, invSize*Y, 0);
+    }
+
+    return sum/weight;
+}
+
+
+[numthreads(NUMTHREADS, NUMTHREADS, 1)]
+void main(uint3 threadID : SV_DispatchThreadID)
+{
+    //CHECKSIZE_RETURN(threadID, texOut);
+
+    uint2 X = threadID.xy;
+    float2 tex = invSize*threadID.xy;
+    float4 color = texColor[X];
+
+    color = motionBlur(X, color, texColor, texNeighborMax, texAngularVariance, texVelocity, texDepth);
+    color.rgb = ToneMap(color.rgb, tonemapExposure);
+    texOut[X] = color;
+}

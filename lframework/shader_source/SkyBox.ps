@@ -1,0 +1,20 @@
+struct VSOutput
+{
+    float4 pos : SV_POSITION;
+    float3 dir : TEXCOORD0;
+};
+
+TextureCube texSky : register(t0);
+SamplerState sampSky : register(s0);
+
+struct PSOutput
+{
+    float4 color : SV_TARGET0;
+};
+
+PSOutput main(VSOutput input)
+{
+    PSOutput output;
+    output.color = texSky.Sample(sampSky, input.dir);
+    return output;
+}
