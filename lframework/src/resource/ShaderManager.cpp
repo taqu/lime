@@ -107,6 +107,15 @@ if(size<=0){\
         for(s32 i=0; i<ShaderPS_Num; ++i){
             result &= loadPS(i, DefaultShaderCompiledBytes::getSizePS(i), DefaultShaderCompiledBytes::getBytesPS(i));
         }
+        for(s32 i=0; i<ShaderCS_Num; ++i){
+            result &= loadCS(i, DefaultShaderCompiledBytes::getSizeCS(i), DefaultShaderCompiledBytes::getBytesCS(i));
+        }
+        for(s32 i=0; i<ShaderDS_Num; ++i){
+            result &= loadDS(i, DefaultShaderCompiledBytes::getSizeDS(i), DefaultShaderCompiledBytes::getBytesDS(i));
+        }
+        for(s32 i=0; i<ShaderHS_Num; ++i){
+            result &= loadHS(i, DefaultShaderCompiledBytes::getSizeHS(i), DefaultShaderCompiledBytes::getBytesHS(i));
+        }
         return result;
     }
 

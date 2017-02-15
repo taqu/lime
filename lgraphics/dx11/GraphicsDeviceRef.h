@@ -35,53 +35,6 @@ namespace lgfx
 
     //--------------------------------------
     //---
-    //--- StencilOPDesc
-    //---
-    //--------------------------------------
-    struct StencilOPDesc
-    {
-        StencilOp failOp_;
-        StencilOp depthFailOp_;
-        StencilOp passOp_;
-        CmpFunc cmpFunc_;
-    };
-
-    //--------------------------------------
-    //---
-    //--- DepthStencilStateRef
-    //---
-    //--------------------------------------
-    class DepthStencilStateRef
-    {
-    public:
-        typedef ID3D11DepthStencilState element_type;
-        typedef ID3D11DepthStencilState* pointer_type;
-        typedef pointer_type const* pointer_array_type;
-
-        DepthStencilStateRef();
-        DepthStencilStateRef(const DepthStencilStateRef& rhs);
-        ~DepthStencilStateRef();
-
-        void destroy();
-
-        pointer_type get() { return state_;}
-        operator pointer_type(){ return state_;}
-        operator pointer_array_type(){ return &state_;}
-
-        bool valid() const;
-
-        DepthStencilStateRef& operator=(const DepthStencilStateRef& rhs);
-        void swap(DepthStencilStateRef& rhs);
-    private:
-        friend class GraphicsDeviceRef;
-
-        explicit DepthStencilStateRef(pointer_type state);
-
-        pointer_type state_;
-    };
-
-    //--------------------------------------
-    //---
     //--- CommandListRef
     //---
     //--------------------------------------
@@ -214,18 +167,12 @@ namespace lgfx
         void getRenderTargetDesc(u32& width, u32& height);
 
         inline void setRasterizerState(RasterizerState state);
+        inline void setRasterizerState(ID3D11RasterizerState* state);
 
         inline void setBlendState(ID3D11BlendState* state);
         inline void setBlendState(BlendState state);
         inline void setDepthStencilState(DepthStencilState state);
         inline void setDepthStencilState(ID3D11DepthStencilState* state, u32 stencilRef);
-
-        inline void setVSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers);
-        inline void setGSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers);
-        inline void setPSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers);
-        inline void setCSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers);
-        inline void setDSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers);
-        inline void setHSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers);
 
         inline void setPrimitiveTopology(Primitive topology);
         inline void setInputLayout(ID3D11InputLayout* layout);
@@ -234,6 +181,7 @@ namespace lgfx
         inline void clearVertexBuffers(u32 startSlot, u32 num);
 
         inline void setIndexBuffer(ID3D11Buffer* buffer, DataFormat format, u32 offsetInBytes);
+        inline void clearIndexBuffers();
 
         inline void setVSConstantBuffers(u32 start, u32 num, ID3D11Buffer* const* buffers);
         inline void setGSConstantBuffers(u32 start, u32 num, ID3D11Buffer* const* buffers);
@@ -249,12 +197,12 @@ namespace lgfx
         inline void setDSResources(u32 start, u32 num, ID3D11ShaderResourceView* const* views);
         inline void setHSResources(u32 start, u32 num, ID3D11ShaderResourceView* const* views);
 
-        inline void setVSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states);
-        inline void setGSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states);
-        inline void setPSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states);
-        inline void setCSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states);
-        inline void setDSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states);
-        inline void setHSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states);
+        inline void setVSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers);
+        inline void setGSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers);
+        inline void setPSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers);
+        inline void setCSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers);
+        inline void setDSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers);
+        inline void setHSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers);
 
         inline void setGeometryShader(ID3D11GeometryShader* shader);
         inline void setVertexShader(ID3D11VertexShader* shader);
@@ -313,6 +261,20 @@ namespace lgfx
         inline void clearDSResources(u32 numResources);
         inline void clearHSResources(u32 numResources);
 
+        inline void clearVSSamplers(u32 numSamplers);
+        inline void clearGSSamplers(u32 numSamplers);
+        inline void clearPSSamplers(u32 numSamplers);
+        inline void clearCSSamplers(u32 numSamplers);
+        inline void clearDSSamplers(u32 numSamplers);
+        inline void clearHSSamplers(u32 numSamplers);
+
+        inline void clearVSConstantBuffers(u32 numBuffers);
+        inline void clearGSConstantBuffers(u32 numBuffers);
+        inline void clearPSConstantBuffers(u32 numBuffers);
+        inline void clearCSConstantBuffers(u32 numBuffers);
+        inline void clearDSConstantBuffers(u32 numBuffers);
+        inline void clearHSConstantBuffers(u32 numBuffers);
+
         inline void clearRenderTargets(u32 numResources);
         inline void clearCSUnorderedAccessView(u32 numResources);
 
@@ -333,6 +295,10 @@ namespace lgfx
     protected:
         static const u32 MaxShaderResources = 32;
         static ID3D11ShaderResourceView* const NULLResources[MaxShaderResources];
+        static const u32 MaxSamplerStates = 8;
+        static ID3D11SamplerState* const NULLSamplerStates[MaxSamplerStates];
+        static const u32 MaxBuffers = 16;
+        static ID3D11Buffer* const NULLBuffers[MaxBuffers];
 
         static ID3D11RenderTargetView* const NullTargets[LGFX_MAX_RENDER_TARGETS];
 
@@ -435,6 +401,11 @@ namespace lgfx
         context_->RSSetState(rasterizerStates_[state]);
     }
 
+    inline void ContextRef::setRasterizerState(ID3D11RasterizerState* state)
+    {
+        context_->RSSetState(state);
+    }
+
     inline void ContextRef::setBlendState(ID3D11BlendState* state)
     {
         context_->OMSetBlendState(state, blendFactors_, 0xFFFFFFFFU);
@@ -453,36 +424,6 @@ namespace lgfx
     inline void ContextRef::setDepthStencilState(ID3D11DepthStencilState* state, u32 stencilRef)
     {
         context_->OMSetDepthStencilState(state, stencilRef);
-    }
-
-    inline void ContextRef::setVSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers)
-    {
-        context_->VSSetSamplers(start, num, samplers);
-    }
-
-    inline void ContextRef::setGSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers)
-    {
-        context_->GSSetSamplers(start, num, samplers);
-    }
-
-    inline void ContextRef::setPSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers)
-    {
-        context_->PSSetSamplers(start, num, samplers);
-    }
-
-    inline void ContextRef::setCSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers)
-    {
-        context_->CSSetSamplers(start, num, samplers);
-    }
-
-    inline void ContextRef::setDSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers)
-    {
-        context_->DSSetSamplers(start, num, samplers);
-    }
-
-    inline void ContextRef::setHSSamplerStates(u32 start, u32 num, ID3D11SamplerState* const* samplers)
-    {
-        context_->HSSetSamplers(start, num, samplers);
     }
 
     inline void ContextRef::setPrimitiveTopology(Primitive topology)
@@ -517,6 +458,11 @@ namespace lgfx
     inline void ContextRef::setIndexBuffer(ID3D11Buffer* buffer, DataFormat format, u32 offsetInBytes)
     {
         context_->IASetIndexBuffer(buffer, static_cast<DXGI_FORMAT>(format), offsetInBytes);
+    }
+
+    inline void ContextRef::clearIndexBuffers()
+    {
+        context_->IASetIndexBuffer(NULL, DXGI_FORMAT_UNKNOWN, 0);
     }
 
     inline void ContextRef::setVSConstantBuffers(u32 start, u32 num, ID3D11Buffer* const* buffers)
@@ -579,34 +525,34 @@ namespace lgfx
         context_->HSSetShaderResources(start, num, views);
     }
 
-    inline void ContextRef::setVSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states)
+    inline void ContextRef::setVSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers)
     {
-        context_->VSSetSamplers(start, num, states);
+        context_->VSSetSamplers(start, num, samplers);
     }
 
-    inline void ContextRef::setGSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states)
+    inline void ContextRef::setGSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers)
     {
-        context_->GSSetSamplers(start, num, states);
+        context_->GSSetSamplers(start, num, samplers);
     }
 
-    inline void ContextRef::setPSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states)
+    inline void ContextRef::setPSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers)
     {
-        context_->PSSetSamplers(start, num, states);
+        context_->PSSetSamplers(start, num, samplers);
     }
 
-    inline void ContextRef::setCSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states)
+    inline void ContextRef::setCSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers)
     {
-        context_->CSSetSamplers(start, num, states);
+        context_->CSSetSamplers(start, num, samplers);
     }
 
-    inline void ContextRef::setDSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states)
+    inline void ContextRef::setDSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers)
     {
-        context_->DSSetSamplers(start, num, states);
+        context_->DSSetSamplers(start, num, samplers);
     }
 
-    inline void ContextRef::setHSSamplers(u32 start, u32 num, ID3D11SamplerState* const* states)
+    inline void ContextRef::setHSSamplers(u32 start, u32 num, ID3D11SamplerState* const* samplers)
     {
-        context_->HSSetSamplers(start, num, states);
+        context_->HSSetSamplers(start, num, samplers);
     }
 
     inline void ContextRef::setGeometryShader(ID3D11GeometryShader* shader)
@@ -762,6 +708,78 @@ namespace lgfx
         context_->HSSetShaderResources(0, numResources, NULLResources);
     }
 
+    inline void ContextRef::clearVSSamplers(u32 numSamplers)
+    {
+        LASSERT(numSamplers<MaxSamplerStates);
+        context_->VSSetSamplers(0, numSamplers, NULLSamplerStates);
+    }
+
+    inline void ContextRef::clearGSSamplers(u32 numSamplers)
+    {
+        LASSERT(numSamplers<MaxSamplerStates);
+        context_->GSSetSamplers(0, numSamplers, NULLSamplerStates);
+    }
+
+    inline void ContextRef::clearPSSamplers(u32 numSamplers)
+    {
+        LASSERT(numSamplers<=MaxSamplerStates);
+        context_->PSSetSamplers(0, numSamplers, NULLSamplerStates);
+    }
+
+    inline void ContextRef::clearCSSamplers(u32 numSamplers)
+    {
+        LASSERT(numSamplers<MaxSamplerStates);
+        context_->CSSetSamplers(0, numSamplers, NULLSamplerStates);
+    }
+
+    inline void ContextRef::clearDSSamplers(u32 numSamplers)
+    {
+        LASSERT(numSamplers<MaxSamplerStates);
+        context_->DSSetSamplers(0, numSamplers, NULLSamplerStates);
+    }
+
+    inline void ContextRef::clearHSSamplers(u32 numSamplers)
+    {
+        LASSERT(numSamplers<MaxSamplerStates);
+        context_->HSSetSamplers(0, numSamplers, NULLSamplerStates);
+    }
+
+    inline void ContextRef::clearVSConstantBuffers(u32 numBuffers)
+    {
+        LASSERT(numBuffers<MaxBuffers);
+        context_->VSSetConstantBuffers(0, numBuffers, NULLBuffers);
+    }
+
+    inline void ContextRef::clearGSConstantBuffers(u32 numBuffers)
+    {
+        LASSERT(numBuffers<MaxBuffers);
+        context_->GSSetConstantBuffers(0, numBuffers, NULLBuffers);
+    }
+
+    inline void ContextRef::clearPSConstantBuffers(u32 numBuffers)
+    {
+        LASSERT(numBuffers<MaxBuffers);
+        context_->PSSetConstantBuffers(0, numBuffers, NULLBuffers);
+    }
+
+    inline void ContextRef::clearCSConstantBuffers(u32 numBuffers)
+    {
+        LASSERT(numBuffers<MaxBuffers);
+        context_->CSSetConstantBuffers(0, numBuffers, NULLBuffers);
+    }
+
+    inline void ContextRef::clearDSConstantBuffers(u32 numBuffers)
+    {
+        LASSERT(numBuffers<MaxBuffers);
+        context_->DSSetConstantBuffers(0, numBuffers, NULLBuffers);
+    }
+
+    inline void ContextRef::clearHSConstantBuffers(u32 numBuffers)
+    {
+        LASSERT(numBuffers<MaxBuffers);
+        context_->HSSetConstantBuffers(0, numBuffers, NULLBuffers);
+    }
+
     inline void ContextRef::clearRenderTargets(u32 numTargets)
     {
         LASSERT(numTargets<LGFX_MAX_RENDER_TARGETS);
@@ -851,16 +869,6 @@ namespace lgfx
 
         inline void present();
 
-        DepthStencilStateRef createDepthStencilState(
-            bool depthEnable,
-            DepthWriteMask depthWriteMask,
-            CmpFunc depthFunc,
-            bool stencilEnable,
-            u8 stencilReadMask,
-            u8 stencilWriteMask,
-            const StencilOPDesc& frontFace,
-            const StencilOPDesc& backFace);
-
         bool checkMultisampleQualityLevels(
             lgfx::DataFormat format,
             u32 sampleCount,
@@ -934,11 +942,13 @@ namespace lgfx
             ID3D11ShaderResourceView* res5);
 
         inline static void setVS(ContextRef& context, u32 start, u32 num);
+        inline static void setHS(ContextRef& context, u32 start, u32 num);
+        inline static void setDS(ContextRef& context, u32 start, u32 num);
         inline static void setGS(ContextRef& context, u32 start, u32 num);
         inline static void setPS(ContextRef& context, u32 start, u32 num);
         inline static void setCS(ContextRef& context, u32 start, u32 num);
 
-        static ID3D11ShaderResourceView* resources_[6];
+        static ID3D11ShaderResourceView* resources_[8];
     };
 
     inline void ShaderResourceView::set(
@@ -1006,6 +1016,16 @@ namespace lgfx
         context.setVSResources(start, num, resources_);
     }
 
+    inline void ShaderResourceView::setHS(ContextRef& context, u32 start, u32 num)
+    {
+        context.setHSResources(start, num, resources_);
+    }
+
+    inline void ShaderResourceView::setDS(ContextRef& context, u32 start, u32 num)
+    {
+        context.setDSResources(start, num, resources_);
+    }
+
     inline void ShaderResourceView::setGS(ContextRef& context, u32 start, u32 num)
     {
         context.setGSResources(start, num, resources_);
@@ -1060,11 +1080,13 @@ namespace lgfx
             ID3D11SamplerState* state5);
 
         inline static void setVS(ContextRef& context, u32 start, u32 num);
+        inline static void setHS(ContextRef& context, u32 start, u32 num);
+        inline static void setDS(ContextRef& context, u32 start, u32 num);
         inline static void setGS(ContextRef& context, u32 start, u32 num);
         inline static void setPS(ContextRef& context, u32 start, u32 num);
         inline static void setCS(ContextRef& context, u32 start, u32 num);
 
-        static ID3D11SamplerState* states_[6];
+        static ID3D11SamplerState* states_[8];
     };
 
     inline void ShaderSamplerState::set(
@@ -1129,22 +1151,32 @@ namespace lgfx
 
     inline void ShaderSamplerState::setVS(ContextRef& context, u32 start, u32 num)
     {
-        context.setVSSamplerStates(start, num, states_);
+        context.setVSSamplers(start, num, states_);
+    }
+
+    inline void ShaderSamplerState::setHS(ContextRef& context, u32 start, u32 num)
+    {
+        context.setHSSamplers(start, num, states_);
+    }
+
+    inline void ShaderSamplerState::setDS(ContextRef& context, u32 start, u32 num)
+    {
+        context.setDSSamplers(start, num, states_);
     }
 
     inline void ShaderSamplerState::setGS(ContextRef& context, u32 start, u32 num)
     {
-        context.setGSSamplerStates(start, num, states_);
+        context.setGSSamplers(start, num, states_);
     }
 
     inline void ShaderSamplerState::setPS(ContextRef& context, u32 start, u32 num)
     {
-        context.setPSSamplerStates(start, num, states_);
+        context.setPSSamplers(start, num, states_);
     }
 
     inline void ShaderSamplerState::setCS(ContextRef& context, u32 start, u32 num)
     {
-        context.setCSSamplerStates(start, num, states_);
+        context.setCSSamplers(start, num, states_);
     }
 }
 #endif //INC_LGRAPHICS_DX11_GRAPHICSDEVICEREF_H__

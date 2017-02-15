@@ -86,10 +86,10 @@ namespace lmath
         f32 rw = dq_[0].w_ * rLength;
         f32 tw = dq_[1].w_ * rLength;
 
-        Vector3 rot(dq_[0].x_, dq_[0].y_, dq_[0].z_);
+        Vector3 rot = {dq_[0].x_, dq_[0].y_, dq_[0].z_};
         rot *= rLength;
 
-        Vector3 trans(dq_[1].x_, dq_[1].y_, dq_[1].z_);
+        Vector3 trans = {dq_[1].x_, dq_[1].y_, dq_[1].z_};
         trans *= rLength;
 
         Vector3 v0 = cross(rot, v);

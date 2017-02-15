@@ -23,6 +23,22 @@ namespace lgfx
         DXGI_MODE_SCALING scaling_;
     };
 
+    inline bool operator==(const DXGIDisplayMode& mode0, const DXGIDisplayMode& mode1)
+    {
+        return (mode0.width_ == mode1.width_)
+            && (mode0.height_ == mode1.width_)
+            && (mode0.format_ == mode1.format_)
+            && (mode0.refreshRate_ == mode1.refreshRate_);
+    }
+
+    inline bool operator!=(const DXGIDisplayMode& mode0, const DXGIDisplayMode& mode1)
+    {
+        return (mode0.width_ != mode1.width_)
+            || (mode0.height_ != mode1.width_)
+            || (mode0.format_ != mode1.format_)
+            || (mode0.refreshRate_ != mode1.refreshRate_);
+    }
+
     //--------------------------------------------
     //---
     //--- DXGIOutput
@@ -107,13 +123,5 @@ namespace lgfx
         IDXGIFactory1* factory_;
         u32 adapterCount_;
     };
-
-    //--------------------------------------------
-    //---
-    //---
-    //---
-    //--------------------------------------------
-    bool getDisplayMode(HINSTANCE hInstance, DXGIDisplayMode& dst, bool& windowed, const DXGIDisplayMode& request);
 }
-
 #endif //INC_LGRAPHICS_DX11_DISPLAY_H__

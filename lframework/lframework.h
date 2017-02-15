@@ -28,9 +28,24 @@ namespace lfw
     using lcore::f64;
     using lcore::Char;
 
+    static const s32 ComputeShader_NumThreads_Shift = LFW_CONFIG_COMPUTESHADER_NUMTHREADS_BITSHIFT;
+    static const s32 ComputeShader_NumThreads = (0x01<<ComputeShader_NumThreads_Shift);
+    static const u32 ComputeShader_NumThreads_Mask = ComputeShader_NumThreads-1;
+
+#ifdef LFW_CONFIG_ENABLE_GUI
+#ifdef _DEBUG
+#define LFW_ENABLE_GUI
+#else
+#ifndef LFW_CONFIG_ENABLE_ONLYDEBUG_GUI
+#define LFW_ENABLE_GUI
+#endif
+#endif
+#endif
+
     enum Layer
     {
         Layer_Default = 0x01U<<0,
+        Layer_Default2D = 0x01U<<1,
     };
 
     enum ResourceType
@@ -75,6 +90,31 @@ namespace lfw
     {
         ShadowType_None =0,
         ShadowType_ShadowMap,
+    };
+
+    enum DeferredRT
+    {
+        DeferredRT_Albedo =0,
+        DeferredRT_Specular,
+        DeferredRT_Normal,
+        DeferredRT_Velocity,
+        DeferredRT_Depth,
+        DeferredRT_Num,
+    };
+
+    enum CollisionType
+    {
+        CollisionType_Sphere = 0,
+        CollisionType_Ray,
+        CollisionType_AABB,
+        CollisionType_Capsule,
+        CollisionType_Num,
+    };
+
+    enum CollisionInfoType
+    {
+        CollisionInfoType_NormalDepth,
+        CollisionInfoType_ClosestPoint,
     };
 
     extern const Char* ImageExtension_DDS;

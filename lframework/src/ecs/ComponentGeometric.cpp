@@ -44,6 +44,12 @@ namespace
         return componentManager->getEntity(getID());
     }
 
+    Entity ComponentGeometric::getEntity()
+    {
+        const ComponentGeometricManager* componentManager = getManager();
+        return componentManager->getEntity(getID());
+    }
+
     const NameString& ComponentGeometric::getName() const
     {
         const ComponentGeometricManager* componentManager = getManager();
@@ -79,8 +85,7 @@ namespace
     {
         ComponentGeometricManager* componentManager = getManager();
         ECSNode& node = componentManager->getNode(getID());
-        ID id(node.parent());
-        return componentManager->get(id);
+        return componentManager->get(ID::construct(node.parent()));
     }
 
     void ComponentGeometric::setParent(ComponentGeometric* parent)
@@ -144,6 +149,24 @@ namespace
         componentManager->getRotation(getID().index()) = rotation;
     }
 
+    const lmath::Vector3& ComponentGeometric::getScale() const
+    {
+        ComponentGeometricManager* componentManager = getManager();
+        return componentManager->getScale(getID().index());
+    }
+
+    lmath::Vector3& ComponentGeometric::getScale()
+    {
+        ComponentGeometricManager* componentManager = getManager();
+        return componentManager->getScale(getID().index());
+    }
+
+    void ComponentGeometric::setScale(const lmath::Vector3& scale)
+    {
+        ComponentGeometricManager* componentManager = getManager();
+        componentManager->getScale(getID().index()) = scale;
+    }
+
     const lmath::Matrix44& ComponentGeometric::getMatrix() const
     {
         ComponentGeometricManager* componentManager = getManager();
@@ -159,17 +182,18 @@ namespace
     void ComponentGeometric::updateMatrix()
     {
         ComponentGeometricManager* componentManager = getManager();
+        const lmath::Vector3& scale = componentManager->getScale(getID().index());
         const lmath::Quaternion& rotation = componentManager->getRotation(getID().index());
         const lmath::Vector4& position = componentManager->getPosition(getID().index());
         lmath::Matrix44& matrix = componentManager->getMatrix(getID().index());
 
         rotation.getMatrix(matrix);
+        matrix(0,0) *= scale.x_; matrix(1,1) *= scale.y_; matrix(2,2) *= scale.z_;
         matrix.translate(position);
 
         ECSNode& node = componentManager->getNode(getID());
         if(ECSNode::Root != node.parent()){
-            ID id(node.parent());
-            ComponentGeometric* parent = componentManager->get(id);
+            ComponentGeometric* parent = componentManager->get(ID::construct(node.parent()));
             matrix.mul(parent->getMatrix(), matrix);
         }
     }

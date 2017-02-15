@@ -19,8 +19,8 @@ namespace lfw
 
         virtual ~ComponentBehavior();
 
-        const Entity& getEntity() const;
         Entity& getEntity();
+        const Entity& getEntity() const;
         virtual u32 getType() const;
 
         virtual void onCreate();

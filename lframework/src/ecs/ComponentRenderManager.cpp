@@ -68,7 +68,7 @@ namespace lfw
             components_[index]->onDestroy();
             LDELETE(components_[index]);
         }
-        ids_.destroy(ID(0, index));
+        ids_.destroy(ID::construct(0, index));
     }
 
     Behavior* ComponentRendererManager::getBehavior(ID id)
@@ -104,7 +104,6 @@ namespace lfw
             data.setFlag(CommonFlag_Start);
         }
         renderer->update();
-        componentRenderers_.push_back(renderer);
     }
 
     void ComponentRendererManager::postUpdateComponents()
@@ -113,6 +112,7 @@ namespace lfw
             if(NULL == components_[i]){
                 continue;
             }
+            componentRenderers_.push_back(components_[i]);
             components_[i]->postUpdate();
         }
     }

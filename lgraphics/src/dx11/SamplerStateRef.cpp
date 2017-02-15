@@ -28,32 +28,32 @@ namespace lgfx
 
     void SamplerStateRef::attachVS(ContextRef& context, u32 start)
     {
-        context.setVSSamplerStates(start, 1, &state_);
+        context.setVSSamplers(start, 1, &state_);
     }
 
     void SamplerStateRef::attachHS(ContextRef& context, u32 start)
     {
-        context.setHSSamplerStates(start, 1, &state_);
+        context.setHSSamplers(start, 1, &state_);
     }
 
     void SamplerStateRef::attachDS(ContextRef& context, u32 start)
     {
-        context.setDSSamplerStates(start, 1, &state_);
+        context.setDSSamplers(start, 1, &state_);
     }
 
     void SamplerStateRef::attachGS(ContextRef& context, u32 start)
     {
-        context.setGSSamplerStates(start, 1, &state_);
+        context.setGSSamplers(start, 1, &state_);
     }
 
     void SamplerStateRef::attachPS(ContextRef& context, u32 start)
     {
-        context.setPSSamplerStates(start, 1, &state_);
+        context.setPSSamplers(start, 1, &state_);
     }
 
     void SamplerStateRef::attachCS(ContextRef& context, u32 start)
     {
-        context.setCSSamplerStates(start, 1, &state_);
+        context.setCSSamplers(start, 1, &state_);
     }
 
 

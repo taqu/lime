@@ -409,14 +409,14 @@ namespace
     //--- Noise
     //---
     //---------------------------------------------------
-    Noise::Noise(u32 seed)
+    Noise::Noise(u64 seed)
     {
         permutate(seed);
     }
 
-    void Noise::permutate(u32 seed)
+    void Noise::permutate(u64 seed)
     {
-        lcore::RandXorshift rand(seed);
+        lcore::RandXorshift128Plus32 rand(seed);
 
         s32 size = PermutationTableSize >> 1;
 

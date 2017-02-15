@@ -13,9 +13,8 @@ struct VSOutput
     float4 position : SV_POSITION;
     float3 normal : TEXCOORD0;
     float2 uv : TEXCOORD1;
-    float3 worldPos : TEXCOORD2;
-    float3 viewPos : TEXCOORD3;
-    float2 velocity : TEXCOORD4;
+    float2 position1 : TEXCOORD2;
+    float2 velocity : TEXCOORD3;
 };
 
 VSOutput main(VSInput input)
@@ -26,15 +25,13 @@ VSOutput main(VSInput input)
 
     float4x4 mwvp0 = mul(mworld0, mvp0);
     float4x4 mwvp1 = mul(mworld1, mvp1);
-    float4x4 mwv1 = mul(mworld1, mview);
     float4 position0 = mul(position, mwvp0);
     float4 position1 = mul(position, mwvp1);
 
     output.position = position1;
-    output.normal = mul(input.normal.xyz, (float3x3)mview);
+    output.normal = mul(input.normal.xyz, (float3x3)mworld1);
     output.uv = input.uv;
-    output.worldPos = mul(position, mworld1).xyz;
-    output.viewPos = mul(position, mwv1).xyz;
-    output.velocity = calcVelocity(position0, position1);
+    output.position1 = position1.zw;
+    output.velocity.xy = calcVelocity(position0, position1);
     return output;
 }

@@ -617,11 +617,11 @@ namespace lcore
         const value_type& operator[](s32 index) const{ return data_[index];}
         value_type& operator[](s32 index){ return data_[index];}
 
-        iterator begin(){ return items_;}
-        const_iterator begin() const{ return (const_iterator)(items_);}
+        iterator begin(){ return data_;}
+        const_iterator begin() const{ return (const_iterator)(data_);}
 
-        iterator end(){ return items_ + size_;}
-        const_iterator end() const{ return (const_iterator)(items_ + size_);}
+        iterator end(){ return data_ + size_;}
+        const_iterator end() const{ return (const_iterator)(data_ + size_);}
 
         void swap(this_type& rhs);
         void reserve(s32 capacity);

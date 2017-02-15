@@ -624,15 +624,15 @@ namespace lmath
 
     bool testRayAABB(f32& tmin, f32& tmax, const Ray& ray, const Vector4& bmin, const Vector4& bmax)
     {
-        Vector3 bmin3(bmin);
-        Vector3 bmax3(bmax);
+        Vector3 bmin3 = Vector3::construct(bmin);
+        Vector3 bmax3 = Vector3::construct(bmax);
         return testRayAABB(tmin, tmax, ray, bmin3, bmax3);
     }
 
     bool testRayAABB(const Ray& ray, const Vector4& bmin, const Vector4& bmax)
     {
-        Vector3 bmin3(bmin);
-        Vector3 bmax3(bmax);
+        Vector3 bmin3 = Vector3::construct(bmin);
+        Vector3 bmax3 = Vector3::construct(bmax);
         return testRayAABB(ray, bmin3, bmax3);
     }
 

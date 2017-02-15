@@ -306,9 +306,9 @@ namespace lcore
             return 30.0f * x * x * (x * (x - 2.0f) + 1.0f);
         }
 
-        explicit Noise(u32 seed=1U);
+        explicit Noise(u64 seed=1U);
 
-        void permutate(u32 seed);
+        void permutate(u64 seed);
 
         NoiseSample2 fbm(Func2D func2D, f32 px, f32 py, s32 octave, f32 frequency, f32 lacunarity=2.0f, f32 persistence=0.5f) const;
         NoiseSample3 fbm(Func3D func3D, f32 px, f32 py, f32 pz, s32 octave, f32 frequency, f32 lacunarity=2.0f, f32 persistence=0.5f) const;

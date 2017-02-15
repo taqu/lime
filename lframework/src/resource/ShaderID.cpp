@@ -113,11 +113,41 @@ namespace
 #include "../../shader/ForwardNUVSkinningShadowVS.txt"
     };
 
+    const u8 shaderVS_FullQuad[] =
+    {
+#include "../../shader/FullQuadVS.txt"
+    };
+
+    const u8 shaderVS_Sprite2D[] =
+    {
+#include "../../shader/Sprite2DVS.txt"
+    };
+
+    const u8 shaderVS_Particle[] =
+    {
+#include "../../shader/ParticleVS.txt"
+    };
+
+    const u8 shaderVS_VolumeParticle[] =
+    {
+#include "../../shader/VolumeParticleVS.txt"
+    };
+
+    const u8 shaderVS_UI[] =
+    {
+#include "../../shader/UIVS.txt"
+    };
+
     // GS
     //-------------------------------------------------------
     const u8 shaderGS_LighDepth[] =
     {
 #include "../../shader/LightDepthGS.txt"
+    };
+
+    const u8 shaderGS_Particle[] =
+    {
+#include "../../shader/ParticleGS.txt"
     };
 
     // PS
@@ -140,6 +170,16 @@ namespace
     const u8 shaderPS_DeferredTexCN[] =
     {
 #include "../../shader/DeferredTexCNPS.txt"
+    };
+
+    const u8 shaderPS_DeferredShadowAccumulating[] =
+    {
+#include "../../shader/DeferredShadowAccumulatingPS.txt"
+    };
+
+    const u8 shaderPS_DeferredLighting[] =
+    {
+#include "../../shader/DeferredLightingPS.txt"
     };
 
     //-------------------------------------------
@@ -181,6 +221,59 @@ namespace
     const u8 shaderPS_ForwardTexCNShadow[] =
     {
 #include "../../shader/ForwardTexCNShadowPS.txt"
+    };
+
+    const u8 shaderPS_Copy[] =
+    {
+#include "../../shader/CopyPS.txt"
+    };
+
+    const u8 shaderPS_Sprite2D[] =
+    {
+#include "../../shader/Sprite2DPS.txt"
+    };
+
+    const u8 shaderPS_Font[] =
+    {
+#include "../../shader/FontPS.txt"
+    };
+
+    const u8 shaderPS_FontOutline[] =
+    {
+#include "../../shader/FontOutlinePS.txt"
+    };
+
+    const u8 shaderPS_Particle[] =
+    {
+#include "../../shader/ParticlePS.txt"
+    };
+
+    const u8 shaderPS_VolumeParticle[] =
+    {
+#include "../../shader/VolumeParticlePS.txt"
+    };
+
+    const u8 shaderPS_UI[] =
+    {
+#include "../../shader/UIPS.txt"
+    };
+
+    // CS
+    //-------------------------------------------------------
+
+    
+    // DS
+    //-------------------------------------------------------
+    const u8 shaderDS_VolumeParticle[] =
+    {
+#include "../../shader/VolumeParticleDS.txt"
+    };
+
+    // HS
+    //-------------------------------------------------------
+    const u8 shaderHS_VolumeParticle[] =
+    {
+#include "../../shader/VolumeParticleHS.txt"
     };
 }
 
@@ -225,6 +318,13 @@ namespace
         shaderVS_ForwardNUVShadow,
         shaderVS_ForwardNUVSkinning,
         shaderVS_ForwardNUVSkinningShadow,
+
+        shaderVS_FullQuad,
+        shaderVS_Sprite2D,
+        shaderVS_Particle,
+        shaderVS_VolumeParticle,
+
+        shaderVS_UI,
     };
 
     const s32 DefaultShaderCompiledBytes::sizeVS_[] =
@@ -251,8 +351,16 @@ namespace
         sizeof(shaderVS_ForwardNUVShadow),
         sizeof(shaderVS_ForwardNUVSkinning),
         sizeof(shaderVS_ForwardNUVSkinningShadow),
+
+        sizeof(shaderVS_FullQuad),
+        sizeof(shaderVS_Sprite2D),
+        sizeof(shaderVS_Particle),
+        sizeof(shaderVS_VolumeParticle),
+
+        sizeof(shaderVS_UI),
     };
 
+    //-------------------------------------------------------
     s32 DefaultShaderCompiledBytes::getSizeGS(s32 id)
     {
         LASSERT(0<=id && id<ShaderGS_Num);
@@ -268,13 +376,16 @@ namespace
     const u8* DefaultShaderCompiledBytes::bytesGS_[] =
     {
         shaderGS_LighDepth,
+        shaderGS_Particle,
     };
 
     const s32 DefaultShaderCompiledBytes::sizeGS_[] =
     {
         sizeof(shaderGS_LighDepth),
+        sizeof(shaderGS_Particle),
     };
 
+    //-------------------------------------------------------
     s32 DefaultShaderCompiledBytes::getSizePS(s32 id)
     {
         LASSERT(0<=id && id<ShaderPS_Num);
@@ -293,6 +404,8 @@ namespace
         shaderPS_DeferredUV,
         shaderPS_DeferredTexC,
         shaderPS_DeferredTexCN,
+        shaderPS_DeferredShadowAccumulating,
+        shaderPS_DeferredLighting,
 
         shaderPS_Forward,
         shaderPS_ForwardShadow,
@@ -302,6 +415,15 @@ namespace
         shaderPS_ForwardTexCShadow,
         shaderPS_ForwardTexCN,
         shaderPS_ForwardTexCNShadow,
+
+        shaderPS_Copy,
+        shaderPS_Sprite2D,
+        shaderPS_Font,
+        shaderPS_FontOutline,
+        shaderPS_Particle,
+        shaderPS_VolumeParticle,
+
+        shaderPS_UI,
     };
 
     const s32 DefaultShaderCompiledBytes::sizePS_[] =
@@ -310,6 +432,8 @@ namespace
         sizeof(shaderPS_DeferredUV),
         sizeof(shaderPS_DeferredTexC),
         sizeof(shaderPS_DeferredTexCN),
+        sizeof(shaderPS_DeferredShadowAccumulating),
+        sizeof(shaderPS_DeferredLighting),
 
         sizeof(shaderPS_Forward),
         sizeof(shaderPS_ForwardShadow),
@@ -319,5 +443,84 @@ namespace
         sizeof(shaderPS_ForwardTexCShadow),
         sizeof(shaderPS_ForwardTexCN),
         sizeof(shaderPS_ForwardTexCNShadow),
+
+        sizeof(shaderPS_Copy),
+        sizeof(shaderPS_Sprite2D),
+        sizeof(shaderPS_Font),
+        sizeof(shaderPS_FontOutline),
+        sizeof(shaderPS_Particle),
+        sizeof(shaderPS_VolumeParticle),
+
+        sizeof(shaderPS_UI),
+    };
+
+    //-------------------------------------------------------
+    s32 DefaultShaderCompiledBytes::getSizeCS(s32 id)
+    {
+        LASSERT(0<=id && id<ShaderCS_Num);
+        //return sizeCS_[id];
+        return 0;
+    }
+
+    const u8* DefaultShaderCompiledBytes::getBytesCS(s32 id)
+    {
+        LASSERT(0<=id && id<ShaderCS_Num);
+        //return bytesCS_[id];
+        return NULL;
+    }
+
+    //const u8* DefaultShaderCompiledBytes::bytesCS_[] =
+    //{
+    //};
+
+    //const s32 DefaultShaderCompiledBytes::sizeCS_[] =
+    //{
+    //};
+
+
+    //-------------------------------------------------------
+    s32 DefaultShaderCompiledBytes::getSizeDS(s32 id)
+    {
+        LASSERT(0<=id && id<ShaderDS_Num);
+        return sizeDS_[id];
+    }
+
+    const u8* DefaultShaderCompiledBytes::getBytesDS(s32 id)
+    {
+        LASSERT(0<=id && id<ShaderDS_Num);
+        return bytesDS_[id];
+    }
+
+    const u8* DefaultShaderCompiledBytes::bytesDS_[] =
+    {
+        shaderDS_VolumeParticle,
+    };
+
+    const s32 DefaultShaderCompiledBytes::sizeDS_[] =
+    {
+        sizeof(shaderDS_VolumeParticle),
+    };
+
+    //-------------------------------------------------------
+    s32 DefaultShaderCompiledBytes::getSizeHS(s32 id)
+    {
+        LASSERT(0<=id && id<ShaderHS_Num);
+        return sizeHS_[id];
+    }
+
+    const u8* DefaultShaderCompiledBytes::getBytesHS(s32 id)
+    {
+        LASSERT(0<=id && id<ShaderHS_Num);
+        return bytesHS_[id];
+    }
+
+    const u8* DefaultShaderCompiledBytes::bytesHS_[] =
+    {
+        shaderHS_VolumeParticle,
+    };
+
+    const s32 DefaultShaderCompiledBytes::sizeHS_[] =
+    {
+        sizeof(shaderHS_VolumeParticle),
     };
 }

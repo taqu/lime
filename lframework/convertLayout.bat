@@ -12,6 +12,8 @@ SET COMPILER=.\tools\ShaderCompiler.exe
 %COMPILER% -vs -p5 -compress -text %SHADERDIR%Layout_PNTBU.vs %OUTDIR%Layout_PNTBU.txt
 %COMPILER% -vs -p5 -compress -text %SHADERDIR%Layout_PNUBone.vs %OUTDIR%Layout_PNUBone.txt
 %COMPILER% -vs -p5 -compress -text %SHADERDIR%Layout_PNTUBone.vs %OUTDIR%Layout_PNTUBone.txt
+%COMPILER% -vs -p5 -compress -text %SHADERDIR%Layout_Sprite2D.vs %OUTDIR%Layout_Sprite2D.txt
 %COMPILER% -vs -p5 -compress -text %SHADERDIR%Layout_Particle.vs %OUTDIR%Layout_Particle.txt
 %COMPILER% -vs -p5 -compress -text %SHADERDIR%Layout_Sprite.vs %OUTDIR%Layout_Sprite.txt
-%COMPILER% -vs -p5 -compress -text %SHADERDIR%Layout_Volume.vs %OUTDIR%Layout_Volume.txt
+%COMPILER% -vs -p5 -compress -text %SHADERDIR%Layout_VolumeParticle.vs %OUTDIR%Layout_VolumeParticle.txt
+%COMPILER% -vs -p5 -compress -text %SHADERDIR%Layout_UI.vs %OUTDIR%Layout_UI.txt

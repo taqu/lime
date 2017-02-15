@@ -206,6 +206,10 @@ namespace linput
         JoystickButton_3,
         JoystickButton_4,
         JoystickButton_5,
+        JoystickButton_6,
+        JoystickButton_7,
+        JoystickButton_8,
+        JoystickButton_9,
         JoystickButton_Num,
     };
 

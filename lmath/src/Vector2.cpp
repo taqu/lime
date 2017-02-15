@@ -12,22 +12,22 @@ namespace lmath
         f32 l = v.lengthSqr();
         LASSERT( !lmath::isZero(l) );
         l = 1.0f/lmath::sqrt(l);
-        return Vector2(v.x_*l, v.y_*l);
+        return {v.x_*l, v.y_*l};
     }
 
     Vector2 normalizeChecked(const Vector2& v)
     {
         f32 l = v.lengthSqr();
         if(lmath::isZero(l)){
-            return Vector2(0.0f);
+            return Vector2::construct(0.0f);
         }
         l = 1.0f/lmath::sqrt(l);
-        return Vector2(v.x_*l, v.y_*l);
+        return {v.x_*l, v.y_*l};
     }
 
     Vector2 lerp(const Vector2& v0, const Vector2& v1, f32 t)
     {
-        Vector2 d(v1.x_-v0.x_, v1.y_-v0.y_);
+        Vector2 d = {v1.x_-v0.x_, v1.y_-v0.y_};
         d *= t;
         d += v0;
         return d;
@@ -37,6 +37,6 @@ namespace lmath
     {
         f32 x = f*v0.x_ + v1.x_;
         f32 y = f*v0.y_ + v1.y_;
-        return Vector2(x,y);
+        return {x,y};
     } 
 }

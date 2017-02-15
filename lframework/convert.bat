@@ -19,6 +19,10 @@ pushd %SHADERDIR%
 %COMPILER% -ps -p5 -compress -text DeferredTexC.ps %OUTDIR%DeferredTexCPS.txt
 %COMPILER% -ps -p5 -compress -text DeferredTexCN.ps %OUTDIR%DeferredTexCNPS.txt
 
+%COMPILER% -ps -p5 -compress -force -text DeferredShadowAccumulating.ps %OUTDIR%DeferredShadowAccumulatingPS.txt
+%COMPILER% -ps -p5 -compress -force -text DeferredLighting.ps %OUTDIR%DeferredLightingPS.txt
+
+
 %COMPILER% -vs -p5 -compress -text Forward.vs %OUTDIR%ForwardVS.txt
 %COMPILER% -vs -p5 -compress -text ForwardShadow.vs %OUTDIR%ForwardShadowVS.txt
 %COMPILER% -vs -p5 -compress -text ForwardSkinning.vs %OUTDIR%ForwardSkinningVS.txt
@@ -41,4 +45,25 @@ pushd %SHADERDIR%
 %COMPILER% -ps -p5 -compress -text ForwardTexCN.ps %OUTDIR%ForwardTexCNPS.txt
 %COMPILER% -ps -p5 -compress -text ForwardTexCNShadow.ps %OUTDIR%ForwardTexCNShadowPS.txt
 
+
+%COMPILER% -vs -p5 -compress -text FullQuad.vs %OUTDIR%FullQuadVS.txt
+%COMPILER% -ps -p5 -compress -text Copy.ps %OUTDIR%CopyPS.txt
+
+%COMPILER% -vs -p5 -compress -text Sprite2D.vs %OUTDIR%Sprite2DVS.txt
+%COMPILER% -ps -p5 -compress -text Sprite2D.ps %OUTDIR%Sprite2DPS.txt
+%COMPILER% -vs -p5 -compress -text Particle.vs %OUTDIR%ParticleVS.txt
+%COMPILER% -gs -p5 -compress -text Particle.gs %OUTDIR%ParticleGS.txt
+%COMPILER% -ps -p5 -compress -text Particle.ps %OUTDIR%ParticlePS.txt
+
+%COMPILER% -hs -p5 -compress -text VolumeParticle.hs %OUTDIR%VolumeParticleHS.txt
+%COMPILER% -ds -p5 -compress -text VolumeParticle.ds %OUTDIR%VolumeParticleDS.txt
+%COMPILER% -vs -p5 -compress -text VolumeParticle.vs %OUTDIR%VolumeParticleVS.txt
+%COMPILER% -ps -p5 -compress -text VolumeParticle.ps %OUTDIR%VolumeParticlePS.txt
+
+
+%COMPILER% -ps -p5 -compress -text Font.ps %OUTDIR%FontPS.txt
+%COMPILER% -ps -p5 -compress -text FontOutline.ps %OUTDIR%FontOutlinePS.txt
+
+%COMPILER% -vs -p5 -compress -text UI.vs %OUTDIR%UIVS.txt
+%COMPILER% -ps -p5 -compress -text UI.ps %OUTDIR%UIPS.txt
 popd

@@ -4,21 +4,19 @@ struct VSOutput
 {
     float4 position : SV_POSITION;
     float3 normal : TEXCOORD0;
-    float3 worldPos : TEXCOORD1;
-    float3 viewPos : TEXCOORD2;
-    float2 velocity : TEXCOORD3;
+    float2 position1 : TEXCOORD1;
+    float2 velocity : TEXCOORD2;
 };
 
 DeferredOutput main(VSOutput input)
 {
-    float metalic = shadow.w;
-
     DeferredOutput output;
-    output.albedo.xyz = diffuse.xyz * (1-metalic);
-    output.albedo.w = diffuse.w;
+    output.albedo.xyz = diffuse.xyz;
+    output.albedo.w = shadow.w;
     output.specular = specular;
     output.normal.xyz = normalize(input.normal);
     output.normal.w = shadow.x;
     output.velocity = input.velocity;
+    output.depth = input.position1.x/input.position1.y;
     return output;
 }

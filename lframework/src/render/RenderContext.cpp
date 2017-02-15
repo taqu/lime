@@ -15,6 +15,7 @@
 #include "animation/lanim.h"
 #include "render/ShadowMap.h"
 #include "render/Camera.h"
+#include "render/Light.h"
 
 namespace lfw
 {
@@ -39,6 +40,31 @@ namespace lfw
     void RenderContext::initialize(lgfx::ContextRef* context)
     {
         context_ = context;
+
+        samplerSet_.create(
+            0,
+            lgfx::TexFilter_MinMagMipPoint,
+            lgfx::TexAddress_Clamp,
+            lgfx::TexAddress_Clamp,
+            lgfx::TexAddress_Clamp,
+            lgfx::Cmp_Always,
+            0.0f);
+        samplerSet_.create(
+            1,
+            lgfx::TexFilter_MinMagMipLinear,
+            lgfx::TexAddress_Clamp,
+            lgfx::TexAddress_Clamp,
+            lgfx::TexAddress_Clamp,
+            lgfx::Cmp_Always,
+            0.0f);
+        samplerSet_.create(
+            2,
+            lgfx::TexFilter_CompMinMagMipLinear,
+            lgfx::TexAddress_Clamp,
+            lgfx::TexAddress_Clamp,
+            lgfx::TexAddress_Clamp,
+            lgfx::Cmp_Less,
+            0.0f);
     }
 
     void RenderContext::terminate()
@@ -50,14 +76,14 @@ namespace lfw
         LASSERT(NULL != context_);
         LASSERT(NULL != constantBufferTableSet_);
 
-        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerFrameConstantVS));
+        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerFrameConstant));
         if(NULL == constant){
             return;
         }
 
         lgfx::MappedSubresource mapped;
         if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
-            PerFrameConstantVS* constants = reinterpret_cast<PerFrameConstantVS*>(mapped.data_);
+            PerFrameConstant* constants = reinterpret_cast<PerFrameConstant*>(mapped.data_);
             constants->velocityScale_ = 1.0f;
             constants->velocityMaxMagnitude_ = 100.0f;
             constant->unmap(*context_, 0);
@@ -67,27 +93,34 @@ namespace lfw
 
     void RenderContext::setPerCameraConstants(Camera& camera)
     {
-        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerCameraConstantVS));
+        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerCameraConstant));
         if(NULL == constant){
             return;
         }
 
         lgfx::MappedSubresource mapped;
         if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
-            PerCameraConstantVS* constants = reinterpret_cast<PerCameraConstantVS*>(mapped.data_);
+            PerCameraConstant* constants = reinterpret_cast<PerCameraConstant*>(mapped.data_);
             copyAlignedDst16(constants->view_, camera.getViewMatrix());
             copyAlignedDst16(constants->invview_, camera.getInvViewMatrix());
             copyAlignedDst16(constants->projection_, camera.getProjMatrix());
             copyAlignedDst16(constants->invprojection_, camera.getInvProjMatrix());
             copyAlignedDst16(constants->vp0_, camera.getPrevViewProjMatrix());
             copyAlignedDst16(constants->vp1_, camera.getViewProjMatrix());
+            camera.getViewProjMatrix().getInvert(constants->invvp1_);
+
             copyAlignedDst16(constants->cameraPos_, camera.getEyePosition());
             camera.getRTSize(constants->screenWidth_, constants->screenHeight_);
             constants->screenInvWidth_ = 1.0f/constants->screenWidth_;
             constants->screenInvHeight_ = 1.0f/constants->screenHeight_;
             constant->unmap(*context_, 0);
-            setConstantBuffer(Shader_VS, 1, constant);
+
+            setConstantBuffer(Shader_VS, 2, constant);
+            setConstantBuffer(Shader_HS, 2, constant);
+            setConstantBuffer(Shader_DS, 2, constant);
+            setConstantBuffer(Shader_GS, 2, constant);
             setConstantBuffer(Shader_PS, 2, constant);
+            setConstantBuffer(Shader_CS, 2, constant);
         }
     }
 
@@ -96,7 +129,7 @@ namespace lfw
         LASSERT(NULL != context_);
         LASSERT(NULL != constantBufferTableSet_);
 
-        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerShadowMapConstantVS));
+        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerShadowMapConstant));
         if(NULL == constant){
             return;
         }
@@ -105,7 +138,8 @@ namespace lfw
         if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
             shadowMap_->getLightViewProjectionAlign16(reinterpret_cast<lmath::Matrix44*>(mapped.data_));
             constant->unmap(*context_, 0);
-            setConstantBuffer(Shader_VS, 4, constant);
+            setConstantBuffer(Shader_VS, 1, constant);
+            setConstantBuffer(Shader_PS, 3, constant);
         }
     }
 
@@ -121,26 +155,41 @@ namespace lfw
             break;
         case RenderPath_Opaque:
             context_->setGeometryShader(NULL);
+            resetDefaultSamplerSet();
             break;
         default:
             context_->setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWDisable);
             context_->setGeometryShader(NULL);
+            resetDefaultSamplerSet();
             break;
         }
     }
 
-    //void RenderContext::setSceneConstantVS(const Scene& scene, const ShadowMap& shadowMap)
-    //{
-    //    sceneConstantBufferVS_ = createConstantBuffer(sizeof(lscene::SceneConstantVS));
+    void RenderContext::beginDeferredLighting(const Light& light)
+    {
+        LASSERT(NULL != context_);
+        LASSERT(NULL != constantBufferTableSet_);
 
-    //    lgraphics::MappedSubresource mapped;
-    //    if(sceneConstantBufferVS_->map(*context_, 0, lgraphics::MapType_WriteDiscard, mapped)){
-    //        lscene::SceneConstantVS* sceneConstantVS = reinterpret_cast<lscene::SceneConstantVS*>(mapped.data_);
-    //        lscene::setSceneConstantVS(*sceneConstantVS, scene, shadowMap);
-    //        sceneConstantBufferVS_->unmap(*context_, 0);
-    //        setSystemConstantBuffer(lscene::RenderContext::Shader_VS, lscene::DefaultSceneConstantVSAttachIndex, sceneConstantBufferVS_);
-    //    }
-    //}
+        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerLightConstant));
+        if(NULL == constant){
+            return;
+        }
+
+        PerLightConstant perLightConstant;
+        perLightConstant.dlDir_ = -light.getDirection();
+        perLightConstant.dlColor_ = light.getColor();
+
+        lgfx::MappedSubresource mapped;
+        if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
+            copyAlignedDstAlignedSrc16(mapped.data_, &perLightConstant, sizeof(PerLightConstant));
+            constant->unmap(*context_, 0);
+            context_->setPSConstantBuffers(1, 1, (*constant));
+        }
+    }
+
+    void RenderContext::endDeferredLighting(const Light& /*light*/)
+    {
+    }
 
     //void RenderContext::setSceneConstantDS(const Scene& scene)
     //{
@@ -312,13 +361,13 @@ namespace lfw
         }
     }
 
-    void RenderContext::updateWorldFrustum(const Camera& camera)
-    {
-        worldFrustum_.calcInWorld(camera);
-    }
-
     void RenderContext::attachDepthShader(DepthShader type)
     {
         depthShaderVS_[type]->attach(*context_);
+    }
+
+    void RenderContext::resetDefaultSamplerSet()
+    {
+        context_->setPSSamplers(0, samplerSet_.getNumSamplers(), samplerSet_.getSamplers());
     }
 }

@@ -8,6 +8,11 @@
 #include <lframework/ecs/ComponentBehavior.h>
 #include <lframework/ecs/Entity.h>
 
+namespace lsound
+{
+    class UserPlayer;
+}
+
 namespace debug
 {
     class Scene00 : public lfw::ComponentBehavior
@@ -24,7 +29,16 @@ namespace debug
     private:
         lfw::Entity mainLight00Entity_;
         lfw::Entity mainCamera00Entity_;
-        lfw::Entity behavior00Entity_;
+        lfw::Entity behaviorEntities_[5];
+        lfw::Entity sprite00_;
+        lfw::Entity particle00_;
+        lfw::Entity volumeParticle00_;
+        lsound::UserPlayer* bgmPlayer_;
+
+        lfw::f32 roty_;
+        lfw::f32 rotx_;
+
+        bool showTestWindow_;
     };
 }
 #endif //INC_SAMPLES_SCENE00_H__

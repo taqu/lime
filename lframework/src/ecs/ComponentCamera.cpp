@@ -4,10 +4,20 @@
 @date 2016/11/29 create
 */
 #include "ecs/ComponentCamera.h"
+#include <lmath/Vector3.h>
+#include <lmath/Vector4.h>
+#include <lmath/Quaternion.h>
+#include <lgraphics/ViewRef.h>
 #include "ecs/ECSManager.h"
 #include "ecs/ComponentSceneElementManager.h"
 #include "ecs/Entity.h"
-#include <lgraphics/ViewRef.h>
+#include "ecs/ComponentGeometric.h"
+#include "ecs/ComponentRenderer.h"
+#include "resource/Resources.h"
+#include "resource/ShaderManager.h"
+#include "render/RenderContext.h"
+#include "render/RenderQueue.h"
+#include "render/RenderTask.h"
 
 namespace lfw
 {
@@ -27,6 +37,12 @@ namespace lfw
     {
     }
 
+    Entity& ComponentCamera::getEntity()
+    {
+        ComponentSceneElementManager* componentManager = getManager();
+        return componentManager->getData(getID()).entity_;
+    }
+
     const Entity& ComponentCamera::getEntity() const
     {
         ComponentSceneElementManager* componentManager = getManager();
@@ -41,22 +57,117 @@ namespace lfw
 
     void ComponentCamera::onCreate()
     {
-        lcore::Log("onCreate");
     }
 
     void ComponentCamera::onStart()
     {
-        lcore::Log("onStart");
     }
 
     void ComponentCamera::update()
     {
-        lcore::Log("update");
     }
 
     void ComponentCamera::onDestroy()
     {
-        lcore::Log("onDestroy");
+    }
+
+    void ComponentCamera::render(lfw::Camera& camera, RenderTask& renderTask)
+    {
+        RenderContext& renderContext = *renderTask.renderContext_;
+        lgfx::ContextRef& context = renderContext.getContext();
+
+        renderContext.setCamera(&camera);
+        renderContext.setPerCameraConstants(camera);
+        renderContext.resetDefaultSamplerSet();
+
+        RenderQueue& queue = *renderTask.renderQueue_;
+
+        camera.beginDeferred(context);
+
+        //Opaque path
+        renderContext.setRenderPath(RenderPath_Opaque);
+        for(s32 j=0; j<queue[RenderPath_Opaque].size_; ++j){
+            queue[RenderPath_Opaque].entries_[j].component_->drawOpaque(renderContext);
+        }
+        camera.endDeferred(context);
+
+        //Opaque Lighting
+        deferredLighting(camera, renderTask);
+
+        //Transparent path
+        context.setRenderTargets(1, camera.getDeferredLightingRenderTarget().renderTargetView_, camera.getDepthStencil().depthStencilView_.get());
+        renderContext.setRenderPath(RenderPath_Transparent);
+        renderContext.resetDefaultSamplerSet();
+        for(s32 j=0; j<queue[RenderPath_Transparent].size_; ++j){
+            queue[RenderPath_Transparent].entries_[j].component_->drawTransparent(renderContext);
+        }
+        context.restoreDefaultRenderTargets();
+
+        //-----------------------------------------------------
+        ShaderManager& shaderManager = Resources::getInstance().getShaderManager();
+
+        lgfx::VertexShaderRef& fullQuadVS = shaderManager.getVS(ShaderVS_FullQuad);
+        lgfx::PixelShaderRef& copyPS = shaderManager.getPS(ShaderPS_Copy);
+
+        context.setVertexShader(fullQuadVS);
+        context.setPixelShader(copyPS);
+        context.setPSResources(0, 1, camera.getDeferredLightingRenderTarget().shaderResourceView_);
+        context.setBlendState(lgfx::ContextRef::BlendState_NoAlpha);
+        context.setDepthStencilState(lgfx::ContextRef::DepthStencil_DDisableWDisable);
+        context.clearVertexBuffers(0, 1);
+        context.clearIndexBuffers();
+        context.setPrimitiveTopology(lgfx::Primitive_TriangleList);
+        context.draw(3, 0);
+
+        context.setInputLayout(NULL);
+        context.clearPSResources(8);
+        context.clearPSSamplers(8);
+        context.setPixelShader(NULL);
+        context.setVertexShader(NULL);
+    }
+
+    void ComponentCamera::deferredLighting(lfw::Camera& camera, RenderTask& renderTask)
+    {
+        RenderContext& renderContext = *renderTask.renderContext_;
+        lgfx::ContextRef& context = renderContext.getContext();
+
+        //Clear shadow accumulation buffer
+        context.setRenderTargets(1, camera.getShadowAccumulatingRenderTarget().renderTargetView_, camera.getDepthStencil().depthStencilView_);
+        context.clearRenderTargetView(camera.getShadowAccumulatingRenderTarget().renderTargetView_, lgfx::ContextRef::Zero);
+
+        context.setPSSamplers(0, camera.getDeferredSamplerSet().getNumSamplers(), camera.getDeferredSamplerSet().getSamplers());
+
+        context.clearVertexBuffers(0, 1);
+        context.setPrimitiveTopology(lgfx::Primitive_TriangleList);
+        context.setDepthStencilState(camera.getDeferredDepthStencilState(), 0);
+        context.setBlendState(lgfx::ContextRef::BlendState_NoAlpha);
+
+        //Set shader resources
+        context.setPSResources(0, camera.getNumRenderTargets(), camera.getSRViews());
+        context.setPSResources(7, 1, renderContext.getShadowMapDepthStencil().shaderResourceViewDepth_);
+
+        context.setVertexShader(camera.getFullQuadVS());
+        context.setGeometryShader(NULL);
+        context.setPixelShader(camera.getDeferredShadowAccumulatingPS());
+
+        //Draw full quad
+        context.draw(3, 0);
+
+        //Clear accumulation buffer
+        context.setRenderTargets(1, camera.getDeferredLightingRenderTarget().renderTargetView_, camera.getDepthStencil().depthStencilView_);
+        context.clearRenderTargetView(camera.getDeferredLightingRenderTarget().renderTargetView_, lgfx::ContextRef::Zero);
+
+        context.setPixelShader(camera.getDeferredLightingPS());
+        context.setBlendState(lgfx::ContextRef::BlendState_Add);
+        context.setPSResources(7, 1, camera.getShadowAccumulatingRenderTarget().shaderResourceView_);
+
+        ComponentSceneElementManager::LightArray& lights = *renderTask.lights_;
+        for(s32 j=0; j<lights.size(); ++j){
+            renderContext.beginDeferredLighting(lights[j].light_);
+            context.draw(3, 0);
+            renderContext.endDeferredLighting(lights[j].light_);
+        }
+        context.clearPSResources(8);
     }
 
     void ComponentCamera::initializePerspective(
@@ -76,18 +187,18 @@ namespace lfw
         camera.setViewport(0.0f, 0.0f, width, height);
         camera.setJitter(jitter);
         if(jitter){
-            f32 jw = 0.5f/width;
-            f32 jh = 0.5f/height;
+            f32 jw = 0.125f/width;
+            f32 jh = 0.125f/height;
             camera.setJitterSize(jw, jh);
         }
     }
 
     void ComponentCamera::initializeDeferred(s32 width, s32 height)
     {
-        width = (width+TextureBlockMask)&~TextureBlockMask;
-        height = (height+TextureBlockMask)&~TextureBlockMask;
+        width = (width+ComputeShader_NumThreads_Mask)&~ComputeShader_NumThreads_Mask;
+        height = (height+ComputeShader_NumThreads_Mask)&~ComputeShader_NumThreads_Mask;
 
-        RenderTarget targets[5];
+        RenderTarget targets[DeferredRT_Num];
         DepthStencil depthStencil;
         lgfx::RTVDesc rtvDesc;
         lgfx::DSVDesc dsvDesc;
@@ -140,13 +251,13 @@ namespace lfw
 
         //Normal
         //------------------------------------------------
-        rtvDesc.format_ = lgfx::Data_R16G16B16A16_SNorm;
-        srvDesc.format_ = lgfx::Data_R16G16B16A16_SNorm;
+        rtvDesc.format_ = lgfx::Data_R8G8B8A8_SNorm;
+        srvDesc.format_ = lgfx::Data_R8G8B8A8_SNorm;
         targets[2].texture_ = lgfx::Texture::create2D(
             width,
             height,
             1, 1,
-            lgfx::Data_R16G16B16A16_SNorm,
+            lgfx::Data_R8G8B8A8_SNorm,
             lgfx::Usage_Default,
             lgfx::BindFlag_RenderTarget|lgfx::BindFlag_ShaderResource,
             lgfx::CPUAccessFlag_None,
@@ -172,6 +283,24 @@ namespace lfw
         targets[3].renderTargetView_ = targets[3].texture_.createRTView(rtvDesc);
         targets[3].shaderResourceView_ = targets[3].texture_.createSRView(srvDesc);
 
+        //Depth
+        //------------------------------------------------
+        rtvDesc.format_ = lgfx::Data_R32_Float;
+        srvDesc.format_ = lgfx::Data_R32_Float;
+        targets[4].texture_ = lgfx::Texture::create2D(
+            width,
+            height,
+            1, 1,
+            lgfx::Data_R32_Float,
+            lgfx::Usage_Default,
+            lgfx::BindFlag_RenderTarget|lgfx::BindFlag_ShaderResource,
+            lgfx::CPUAccessFlag_None,
+            lgfx::ResourceMisc_None,
+            NULL);
+
+        targets[4].renderTargetView_ = targets[4].texture_.createRTView(rtvDesc);
+        targets[4].shaderResourceView_ = targets[4].texture_.createSRView(srvDesc);
+
         //Depth Stencil
         //------------------------------------------------
         depthStencil.texture_ = lgfx::Texture::create2D(
@@ -196,8 +325,10 @@ namespace lfw
         viewport.Height = static_cast<f32>(height);
         viewport.MinDepth = 0.0f;
         viewport.MaxDepth = 1.0f;
-        setRenderTargets(viewport, 5, targets, &depthStencil);
-        getManager()->getCamera(getID()).setRenderType(RenderType_Deferred);
+        setRenderTargets(viewport, DeferredRT_Num, targets, &depthStencil);
+        Camera& camera = getManager()->getCamera(getID());
+        camera.setRenderType(RenderType_Deferred);
+        camera.setDeferred();
     }
 
     const D3D11_VIEWPORT& ComponentCamera::getViewport() const
@@ -317,6 +448,20 @@ namespace lfw
         camera.ortho(width, height, znear, zfar);
     }
 
+    void ComponentCamera::lookAt(const lmath::Vector3& eye, const lmath::Vector3& at)
+    {
+        Entity entity = getEntity();
+        entity.getGeometric()->getRotation().lookAt(eye, at);
+        entity.getGeometric()->setPosition(lmath::Vector4::construct(eye));
+    }
+
+    void ComponentCamera::lookAt(const lmath::Vector4& eye, const lmath::Vector4& at)
+    {
+        Entity entity = getEntity();
+        entity.getGeometric()->getRotation().lookAt(eye, at);
+        entity.getGeometric()->setPosition(eye);
+    }
+
     void ComponentCamera::setJitter(bool enable)
     {
         Camera& camera = getManager()->getCamera(getID());
@@ -353,33 +498,4 @@ namespace lfw
         camera.clearRenderTargets();
     }
 
-    const lgfx::Texture2DRef& ComponentCamera::getRTTexture(s32 index) const
-    {
-        const Camera& camera = getManager()->getCamera(getID());
-        return camera.getRTTexture(index);
-    }
-
-    const lgfx::RenderTargetViewRef& ComponentCamera::getRTView(s32 index) const
-    {
-        const Camera& camera = getManager()->getCamera(getID());
-        return camera.getRTView(index);
-    }
-
-    const lgfx::ShaderResourceViewRef& ComponentCamera::getSRView(s32 index) const
-    {
-        const Camera& camera = getManager()->getCamera(getID());
-        return camera.getSRView(index);
-    }
-
-    const lgfx::UnorderedAccessViewRef& ComponentCamera::getUAView(s32 index) const
-    {
-        const Camera& camera = getManager()->getCamera(getID());
-        return camera.getUAView(index);
-    }
-
-    const DepthStencil& ComponentCamera::getDepthStencil() const
-    {
-        const Camera& camera = getManager()->getCamera(getID());
-        return camera.getDepthStencil();
-    }
 }

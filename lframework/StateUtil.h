@@ -10,11 +10,11 @@
 namespace lfw
 {
 #define STATEUTIL_DECLTYPE(CLASS_NAME, STATE_NUM, TYPENAME) \
-    typedef fractal::StateUtil<CLASS_NAME, STATE_NUM> TYPENAME; \
-    friend class fractal::StateUtil<CLASS_NAME, STATE_NUM>; \
-    template<fractal::s32 N> void init(); \
-    template<fractal::s32 N> void proc(); \
-    template<fractal::s32 N> void term()
+    typedef lfw::StateUtil<CLASS_NAME, STATE_NUM> TYPENAME; \
+    friend class lfw::StateUtil<CLASS_NAME, STATE_NUM>; \
+    template<lfw::s32 N> void init(); \
+    template<lfw::s32 N> void proc(); \
+    template<lfw::s32 N> void term()
 
 #define STATEUTIL_DESCLSTATEFUNC(STATE_NAME) \
     template<> void init<STATE_NAME>(); \

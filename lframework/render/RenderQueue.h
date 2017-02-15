@@ -7,6 +7,7 @@
 */
 #include "../lframework.h"
 #include <lmath/Vector4.h>
+#include "Frustum.h"
 
 namespace lgfx
 {
@@ -16,6 +17,7 @@ namespace lgfx
 namespace lfw
 {
     class Camera;
+    class ShadowMap;
     class ComponentRenderer;
 
     /**
@@ -50,15 +52,23 @@ namespace lfw
         inline void clear();
         inline void swap(RenderQueue& rhs);
 
-        void sort();
-        inline const lmath::Vector4& getCameraPosition() const;
-        inline void setCameraPosition(const lmath::Vector4& position);
+        inline const Camera& getCamera() const;
+        void setCamera(const Camera* camera);
+        inline const ShadowMap& getShadowMap();
+        inline void setShadowMap(const ShadowMap* shadowMap);
+        inline const Frustum& getWorldFrustum() const;
 
         inline const Queue& operator[](s32 index) const;
         inline Queue& operator[](s32 index);
+
+        void sort();
     private:
-        lmath::Vector4 cameraPosition_;
         Queue queues_[RenderPath_Num];
+
+        const Camera* camera_;
+        const ShadowMap* shadowMap_;
+
+        Frustum worldFrustum_;
     };
 
     inline s32 RenderQueue::size() const
@@ -82,14 +92,24 @@ namespace lfw
         }
     }
 
-    inline const lmath::Vector4& RenderQueue::getCameraPosition() const
+    inline const Camera& RenderQueue::getCamera() const
     {
-        return cameraPosition_;
+        return *camera_;
     }
 
-    inline void RenderQueue::setCameraPosition(const lmath::Vector4& position)
+    inline const ShadowMap& RenderQueue::getShadowMap()
     {
-        cameraPosition_ = position;
+        return *shadowMap_;
+    }
+
+    inline void RenderQueue::setShadowMap(const ShadowMap* shadowMap)
+    {
+        shadowMap_ = shadowMap;
+    }
+
+    inline const Frustum& RenderQueue::getWorldFrustum() const
+    {
+        return worldFrustum_;
     }
 
     inline const RenderQueue::Queue& RenderQueue::operator[](s32 index) const

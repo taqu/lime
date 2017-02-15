@@ -12,11 +12,12 @@
 #include <lgraphics/IndexBufferRef.h>
 #include <lgraphics/ConstantBufferTableSet.h>
 #include <lgraphics/TransientBuffer.h>
-#include <lgraphics/DynamicBuffer.h>
 #include <lgraphics/BufferCreator.h>
+#include <lgraphics/ShaderRef.h>
 #include "RenderQueue.h"
 #include "RenderContext.h"
-#include "DepthStencil.h"
+#include "RenderQueue2D.h"
+#include "RenderContext2D.h"
 #include "ShadowMap.h"
 
 namespace lfw
@@ -28,9 +29,6 @@ namespace lfw
 
     typedef lgfx::TransientBuffer<lgfx::IndexBufferRef, lgfx::IndexBufferCreator> TransientIndexBuffer;
     typedef TransientIndexBuffer::allocated_chunk_type TransientIndexBufferRef;
-
-    typedef lgfx::DynamicBuffer<lgfx::VertexBufferRef, lgfx::VertexBufferCreator> DynamicVertexBuffer;
-    typedef lgfx::DynamicBuffer<lgfx::IndexBufferRef, lgfx::IndexBufferCreator> DynamicIndexBuffer;
 
     class ComponentRenderer;
 
@@ -46,7 +44,7 @@ namespace lfw
         Renderer();
         ~Renderer();
 
-        void initialize(const RendererInitParam& initParam);
+        void initialize(s32 backBufferWidth, s32 backBufferHeight, const RendererInitParam& initParam);
         void terminate();
 
         inline lgfx::FrameSyncQuery& getFrameSync();
@@ -55,12 +53,17 @@ namespace lfw
         inline TransientVertexBuffer& getVertexBuffer();
         inline TransientIndexBuffer& getIndexBuffer();
 
+        inline RenderContext& getRenderContext();
+        inline RenderContext2D& getRenderContext2D();
+
+        void begin();
         void update();
     private:
         Renderer(const Renderer&);
         Renderer& operator=(const Renderer&);
 
-        typedef lcore::ArrayPOD<RenderQueue> RenderQueueArray;
+        typedef lcore::Array<RenderQueue> RenderQueueArray;
+
         void traverseComponents();
         void draw();
 
@@ -68,11 +71,14 @@ namespace lfw
         lgfx::ConstantBufferTableSet constantBufferTableSet_;
         TransientVertexBuffer transientVertexBuffer_;
         TransientIndexBuffer transientIndexBuffer_;
-        RenderContext renderContext_;
 
+        RenderContext renderContext_;
         RenderQueueArray renderQueuePerCamera_;
+
+        RenderContext2D renderContext2D_;
+        RenderQueue2D renderQueue2D_;
+
         ShadowMap shadowMap_;
-        DepthStencil shadowMapDepthStencil_;
     };
 
     inline lgfx::FrameSyncQuery& Renderer::getFrameSync()
@@ -93,6 +99,16 @@ namespace lfw
     inline TransientIndexBuffer& Renderer::getIndexBuffer()
     {
         return transientIndexBuffer_;
+    }
+
+    inline RenderContext& Renderer::getRenderContext()
+    {
+        return renderContext_;
+    }
+
+    inline RenderContext2D& Renderer::getRenderContext2D()
+    {
+        return renderContext2D_;
     }
 }
 #endif //INC_LFRAMEWORK_RENDERER__

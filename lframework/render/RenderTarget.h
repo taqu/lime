@@ -15,6 +15,13 @@ namespace lfw
         lgfx::Texture2DRef texture_;
         lgfx::RenderTargetViewRef renderTargetView_;
         lgfx::ShaderResourceViewRef shaderResourceView_;
+    };
+
+    struct RenderTargetUAV
+    {
+        lgfx::Texture2DRef texture_;
+        lgfx::RenderTargetViewRef renderTargetView_;
+        lgfx::ShaderResourceViewRef shaderResourceView_;
         lgfx::UnorderedAccessViewRef unorderedAccessView_;
     };
 }

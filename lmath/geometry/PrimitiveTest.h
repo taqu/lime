@@ -38,7 +38,7 @@ namespace lmath
     //---------------------------------------------------------------------------------
     /**
     @brief 点から線分への最近傍点を計算
-    @return result = t*(l2-l1)となるt
+    @return result = t*(l1-l0) + l0となるt
     @param result ... 出力
     @param point ... 
     @param l1 ... 
@@ -47,8 +47,8 @@ namespace lmath
     f32 closestPointPointSegment(
         lmath::Vector3& result,
         const lmath::Vector3& point,
-        const lmath::Vector3& l1,
-        const lmath::Vector3& l2);
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1);
 
     //---------------------------------------------------------------------------------
     /**
@@ -58,35 +58,94 @@ namespace lmath
     @param l1 ... 
     @param l2 ... 
     */
-    f32 distancePointSegment(
+    f32 distancePointSegmentSqr(
         const lmath::Vector3& point,
-        const lmath::Vector3& l1,
-        const lmath::Vector3& l2);
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1);
+    inline f32 distancePointSegment(
+        const lmath::Vector3& point,
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1)
+    {
+        return lmath::sqrt( distancePointSegmentSqr(point, l0, l1) );
+    }
 
     //---------------------------------------------------------------------------------
-    f32 sqDistancePointAABB(
+    /**
+    @brief 点から直線への最近傍点を計算
+    @return result = t*(l1-l0) + l0となるt
+    @param result ... 出力
+    @param point ... 
+    @param l1 ... 
+    @param l2 ... 
+    */
+    f32 closestPointPointLine(
+        lmath::Vector3& result,
+        const lmath::Vector3& point,
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1);
+
+    //---------------------------------------------------------------------------------
+    /**
+    @brief 点から直線への距離を計算
+    @return 点から直線への距離
+    @param point ... 
+    @param l1 ... 
+    @param l2 ... 
+    */
+    f32 distancePointLineSqr(
+        const lmath::Vector3& point,
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1);
+    inline f32 distancePointLine(
+        const lmath::Vector3& point,
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1)
+    {
+        return lmath::sqrt( distancePointLineSqr(point, l0, l1) );
+    }
+
+    //---------------------------------------------------------------------------------
+    /**
+    @brief 線分と線分の最近傍点を計算
+    @return 線分同士の距離の平方
+    @param s ... 
+    @param t ... 
+    */
+    f32 closestPointSegmentSegmentSqr(
+        f32& s,
+        f32& t,
+        Vector3& c0,
+        Vector3& c1,
+        const Vector3& p0,
+        const Vector3& q0,
+        const Vector3& p1,
+        const Vector3& q1);
+
+    //---------------------------------------------------------------------------------
+    f32 distancePointAABBSqr(
         const f32* point,
         const f32* bmin,
         const f32* bmax);
 
-    inline f32 sqDistancePointAABB(const lmath::Vector4& point, const lmath::Vector4& bmin, const lmath::Vector4& bmax)
+    inline f32 distancePointAABBSqr(const lmath::Vector4& point, const lmath::Vector4& bmin, const lmath::Vector4& bmax)
     {
-        return sqDistancePointAABB(&point.x_, &bmin.x_, &bmax.x_);
+        return distancePointAABBSqr(&point.x_, &bmin.x_, &bmax.x_);
     }
 
-    inline f32 sqDistancePointAABB(const lmath::Vector3& point, const lmath::Vector3& bmin, const lmath::Vector3& bmax)
+    inline f32 distancePointAABBSqr(const lmath::Vector3& point, const lmath::Vector3& bmin, const lmath::Vector3& bmax)
     {
-        return sqDistancePointAABB(&point.x_, &bmin.x_, &bmax.x_);
+        return distancePointAABBSqr(&point.x_, &bmin.x_, &bmax.x_);
     }
 
-    inline f32 sqDistancePointAABB(const lmath::Vector3& point, const lmath::Vector4& bmin, const lmath::Vector4& bmax)
+    inline f32 distancePointAABBSqr(const lmath::Vector3& point, const lmath::Vector4& bmin, const lmath::Vector4& bmax)
     {
-        return sqDistancePointAABB(&point.x_, &bmin.x_, &bmax.x_);
+        return distancePointAABBSqr(&point.x_, &bmin.x_, &bmax.x_);
     }
 
-    inline f32 sqDistancePointAABB(const lmath::Vector4& point, const lmath::Vector3& bmin, const lmath::Vector3& bmax)
+    inline f32 distancePointAABBSqr(const lmath::Vector4& point, const lmath::Vector3& bmin, const lmath::Vector3& bmax)
     {
-        return sqDistancePointAABB(&point.x_, &bmin.x_, &bmax.x_);
+        return distancePointAABBSqr(&point.x_, &bmin.x_, &bmax.x_);
     }
 
     //---------------------------------------------------------------------------------
@@ -127,6 +186,18 @@ namespace lmath
 
     //---------------------------------------------------------------------------------
     bool testSphereAABB(lmath::Vector4& close, const Sphere& sphere, const lmath::Vector4& bmin, const lmath::Vector4& bmax);
+
+    //---------------------------------------------------------------------------------
+    bool testSphereCapsule(const Sphere& sphere, const Vector3& p0, const Vector3& q0, f32 r0);
+
+    //---------------------------------------------------------------------------------
+    bool testCapsuleCapsule(
+        const Vector3& p0,
+        const Vector3& q0,
+        f32 r0,
+        const Vector3& p1,
+        const Vector3& q1,
+        f32 r1);
 
     //---------------------------------------------------------------------------------
     struct Triangle

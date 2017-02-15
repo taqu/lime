@@ -62,16 +62,27 @@ namespace
 
     void ComponentMeshRenderer::addQueue(RenderQueue& queue)
     {
-        const ComponentGeometric* geometric = getEntity().getGeometric();
-        f32 depth = lmath::manhattanDistance3(queue.getCameraPosition(), geometric->getPosition());
-        //if(checkFlag(Flag_ShadowCast)){
-            queue.add(RenderPath_Shadow, depth, this);
-        //}
-        if(checkFlag(Flag_Opaque)){
-            queue.add(RenderPath_Opaque, depth, this);
+        if(NULL == model_){
+            return;
         }
-        if(checkFlag(Flag_Transparent)){
-            queue.add(RenderPath_Transparent, depth, this);
+        const lmath::Vector4& position = getEntity().getGeometric()->getPosition();
+        f32 depth = lmath::manhattanDistance3(queue.getCamera().getEyePosition(), position);
+        lmath::Sphere sphere = model_->getSphere();
+        sphere.translate(position);
+
+        if(checkFlag(Flag_ShadowCast)){
+            if(queue.getShadowMap().contains(sphere)){
+                queue.add(RenderPath_Shadow, depth, this);
+            }
+        }
+
+        if(queue.getWorldFrustum().contains(sphere)){
+            if(checkFlag(Flag_Opaque)){
+                queue.add(RenderPath_Opaque, depth, this);
+            }
+            if(checkFlag(Flag_Transparent)){
+                queue.add(RenderPath_Transparent, depth, this);
+            }
         }
     }
 
@@ -82,7 +93,7 @@ namespace
 
         renderContext.attachDepthShader(RenderContext::DepthShader_Normal);
 
-        PerModelConstant0VS modelConstantVS;
+        PerModelConstant0 modelConstantVS;
         for(s32 i=0; i<model_->getNumNodes(); ++i){
             Node& node = model_->getNode(i);
             if(node.numMeshes_<=0){
@@ -91,7 +102,7 @@ namespace
             modelConstantVS.world0_ = node.world0_;
             modelConstantVS.world1_ = node.world1_;
 
-            renderContext.setConstant(RenderContext::Shader_VS, 2, sizeof(modelConstantVS), &modelConstantVS);
+            renderContext.setConstant(RenderContext::Shader_VS, 3, sizeof(modelConstantVS), &modelConstantVS);
 
             for(s32 j=0; j<node.numMeshes_; ++j){
                 Mesh& mesh = node.meshes_[j];
@@ -109,9 +120,7 @@ namespace
 
         renderContext.attachDepthShader(RenderContext::DepthShader_Normal);
 
-        ID3D11ShaderResourceView* views[TextureType_Used];
-        ID3D11SamplerState* samplers[TextureType_Used];
-        PerModelConstant0VS modelConstantVS;
+        PerModelConstant0 modelConstantVS;
         for(s32 i=0; i<model_->getNumNodes(); ++i){
             Node& node = model_->getNode(i);
             if(node.numMeshes_<=0){
@@ -120,7 +129,7 @@ namespace
             modelConstantVS.world0_ = node.world0_;
             modelConstantVS.world1_ = node.world1_;
 
-            renderContext.setConstant(RenderContext::Shader_VS, 2, sizeof(modelConstantVS), &modelConstantVS);
+            renderContext.setConstant(RenderContext::Shader_VS, 3, sizeof(modelConstantVS), &modelConstantVS);
 
             for(s32 j=0; j<node.numMeshes_; ++j){
                 Mesh& mesh = node.meshes_[j];
@@ -141,15 +150,15 @@ namespace
                 for(s32 k=0; k<TextureType_Used; ++k){
                     if(material->hasTexture(k)){
                         Texture2D& tex = model_->getTexture(material->textureIDs_[k]);
-                        views[k] = tex.srv_.get();
-                        samplers[k] = tex.sampler_.get();
+                        lgfx::ShaderResourceView::resources_[k] = tex.srv_.get();
+                        //lgfx::ShaderSamplerState::states_[k] = tex.sampler_.get();
                     } else{
-                        views[k] = NULL;
-                        samplers[k] = NULL;
+                        lgfx::ShaderResourceView::resources_[k] = NULL;
+                        //lgfx::ShaderSamplerState::states_[k] = NULL;
                     }
                 }
-                context.setPSResources(0, TextureType_Used, views);
-                context.setPSSamplerStates(0, TextureType_Used, samplers);
+                lgfx::ShaderResourceView::setPS(context, 0, TextureType_Used);
+                //lgfx::ShaderSamplerState::setPS(context, 0, TextureType_Used);
 
                 context.setPrimitiveTopology(mesh.getType());
                 geometry.attach(context);
@@ -164,9 +173,7 @@ namespace
 
         renderContext.attachDepthShader(RenderContext::DepthShader_Normal);
 
-        ID3D11ShaderResourceView* views[TextureType_Used];
-        ID3D11SamplerState* samplers[TextureType_Used];
-        PerModelConstant0VS modelConstantVS;
+        PerModelConstant0 modelConstantVS;
         for(s32 i=0; i<model_->getNumNodes(); ++i){
             Node& node = model_->getNode(i);
             if(node.numMeshes_<=0){
@@ -175,7 +182,7 @@ namespace
             modelConstantVS.world0_ = node.world0_;
             modelConstantVS.world1_ = node.world1_;
 
-            renderContext.setConstant(RenderContext::Shader_VS, 2, sizeof(modelConstantVS), &modelConstantVS);
+            renderContext.setConstant(RenderContext::Shader_VS, 3, sizeof(modelConstantVS), &modelConstantVS);
 
             for(s32 j=0; j<node.numMeshes_; ++j){
                 Mesh& mesh = node.meshes_[j];
@@ -196,15 +203,15 @@ namespace
                 for(s32 k=0; k<TextureType_Used; ++k){
                     if(material->hasTexture(k)){
                         Texture2D& tex = model_->getTexture(material->textureIDs_[k]);
-                        views[k] = tex.srv_.get();
-                        samplers[k] = tex.sampler_.get();
+                        lgfx::ShaderResourceView::resources_[k] = tex.srv_.get();
+                        //lgfx::ShaderSamplerState::states_[k] = tex.sampler_.get();
                     } else{
-                        views[k] = NULL;
-                        samplers[k] = NULL;
+                        lgfx::ShaderResourceView::resources_[k] = NULL;
+                        //lgfx::ShaderSamplerState::states_[k] = NULL;
                     }
                 }
-                context.setPSResources(0, TextureType_Used, views);
-                context.setPSSamplerStates(0, TextureType_Used, samplers);
+                lgfx::ShaderResourceView::setPS(context, 0, TextureType_Used);
+                //lgfx::ShaderSamplerState::setPS(context, 0, TextureType_Used);
 
                 context.setPrimitiveTopology(mesh.getType());
                 geometry.attach(context);

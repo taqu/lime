@@ -1,8 +1,4 @@
-cbuffer ConstantBuffer1 : register(b1)
-{
-    float4x4 mvp;
-    float4x4 iview;
-}
+#include "Common.vs"
 
 struct VSInput
 {
@@ -11,7 +7,6 @@ struct VSInput
     float4 color : COLOR;
     float2 size : SIZE;
     float2 rotation : ROTATION;
-    float4 params : PARAMS;
 };
 
 struct VSOutput
@@ -20,9 +15,26 @@ struct VSOutput
     float4 texcoord : TEXCOORD;
     float4 color : COLOR;
     float2 size : SIZE;
-    nointerpolation float4 params : PARAMS;
     float4x4 mat : MATRIX;
 };
+
+#if 0
+void getBGRAAndParam(out float4 color, out uint param, float x)
+{
+    static const float Ratio = 1.0/254.0;
+    uint i = asuint(x);
+
+    uint ub = (i>>0)&0xFF;
+    uint ug = (i>>8)&0xFF;
+    uint ur = (i>>16)&0xFF;
+    uint ua = (i>>24)&0xFF;
+    color.b = Ratio * (ub&0xFE);
+    color.g = Ratio * (ug&0xFE);
+    color.r = Ratio * (ur&0xFE);
+    color.a = Ratio * (ua&0xFE);
+    param = ((ua&0x01)<<3) | ((ur&0x01)<<2) | ((ug&0x01)<<1) | (ub&0x01);
+}
+#endif
 
 VSOutput main( VSInput input )
 {
@@ -35,7 +47,9 @@ VSOutput main( VSInput input )
          0,   0, 1, 0,
          0,   0, 0, 1,
     };
-    mat = mul(mat, iview);
+
+    mat = mul(mat, minvview);
+
     mat[3][0] = input.position.x;
     mat[3][1] = input.position.y;
     mat[3][2] = input.position.z;
@@ -45,8 +59,6 @@ VSOutput main( VSInput input )
     output.texcoord = input.texcoord;
     output.color = input.color;
     output.size = input.size * 0.5;
-    output.params.x = asfloat((int)(input.params.x*255));
-    output.params.yzw = input.params.yzw;
     output.mat = mat;
 
     return output;

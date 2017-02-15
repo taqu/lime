@@ -38,7 +38,7 @@ namespace lfw
         Entity entities[Size];
         ECSManager& ecsManager = ECSManager::getInstance();
         for(s32 i=0; i<Size; ++i){
-            entities[i] = ecsManager.requestCreateGeometric();
+            entities[i] = ecsManager.requestCreateGeometric("");
             ASSERT_FALSE(entities[i].isNull());
 
             ComponentGeometric* componentGeometric = entities[i].getGeometric();

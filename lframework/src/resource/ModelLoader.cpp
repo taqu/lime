@@ -5,6 +5,7 @@
 */
 #include "resource/ModelLoader.h"
 
+#include <lcore/liostream.h>
 #include <lgraphics/InputLayoutRef.h>
 #include <lgraphics/VertexBufferRef.h>
 #include <lgraphics/IndexBufferRef.h>
@@ -21,11 +22,11 @@
 #include "resource/load_texture.h"
 
 #include "render/Model.h"
-#include "render/AnimModel.h"
 #include "render/Geometry.h"
 #include "render/Material.h"
 #include "render/Mesh.h"
 #include "render/Node.h"
+#include "animation/Skeleton.h"
 
 #include "resource/Resources.h"
 #include "resource/InputLayoutFactory.h"
@@ -63,16 +64,30 @@ namespace lfw
 
     //---------------------------------------------
     // オブジェクトロード
-    Model* ModelLoader::loadModel(s32 setID, const Char* filepath)
+    void ModelLoader::loadModel(Model*& model, Skeleton*& skeleton, s32 setID, const Char* filepath)
     {
-        LASSERT(NULL != fileSystem_);
         LASSERT(NULL != filepath);
 
         clearTextures();
 
-        lcore::FileProxy* file = fileSystem_->openFile(filepath);
+        model = NULL;
+
+        lcore::FileProxy* file = NULL;
+        if(NULL != fileSystem_){
+            file = fileSystem_->openFile(filepath);
+        } else{
+            lcore::LHANDLE handle = CreateFile(
+                filepath,
+                GENERIC_READ,
+                FILE_SHARE_READ,
+                NULL,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL);
+            file = LNEW lcore::FileProxyOSRaw(handle);
+        }
         if(NULL == file){
-            return NULL;
+            return;
         }
         fileStream_.reset(file);
 
@@ -80,9 +95,8 @@ namespace lfw
         setDirectoryPath(filepath);
 
         if(!load(header_)){
-            fileStream_.reset(NULL);
-            fileSystem_->closeFile(file);
-            return NULL;
+            clearFileStream(file);
+            return;
         }
 
         u32 numGeometries = header_.elems_[Elem_Geometry].number_;
@@ -91,7 +105,7 @@ namespace lfw
         u32 numNodes = header_.elems_[Elem_Node].number_;
         u32 numTextures = header_.elems_[Elem_Texture].number_;
 
-        Model* model = LNEW Model;
+        model = LNEW Model;
         if(!model->create(
             numGeometries,
             numMeshes,
@@ -100,86 +114,29 @@ namespace lfw
             numTextures))
         {
             LDELETE(model);
-            fileStream_.reset(NULL);
-            fileSystem_->closeFile(file);
-            return NULL;
+            clearFileStream(file);
+            return;
         }
 
-        if(!loadInternal(*model) || !loadTextures(setID, *model)){
+        if(!loadInternal(*model)){
             LDELETE(model);
-            fileStream_.reset(NULL);
-            fileSystem_->closeFile(file);
-            return NULL;
+            clearFileStream(file);
+            return;
+        }
+
+        skeleton = NULL;
+        loadSkeleton(skeleton);
+
+        if(!loadTextures(setID, *model)){
+            LDELETE(model);
+            clearFileStream(file);
+            return;
         }
 
         //境界球
         calcBoundingSphere(*model);
 
-        fileStream_.reset(NULL);
-        fileSystem_->closeFile(file);
-        return model;
-    }
-
-    //---------------------------------------------
-    // オブジェクトロード
-    AnimModel* ModelLoader::loadAnimModel(s32 setID, const Char* filepath)
-    {
-        LASSERT(NULL != fileSystem_);
-        LASSERT(NULL != filepath);
-
-        clearTextures();
-
-        lcore::FileProxy* file = fileSystem_->openFile(filepath);
-        if(NULL == file){
-            return NULL;
-        }
-        fileStream_.reset(file);
-
-        //ディレクトリパスセット
-        setDirectoryPath(filepath);
-
-        if(!load(header_)){
-            fileStream_.reset(NULL);
-            fileSystem_->closeFile(file);
-            return NULL;
-        }
-
-        u32 numGeometries = header_.elems_[Elem_Geometry].number_;
-        u32 numMeshes = header_.elems_[Elem_Mesh].number_;
-        u32 numMaterials = header_.elems_[Elem_Material].number_;
-        u32 numNodes = header_.elems_[Elem_Node].number_;
-        s32 numJoints = static_cast<s32>(header_.elems_[Elem_Joint].number_);
-        u32 numTextures = header_.elems_[Elem_Texture].number_;
-
-        AnimModel* animModel = LNEW AnimModel;
-        if(!animModel->create(
-            numGeometries,
-            numMeshes,
-            numMaterials,
-            numNodes,
-            numTextures,
-            numJoints))
-        {
-            LDELETE(animModel);
-            fileStream_.reset(NULL);
-            fileSystem_->closeFile(file);
-            return NULL;
-        }
-
-        if(!loadInternal(*animModel)
-            || !loadSkeleton(*animModel)
-            || !loadTextures(setID, *animModel)){
-            LDELETE(animModel);
-            fileStream_.reset(NULL);
-            fileSystem_->closeFile(file);
-            return NULL;
-        }
-        //境界球
-        calcBoundingSphere(*animModel);
-
-        fileStream_.reset(NULL);
-        fileSystem_->closeFile(file);
-        return animModel;
+        clearFileStream(file);
     }
 
     //---------------------------------------------
@@ -192,6 +149,16 @@ namespace lfw
             path_ = LNEW Char[directoryPathLength_+MaxNameSize]; //ファイル名のサイズだけ余分に確保
         }
         directoryPathLength_ = lcore::extractDirectoryPath(path_, len, path);
+    }
+
+    void ModelLoader::clearFileStream(lcore::FileProxy* file)
+    {
+        fileStream_.reset(NULL);
+        if(NULL != fileSystem_){
+            fileSystem_->closeFile(file);
+        } else{
+            LDELETE(file);
+        }
     }
 
     //---------------------------------------------
@@ -238,16 +205,21 @@ namespace lfw
         return true;
     }
 
-    bool ModelLoader::loadSkeleton(AnimModel& model)
+    bool ModelLoader::loadSkeleton(Skeleton*& skeleton)
     {
-        Skeleton& skeleton = model.getSkeleton();
+        u32 numJoints = header_.elems_[Elem_Joint].number_;
+        if(numJoints<=0){
+            return true;
+        }
+        skeleton = LNEW Skeleton(numJoints);
         LoadJoint tjoint;
         Name name;
-        for(s32 i=0; i<skeleton.getNumJoints(); ++i){
+        for(u32 i=0; i<numJoints; ++i){
             if(!fileStream_.read(tjoint)){
+                LDELETE(skeleton);
                 return false;
             }
-            Joint& joint = skeleton.getJoint(i);
+            Joint& joint = skeleton->getJoint(i);
             joint.setParentIndex(tjoint.parent_);
             joint.setSubjectTo(tjoint.subjectTo_);
             joint.setType(tjoint.type_);
@@ -257,7 +229,7 @@ namespace lfw
             invInitialMatrix.invert();
             joint.setInitialMatrix(tjoint.initialMatrix_);
             joint.setInvInitialMatrix(invInitialMatrix);
-            skeleton.setJointName(i, MaxNameLength, tjoint.name_);
+            skeleton->setJointName(i, MaxNameLength, tjoint.name_);
         }
         return true;
     }
@@ -424,7 +396,7 @@ namespace lfw
         node.parentIndex_ = tmp.parentIndex_;
         node.childStartIndex_ = tmp.childStartIndex_;
         node.numChildren_ = tmp.numChildren_;
-        node.translation_ = tmp.translation_;
+        node.translation_ = lmath::Vector4::construct(tmp.translation_);
         //node.rotation_ = tmp.rotation_;
         node.scale_ = tmp.scale_;
         node.type_ = tmp.type_;
@@ -452,12 +424,27 @@ namespace lfw
         s32 len = lcore::strlen_s32(loadTexture.name_);
         lcore::strncpy(path_+directoryPathLength_, MaxNameSize, loadTexture.name_, len);
         TextureParameter texParam;
-        texParam.reserved_ = 0;
+        texParam.sRGB_ = 1;
         texParam.filterType_ = loadTexture.filterType_;
         texParam.addressUVW_ = loadTexture.addressUVW_;
         texParam.compFunc_ = loadTexture.compFunc_;
         texParam.borderColor_ = loadTexture.borderColor_;
-        ResourceTexture2D::pointer resTex(Resources::getInstance().load(setID, path_, ResourceType_Texture2D, texParam).get_reinterpret_cast<ResourceTexture2D>());
+
+        ResourceTexture2D::pointer resTex;
+        if(fileSystem_){
+            resTex = Resources::getInstance().load(setID, path_, ResourceType_Texture2D, texParam).get_reinterpret_cast<ResourceTexture2D>();
+        }else{
+            lcore::ifstream file(path_, lcore::ios::binary);
+            if(!file.is_open()){
+                return false;
+            }
+            u32 size = file.getSize();
+            u8* buffer = LNEW u8[size];
+            lcore::io::read(file, buffer, size);
+            resTex = ResourceTexture2D::load(path_, size, buffer, texParam);
+            LDELETE_ARRAY(buffer);
+        }
+        
         if(NULL == resTex){
             return false;
         }
@@ -523,6 +510,48 @@ namespace lfw
         }
 
         inputLayout = inputLayoutFactory.get(layoutType);
+    }
+
+    //
+    LoadTexture* ModelLoader::loadTextures(const Char* filepath)
+    {
+        LASSERT(NULL != filepath);
+        lcore::FileProxy* file = NULL;
+        if(NULL != fileSystem_){
+            file = fileSystem_->openFile(filepath);
+        } else{
+            lcore::LHANDLE handle = CreateFile(
+                filepath,
+                GENERIC_READ,
+                FILE_SHARE_READ,
+                NULL,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL);
+            file = LNEW lcore::FileProxyOSRaw(handle);
+        }
+        if(NULL == file){
+            return NULL;
+        }
+        fileStream_.reset(file);
+
+        if(!load(header_)){
+            clearFileStream(file);
+            return NULL;
+        }
+
+        u32 offsetTextures = header_.elems_[Elem_Texture].offset_;
+        u32 numTextures = header_.elems_[Elem_Texture].number_;
+
+        if(numTextures<=0){
+            return NULL;
+        }
+        LoadTexture* textures = LNEW LoadTexture[numTextures];
+
+        fileStream_.seekg(offsetTextures, lcore::ios::beg);
+        fileStream_.read(textures, sizeof(LoadTexture)*numTextures);
+        clearFileStream(file);
+        return textures;
     }
 
     //
@@ -659,7 +688,9 @@ namespace lfw
             lcore::io::write(os, loadJoints, sizeof(LoadJoint)*skeleton->getNumJoints());
         }
 
-        lcore::io::write(os, textures, sizeof(LoadTexture)*model.getNumTextures());
+        if(NULL != textures){
+            lcore::io::write(os, textures, sizeof(LoadTexture)*model.getNumTextures());
+        }
 
         os.close();
 

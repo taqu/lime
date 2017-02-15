@@ -1,0 +1,123 @@
+#include "Common.ds"
+#include "Volume.inc"
+#include "SignedDistance.inc"
+
+#define OUTPUT_PATCH_SIZE 4
+#define DOMAIN "quad"
+
+struct HSConstantOutput
+{
+    float edgeFactor[4] : SV_TessFactor;
+    float insideFactor[2] : SV_InsideTessFactor;
+};
+
+float3 hemiSphere(float2 uv)
+{
+    float2 tuv0 = uv * 2.0 - 1.0;
+    float2 tuv1 = abs(tuv0);
+    float len = max(tuv1.x, tuv1.y);
+    return normalize(float3(tuv0.xy, len-1));
+}
+
+[domain(DOMAIN)]
+DSOutput main(HSConstantOutput hsConstant, float2 uv : SV_DomainLocation, const OutputPatch<VSInOut, OUTPUT_PATCH_SIZE> patches)
+{
+    float3 worldPos = patches[0].position;
+    float radius = patches[0].timescale.y * patches[0].radius.x;
+
+    float3 dir = hemiSphere(uv);
+
+#if 0
+    float time = patches[0].timescale.x;
+    float innerRadius = radius*inner_;
+    float3 frontNormal = dir;
+    float3 frontPosW = mul(frontNormal, (float3x3)minvview) * radius + worldPos;
+    float3 frontDirW = normalize(frontPosW);
+    //for(int i=0; i<hullSteps_; ++i){
+    {
+        float dispOut;
+        float distance = signedDistancePrimitiveDisplaced(
+            frontPosW,
+            worldPos,
+            innerRadius,
+            1,
+            displacement_,
+            hullOctaves_,
+            time,
+            noise_,
+            dispOut);
+        frontPosW -= frontDirW * distance;
+    }
+
+    //frontPosW += frontDirW * skinThickness_;
+    float4 frontPosV = mul(float4(frontPosW, 1), mview);
+    float4 frontPosP = mul(float4(frontPosW, 1), mvp1);
+
+    float3 backNormal = float3(dir.x, dir.y, -dir.z);
+    float3 backPosW = mul(backNormal, (float3x3)minvview) * radius + worldPos;
+    float3 backDirW = normalize(backPosW);
+    //for(int j=0; j<hullSteps_; ++j){
+    {
+        float dispOut;
+        float distance = signedDistancePrimitiveDisplaced(
+            backPosW,
+            worldPos,
+            innerRadius,
+            1,
+            displacement_,
+            hullOctaves_,
+            time,
+            noise_,
+            dispOut);
+        backPosW += backDirW * distance;
+    }
+
+    //backPosW += backDirW * skinThickness_;
+    float4 backPosV = mul(float4(backPosW, 1), mview);
+
+    float3 cameraForward = float3(mview[0][2],mview[1][2],mview[2][2]);
+    float3 cameraVec = frontPosW - cameraPos.xyz;
+    float3 cameraRay = normalize(cameraVec/dot(cameraVec, cameraForward));
+    float3 cameraRay = normalize(frontPosW - cameraPos.xyz);
+
+    DSOutput output= (DSOutput)0;
+    output.position = frontPosP;
+    output.worldPos = worldPos;
+    output.timescale = patches[0].timescale;
+    output.rayHitNearFar = float2(frontPosV.z, backPosV.z);
+    output.rayDirection = cameraRay;
+
+#else
+    float time = patches[0].timescale.x;
+    float displacement;
+
+    float3 frontNormal = mul(dir, (float3x3)minvview);
+    float3 scaledN = frontNormal*radius;
+    float3 frontPosW = scaledN + worldPos;
+
+    displacement = fractalNoise(frontPosW, noise_.noiseScale_, time, noise_)*displacement_;
+    radius += displacement;
+    scaledN = frontNormal*radius;
+    frontPosW = scaledN + worldPos;
+
+    float rayNear = distance(frontPosW, cameraPos.xyz);
+    float3 cameraRay = (frontPosW - cameraPos.xyz)/rayNear;
+
+    float4 frontPosP = mul(float4(frontPosW, 1), mvp1);
+
+    //float3 backNormal = float3(dir.x, dir.y, -dir.z);
+    //float3 backPosW = mul(backNormal, (float3x3)minvview) * radius + worldPos;
+    float3 backPosW = cameraRay*dot(-scaledN, cameraRay)*2 + frontPosW;
+    float rayFar = distance(backPosW, cameraPos.xyz);
+
+    DSOutput output= (DSOutput)0;
+    output.position = frontPosP;
+    output.worldPos = worldPos;
+    output.timescale = patches[0].timescale;
+    output.radius = patches[0].radius;
+    output.rayHitNearFar = float2(rayNear, rayFar);
+    output.rayDirection = cameraRay;
+#endif
+
+    return output;
+}

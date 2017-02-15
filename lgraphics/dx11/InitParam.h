@@ -41,9 +41,12 @@ namespace lgfx
             ,deviceFlags_(0)
             ,flags_(0)
             ,maximumFrameLatency_(3)
-            ,depthBias_(-0.0008f)
-            ,slopeScaledDepthBias_(1.0f)
-            ,depthBiasClamp_(0.005f)
+            //,depthBias_(-0.0008f)
+            //,slopeScaledDepthBias_(1.0f)
+            //,depthBiasClamp_(0.005f)
+            ,depthBias_(0.0f)
+            ,slopeScaledDepthBias_(0.0f)
+            ,depthBiasClamp_(0.0f)
         {
         }
 

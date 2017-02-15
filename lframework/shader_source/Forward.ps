@@ -8,66 +8,23 @@ struct VSOutput
     float3 viewPos : TEXCOORD2;
 };
 
-struct PSOutput
+float4 main(VSOutput input) : SV_TARGET0
 {
-    float4 color : SV_TARGET0;
-};
+    float4 albedo = diffuse;
 
-PSOutput main(VSOutput input)
-{
     float3 L = dlDir.xyz;
     float3 N = normalize(input.normal);
-    float3 E = normalize(cameraPos.xyz - input.worldPos.xyz); //視線ベクトル
-    float3 H = normalize(L+E); //ハーフベクトル
-
-    float cosLH = saturate(dot(L,H));
-    float cosNL = saturate(dot(N,L));
-    float cosNH = saturate(dot(N,H));
-    float cosNE = saturate(dot(N,E));
-
-    float3 irradiance = dlColor.xyz * cosNL;
-
-    //BRDF
-#ifdef NPBR
-    float rd, rs;
-    calcFresnel(rd, rs, ambient.w, cosLH);
-    float3 kd = diffuse.xyz * rd * INV_PI;
-    float3 ks = specular.xyz * rs * pow(cosNH, specular.w) / max(cosNL, cosNE);
-    ks *= specular.w*0.039662 + 0.090587;
-    float4 color;
-    color.xyz = (kd + ks)*irradiance;
-    color.w = diffuse.w;
-
-#else
+    float3 V = normalize(cameraPos.xyz - input.worldPos.xyz);
+    float roughness = specular.w;
     float metalic = shadow.w;
-    float3 albedo = diffuse.xyz * (1-metalic);
+    float ambientOcclusion = 1.0;
 
-    float alpha = specular.w*specular.w;
-
-    float mipLevel = alpha * specularMapMipLevels;
-    float3 envSpecular = texSpecular.SampleLevel(samSpecular, reflect(-E,N), mipLevel).xyz;
-    float3 envIrradiance = texIrradiance.Sample(samIrradiance, N).xyz;
-
-    float3 rd, rs;
-    calcFresnel(rd, rs, specular.xyz, cosLH);
-    float3 envF = envFresnel(specular.xyz, cosNE, alpha);
-
-    float D = NDF(cosNH, alpha);
-    float V = Visibility(cosNL, cosNE, alpha);
-    float3 kd = albedo * rd * INV_PI;
-    float3 ks = specular.xyz * D * V * rs;
-
-    float3 diffuseAmbient = ambient.xyz * envIrradiance;
-    float3 specularAmbient = envF * envSpecular;
-
-    float3 Li = gatherLights(input.worldPos, input.viewPos, N);
+    EnvironmentLight envLight;
+    envLight.diffuse_ = irradianceDiffuse(texIrradiance, samLinear, N);
+    envLight.specular_ = radianceSpecular(texRadiance, samLinear, N, V, roughness, specularMapMipLevels);
 
     float4 color;
-    color.xyz = kd*(irradiance + diffuseAmbient) + ks*irradiance + specularAmbient + Li;
-    color.w = diffuse.w;
-#endif
-
-    PSOutput output;
-    output.color = color;
-    return output;
+    color.rgb = lightSurface(N, V, L, dlColor.xyz, albedo.xyz, roughness, metalic, ambientOcclusion, envLight);
+    color.a = albedo.w;
+    return color;
 }

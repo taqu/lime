@@ -1,0 +1,35 @@
+
+Boom Pack 1
+ Author: dklon
+ License(s): CC-BY 3.0
+  Attribution Instructions: 
+  If you do use this, all I ask is that you credit me as dklon somewhere.
+
+2 High Quality Explosions
+ Author: Michel Baradari
+ License(s): CC-BY 3.0
+  Published here http://www.cubeengine.com/forum.php4?action=display_thread&thread_id=2164.
+
+51 UI sound effects (buttons, switches and clicks)
+63 Digital sound effects (lasers, phasers, space etc.)
+ Author: Kenney
+ License(s): CC0
+  Credit "Kenney.nl" or "www.kenney.nl", this is not mandatory.
+
+100 plus game sound effects WAV,OGG,M4A
+Author: Damaged Panda
+License(s): CC-BY 3.0
+ you do not have to add a link but if you want to credit me feel free. Damaged Panda 
+
+GUI Sound Effects
+ Author: Lokif
+ License(s): CC0
+
+Hit sounds
+ Author: pauliuw
+ License(s): CC0
+
+Space Sound Effects
+ Author: messersm
+ License(s): CC0
+  Bfxr: http://www.bfxr.net/

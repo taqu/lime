@@ -28,7 +28,7 @@ namespace lfw
     {
         ECSManager& ecsManager = ECSManager::getInstance();
         HandleBasedAllocator& allocator = ecsManager.getComponentHandleAllocator();
-        allocator.deallocate(HandleBasedAllocator::Handle(size_*sizeof(ID), offset_));
+        allocator.deallocate(bufferSize(), offset_);
 
         capacity_ = 0;
         size_ = 0;
@@ -39,17 +39,18 @@ namespace lfw
     {
         LASSERT(0<=index && index<size_);
         const HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
-        return allocator.get<ID>(offset_)[index];
+        return allocator.get<ID>(bufferSize(), offset_)[index];
     }
 
     const ID* Entity::Components::get() const
     {
         const HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
-        return allocator.getMaybeNull<ID>(offset_);
+        return allocator.getMaybeNull<ID>(bufferSize(), offset_);
     }
 
     void Entity::Components::add(ID id)
     {
+        LASSERT(0<id.category());
         if(id.category() == ECSCategory_Logical || id.category() == ECSCategory_Geometric){
             LASSERT(false);
             return;
@@ -59,16 +60,24 @@ namespace lfw
 
     void Entity::Components::forceAdd(ID id)
     {
+        LASSERT(0<id.category());
         HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
 
         ID* components = NULL;
         if(capacity_<=size_){
             components = resize();
         }else{
-            components = allocator.get<ID>(offset_);
+            components = allocator.get<ID>(bufferSize(), offset_);
         }
         components[size_] = id;
         ++size_;
+#ifdef _DEBUG
+        for(s32 i=0; i<size_; ++i){
+            u8 category = components[i].category();
+            LASSERT(0<category && category<255);
+            LASSERT(components[i].valid());
+        }
+#endif
     }
 
     void Entity::Components::remove(ID id)
@@ -85,7 +94,7 @@ namespace lfw
         LASSERT(0<=index && index<size_);
 
         HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
-        ID* components = allocator.getMaybeNull<ID>(offset_);
+        ID* components = allocator.getMaybeNull<ID>(bufferSize(), offset_);
         if(components[index].category() == ECSCategory_Logical || components[index].category() == ECSCategory_Geometric){
             LASSERT(false);
             return;
@@ -94,12 +103,17 @@ namespace lfw
             components[j-1] = components[j];
         }
         --size_;
+#ifdef _DEBUG
+        for(s32 i=0; i<size_; ++i){
+            LASSERT(components[i].valid());
+        }
+#endif
     }
 
     void Entity::Components::forceRemove(ID id)
     {
         HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
-        ID* components = allocator.getMaybeNull<ID>(offset_);
+        ID* components = allocator.getMaybeNull<ID>(bufferSize(), offset_);
         for(s16 i=0; i<size_; ++i){
             if(id == components[i]){
                 for(s16 j=i+1; j<size_; ++j){
@@ -109,6 +123,11 @@ namespace lfw
                 break;
             }
         }
+#ifdef _DEBUG
+        for(s32 i=0; i<size_; ++i){
+            LASSERT(components[i].valid());
+        }
+#endif
     }
 
     ID* Entity::Components::resize()
@@ -118,13 +137,21 @@ namespace lfw
         HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
 
         s16 capacity = capacity_ + expand;
-        HandleBasedAllocator::Handle handle = allocator.allocate(capacity*sizeof(ID));
+        s32 nextBufferSize = capacity*sizeof(ID);
+        HandleBasedAllocator::Handle handle = allocator.allocate(nextBufferSize);
 
-        ID* newComponents = allocator.get<ID>(handle.offset());
-        ID* components = allocator.getMaybeNull<ID>(offset_);
-        lcore::memcpy(newComponents, components, sizeof(ID)*capacity_);
-        allocator.deallocate(HandleBasedAllocator::Handle(size_*sizeof(ID), offset_));
+        s32 prevBufferSize = bufferSize();
+        ID* newComponents = allocator.get<ID>(handle.size(), handle.offset());
+        ID* components = allocator.getMaybeNull<ID>(prevBufferSize, offset_);
+        lcore::memcpy(newComponents, components, prevBufferSize);
 
+        allocator.deallocate(prevBufferSize, offset_);
+
+#ifdef _DEBUG
+        for(s32 i=capacity_; i<capacity; ++i){
+            newComponents[i].clear();
+        }
+#endif
         capacity_ = capacity;
         offset_ = handle.offset();
 
@@ -244,5 +271,14 @@ namespace lfw
     {
         ECSManager& manager = ECSManager::getInstance();
         return manager.getComponent(*this, id);
+    }
+
+    void Entity::removeComponent(ID id)
+    {
+        ECSManager& manager = ECSManager::getInstance();
+        Behavior* component = manager.getComponent(*this, id);
+        if(NULL != component){
+            manager.removeComponent(*this, id);
+        }
     }
 }

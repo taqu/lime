@@ -6,7 +6,7 @@
 @date 2015/07/06 create
 */
 #include "../lsound.h"
-#include <lcore/async/SyncObject.h>
+#include <lcore/SyncObject.h>
 
 #include "Device.h"
 #include "Player.h"
@@ -46,7 +46,7 @@ namespace lsound
 
         void clear();
 
-        void setGain(f32 gain);
+        bool setGain(f32 gain);
         void setPause(bool pause);
         void updateRequests();
 

@@ -1,15 +1,27 @@
+cbuffer ParticleConstant : register(b4)
+{
+    float depthDelta;
+    float3 reserved;
+}
+
 struct GSOutput
 {
     float4 position : SV_Position;
     float4 color : COLOR;
-    float2 texcoord : TEXCOORD;
-    float4 params : PARAMS;
+    float4 texcoord : TEXCOORD0;
+    float depth : TEXCOORD1;
 };
 
 Texture2D texColor : register(t0);
+Texture2D texDepth : register(t1);
 SamplerState samLinear : register(s0);
 
 float4 main(GSOutput input) : SV_Target
 {
-    return input.color * texColor.Sample(samLinear, input.texcoord);
+    float2 screen = input.texcoord.zw*float2(0.5,-0.5) + 0.5;
+    float depth = texDepth.Sample(samLinear, screen).r;
+    float transparent = smoothstep(0, depthDelta, input.depth-depth);
+    float4 color = input.color * texColor.Sample(samLinear, input.texcoord.xy);
+    color.a *= transparent;
+    return color;
 }

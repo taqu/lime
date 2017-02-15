@@ -27,6 +27,7 @@ namespace lfw
         virtual ~ComponentRenderer();
 
         const Entity& getEntity() const;
+        Entity getEntity();
         virtual u32 getType() const;
 
         virtual void onCreate();

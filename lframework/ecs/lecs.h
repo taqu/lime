@@ -36,17 +36,32 @@ namespace lfw
         static const u32 IndexBits = 16;
         static const u32 IndexMask = 0xFFFFU;
 
-        ID()
-            :value_(InvalidValue)
-        {}
+        static ID construct()
+        {
+            return {InvalidValue};
+        }
 
-        explicit ID(u32 value)
-            :value_(value)
-        {}
+        static ID construct(u32 value)
+        {
+            return {value};
+        }
 
-        ID(u8 category, u16 index)
-            :value_((category<<CategoryShift) | (index&IndexMask))
-        {}
+        static ID construct(u8 category, u16 index)
+        {
+            return {(category<<CategoryShift) | (index&IndexMask)};
+        }
+
+        //ID()
+        //    :value_(InvalidValue)
+        //{}
+
+        //explicit ID(u32 value)
+        //    :value_(value)
+        //{}
+
+        //ID(u8 category, u16 index)
+        //    :value_((category<<CategoryShift) | (index&IndexMask))
+        //{}
 
         inline static ID InvalidID()
         {
@@ -131,7 +146,7 @@ namespace lfw
         {
             LASSERT(handles_.size()<MaxCapacity);
             handle_type handle = handles_.create();
-            return ID(category, handle);
+            return ID::construct(category, handle);
         }
 
         void destroy(ID id)
@@ -231,22 +246,33 @@ namespace lfw
 
         bool operator==(const Operation& rhs) const
         {
-            return data_.value_ == rhs.data_.value_;
+            return id_ == rhs.id_;
         }
 
-        struct OpIndex
+        s32 type() const{return type_;}
+        const ID& id() const{return id_;}
+
+        s32 type_;
+        ID id_;
+    };
+
+    struct ComponentOperation
+    {
+        enum Type
         {
-            u16 type_;
-            u16 index_;
+            Type_Add =0,
+            Type_Destroy,
+            Type_Max,
         };
-        union Data
+
+        bool operator==(const ComponentOperation& rhs) const
         {
-            OpIndex opIndex_;
-            u32 value_;
-        };
-        u16 type() const{return data_.opIndex_.type_;}
-        u16 index() const{return data_.opIndex_.index_;}
-        Data data_;
+            return component_ == rhs.component_;
+        }
+
+        s32 type_;
+        Handle entityHandle_;
+        ID component_;
     };
 
     //----------------------------------------------------------
@@ -393,6 +419,7 @@ namespace lfw
         ECSCategory_Logical,
         ECSCategory_Geometric,
         ECSCategory_Renderer,
+        ECSCategory_Renderer2D,
         ECSCategory_SceneElement,
         ECSCategory_Behavior,
         ECSCategory_User,
@@ -405,6 +432,7 @@ namespace lfw
         ECSType_Logical,
         ECSType_Geometric,
         ECSType_Renderer,
+        ECSType_Renderer2D,
         ECSType_Camera,
         ECSType_Light,
         ECSType_Behavior,

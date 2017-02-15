@@ -408,7 +408,7 @@ namespace lfw
     // 球が視錐台内にあるか
     bool Frustum::contains(f32 x, f32 y, f32 z, f32 radius) const
     {
-        lmath::Vector4 p(x, y, z, 1.0f);
+        lmath::Vector4 p = lmath::Vector4::construct(x, y, z, 1.0f);
         f32 distance;
         for(s32 i=0; i<6; ++i){
             distance = planes_[i].dot(p);
@@ -527,7 +527,7 @@ namespace lfw
         lmath::calcAABBPoints(points, aabbMin, aabbMax);
 
         for(s32 i=0; i<8; ++i){
-            points[i] = mul(camera.getViewMatrix(), points[i]);
+            points[i] = lmath::Vector4::construct(mul(camera.getViewMatrix(), points[i]));
         }
 
         //視錐台の各側面について

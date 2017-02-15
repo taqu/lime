@@ -32,28 +32,23 @@ namespace lmath
         static const Vector4 Right;
         static const Vector4 Left;
 
-        Vector4()
-        {}
+        inline static Vector4 construct(f32 xyzw);
+        inline static Vector4 construct(f32 x, f32 y, f32 z);
+        inline static Vector4 construct(f32 x, f32 y, f32 z, f32 w);
+        inline static Vector4 zero();
+        inline static Vector4 one();
+        inline static Vector4 identity();
+        inline static Vector4 construct(const Vector4& v);
+        inline static Vector4 construct(const lm128& v);
+        static Vector4 construct(const Vector3& v);
+        static Vector4 construct(const Vector3& v, f32 w);
 
-        inline Vector4(f32 x, f32 y, f32 z, f32 w);
-        explicit Vector4(const Vector3& v);
-        Vector4(const Vector3& v, f32 w);
-        inline explicit Vector4(f32 xyzw);
-        inline Vector4(const lm128& rhs);
         inline operator lm128() const;
-
-        inline Vector4& operator=(const Vector4& rhs);
-        Vector4& operator=(const Vector3& rhs);
-        inline Vector4& operator=(f32 rhs);
 
         inline void set(f32 x, f32 y, f32 z, f32 w);
         void set(const Vector3& v);
         void set(const Vector3& v, f32 w);
         inline void set(f32 v);
-
-        inline Vector4& zero();
-        inline Vector4& identity();
-        inline Vector4& one();
 
         inline f32 operator[](s32 index) const;
         inline f32& operator[](s32 index);
@@ -86,12 +81,12 @@ namespace lmath
         inline Vector4 getParallelComponent(const Vector4& basis) const
         {
             f32 cs = dot(*this, basis);
-            return basis*cs;
+            return construct(basis*cs);
         }
 
         inline Vector4 getPerpendicularComponent(const Vector4& basis) const
         {
-            return *this - getParallelComponent(basis);
+            return construct(*this - getParallelComponent(basis));
         }
 
         friend return_type_vec4 normalize(const Vector4& v);
@@ -204,44 +199,61 @@ namespace lmath
     //--- Vector4
     //---
     //--------------------------------------------
-    inline Vector4::Vector4(f32 x, f32 y, f32 z, f32 w)
-        :x_(x), y_(y), z_(z), w_(w)
-    {}
-
-    inline Vector4::Vector4(f32 xyzw)
+    inline Vector4 Vector4::construct(f32 xyzw)
     {
-#if defined(LMATH_USE_SSE)
-        lm128 t = _mm_set1_ps(xyzw);
-        store(*this, t);
-#else
-        x_ = y_ = z_ = w_ = v;
-#endif
+        Vector4 v;
+        _mm_storeu_ps(&v.x_, _mm_set1_ps(xyzw));
+        return v;
     }
-    inline Vector4::Vector4(const lm128& rhs)
+
+    inline Vector4 Vector4::construct(f32 x, f32 y, f32 z)
     {
-        _mm_storeu_ps(&x_, rhs);
+        return {x,y,z,0.0f};
+    }
+
+    inline Vector4 Vector4::construct(f32 x, f32 y, f32 z, f32 w)
+    {
+        return {x,y,z,w};
+    }
+
+    inline Vector4 Vector4::zero()
+    {
+        Vector4 v;
+        _mm_storeu_ps(&v.x_, _mm_setzero_ps());
+        return v;
+    }
+
+    inline Vector4 Vector4::one()
+    {
+        Vector4 v;
+        _mm_storeu_ps(&v.x_, _mm_load_ps(One));
+        return v;
+    }
+
+    inline Vector4 Vector4::identity()
+    {
+        Vector4 v;
+        _mm_storeu_ps(&v.x_, _mm_load_ps(Identity));
+        return v;
+    }
+
+    inline Vector4 Vector4::construct(const Vector4& v)
+    {
+        Vector4 r;
+        _mm_storeu_ps(&r.x_, _mm_loadu_ps(&v.x_));
+        return r;
+    }
+
+    inline Vector4 Vector4::construct(const lm128& v)
+    {
+        Vector4 r;
+        _mm_storeu_ps(&r.x_, v);
+        return r;
     }
 
     inline Vector4::operator lm128() const
     {
         return _mm_loadu_ps(&x_);
-    }
-
-    inline Vector4& Vector4::operator=(const Vector4& rhs)
-    {
-#if defined(LMATH_USE_SSE)
-        lm128 t = load(rhs);
-        store(*this, t);
-#else
-        set(rhs.x_, rhs.y_, rhs.z_, rhs.w_);
-#endif
-        return *this;
-    }
-
-    inline Vector4& Vector4::operator=(f32 v)
-    {
-        set(v);
-        return *this;
     }
 
     inline void Vector4::set(f32 x, f32 y, f32 z, f32 w)
@@ -258,41 +270,6 @@ namespace lmath
         x_ = y_ = z_ = w_ = v;
 #endif
     }
-
-    inline Vector4& Vector4::zero()
-    {
-#if defined(LMATH_USE_SSE)
-        lm128 zero = _mm_setzero_ps();
-        store(*this, zero);
-#else
-        x_ = y_ = z_ = w_ = 0.0f;
-#endif
-        return *this;
-    }
-
-    inline Vector4& Vector4::identity()
-    {
-#if defined(LMATH_USE_SSE)
-        lm128 r = _mm_load_ps(Identity);
-        store(*this, r);
-#else
-        x_ = y_ = z_ = 0.0f;
-        w_ = 1.0f;
-#endif
-        return *this;
-    }
-
-    inline Vector4& Vector4::one()
-    {
-#if defined(LMATH_USE_SSE)
-        lm128 r = _mm_load_ps(One);
-        store(*this, r);
-#else
-        x_ = y_ = z_ = w_ = 1.0f;
-#endif
-        return *this;
-    }
-
 
     inline f32 Vector4::operator[](s32 index) const
     {
@@ -562,12 +539,12 @@ namespace lmath
 
     inline return_type_vec4 operator*(const Vector4& v0, const Vector4& v1)
     {
-#if defined(MATH_USE_SSE)
+#if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
         return _mm_mul_ps(r0, r1);
 #else
-        return Vector4(v0.x_*v1.x_, v0.y_*v1.y_, v0.z_*v1.z_, v0.w_*v1.w_);
+        return {v0.x_*v1.x_, v0.y_*v1.y_, v0.z_*v1.z_, v0.w_*v1.w_};
 #endif
     }
 
@@ -585,12 +562,12 @@ namespace lmath
 
     inline return_type_vec4 operator/(const Vector4& v0, const Vector4& v1)
     {
-#if defined(MATH_USE_SSE)
+#if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
         return _mm_div_ps(r0, r1);
 #else
-        return Vector4(v0.x_/v1.x_, v0.y_/v1.y_, v0.z_/v1.z_, v0.w_/v1.w_);
+        return {v0.x_/v1.x_, v0.y_/v1.y_, v0.z_/v1.z_, v0.w_/v1.w_};
 #endif
     }
 
@@ -615,7 +592,7 @@ namespace lmath
         f32 y = v0.y_ * v1.y_;
         f32 z = v0.z_ * v1.z_;
         f32 w = v0.w_ * v1.w_;
-        return Vector4(x,y,z,w);
+        return {x,y,z,w};
 #endif
     }
 
@@ -640,7 +617,7 @@ namespace lmath
         f32 y = v0.y_ / v1.y_;
         f32 z = v0.z_ / v1.z_;
         f32 w = v0.w_ / v1.w_;
-        return Vector4(x,y,z,w);
+        return {x,y,z,w};
 #endif
     }
 
@@ -657,7 +634,7 @@ namespace lmath
         lm128 r1 = _mm_set1_ps(f);
         return _mm_add_ps(r0, r1);
 #else
-        return Vector4(v.x_+f, v.y_+f, v.z_+f, v.w_+f);
+        return {v.x_+f, v.y_+f, v.z_+f, v.w_+f};
 #endif
     }
 
@@ -668,7 +645,7 @@ namespace lmath
         lm128 r1 = _mm_set1_ps(f);
         return _mm_sub_ps(r0, r1);
 #else
-        return Vector4(v.x_-f, v.y_-f, v.z_-f, v.w_0f);
+        return {v.x_-f, v.y_-f, v.z_-f, v.w_0f};
 #endif
     }
 
@@ -684,7 +661,7 @@ namespace lmath
         f32 y = lcore::minimum(v0.y_, v1.y_);
         f32 z = lcore::minimum(v0.z_, v1.z_);
         f32 w = lcore::minimum(v0.w_, v1.w_);
-        return Vector4(x,y,z,w);
+        return {x,y,z,w};
 #endif
     }
 
@@ -700,7 +677,7 @@ namespace lmath
         f32 y = lcore::maximum(v0.y_, v1.y_);
         f32 z = lcore::maximum(v0.z_, v1.z_);
         f32 w = lcore::maximum(v0.w_, v1.w_);
-        return Vector4(x,y,z,w);
+        return {x,y,z,w};
 #endif
     }
 
@@ -722,7 +699,7 @@ namespace lmath
         f32 y = v0.y_ * v1.y_ + v2.y_;
         f32 z = v0.z_ * v1.z_ + v2.z_;
         f32 w = v0.w_ * v1.w_ + v2.w_;
-        return Vector4(x,y,z,w);
+        return {x,y,z,w};
 #endif
     }
 
@@ -744,7 +721,7 @@ namespace lmath
         f32 y = a * v0.y_ + v1.y_;
         f32 z = a * v0.z_ + v1.z_;
         f32 w = a * v0.w_ + v1.w_;
-        return Vector4(x,y,z,w);
+        return {x,y,z,w};
 #endif
     }
 
@@ -762,7 +739,7 @@ namespace lmath
         f32 y = 1.0f/y_;
         f32 z = 1.0f/z_;
         f32 w = 1.0f/w_;
-        return Vector4(x,y,z,w);
+        return {x,y,z,w};
 #endif
     }
 
@@ -776,7 +753,7 @@ namespace lmath
         f32 y = lmath::sqrt(y_);
         f32 z = lmath::sqrt(z_);
         f32 w = lmath::sqrt(w_);
-        return Vector4(x,y,z,w);
+        return {x,y,z,w};
 #endif
     }
 

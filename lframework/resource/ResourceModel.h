@@ -6,7 +6,8 @@
 @date 2016/11/23 create
 */
 #include "Resource.h"
-#include "render/Model.h"
+#include "../render/Model.h"
+#include "../animation/Skeleton.h"
 
 namespace lfw
 {
@@ -20,29 +21,39 @@ namespace lfw
 
         static ResourceModel* load(s32 setID, const Char* path, ModelLoader& modelLoader);
 
+        ResourceModel(Model* model, Skeleton* skeleton)
+            :model_(model)
+            ,skeleton_(skeleton)
+        {}
+
         virtual s32 getType() const
         {
             return ResourceType_Model;
         }
 
         inline Model::pointer& get();
+        Model::pointer clone();
+        inline Skeleton::pointer& getSkeleton();
+        Skeleton::pointer cloneSkeleton();
     protected:
         ResourceModel(const ResourceModel&);
         ResourceModel& operator=(const ResourceModel&);
-
-        ResourceModel(Model* model)
-            :model_(model)
-        {}
 
         virtual ~ResourceModel()
         {}
 
         Model::pointer model_;
+        Skeleton::pointer skeleton_;
     };
 
     inline Model::pointer& ResourceModel::get()
     {
         return model_;
+    }
+
+    inline Skeleton::pointer& ResourceModel::getSkeleton()
+    {
+        return skeleton_;
     }
 }
 #endif //INC_LFRAMEWORK_RESOURCEMODEL_H__

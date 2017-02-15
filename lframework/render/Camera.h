@@ -7,12 +7,13 @@
 */
 #include <lmath/lmath.h>
 #include <lmath/Matrix44.h>
-#include <lgraphics/lgraphics.h>
-#include <lgraphics/GraphicsDeviceRef.h>
+#include <lgraphics/DepthStencilStateRef.h>
+#include <lgraphics/ShaderRef.h>
 
 #include "../lframework.h"
 #include "RenderTarget.h"
 #include "DepthStencil.h"
+#include "SamplerSet.h"
 
 namespace lgfx
 {
@@ -36,8 +37,6 @@ namespace lfw
         inline bool isUseCameraRenderTarget() const;
         inline RenderType getRenderType() const;
         void setRenderType(RenderType type);
-        inline ShadowType getShadowType() const;
-        inline void setShadowType(ShadowType type);
 
         inline s32 getSortLayer() const;
         inline void setSortLayer(s32 layer);
@@ -102,9 +101,9 @@ namespace lfw
         void lookAt(const lmath::Vector3& eye, const lmath::Quaternion& rotation);
 
         void updateMatrix();
-        void beginForward(lgfx::ContextRef& context);
+
         void beginDeferred(lgfx::ContextRef& context);
-        void beginDeferredLighting(lgfx::ContextRef& context);
+        void endDeferred(lgfx::ContextRef& context);
 
         const lmath::Matrix44& getPrevViewProjMatrix() const
         {
@@ -134,12 +133,23 @@ namespace lfw
         inline s8 getNumRenderTargets() const;
         void setRenderTargets(const lgfx::Viewport& viewport, s8 numTargets, const RenderTarget* targets, const DepthStencil* depthStencil);
         void clearRenderTargets();
+        void setDeferred();
 
-        inline const lgfx::Texture2DRef& getRTTexture(s32 index) const;
-        inline const lgfx::RenderTargetViewRef& getRTView(s32 index) const;
-        inline const lgfx::ShaderResourceViewRef& getSRView(s32 index) const;
-        inline const lgfx::UnorderedAccessViewRef& getUAView(s32 index) const;
-        inline const DepthStencil& getDepthStencil() const;
+        inline lgfx::Texture2DRef::pointer_type getRTTexture(s32 index);
+        inline lgfx::RenderTargetViewRef::pointer_type getRTView(s32 index);
+        inline lgfx::ShaderResourceViewRef::pointer_type getSRView(s32 index);
+        inline lgfx::ShaderResourceViewRef::pointer_type* getSRViews();
+
+        inline DepthStencil& getDepthStencil();
+
+        inline RenderTarget& getShadowAccumulatingRenderTarget();
+        inline lgfx::PixelShaderRef& getDeferredShadowAccumulatingPS();
+
+        inline SamplerSet<3>& getDeferredSamplerSet();
+        inline lgfx::VertexShaderRef& getFullQuadVS();
+        inline lgfx::PixelShaderRef& getDeferredLightingPS();
+        inline lgfx::DepthStencilStateRef& getDeferredDepthStencilState();
+        inline RenderTarget& getDeferredLightingRenderTarget();
     private:
         static const s32 JitterPrime0 = 2;
         static const s32 JitterPrime1 = 3;
@@ -188,13 +198,25 @@ namespace lfw
         s8 numRenderTargets_;
         u8 useCameraRenderTargets_;
         u8 renderType_;
-        u8 shadowType_;
+        u8 reserved_;
+
         lgfx::DepthStencilStateRef deferredDepthStencilState_;
         lgfx::Texture2DRef rtTextures_[lgfx::LGFX_MAX_RENDER_TARGETS];
         lgfx::RenderTargetViewRef rtViews_[lgfx::LGFX_MAX_RENDER_TARGETS];
         lgfx::ShaderResourceViewRef srViews_[lgfx::LGFX_MAX_RENDER_TARGETS];
-        lgfx::UnorderedAccessViewRef uaViews_[lgfx::LGFX_MAX_RENDER_TARGETS];
         DepthStencil depthStencil_;
+
+        lgfx::RenderTargetViewRef::pointer_type rtView_pointers_[lgfx::LGFX_MAX_RENDER_TARGETS];
+        lgfx::ShaderResourceViewRef::pointer_type srView_pointers_[lgfx::LGFX_MAX_RENDER_TARGETS];
+
+        RenderTarget shadowAccumulatingTarget_;
+        lgfx::PixelShaderRef deferredShadowAccumulatingPS_;
+
+        SamplerSet<3> deferredSamplerSet_;
+        lgfx::VertexShaderRef fullQuadVS_;
+        lgfx::PixelShaderRef deferredLightingPS_;
+        lgfx::DepthStencilStateRef deferredLightingDepthStencilState_;
+        RenderTarget deferredLightingRenderTarget_;
     };
 
     inline bool Camera::isUseCameraRenderTarget() const
@@ -205,16 +227,6 @@ namespace lfw
     inline RenderType Camera::getRenderType() const
     {
         return static_cast<RenderType>(renderType_);
-    }
-
-    inline ShadowType Camera::getShadowType() const
-    {
-        return static_cast<ShadowType>(shadowType_);
-    }
-
-    inline void Camera::setShadowType(ShadowType type)
-    {
-        shadowType_ = static_cast<u8>(type);
     }
 
     inline s32 Camera::getSortLayer() const
@@ -339,31 +351,30 @@ namespace lfw
         return numRenderTargets_;
     }
 
-    inline const lgfx::Texture2DRef& Camera::getRTTexture(s32 index) const
+    inline lgfx::Texture2DRef::pointer_type Camera::getRTTexture(s32 index)
     {
         LASSERT(0<=index && index<numRenderTargets_);
-        return rtTextures_[index];
+        return rtTextures_[index].get();
     }
 
-    inline const lgfx::RenderTargetViewRef& Camera::getRTView(s32 index) const
+    inline lgfx::RenderTargetViewRef::pointer_type Camera::getRTView(s32 index)
     {
         LASSERT(0<=index && index<numRenderTargets_);
-        return rtViews_[index];
+        return rtViews_[index].get();
     }
 
-    inline const lgfx::ShaderResourceViewRef& Camera::getSRView(s32 index) const
+    inline lgfx::ShaderResourceViewRef::pointer_type Camera::getSRView(s32 index)
     {
         LASSERT(0<=index && index<numRenderTargets_);
-        return srViews_[index];
+        return srViews_[index].get();
     }
 
-    inline const lgfx::UnorderedAccessViewRef& Camera::getUAView(s32 index) const
+    inline lgfx::ShaderResourceViewRef::pointer_type* Camera::getSRViews()
     {
-        LASSERT(0<=index && index<numRenderTargets_);
-        return uaViews_[index];
+        return srView_pointers_;
     }
 
-    inline const DepthStencil& Camera::getDepthStencil() const
+    inline DepthStencil& Camera::getDepthStencil()
     {
         return depthStencil_;
     }
@@ -371,6 +382,41 @@ namespace lfw
     inline bool lessCamera(const Camera& c0, const Camera& c1)
     {
         return c0.getSortLayer()<c1.getSortLayer();
+    }
+
+    inline RenderTarget& Camera::getShadowAccumulatingRenderTarget()
+    {
+        return shadowAccumulatingTarget_;
+    }
+
+    inline lgfx::PixelShaderRef& Camera::getDeferredShadowAccumulatingPS()
+    {
+        return deferredShadowAccumulatingPS_;
+    }
+
+    inline SamplerSet<3>& Camera::getDeferredSamplerSet()
+    {
+        return deferredSamplerSet_;
+    }
+
+    inline lgfx::VertexShaderRef& Camera::getFullQuadVS()
+    {
+        return fullQuadVS_;
+    }
+
+    inline lgfx::PixelShaderRef& Camera::getDeferredLightingPS()
+    {
+        return deferredLightingPS_;
+    }
+
+    inline lgfx::DepthStencilStateRef& Camera::getDeferredDepthStencilState()
+    {
+        return deferredLightingDepthStencilState_;
+    }
+
+    inline RenderTarget& Camera::getDeferredLightingRenderTarget()
+    {
+        return deferredLightingRenderTarget_;
     }
 }
 

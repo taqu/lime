@@ -29,7 +29,7 @@ namespace lfw
         ECSManager& ecsManager = ECSManager::getInstance();
 
         for(s32 i=0; i<numSamples; ++i){
-            entities[i] = ecsManager.requestCreateLogical();
+            entities[i] = ecsManager.requestCreateLogical("");
         }
         for(s32 i=0; i<numSamples; ++i){
             EXPECT_TRUE(ecsManager.isValidEntity(entities[i]));
@@ -38,13 +38,13 @@ namespace lfw
             }
         }
         for(s32 i=0; i<numSamples; ++i){
-            entities[i] = ecsManager.requestCreateLogical();
+            entities[i] = ecsManager.requestCreateLogical("");
             ecsManager.destroyEntity(entities[i]);
             EXPECT_TRUE(entities[i].getHandle().isNull());
         }
 
         for(s32 i=0; i<numSamples; ++i){
-            entities[i] = ecsManager.requestCreateLogical();
+            entities[i] = ecsManager.requestCreateLogical("");
         }
         for(s32 i=0; i<numSamples; ++i){
             EXPECT_TRUE(ecsManager.isValidEntity(entities[i]));

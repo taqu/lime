@@ -79,8 +79,11 @@ namespace lfw
         inline const Behavior* getComponent(Entity entity, u8 category, u32 type) const;
         Behavior* getComponent(Entity entity, u8 category, u32 type);
 
+        void removeComponent(Entity entity, ID component);
+
         void initialize();
         void update();
+        void postUpdate();
         void terminate();
     private:
         ECSManager();
@@ -106,6 +109,9 @@ namespace lfw
 
         typedef lcore::Array<ComponentRenderer*> ComponentRendererArray;
         ComponentRendererArray componentRenderers_;
+
+        typedef lcore::ArrayPOD<ComponentOperation> OperationArray;
+        OperationArray componentOperations_;
     };
 
     inline ECSInitParam ECSManager::defaultInitParam()

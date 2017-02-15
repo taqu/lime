@@ -1,8 +1,4 @@
-cbuffer ConstantBuffer0 : register(b0)
-{
-    float4x4 mvp;
-    float4x4 iview;
-}
+#include "Common.vs"
 
 struct VSOutput
 {
@@ -10,7 +6,6 @@ struct VSOutput
     float4 texcoord : TEXCOORD;
     float4 color : COLOR;
     float2 size : SIZE;
-    float4 params : PARAMS;
     float4x4 mat : MATRIX;
 };
 
@@ -18,8 +13,8 @@ struct GSOutput
 {
     float4 position : SV_Position;
     float4 color : COLOR;
-    float2 texcoord : TEXCOORD;
-    nointerpolation float4 params : PARAMS;
+    float4 texcoord : TEXCOORD0;
+    float depth : TEXCOORD1;
 };
 
 [maxvertexcount(4)]
@@ -41,11 +36,13 @@ void main(point VSOutput input[1], inout TriangleStream<GSOutput> outputStream)
 
     GSOutput output;
     output.color = input[0].color;
-    output.params = input[0].params;
+    float4x4 mvp = mul(input[0].mat, mvp1);
     for(int i=0; i<4; ++i){
-        float4 position = mul(pos[i], input[0].mat);
-        output.position = mul(position, mvp);
-        output.texcoord = texcoords[i];
+        float4 position = mul(pos[i], mvp);
+        output.position = position;
+        output.texcoord.xy = texcoords[i];
+        output.texcoord.zw = output.position.xy/output.position.w;
+        output.depth = position.z/position.w;//distance(position.xyz, cameraPos.xyz);
         outputStream.Append(output);
     }
     outputStream.RestartStrip();

@@ -10,6 +10,7 @@
 
 namespace lmath
 {
+    class Vector3;
     class Vector4;
     class Quaternion;
     class Matrix44;
@@ -35,6 +36,7 @@ namespace lfw
         ~ComponentGeometric();
 
         const Entity& getEntity() const;
+        Entity getEntity();
 
         const NameString& getName() const;
         NameString& getName();
@@ -59,6 +61,10 @@ namespace lfw
         const lmath::Quaternion& getRotation() const;
         lmath::Quaternion& getRotation();
         void setRotation(const lmath::Quaternion& rotation);
+
+        const lmath::Vector3& getScale() const;
+        lmath::Vector3& getScale();
+        void setScale(const lmath::Vector3& scale);
 
         const lmath::Matrix44& getMatrix() const;
         lmath::Matrix44& getMatrix();

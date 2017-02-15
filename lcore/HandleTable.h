@@ -27,18 +27,28 @@ namespace lcore
         static const value_type MaxCount = (0x01U<<(sizeof(T)*8-1-U))-1;
         static const value_type UsedFlag = 0x01U<<(sizeof(T)*8-1);
 
-        Handle()
-            :value_(0)
-        {}
-
-        explicit Handle(value_type value)
-            :value_(value)
-        {}
-
-        Handle(value_type count, value_type index, value_type flag)
+        static Handle construct(value_type value)
         {
-            value_ = (count<<Shift) | (index&Mask) | flag;
+            return {value};
         }
+
+        static Handle construct(value_type count, value_type index, value_type flag)
+        {
+            return {(count<<Shift) | (index&Mask) | flag};
+        }
+
+        //Handle()
+        //    :value_(0)
+        //{}
+
+        //explicit Handle(value_type value)
+        //    :value_(value)
+        //{}
+
+        //Handle(value_type count, value_type index, value_type flag)
+        //{
+        //    value_ = (count<<Shift) | (index&Mask) | flag;
+        //}
 
         inline value_type count() const
         {
@@ -84,9 +94,6 @@ namespace lcore
         {
             return value_ != handle.value_;
         }
-    private:
-        template<class T, s32 U>
-        friend class HandleTable;
 
         value_type value_;
     };
@@ -236,7 +243,7 @@ namespace lcore
 
         //Set used flag
         entries_[index].set(count, index, UsedFlag);
-        return handle_type(count, index, UsedFlag);
+        return handle_type::construct(count, index, UsedFlag);
     }
 
     template<class T, s32 U>

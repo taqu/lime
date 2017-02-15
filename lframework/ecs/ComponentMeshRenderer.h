@@ -7,7 +7,7 @@
 */
 #include "ComponentRenderer.h"
 #include <lmath/Matrix44.h>
-#include "render/Model.h"
+#include "../render/Model.h"
 
 namespace lfw
 {

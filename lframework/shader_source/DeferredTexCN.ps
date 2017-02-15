@@ -7,9 +7,8 @@ struct VSOutput
     float3 tangent : TEXCOORD1;
     float3 binormal : TEXCOORD2;
     float2 uv : TEXCOORD3;
-    float3 worldPos : TEXCOORD4;
-    float3 viewPos : TEXCOORD5;
-    float2 velocity : TEXCOORD6;
+    float2 position1 : TEXCOORD4;
+    float2 velocity : TEXCOORD5;
 };
 
 DeferredOutput main(VSOutput input)
@@ -20,17 +19,17 @@ DeferredOutput main(VSOutput input)
 
     //tangent to world normal
     float3x3 tangentToWorld = float3x3(T,B,N);
-    N = mul(texNormal.Sample(samNormal, input.uv).xyz, tangentToWorld);
+    N = mul(texNormal.Sample(samLinear, input.uv).xyz, tangentToWorld);
 
-    float4 albedo = texAlbedo.Sample(samAlbedo, input.uv) * diffuse;
-    float metalic = shadow.w;
+    float4 albedo = texAlbedo.Sample(samLinear, input.uv);
 
     DeferredOutput output;
-    output.albedo.xyz = albedo.xyz * (1-metalic);
-    output.albedo.w = albedo.w;
+    output.albedo.xyz = albedo.xyz * diffuse.xyz;
+    output.albedo.w = shadow.w;
     output.specular = specular;
     output.normal.xyz = normalize(N);
     output.normal.w = shadow.x;
     output.velocity = input.velocity;
+    output.depth = input.position1.x/input.position1.y;
     return output;
 }

@@ -45,26 +45,21 @@ namespace lmath
 
         Vector3 center() const
         {
-            return Vector3(
-                (bmin_.x_ + bmax_.x_)*0.5f,
+            return {(bmin_.x_ + bmax_.x_)*0.5f,
                 (bmin_.y_ + bmax_.y_)*0.5f,
-                (bmin_.z_ + bmax_.z_)*0.5f);
+                (bmin_.z_ + bmax_.z_)*0.5f};
         }
 
         Vector3 extent() const
         {
-            return Vector3(
-                bmax_.x_ - bmin_.x_,
-                bmax_.y_ - bmin_.y_,
-                bmax_.z_ - bmin_.z_);
+            return {bmax_.x_ - bmin_.x_, bmax_.y_ - bmin_.y_, bmax_.z_ - bmin_.z_};
         }
 
         Vector3 diagonal() const
         {
-            return Vector3(
-                bmax_.x_-bmin_.x_,
+            return {bmax_.x_-bmin_.x_,
                 bmax_.y_-bmin_.y_,
-                bmax_.z_-bmin_.z_);
+                bmax_.z_-bmin_.z_};
         }
 
         void expand(f32 delta);
@@ -120,16 +115,12 @@ namespace lmath
 
         Vector2 extent() const
         {
-            return Vector2(
-                bmax_.x_ - bmin_.x_,
-                bmax_.y_ - bmin_.y_);
+            return {bmax_.x_ - bmin_.x_, bmax_.y_ - bmin_.y_};
         }
 
         Vector2 diagonal() const
         {
-            return Vector2(
-                bmax_.x_-bmin_.x_,
-                bmax_.y_-bmin_.y_);
+            return {bmax_.x_-bmin_.x_, bmax_.y_-bmin_.y_};
         }
 
         void extend(const Vector2& point);

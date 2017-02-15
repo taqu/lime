@@ -24,20 +24,15 @@ namespace lmath
         static const Vector3 Right;
         static const Vector3 Left;
 
-        Vector3()
-        {}
-
-        inline Vector3(f32 x, f32 y, f32 z);
-        explicit inline Vector3(f32 xyz);
-        explicit Vector3(const Vector4& v);
+        inline static Vector3 construct(f32 xyz);
+        inline static Vector3 construct(f32 x, f32 y, f32 z);
+        inline static Vector3 zero();
+        inline static Vector3 one();
+        static Vector3 construct(const Vector4& v);
 
         inline void set(f32 x, f32 y, f32 z);
 
         void set(const Vector4& v);
-        Vector3& operator=(const Vector4& v);
-
-        inline Vector3& zero();
-        inline Vector3& one();
 
         inline f32 operator[](s32 index) const;
         inline f32& operator[](s32 index);
@@ -170,34 +165,29 @@ namespace lmath
     //--- 実装
     //---
     //--------------------------------------------
-    inline Vector3::Vector3(f32 x, f32 y, f32 z)
-        :x_(x)
-        ,y_(y)
-        ,z_(z)
-    {}
-
-    inline Vector3::Vector3(f32 xyz)
-        :x_(xyz)
-        ,y_(xyz)
-        ,z_(xyz)
+    inline Vector3 Vector3::construct(f32 xyz)
     {
+        return {xyz, xyz, xyz};
+    }
+
+    inline Vector3 Vector3::construct(f32 x, f32 y, f32 z)
+    {
+        return {x, y, z};
+    }
+
+    inline Vector3 Vector3::zero()
+    {
+        return {0.0f, 0.0f, 0.0f};
+    }
+
+    inline Vector3 Vector3::one()
+    {
+        return {1.0f, 1.0f, 1.0f};
     }
 
     inline void Vector3::set(f32 x, f32 y, f32 z)
     {
         x_ = x; y_ = y; z_ = z;
-    }
-
-    inline Vector3& Vector3::zero()
-    {
-        x_ = y_ = z_ = 0.0f;
-        return *this;
-    }
-
-    inline Vector3& Vector3::one()
-    {
-        x_ = y_ = z_ = 1.0f;
-        return *this;
     }
 
     inline f32 Vector3::operator[](s32 index) const
@@ -216,19 +206,8 @@ namespace lmath
 
     inline Vector3 Vector3::operator-() const
     {
-        return Vector3(-x_, -y_, -z_);
+        return {-x_, -y_, -z_};
     }
-
-    //inline Vector3 Vector3::operator*(f32 f) const
-    //{
-    //    return Vector3(f*x_, f*y_, f*z_);
-    //}
-
-    //inline Vector3 Vector3::operator/(f32 f) const
-    //{
-    //    f32 inv = 1.0f/f;
-    //    return Vector3(inv*x_, inv*y_, inv*z_);
-    //}
 
     inline Vector3& Vector3::operator+=(const Vector3& v)
     {
@@ -380,18 +359,16 @@ namespace lmath
 
     inline Vector3 minimum(const Vector3& v0, const Vector3& v1)
     {
-        return Vector3(
-            lcore::minimum(v0.x_, v1.x_),
+        return {lcore::minimum(v0.x_, v1.x_),
             lcore::minimum(v0.y_, v1.y_),
-            lcore::minimum(v0.z_, v1.z_));
+            lcore::minimum(v0.z_, v1.z_)};
     }
 
     inline Vector3 maximum(const Vector3& v0, const Vector3& v1)
     {
-        return Vector3(
-            lcore::maximum(v0.x_, v1.x_),
+        return {lcore::maximum(v0.x_, v1.x_),
             lcore::maximum(v0.y_, v1.y_),
-            lcore::maximum(v0.z_, v1.z_));
+            lcore::maximum(v0.z_, v1.z_)};
     }
 
     // v0*v1 + v2

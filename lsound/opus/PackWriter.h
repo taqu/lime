@@ -7,7 +7,7 @@
 
 */
 #include <lcore/liostream.h>
-#include <lcore/vector.h>
+#include <lcore/Array.h>
 #include "Pack.h"
 
 namespace lsound
@@ -26,8 +26,8 @@ namespace lsound
         inline bool openListFile(const Char* path);
 
     private:
-        typedef lcore::vector_arena<FileEntry> FileEntryArray;
-        typedef lcore::vector_arena<void*> MemPtrArray;
+        typedef lcore::ArrayPOD<FileEntry> FileEntryArray;
+        typedef lcore::ArrayPOD<void*> MemPtrArray;
 
         /// ファイルオープン
         inline bool open(const Char* path);

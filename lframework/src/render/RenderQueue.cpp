@@ -6,6 +6,7 @@
 #include "render/RenderQueue.h"
 #include <lcore/Sort.h>
 #include "ecs/ComponentRenderer.h"
+#include "render/Camera.h"
 
 namespace lfw
 {
@@ -61,12 +62,18 @@ namespace lfw
         ++queue.size_;
     }
 
+    void RenderQueue::setCamera(const Camera* camera)
+    {
+        camera_ = camera;
+        worldFrustum_.calcInWorld(*camera_);
+    }
+
     namespace
     {
         bool SortCompDepthAscend(const RenderQueue::Entry& lhs, const RenderQueue::Entry& rhs)
         {
             return (lhs.component_->getSortLayer() == rhs.component_->getSortLayer())
-                ? rhs.depth_<lhs.depth_
+                ? lhs.depth_<rhs.depth_
                 : lhs.component_->getSortLayer()<rhs.component_->getSortLayer();
         }
 

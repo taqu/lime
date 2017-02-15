@@ -1,19 +1,3 @@
-#define MAX_CASCADES 4
-#define NUM_CASCADES 2
-
-cbuffer SceneConstant : register(b0)
-{
-    float4x4 mv;
-    //float4x4 mp;
-    float4x4 mvp0; //previous vew projection
-    float4x4 mvp1; //current view projection
-    float4x4 mlvp[MAX_CASCADES];
-    float4 cameraPos;
-    //float invzrange;
-    //float znear;
-    //float reserved0;
-    //float reserved1;
-}
 
 float calcEdgeDot(float3 edgeNormal0, float3 edgeNormal1, float3 viewVector)
 {

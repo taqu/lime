@@ -28,9 +28,9 @@ namespace lfw
     //--------------------------------------------------
     void Node::clearTransform()
     {
-        translation_.zero();
-        rotation_.identity();
-        scale_.one();
+        translation_ = lmath::Vector4::zero();
+        rotation_.setIdentity();
+        scale_ = lmath::Vector3::one();
     }
 
     //--------------------------------------------------
@@ -81,7 +81,7 @@ namespace lfw
         rotY.setRotateX(y);
         rotZ.setRotateX(z);
 
-        rotation_.identity();
+        rotation_.setIdentity();
 
         switch(rotationOrder_)
         {

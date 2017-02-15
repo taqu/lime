@@ -31,32 +31,28 @@ namespace lmath
     //---------------------------------------------------------------------------------
     // 点から線分への最近傍点を計算
     f32 closestPointPointSegment(
-        f32& t,
         lmath::Vector3& result,
         const lmath::Vector3& point,
-        const lmath::Vector3& l1,
-        const lmath::Vector3& l2)
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1)
     {
-        Vector3 v0 = l1;
-        v0 -= l2;
+        Vector3 v0 = l1-l0;
+        Vector3 v1 = point - l0;
 
-        Vector3 v1 = point;
-        v1 -= l1;
-
-        t = dot(v1, v0);
-        if(t<=0.0f){
+        f32 t = dot(v1, v0);
+        if(t<=LMATH_F32_EPSILON){
             t = 0.0f;
-            result = l1;
+            result = l0;
         }else{
             f32 denom = v0.lengthSqr();
-            if(t>=denom){
+            if(denom<=t){
                 t = 1.0f;
-                result = l2;
+                result = l1;
             }else{
                 t /= denom;
                 result = v0;
                 result *= t;
-                result += l1;
+                result += l0;
             }
         }
         return t;
@@ -64,38 +60,130 @@ namespace lmath
 
     //---------------------------------------------------------------------------------
     // 点から線分への距離を計算
-    f32 distancePointSegment(
+    f32 distancePointSegmentSqr(
         const lmath::Vector3& point,
-        const lmath::Vector3& l1,
-        const lmath::Vector3& l2)
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1)
     {
-        Vector3 v0 = l2;
-        v0 -= l1;
-
-        Vector3 v1 = point;
-        v1 -= l1;
-
-        Vector3 v2 = point;
-        v2 -= l2;
+        Vector3 v0 = l1 - l0;
+        Vector3 v1 = point - l0;
 
         f32 t = dot(v0, v1);
-        f32 l;
-        if(t<=0.0f){
-            l = v1.lengthSqr();
+        if(t<=LMATH_F32_EPSILON){
+            return v1.lengthSqr();
         }else{
-
             f32 u = v0.lengthSqr();
-            if(u>=t){
-                l = v2.lengthSqr();
+            if(u<=t){
+                return distanceSqr(point, l1);
             }else{
-                l = v1.lengthSqr() - t*t/u;
+                return v1.lengthSqr() - t*t/u;
             }
         }
-        return lmath::sqrt(l);
     }
 
     //---------------------------------------------------------------------------------
-    f32 sqDistancePointAABB(
+    // 点から直線への最近傍点を計算
+    f32 closestPointPointLine(
+        lmath::Vector3& result,
+        const lmath::Vector3& point,
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1)
+    {
+        Vector3 v0 = l1 - l0;
+        Vector3 v1 = point - l0;
+
+        f32 t;
+        f32 denom = v0.lengthSqr();
+        if(denom<=LMATH_F32_EPSILON){
+            t = 0.0f;
+            result = l0;
+        } else{
+            t = dot(v1, v0);
+            t /= denom;
+            result = v0;
+            result *= t;
+            result += l0;
+        }
+        return t;
+    }
+
+    //---------------------------------------------------------------------------------
+    // 点から直線への距離を計算
+    f32 distancePointLineSqr(
+        const lmath::Vector3& point,
+        const lmath::Vector3& l0,
+        const lmath::Vector3& l1)
+    {
+        Vector3 v0 = l1 - l0;
+        Vector3 v1 = point - l0;
+
+        f32 denom = v0.lengthSqr();
+        if(denom<=LMATH_F32_EPSILON){
+            return v1.lengthSqr();
+        }else{
+            f32 t = dot(v1, v0);
+            return v1.lengthSqr() - t*t/denom;
+        }
+    }
+
+    //---------------------------------------------------------------------------------
+    // 線分と線分の最近傍点を計算
+    f32 closestPointSegmentSegmentSqr(
+        f32& s,
+        f32& t,
+        Vector3& c0,
+        Vector3& c1,
+        const Vector3& p0,
+        const Vector3& q0,
+        const Vector3& p1,
+        const Vector3& q1)
+    {
+        Vector3 d0 = q0-p0;
+        Vector3 d1 = q1-p1;
+        Vector3 r = p0-p1;
+        f32 a = dot(d0, d0);
+        f32 e = dot(d1, d1);
+        f32 f = dot(d1, r);
+        if(a<=LMATH_F32_EPSILON && e<=LMATH_F32_EPSILON){
+            s = t = 0.0f;
+            c0 = p0;
+            c1 = p1;
+            return dot(r, r);
+        }
+        if(a<=LMATH_F32_EPSILON){
+            s = 0.0f;
+            t = lcore::clamp01(f/e);
+        }else if(e<=LMATH_F32_EPSILON){
+            t = 0.0f;
+            s = lcore::clamp01(-dot(d0,r)/a);
+        }else{
+            f32 b = dot(d0,d1);
+            f32 c = dot(d0,r);
+            f32 denom = a*e - b*b;
+            if(LMATH_F32_EPSILON<denom){
+                s = lcore::clamp01((b*f-c*e)/denom);
+            }else{
+                s = 0.0f;
+            }
+            f32 tnorm = b*s + f;
+            if(tnorm<0.0f){
+                t = 0.0f;
+                s = lcore::clamp01(-c/a);
+            }else if(e<tnorm){
+                t = 1.0f;
+                s = lcore::clamp01((b-c)/a);
+            }else{
+                t = tnorm/e;
+            }
+        }
+
+        c0 = p0 + d0 * s;
+        c1 = p1 + d1 * t;
+        return distanceSqr(c0, c1);
+    }
+
+    //---------------------------------------------------------------------------------
+    f32 distancePointAABBSqr(
         const f32* point,
         const f32* bmin,
         const f32* bmax)
@@ -157,7 +245,7 @@ namespace lmath
     // 球と平面が交差するか
     bool testSpherePlane(f32 &t, const Sphere& sphere, const Plane& plane)
     {
-        t = distancePointPlane(Vector3(sphere.x_, sphere.y_, sphere.z_), plane);
+        t = distancePointPlane({sphere.x_, sphere.y_, sphere.z_}, plane);
         return (t<=sphere.r_);
     }
 
@@ -213,7 +301,7 @@ namespace lmath
     //---------------------------------------------------------------------------------
     bool testSphereAABB(const Sphere& sphere, const lmath::Vector4& bmin, const lmath::Vector4& bmax)
     {
-        f32 distance = sqDistancePointAABB(sphere, bmin, bmax);
+        f32 distance = distancePointAABBSqr(sphere, bmin, bmax);
         return distance <= (sphere.radius()*sphere.radius());
     }
 
@@ -222,9 +310,37 @@ namespace lmath
     {
         closestPointPointAABB(close, sphere, bmin, bmax);
 
-        lmath::Vector4 d = close - sphere;
+        Vector4 d = Vector4::construct(close - sphere);
         d.w_ = 0.0f;
         return d.lengthSqr() <= (sphere.radius()*sphere.radius());
+    }
+
+    //---------------------------------------------------------------------------------
+    bool testSphereCapsule(const Sphere& sphere, const Vector3& p0, const Vector3& q0, f32 r0)
+    {
+        f32 distanceSqr = distancePointSegmentSqr(sphere.position(), p0, q0);
+        f32 radius = sphere.radius() + r0;
+        return distanceSqr <= (radius*radius);
+    }
+
+    //---------------------------------------------------------------------------------
+    bool testCapsuleCapsule(
+        const Vector3& p0,
+        const Vector3& q0,
+        f32 r0,
+        const Vector3& p1,
+        const Vector3& q1,
+        f32 r1)
+    {
+        f32 s,t;
+        Vector3 c0,c1;
+        f32 distanceSqr = closestPointSegmentSegmentSqr(
+            s,t,
+            c0, c1,
+            p0, q0,
+            p1, q1);
+        f32 radius = r0 + r1;
+        return distanceSqr <= (radius*radius);
     }
 
     //---------------------------------------------------------------------------------
@@ -267,10 +383,10 @@ namespace lmath
 
                 f32 t;
                 t = d[0] / (d[0] - d[2]);
-                Vector4 new0 = lerp(p0, p1, t);
+                Vector4 new0 = Vector4::construct(lerp(p0, p1, t));
 
                 t = d[0] / (d[0] - d[1]);
-                Vector4 new1 = lerp(p0, p2, t);
+                Vector4 new1 = Vector4::construct(lerp(p0, p2, t));
 
                 triangle.v_[0] = p0;
                 triangle.v_[1] = new0;
@@ -289,10 +405,10 @@ namespace lmath
 
                 f32 t;
                 t = d[2] / (d[2] - d[0]);
-                Vector4 new0 = lerp(p0, p1, t);
+                Vector4 new0 = Vector4::construct(lerp(p0, p1, t));
 
                 t = d[2] / (d[2] - d[1]);
-                Vector4 new1 = lerp(p0, p2, t);
+                Vector4 new1 = Vector4::construct(lerp(p0, p2, t));
 
                 triangle.v_[0] = p1;
                 triangle.v_[1] = new0;

@@ -18,8 +18,9 @@ namespace lfw
         inline void setID(ID id){ id_ = id;}
     protected:
         Component()
-            :id_(ID::InvalidValue)
-        {}
+        {
+            id_ = ID::construct();
+        }
 
         explicit Component(ID id)
             :id_(id)
@@ -36,6 +37,9 @@ namespace lfw
     public:
         virtual ~Behavior()
         {}
+
+        const Entity& getEntity() const;
+        Entity& getEntity();
 
         virtual u32 getType() const =0;
         virtual void onCreate() =0;

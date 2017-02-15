@@ -13,7 +13,35 @@ namespace lfw
     ResourceModel* ResourceModel::load(s32 setID, const Char* path, ModelLoader& modelLoader)
     {
         LASSERT(NULL != path);
-        Model* model = modelLoader.loadModel(setID, path);
-        return LNEW ResourceModel(model);
+        Model* model = NULL;
+        Skeleton* skeleton = NULL;
+        modelLoader.loadModel(model, skeleton, setID, path);
+        return LNEW ResourceModel(model, skeleton);
+    }
+
+    Model::pointer ResourceModel::clone()
+    {
+        if(NULL == model_){
+            return model_;
+        }
+        Model* model = LNEW Model();
+        if(model_->copyTo(*model)){
+            return Model::pointer(model);
+        }
+        LDELETE(model);
+        return Model::pointer();
+    }
+
+    Skeleton::pointer ResourceModel::cloneSkeleton()
+    {
+        if(NULL == skeleton_){
+            return skeleton_;
+        }
+        Skeleton* skeleton = LNEW Skeleton();
+        if(skeleton_->copyTo(*skeleton)){
+            return Skeleton::pointer(skeleton);
+        }
+        LDELETE(skeleton);
+        return Skeleton::pointer();
     }
 }

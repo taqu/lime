@@ -8,11 +8,20 @@
 #include "resource/ResourceBytes.h"
 #include "resource/ResourceTexture2D.h"
 #include "resource/ResourceModel.h"
-#include "resource/ResourceAnimation.h"
+#include "resource/ResourceAnimationClip.h"
 
 namespace lfw
 {
     Resources* Resources::instance_ = NULL;
+
+    void TextureParameter::initialize()
+    {
+        sRGB_ = 1;
+        filterType_ = lgfx::TexFilter_MinMagMipLinear;
+        addressUVW_ = lgfx::TexAddress_Clamp;
+        compFunc_ = lgfx::Cmp_Always;
+        borderColor_ = 0.0f;
+    }
 
     bool Resources::initialize(s32 numSets, lcore::FileSystem* fileSystem)
     {
@@ -21,6 +30,32 @@ namespace lfw
         }
         numSets = lcore::maximum(1, numSets);
         instance_ = LNEW Resources(numSets, fileSystem);
+
+        TextureParameter texParam;
+        texParam.sRGB_ = 0;
+        texParam.filterType_ = lgfx::TexFilter_MinMagMipPoint;
+        texParam.addressUVW_ = lgfx::TexAddress_Clamp;
+        texParam.compFunc_ = lgfx::Cmp_Always;
+        texParam.borderColor_ = 0.0f;
+        instance_->emptyTextureWhite_ = Resource::pointer(ResourceTexture2D::create(0xFFFFFFFFU, texParam));
+        instance_->emptyTextureBlack_ = Resource::pointer(ResourceTexture2D::create(0xFF000000U, texParam));
+        instance_->emptyTextureClear_ = Resource::pointer(ResourceTexture2D::create(0x00000000U, texParam));
+
+        {
+            static const u32 width = 128;
+            static const u32 height = 128;
+            static const u32 step = 32;
+            u32 colors[width*height];
+            for(u32 i=0; i<height; ++i){
+                u32 y = i/step;
+                for(u32 j=0; j<width; ++j){
+                    u32 x = j/step;
+                    bool on = 0 != ((x^y)&0x01U);
+                    colors[i*width + j] = (on)? 0xFFFFFFFFU : 0xFF000000U;
+                }
+            }
+            instance_->textureChecker_ = Resource::pointer(ResourceTexture2D::create(width, height, colors, texParam));
+        }
         return true;
     }
 
@@ -291,9 +326,19 @@ namespace lfw
         }
         break;
         case ResourceType_Texture2D:
-            LASSERT(false);
-            return NULL;
-
+        {
+            lcore::FileProxy* file = fileSystem_->openFile(path);
+            if(NULL != file){
+                s64 size = file->getUncompressedSize();
+                expand(size);
+                file->read(0, size, buffer_);
+                fileSystem_->closeFile(file);
+                TextureParameter texParam;
+                texParam.initialize();
+                resource = ResourceTexture2D::load(path, size, buffer_, texParam);
+            }
+        }
+        break;
         case ResourceType_Model:
         {
             resource = ResourceModel::load(setID, path, modelLoader_);

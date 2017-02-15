@@ -28,6 +28,7 @@ namespace lfw
         ~ComponentLogical();
 
         const Entity& getEntity() const;
+        Entity getEntity();
 
         const NameString& getName() const;
         NameString& getName();

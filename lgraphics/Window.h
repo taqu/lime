@@ -26,6 +26,8 @@ namespace lgfx
             InitParam()
                 :width_(0)
                 ,height_(0)
+                ,style_(0)
+                ,exStyle_(0)
                 ,wndProc_(NULL)
                 ,windowed_(true)
             {
@@ -36,6 +38,8 @@ namespace lgfx
 
             u32 width_;
             u32 height_;
+            u32 style_;
+            u32 exStyle_;
             char title_[MAX_TITLE_SIZE];
             WNDPROC wndProc_;
             bool windowed_;
@@ -58,13 +62,11 @@ namespace lgfx
         bool getEvent(EVENT& ev);
 
         const WindowHandle& getHandle() const{ return handle_;}
+        WindowHandle& getHandle() { return handle_;}
 
         void setShow(bool enable);
 
-        void getViewSize(u32& width, u32& height);
-
-        //u32 getViewWidth() const{ return viewWidth_;}
-        //u32 getViewHeight() const{ return viewHeight_;}
+        void getViewSize(s32& width, s32& height);
 
  // X Window System用
 #if defined(__CYGWIN__) || defined(__linux__)

@@ -20,7 +20,7 @@ namespace lmath
 
     TEST_F(TestVector4, Test_mulPoint)
     {
-        Vector4 v(4.0f, 3.0f, 2.0f, 1.0f);
+        Vector4 v = Vector4::construct(4.0f, 3.0f, 2.0f, 1.0f);
         Matrix44 m;
         m.identity();
 
@@ -33,8 +33,8 @@ namespace lmath
 
     TEST_F(TestVector4, Test_manhattanDistance3)
     {
-        Vector4 v0(4.0f, 3.0f, 2.0f, 1.0f);
-        Vector4 v1(3.0f, 2.0f, 1.0f, 0.0f);
+        Vector4 v0 = Vector4::construct(4.0f, 3.0f, 2.0f, 1.0f);
+        Vector4 v1 = Vector4::construct(3.0f, 2.0f, 1.0f, 0.0f);
 
         f32 distance = manhattanDistance3(v0, v1);
 

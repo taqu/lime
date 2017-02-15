@@ -14,53 +14,6 @@ namespace lgfx
 {
     //--------------------------------------
     //---
-    //--- DepthStencilStateRef
-    //---
-    //--------------------------------------
-    DepthStencilStateRef::DepthStencilStateRef()
-        :state_(NULL)
-    {}
-
-    DepthStencilStateRef::DepthStencilStateRef(const DepthStencilStateRef& rhs)
-        :state_(rhs.state_)
-    {
-        if(state_ != NULL){
-            state_->AddRef();
-        }
-    }
-
-    DepthStencilStateRef::~DepthStencilStateRef()
-    {
-        destroy();
-    }
-
-    void DepthStencilStateRef::destroy()
-    {
-        LDXSAFE_RELEASE(state_);
-    }
-
-    DepthStencilStateRef::DepthStencilStateRef(pointer_type state)
-        :state_(state)
-    {}
-
-    bool DepthStencilStateRef::valid() const
-    {
-        return (NULL != state_);
-    }
-
-    DepthStencilStateRef& DepthStencilStateRef::operator=(const DepthStencilStateRef& rhs)
-    {
-        DepthStencilStateRef(rhs).swap(*this);
-        return *this;
-    }
-
-    void DepthStencilStateRef::swap(DepthStencilStateRef& rhs)
-    {
-        lcore::swap(state_, rhs.state_);
-    }
-
-    //--------------------------------------
-    //---
     //--- CommandListRef
     //---
     //--------------------------------------
@@ -151,10 +104,13 @@ namespace lgfx
     const u32 ContextRef::UIZero[4] = {0, 0, 0, 0};
 
     ID3D11ShaderResourceView* const ContextRef::NULLResources[GraphicsDeviceRef::MaxShaderResources] =
-    { NULL, };
-
+    { NULL };
+    ID3D11SamplerState* const ContextRef::NULLSamplerStates[GraphicsDeviceRef::MaxSamplerStates] =
+    { NULL };
+    ID3D11Buffer* const ContextRef::NULLBuffers[GraphicsDeviceRef::MaxBuffers] =
+    { NULL };
     ID3D11RenderTargetView* const ContextRef::NullTargets[LGFX_MAX_RENDER_TARGETS] =
-    { NULL, };
+    { NULL };
 
     const Char* ContextRef::GSModel = GSModels[0];
     const Char* ContextRef::VSModel = VSModels[0];
@@ -689,8 +645,8 @@ namespace lgfx
 
         {//ラスタライザステート
             D3D11_RASTERIZER_DESC rasterizerDesc;
-            rasterizerDesc.FillMode = D3D11_FILL_SOLID;
-            rasterizerDesc.CullMode = D3D11_CULL_BACK;
+            rasterizerDesc.FillMode = (D3D11_FILL_MODE)Fill_Solid;
+            rasterizerDesc.CullMode = (D3D11_CULL_MODE)Cull_Back;
             rasterizerDesc.FrontCounterClockwise = FALSE;
             rasterizerDesc.DepthBias = 0;
             rasterizerDesc.SlopeScaledDepthBias = 0.0f;
@@ -705,27 +661,27 @@ namespace lgfx
                 return false;
             }
 
-            rasterizerDesc.CullMode = D3D11_CULL_NONE;
+            rasterizerDesc.CullMode = (D3D11_CULL_MODE)Cull_None;
             hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_FillSolidNoCull]);
             if(FAILED(hr)){
                 return false;
             }
 
-            rasterizerDesc.CullMode = D3D11_CULL_BACK;
-            rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+            rasterizerDesc.FillMode = (D3D11_FILL_MODE)Fill_WireFrame;
+            rasterizerDesc.CullMode = (D3D11_CULL_MODE)Cull_Back;
             hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_FillWireFrame]);
             if(FAILED(hr)){
                 return false;
             }
 
-            rasterizerDesc.CullMode = D3D11_CULL_NONE;
-            rasterizerDesc.FillMode = D3D11_FILL_WIREFRAME;
+            rasterizerDesc.FillMode = (D3D11_FILL_MODE)Fill_WireFrame;
+            rasterizerDesc.CullMode = (D3D11_CULL_MODE)Cull_None;
             hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_FillWireFrameNoCull]);
             if(FAILED(hr)){
                 return false;
             }
 
-            rasterizerDesc.FillMode = D3D11_FILL_SOLID;
+            rasterizerDesc.FillMode = (D3D11_FILL_MODE)Fill_Solid;
 
             //デプスバッファのフォーマットによってDepthBiasの扱いが異なる
             const f32 depthBias = initParam.depthBias_;
@@ -1052,42 +1008,6 @@ namespace lgfx
     }
 
     //---------------------------------------------------------
-    DepthStencilStateRef GraphicsDeviceRef::createDepthStencilState(
-        bool depthEnable,
-        DepthWriteMask depthWriteMask,
-        CmpFunc depthFunc,
-        bool stencilEnable,
-        u8 stencilReadMask,
-        u8 stencilWriteMask,
-        const StencilOPDesc& frontFace,
-        const StencilOPDesc& backFace)
-    {
-        D3D11_DEPTH_STENCIL_DESC desc;
-        desc.DepthEnable = (depthEnable)? TRUE : FALSE;
-        desc.DepthWriteMask = (D3D11_DEPTH_WRITE_MASK)depthWriteMask;
-        desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(depthFunc);
-        desc.StencilEnable = (stencilEnable)? TRUE : FALSE;
-        desc.StencilReadMask = stencilReadMask;
-        desc.StencilWriteMask = stencilWriteMask;
-
-        desc.FrontFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>(frontFace.failOp_);
-        desc.FrontFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>(frontFace.depthFailOp_);
-        desc.FrontFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>(frontFace.passOp_);
-        desc.FrontFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>(frontFace.cmpFunc_);
-
-        desc.BackFace.StencilFailOp = static_cast<D3D11_STENCIL_OP>(backFace.failOp_);
-        desc.BackFace.StencilDepthFailOp = static_cast<D3D11_STENCIL_OP>(backFace.depthFailOp_);
-        desc.BackFace.StencilPassOp = static_cast<D3D11_STENCIL_OP>(backFace.passOp_);
-        desc.BackFace.StencilFunc = static_cast<D3D11_COMPARISON_FUNC>(backFace.cmpFunc_);
-
-        ID3D11DepthStencilState* state = NULL;
-        device_->CreateDepthStencilState(&desc, &state);
-
-        return DepthStencilStateRef(state);
-    }
-
-
-    //---------------------------------------------------------
     bool GraphicsDeviceRef::checkMultisampleQualityLevels(
             lgfx::DataFormat format,
             u32 sampleCount,
@@ -1116,12 +1036,12 @@ namespace lgfx
     //--- ShaderResourceView
     //---
     //--------------------------------------
-    ID3D11ShaderResourceView* ShaderResourceView::resources_[6];
+    ID3D11ShaderResourceView* ShaderResourceView::resources_[8];
 
     //--------------------------------------
     //---
     //--- ShaderSamplerState
     //---
     //--------------------------------------
-    ID3D11SamplerState* ShaderSamplerState::states_[6];
+    ID3D11SamplerState* ShaderSamplerState::states_[8];
 }

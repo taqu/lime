@@ -12,6 +12,7 @@
 #include "InputLayoutFactory.h"
 #include "ShaderManager.h"
 #include "ModelLoader.h"
+#include "FontManager.h"
 
 namespace lcore
 {
@@ -59,7 +60,6 @@ namespace lfw
         @brief 追加
         @return 成否
         @param setID ... セットID
-        @param resID ... リソースID
         @param resource ... リソース
         */
         bool addInSet(s32 setID, Resource::pointer& resource);
@@ -108,11 +108,17 @@ namespace lfw
 
         inline InputLayoutFactory& getInputLayoutFactory();
         inline ShaderManager& getShaderManager();
+        inline FontManager& getFontManager();
 
         Resource::pointer load(const Char* path, ResourceType type);
         Resource::pointer load(s32& setID, const Char* path, ResourceType type);
         Resource::pointer load(const Char* path, ResourceType type, const TextureParameter& param);
         Resource::pointer load(s32& setID, const Char* path, ResourceType type, const TextureParameter& param);
+
+        inline Resource::pointer& getEmptyTextureWhite();
+        inline Resource::pointer& getEmptyTextureBlack();
+        inline Resource::pointer& getEmptyTextureClear();
+        inline Resource::pointer& getTextureChecker();
     private:
         Resources(const Resources&);
         Resources& operator=(const Resources&);
@@ -135,8 +141,14 @@ namespace lfw
         typedef lcore::Array<ResourceSet> ResourceSetArray;
         ResourceSetArray resourceSets_;
 
+        Resource::pointer emptyTextureWhite_;
+        Resource::pointer emptyTextureBlack_;
+        Resource::pointer emptyTextureClear_;
+        Resource::pointer textureChecker_;
+
         InputLayoutFactory inputLayoutFactory_;
         ShaderManager shaderManager_;
+        FontManager fontManager_;
         ModelLoader modelLoader_;
         lcore::FileSystem* fileSystem_;
         s64 bufferSize_;
@@ -161,6 +173,31 @@ namespace lfw
     inline ShaderManager& Resources::getShaderManager()
     {
         return shaderManager_;
+    }
+
+    inline FontManager& Resources::getFontManager()
+    {
+        return fontManager_;
+    }
+
+    inline Resource::pointer& Resources::getEmptyTextureWhite()
+    {
+        return emptyTextureWhite_;
+    }
+
+    inline Resource::pointer& Resources::getEmptyTextureBlack()
+    {
+        return emptyTextureBlack_;
+    }
+
+    inline Resource::pointer& Resources::getEmptyTextureClear()
+    {
+        return emptyTextureClear_;
+    }
+
+    inline Resource::pointer& Resources::getTextureChecker()
+    {
+        return textureChecker_;
     }
 }
 #endif //INC_LFRAMEWORK_RESOURCES_H__

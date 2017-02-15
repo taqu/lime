@@ -11,32 +11,22 @@
 
 namespace lmath
 {
-    const Vector3 Vector3::Forward(0.0f, 0.0f, 1.0f);
-    const Vector3 Vector3::Backward(0.0f, 0.0f, -1.0f);
-    const Vector3 Vector3::Up(0.0f, 1.0f, 0.0f);
-    const Vector3 Vector3::Down(0.0f, -1.0f, 0.0f);
-    const Vector3 Vector3::Right(1.0f, 0.0f, 0.0f);
-    const Vector3 Vector3::Left(-1.0f, 0.0f, 0.0f);
+    const Vector3 Vector3::Forward = {0.0f, 0.0f, 1.0f};
+    const Vector3 Vector3::Backward= {0.0f, 0.0f, -1.0f};
+    const Vector3 Vector3::Up = {0.0f, 1.0f, 0.0f};
+    const Vector3 Vector3::Down = {0.0f, -1.0f, 0.0f};
+    const Vector3 Vector3::Right = {1.0f, 0.0f, 0.0f};
+    const Vector3 Vector3::Left = {-1.0f, 0.0f, 0.0f};
 
-    Vector3::Vector3(const lmath::Vector4& v)
-        :x_(v.x_)
-        ,y_(v.y_)
-        ,z_(v.z_)
+    Vector3 Vector3::construct(const Vector4& v)
     {
+        return {v.x_, v.y_, v.z_};
     }
 
     void Vector3::set(const lmath::Vector4& v)
     {
         x_ = v.x_; y_ = v.y_; z_ = v.z_;
     }
-
-    Vector3& Vector3::operator=(const lmath::Vector4& rhs)
-    {
-        x_ = rhs.x_; y_ = rhs.y_; z_ = rhs.z_;
-        return *this;
-    }
-
-    
 
     Vector3& Vector3::operator/=(f32 f)
     {
@@ -79,27 +69,27 @@ namespace lmath
 
     Vector3 operator+(const Vector3& v0, const Vector3& v1)
     {
-        return Vector3(v0.x_+v1.x_, v0.y_+v1.y_, v0.z_+v1.z_);
+        return {v0.x_+v1.x_, v0.y_+v1.y_, v0.z_+v1.z_};
     }
 
     Vector3 operator-(const Vector3& v0, const Vector3& v1)
     {
-        return Vector3(v0.x_-v1.x_, v0.y_-v1.y_, v0.z_-v1.z_);
+        return {v0.x_-v1.x_, v0.y_-v1.y_, v0.z_-v1.z_};
     }
 
     Vector3 operator*(f32 f, const Vector3& v)
     {
-        return Vector3(f*v.x_, f*v.y_, f*v.z_);
+        return {f*v.x_, f*v.y_, f*v.z_};
     }
 
     Vector3 operator*(const Vector3& v, f32 f)
     {
-        return Vector3(v.x_*f, v.y_*f, v.z_*f);
+        return {v.x_*f, v.y_*f, v.z_*f};
     }
 
     Vector3 operator*(const Vector3& v0, const Vector3& v1)
     {
-        return Vector3(v0.x_*v1.x_, v0.y_*v1.y_, v0.z_*v1.z_);
+        return {v0.x_*v1.x_, v0.y_*v1.y_, v0.z_*v1.z_};
     }
 
     Vector3 operator/(const Vector3& v, f32 f)
@@ -123,7 +113,7 @@ namespace lmath
         LASSERT(!lmath::isZero(v1.y_));
         LASSERT(!lmath::isZero(v1.z_));
 
-        return Vector3(v0.x_/v1.x_, v0.y_/v1.y_, v0.z_/v1.z_);
+        return {v0.x_/v1.x_, v0.y_/v1.y_, v0.z_/v1.z_};
     }
 
     Vector3 normalize(const Vector3& v)
@@ -162,7 +152,7 @@ namespace lmath
     {
         f32 l = v.lengthSqr();
         if(lmath::isZeroPositive(l)){
-            return Vector3(0.0f);
+            return Vector3::construct(0.0f);
         }else{
             return normalize(v, l);
         }
@@ -170,7 +160,7 @@ namespace lmath
 
     Vector3 absolute(const Vector3& v)
     {
-        return Vector3(lcore::absolute(v.x_), lcore::absolute(v.y_), lcore::absolute(v.z_));
+        return {lcore::absolute(v.x_), lcore::absolute(v.y_), lcore::absolute(v.z_)};
     }
 
     f32 distanceSqr(const Vector3& v0, const Vector3& v1)
@@ -206,13 +196,13 @@ namespace lmath
         f32 x = v0.y_ * v1.z_ - v0.z_ * v1.y_;
         f32 y = v0.z_ * v1.x_ - v0.x_ * v1.z_;
         f32 z = v0.x_ * v1.y_ - v0.y_ * v1.x_;
-        return Vector3(x,y,z);
+        return {x,y,z};
 #endif
     }
 
     Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t)
     {
-        Vector3 tmp(v1.x_-v0.x_, v1.y_-v0.y_, v1.z_-v0.z_);
+        Vector3 tmp = {v1.x_-v0.x_, v1.y_-v0.y_, v1.z_-v0.z_};
         tmp.x_ = tmp.x_*t + v0.x_;
         tmp.y_ = tmp.y_*t + v0.y_;
         tmp.z_ = tmp.z_*t + v0.z_;
@@ -221,9 +211,9 @@ namespace lmath
 
     Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t0, f32 t1)
     {
-        Vector3 tmp0(v0.x_*t1, v0.y_*t1, v0.z_*t1);
-        Vector3 tmp1(v1.x_*t0, v1.y_*t0, v1.z_*t0);
-        return Vector3(tmp0.x_+tmp1.x_, tmp0.y_+tmp1.y_, tmp0.z_+tmp1.z_);
+        Vector3 tmp0 = {v0.x_*t1, v0.y_*t1, v0.z_*t1};
+        Vector3 tmp1 = {v1.x_*t0, v1.y_*t0, v1.z_*t0};
+        return {tmp0.x_+tmp1.x_, tmp0.y_+tmp1.y_, tmp0.z_+tmp1.z_};
     }
 
 
@@ -410,7 +400,7 @@ namespace lmath
         Quaternion rot = mul(conj, v);
         rot = mul(rot, rotation);
 
-        return Vector3(rot.x_, rot.y_, rot.z_);
+        return {rot.x_, rot.y_, rot.z_};
     }
 
     Vector3 rotate(const Quaternion& rotation, const Vector3& v)
@@ -420,17 +410,17 @@ namespace lmath
         Quaternion rot = mul(conj, v);
         rot = mul(rot, rotation);
 
-        return Vector3(rot.x_, rot.y_, rot.z_);
+        return {rot.x_, rot.y_, rot.z_};
     }
 
     Vector3 mul(const Vector3& v0, const Vector3& v1)
     {
-        return Vector3(v0.x_ * v1.x_, v0.y_ * v1.y_, v0.z_ * v1.z_);
+        return {v0.x_ * v1.x_, v0.y_ * v1.y_, v0.z_ * v1.z_};
     }
 
     Vector3 div(const Vector3& v0, const Vector3& v1)
     {
-        return Vector3(v0.x_ / v1.x_, v0.y_ / v1.y_, v0.z_ / v1.z_);
+        return {v0.x_ / v1.x_, v0.y_ / v1.y_, v0.z_ / v1.z_};
     }
 
     // v0*v1 + v2
@@ -439,7 +429,7 @@ namespace lmath
         f32 x = v0.x_ * v1.x_ + v2.x_;
         f32 y = v0.y_ * v1.y_ + v2.y_;
         f32 z = v0.z_ * v1.z_ + v2.z_;
-        return Vector3(x,y,z);
+        return {x,y,z};
     }
 
     // a*v1 + v2
@@ -448,6 +438,6 @@ namespace lmath
         f32 x = a * v0.x_ + v1.x_;
         f32 y = a * v0.y_ + v1.y_;
         f32 z = a * v0.z_ + v1.z_;
-        return Vector3(x,y,z);
+        return {x,y,z};
     }
 }

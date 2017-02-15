@@ -89,7 +89,7 @@ namespace lsound
     class Player : public PlayerLink
     {
     public:
-        static const s16 NumMaxBuffers = lsound::NumMaxBuffers;
+        static const s32 NumMaxBuffers = lsound::NumMaxBuffers;
 
         enum InnerFlag
         {
@@ -125,7 +125,7 @@ namespace lsound
         void setGain(f32 gain);
         void setPitch(f32 pitch);
 
-        bool create(s8 numBuffers, IAudioClient* audioClient, const WAVEFORMATEX& fmt);
+        bool create(s32 numBuffers, IAudioClient* audioClient, const WAVEFORMATEX& fmt);
 
         void setStream(Stream* stream);
 
@@ -159,7 +159,7 @@ namespace lsound
         UserPlayer* userPlayer_;
 
         Resampler resampler_;
-        LIME_ALIGN16 static LSfloat sharedBuffer_[SharedBufferLength];
+        LALIGN16 static LSfloat sharedBuffer_[SharedBufferLength];
     };
 
     inline bool Player::checkUserFlag(PlayerFlag flag) const

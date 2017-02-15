@@ -161,7 +161,7 @@ namespace lfw
     // ƒƒbƒVƒ…”
     inline s32 Model::getNumMeshes() const
     {
-        return numGeometries_;
+        return numMeshes_;
     }
 
     //--------------------------------------------------

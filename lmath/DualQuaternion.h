@@ -155,7 +155,7 @@ namespace lmath
     // 後から平行移動
     inline void DualQuaternion::translate(f32 x, f32 y, f32 z)
     {
-        translate(Vector3(x, y, z));
+        translate(Vector3::construct(x, y, z));
     }
 
     // 後から平行移動
@@ -173,7 +173,7 @@ namespace lmath
     // 前から平行移動
     inline void DualQuaternion::preTranslate(f32 x, f32 y, f32 z)
     {
-        preTranslate(Vector3(x, y, z));
+        preTranslate(Vector3::construct(x, y, z));
     }
 
     // 前から平行移動

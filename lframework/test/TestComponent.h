@@ -31,7 +31,7 @@ namespace lfw
         ECSManager& ecsManager = ECSManager::getInstance();
 
         for(s32 i=0; i<numSamples; ++i){
-            entities[i] = ecsManager.requestCreateLogical();
+            entities[i] = ecsManager.requestCreateLogical("");
             EXPECT_FALSE(entities[i].isNull());
 
             ComponentLogical* componentLogical = entities[i].getLogical();

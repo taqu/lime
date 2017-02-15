@@ -6,11 +6,14 @@
 @date 2016/11/29 create
 */
 #include "Component.h"
+#include "ComponentSceneElementManager.h"
 
 struct D3D11_VIEWPORT;
 
 namespace lmath
 {
+    class Vector3;
+    class Vector4;
     class Matrix44;
 }
 
@@ -25,21 +28,23 @@ namespace lgfx
 namespace lfw
 {
     class Entity;
+    class RenderContext;
+    class Camera;
     struct RenderTarget;
     struct DepthStencil;
+    struct DeferredResource;
+    struct RenderTask;
 
     class ComponentCamera : public Behavior
     {
     public:
-        static const u32 TextureBlockSize = 8;
-        static const u32 TextureBlockMask = TextureBlockSize-1;
-
         static u8 category(){ return ECSCategory_SceneElement;}
         static u32 type(){ return ECSType_Camera;}
 
         ComponentCamera();
         virtual ~ComponentCamera();
 
+        Entity& getEntity();
         const Entity& getEntity() const;
         virtual u32 getType() const;
 
@@ -47,6 +52,10 @@ namespace lfw
         virtual void onStart();
         virtual void update();
         virtual void onDestroy();
+
+        virtual void render(lfw::Camera& camera, RenderTask& renderTask);
+
+        virtual void deferredLighting(lfw::Camera& camera, RenderTask& renderTask);
 
         void initializePerspective(
             f32 fovyDegree,
@@ -96,6 +105,9 @@ namespace lfw
         */
         void ortho(f32 width, f32 height, f32 znear, f32 zfar);
 
+        void lookAt(const lmath::Vector3& eye, const lmath::Vector3& at);
+        void lookAt(const lmath::Vector4& eye, const lmath::Vector4& at);
+
         void setJitter(bool enable);
         bool isJitter() const;
 
@@ -105,11 +117,6 @@ namespace lfw
         void setRenderTargets(const D3D11_VIEWPORT& viewport, s8 numTargets, const RenderTarget* targets, const DepthStencil* depthStencil);
         void clearRenderTargets();
 
-        const lgfx::Texture2DRef& getRTTexture(s32 index) const;
-        const lgfx::RenderTargetViewRef& getRTView(s32 index) const;
-        const lgfx::ShaderResourceViewRef& getSRView(s32 index) const;
-        const lgfx::UnorderedAccessViewRef& getUAView(s32 index) const;
-        const DepthStencil& getDepthStencil() const;
     protected:
         ComponentCamera(const ComponentCamera&);
         ComponentCamera& operator=(const ComponentCamera&);

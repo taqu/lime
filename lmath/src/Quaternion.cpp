@@ -209,7 +209,7 @@ namespace lmath
         }
 
         if(lmath::isEqual(d, 1.0f, LMATH_F32_DOT_EPSILON)){
-            identity();
+            setIdentity();
             return;
         }
 
@@ -221,7 +221,7 @@ namespace lmath
     void Quaternion::lookAt(const Vector4& eye, const Vector4& at)
     {
         LASSERT(!eye.isEqual(at));
-        lookAt(normalize(at-eye));
+        lookAt( Vector4::construct(normalize(at-eye)) );
     }
 
     void Quaternion::lookAt(const Vector4& dir)
@@ -235,12 +235,12 @@ namespace lmath
         }
 
         if(lmath::isEqual(d, 1.0f, LMATH_F32_DOT_EPSILON)){
-            identity();
+            setIdentity();
             return;
         }
 
         f32 radian = lmath::acos(d);
-        lmath::Vector4 axis = normalize(cross3(Vector4::Forward, dir));
+        lmath::Vector4 axis = Vector4::construct( normalize(cross3(Vector4::Forward, dir)) );
         setRotateAxis(axis.x_, axis.y_, axis.z_, radian);
     }
 
@@ -598,21 +598,21 @@ namespace lmath
     Quaternion Quaternion::rotateX(f32 radian)
     {
         f32 over2 = radian * 0.5f;
-        return Quaternion(lmath::cosf(over2), lmath::sinf(over2), 0.0f, 0.0f);
+        return {lmath::cosf(over2), lmath::sinf(over2), 0.0f, 0.0f};
     }
 
     Quaternion Quaternion::rotateY(f32 radian)
     {
         f32 over2 = radian * 0.5f;
 
-        return Quaternion(lmath::cosf(over2), 0.0f, lmath::sinf(over2), 0.0f);
+        return {lmath::cosf(over2), 0.0f, lmath::sinf(over2), 0.0f};
     }
 
     Quaternion Quaternion::rotateZ(f32 radian)
     {
         f32 over2 = radian * 0.5f;
 
-        return Quaternion(lmath::cosf(over2), 0.0f, 0.0f, lmath::sinf(over2));
+        return {lmath::cosf(over2), 0.0f, 0.0f, lmath::sinf(over2)};
     }
 
     Quaternion Quaternion::rotateXYZ(f32 radx, f32 rady, f32 radz)
@@ -690,13 +690,12 @@ namespace lmath
         f32 over2 = radian * 0.5f;
         f32 sinOver2 = lmath::sinf(over2);
 
-        return Quaternion(lmath::cosf(over2), x*sinOver2, y*sinOver2, z*sinOver2);
+        return {lmath::cosf(over2), x*sinOver2, y*sinOver2, z*sinOver2};
     }
 
     Quaternion invert(const Quaternion& q)
     {
-        f32 lenSqr = q.lengthSqr();
-        LASSERT(lmath::isEqual(lenSqr, 0.0f) == false);
+        LASSERT(lmath::isEqual(q.lengthSqr(), 0.0f) == false);
 
         lm128 r0 = Quaternion::load(q);
         lm128 r1 = _mm_mul_ps(r0, r0);
@@ -725,7 +724,7 @@ namespace lmath
         f32 mag = lengthSqr();
         if(lmath::isEqual(mag, 0.0f)){
             LASSERT(false && "Quaternion::normalize magnitude is zero");
-            identity();
+            setIdentity();
             return;
         }
         f32 magOver = 1.0f / lmath::sqrt(mag);
@@ -765,14 +764,14 @@ namespace lmath
     Quaternion exp(const Quaternion& q, f32 exponent)
     {
         if(0.9999f < lcore::absolute(q.w_)){
-            return Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
+            return Quaternion::identity();
         }
 
         f32 old = lmath::acos(q.w_);
 
         f32 theta = old * exponent;
         f32 t = lmath::sinf(theta)/lmath::sinf(old);
-        return Quaternion(lmath::cosf(theta), q.x_*t, q.y_*t, q.z_*t);
+        return {lmath::cosf(theta), q.x_*t, q.y_*t, q.z_*t};
     }
 
     Quaternion mul(const Quaternion& q0, const Quaternion& q1)
@@ -1023,11 +1022,11 @@ namespace lmath
     {
         f32 cosine = dot(from, to);
         if(LMATH_F32_ANGLE_LIMIT1<lcore::absolute(cosine)){
-            return Quaternion(1.0f, 0.0f, 0.0f, 0.0f);
+            return Quaternion::identity();
         }
-        lmath::Vector4 axis=cross3(from, to);
+        Vector4 axis=Vector4::construct(cross3(from, to));
         axis.w_ = 0.0f;
-        return Quaternion::rotateAxis(normalize(axis), lmath::acos(cosine));
+        return Quaternion::rotateAxis(Vector4::construct(normalize(axis)), lmath::acos(cosine));
     }
 
     Quaternion lerp(const Quaternion& q0, const Quaternion& q1, f32 t)

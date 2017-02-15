@@ -5,22 +5,21 @@ struct VSOutput
     float4 position : SV_POSITION;
     float3 normal : TEXCOORD0;
     float2 uv : TEXCOORD1;
-    float3 worldPos : TEXCOORD2;
-    float3 viewPos : TEXCOORD3;
-    float2 velocity : TEXCOORD4;
+    float2 position1 : TEXCOORD2;
+    float2 velocity : TEXCOORD3;
 };
 
 DeferredOutput main(VSOutput input)
 {
-    float4 albedo = texAlbedo.Sample(samAlbedo, input.uv) * diffuse;
-    float metalic = shadow.w;
+    float4 albedo = texAlbedo.Sample(samLinear, input.uv);
 
     DeferredOutput output;
-    output.albedo.xyz = albedo.xyz * (1-metalic);
-    output.albedo.w = albedo.w;
+    output.albedo.xyz = albedo.xyz*diffuse.xyz;
+    output.albedo.w = shadow.w;
     output.specular = specular;
     output.normal.xyz = normalize(input.normal);
     output.normal.w = shadow.x;
     output.velocity = input.velocity;
+    output.depth = input.position1.x/input.position1.y;
     return output;
 }

@@ -160,6 +160,37 @@ namespace lfw
         { "BLENDWEIGHT", 0, DXGI_FORMAT_R16G16_FLOAT, 0, 36, D3D11_INPUT_PER_VERTEX_DATA, 0 },
     };
 
+
+    D3D11_INPUT_ELEMENT_DESC DefaultInputLayoutElement::layoutSprite2D[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R16G16_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+    D3D11_INPUT_ELEMENT_DESC DefaultInputLayoutElement::layoutParticle[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R16G16B16A16_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "SIZE", 0, DXGI_FORMAT_R16G16_FLOAT, 0, 24, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "ROTATION", 0, DXGI_FORMAT_R16G16_SNORM, 0, 28, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+    D3D11_INPUT_ELEMENT_DESC DefaultInputLayoutElement::layoutVolumeParticle[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32B32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TIMESCALE", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 12, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "RADIUS", 0, DXGI_FORMAT_R16G16_FLOAT, 0, 20, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
+    D3D11_INPUT_ELEMENT_DESC DefaultInputLayoutElement::layoutUI[] =
+    {
+        { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 0, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT, 0, 8, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+        { "COLOR", 0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, 16, D3D11_INPUT_PER_VERTEX_DATA, 0 },
+    };
+
     u32 DefaultInputLayoutElement::numElements_[] =
     {
         1,
@@ -172,6 +203,12 @@ namespace lfw
         5,
         5,
         6,
+
+        3, //Sprite2D
+        5,
+        3,
+
+        3, //UI
     };
 
     D3D11_INPUT_ELEMENT_DESC* DefaultInputLayoutElement::elements_[] =
@@ -186,6 +223,12 @@ namespace lfw
         layoutPNTBU,
         layoutPNUBone,
         layoutPNTUBone,
+
+        layoutSprite2D,
+        layoutParticle,
+        layoutVolumeParticle,
+
+        layoutUI,
     };
 
 
@@ -244,6 +287,26 @@ namespace lfw
 #include "../../shader/Layout_PNTUBone.txt"
     };
 
+    const u8 DefaultInputLayoutCompiledBytes::bytesSprite2D[] =
+    {
+#include "../../shader/Layout_Sprite2D.txt"
+    };
+
+    const u8 DefaultInputLayoutCompiledBytes::bytesParticle[] =
+    {
+#include "../../shader/Layout_Particle.txt"
+    };
+
+    const u8 DefaultInputLayoutCompiledBytes::bytesVolumeParticle[] =
+    {
+#include "../../shader/Layout_VolumeParticle.txt"
+    };
+
+    const u8 DefaultInputLayoutCompiledBytes::bytesUI[] =
+    {
+#include "../../shader/Layout_UI.txt"
+    };
+
     s32 DefaultInputLayoutCompiledBytes::getSize(s32 id)
     {
         LASSERT(0<=id && id<InputLayout_Num);
@@ -268,6 +331,10 @@ namespace lfw
         bytesPNTBU,
         bytesPNUBone,
         bytesPNTUBone,
+        bytesSprite2D,
+        bytesParticle,
+        bytesVolumeParticle,
+        bytesUI,
     };
 
     const s32 DefaultInputLayoutCompiledBytes::size_[] =
@@ -282,185 +349,9 @@ namespace lfw
         sizeof(bytesPNTBU),
         sizeof(bytesPNUBone),
         sizeof(bytesPNTUBone),
+        sizeof(bytesSprite2D),
+        sizeof(bytesParticle),
+        sizeof(bytesVolumeParticle),
+        sizeof(bytesUI),
     };
-
-#if 0
-    //-------------------------------------------------------
-    //---
-    //--- DefaultInputLayoutSource
-    //---
-    //-------------------------------------------------------
-    const Char DefaultInputLayoutSource::sourceP[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "};"
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-    };
-
-    const Char DefaultInputLayoutSource::sourcePN[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "float4 normal : NORMAL;"
-        "};"
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-    };
-
-    const Char DefaultInputLayoutSource::sourcePU[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "float2 tex0 : TEXCOORD0;"
-        "};"
-
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-    };
-
-    const Char DefaultInputLayoutSource::sourcePC[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "float4 color : COLOR;"
-        "};"
-
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-    };
-
-    const Char DefaultInputLayoutSource::sourcePNTB[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "float4 normal : NORMAL;"
-        "float4 tangent : TANGENT;"
-        "float4 binormal : BINORMAL;"
-        "};"
-
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-    };
-
-    const Char DefaultInputLayoutSource::sourcePNU[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "float4 normal : NORMAL;"
-        "float2 tex0 : TEXCOORD0;"
-        "};"
-
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-    };
-
-    const Char DefaultInputLayoutSource::sourcePNCU[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "float4 normal : NORMAL;"
-        "float4 color : COLOR;"
-        "float2 tex0 : TEXCOORD0;"
-        "};"
-
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-
-    };
-
-    const Char DefaultInputLayoutSource::sourcePNTBU[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "float4 normal : NORMAL;"
-        "float4 tangent : TANGENT;"
-        "float4 binormal : BINORMAL;"
-        "float2 tex0 : TEXCOORD0;"
-        "};"
-
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-    };
-
-    const Char DefaultInputLayoutSource::sourcePNUBone[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "float4 normal : NORMAL;"
-        "float2 uv : TEXCOORD0;"
-        "uint2 bone : BLENDINDICES;"
-        "float weight : BLENDWEIGHT;"
-        "};"
-
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-    };
-
-    const Char DefaultInputLayoutSource::sourcePNTUBone[] =
-    {
-        "struct VSInput"
-        "{"
-        "float3 position : POSITION;"
-        "float4 normal : NORMAL;"
-        "float4 tangent : TANGENT;"
-        "float2 uv : TEXCOORD0;"
-        "uint2 bone : BLENDINDICES;"
-        "float weight : BLENDWEIGHT;"
-        "};"
-
-        "float4 main( VSInput input ) : SV_POSITION "
-        "{"
-        "return float4(input.position, 1);"
-        "}"
-    };
-
-    const Char* DefaultInputLayoutSource::getSource(s32 id)
-    {
-        LASSERT(0<=id && id<InputLayout_Num);
-        return sources_[id];
-    }
-
-    const Char* DefaultInputLayoutSource::sources_[] =
-    {
-        sourceP,
-        sourcePN,
-        sourcePU,
-        sourcePC,
-        sourcePNTB,
-        sourcePNU,
-        sourcePNCU,
-        sourcePNTBU,
-        sourcePNUBone,
-        sourcePNTUBone,
-    };
-#endif
 }

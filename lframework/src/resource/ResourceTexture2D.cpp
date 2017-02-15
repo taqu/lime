@@ -24,8 +24,7 @@ namespace lfw
 
         u32 width = 0;
         u32 height = 0;
-        lcore::lsize_t rowBytes = 0;
-        lgfx::DataFormat format = lgfx::Data_R8G8B8A8_UNorm_SRGB;
+        lgfx::DataFormat format = (param.sRGB_)? lgfx::Data_R8G8B8A8_UNorm_SRGB : lgfx::Data_R8G8B8A8_UNorm;
         bool result = false;
 
         if(0==lcore::strncmp(ext, ImageExtension_DDS, 3)){
@@ -37,7 +36,7 @@ namespace lfw
                 lgfx::BindFlag_ShaderResource,
                 lgfx::CPUAccessFlag_None,
                 lgfx::ResourceMisc_None,
-                true,
+                (param.sRGB_)? true:false,
                 width, height, format);
 
         }else if(0==lcore::strncmp(ext, ImageExtension_PNG, 3)){
@@ -125,6 +124,78 @@ namespace lfw
         }
         lgfx::ShaderResourceViewRef srv = texture.createSRView(srvDesc);
 
+        return LNEW ResourceTexture2D(texture, sampler, srv);
+    }
+
+    ResourceTexture2D* ResourceTexture2D::create(u32 color, const TextureParameter& param)
+    {
+        u32 buffer[1] = {color};
+
+        lgfx::SubResourceData initData;
+        initData.pitch_ = 4;
+        initData.slicePitch_ = 0;
+        initData.mem_ = buffer;
+        lgfx::Texture2DRef texture = lgfx::Texture::create2D(
+            1,
+            1,
+            1, 1,
+            (param.sRGB_)? lgfx::Data_R8G8B8A8_UNorm_SRGB : lgfx::Data_R8G8B8A8_UNorm,
+            lgfx::Usage_Default,
+            lgfx::BindFlag_ShaderResource,
+            lgfx::CPUAccessFlag_None,
+            lgfx::ResourceMisc_None,
+            &initData);
+
+        lgfx::SamplerStateRef sampler = lgfx::SamplerState::create(
+            static_cast<lgfx::TextureFilterType>(param.filterType_),
+            static_cast<lgfx::TextureAddress>(param.addressUVW_),
+            static_cast<lgfx::TextureAddress>(param.addressUVW_),
+            static_cast<lgfx::TextureAddress>(param.addressUVW_),
+            static_cast<lgfx::CmpFunc>(param.compFunc_),
+            param.borderColor_);
+
+        lgfx::SRVDesc srvDesc;
+        srvDesc.format_ = (param.sRGB_)? lgfx::Data_R8G8B8A8_UNorm_SRGB : lgfx::Data_R8G8B8A8_UNorm;
+        srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
+        srvDesc.tex2D_.mostDetailedMip_ = 0;
+        srvDesc.tex2D_.mipLevels_ = 1;
+        lgfx::ShaderResourceViewRef srv = texture.createSRView(srvDesc);
+        return LNEW ResourceTexture2D(texture, sampler, srv);
+    }
+
+    ResourceTexture2D* ResourceTexture2D::create(u32 width, u32 height, const u32* colors, const TextureParameter& param)
+    {
+        LASSERT(NULL != colors);
+
+        lgfx::SubResourceData initData;
+        initData.pitch_ = sizeof(u32)*width;
+        initData.slicePitch_ = 0;
+        initData.mem_ = colors;
+        lgfx::Texture2DRef texture = lgfx::Texture::create2D(
+            width,
+            height,
+            1, 1,
+            (param.sRGB_)? lgfx::Data_R8G8B8A8_UNorm_SRGB : lgfx::Data_R8G8B8A8_UNorm,
+            lgfx::Usage_Default,
+            lgfx::BindFlag_ShaderResource,
+            lgfx::CPUAccessFlag_None,
+            lgfx::ResourceMisc_None,
+            &initData);
+
+        lgfx::SamplerStateRef sampler = lgfx::SamplerState::create(
+            static_cast<lgfx::TextureFilterType>(param.filterType_),
+            static_cast<lgfx::TextureAddress>(param.addressUVW_),
+            static_cast<lgfx::TextureAddress>(param.addressUVW_),
+            static_cast<lgfx::TextureAddress>(param.addressUVW_),
+            static_cast<lgfx::CmpFunc>(param.compFunc_),
+            param.borderColor_);
+
+        lgfx::SRVDesc srvDesc;
+        srvDesc.format_ = (param.sRGB_)? lgfx::Data_R8G8B8A8_UNorm_SRGB : lgfx::Data_R8G8B8A8_UNorm;
+        srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
+        srvDesc.tex2D_.mostDetailedMip_ = 0;
+        srvDesc.tex2D_.mipLevels_ = 1;
+        lgfx::ShaderResourceViewRef srv = texture.createSRView(srvDesc);
         return LNEW ResourceTexture2D(texture, sampler, srv);
     }
 }

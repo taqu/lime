@@ -40,26 +40,16 @@ set(OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 
-if(MSVC)
-    set(CMAKE_CXX_FLAGS "${DEFAULT_CXX_FLAGS}" CACHE STRING "Flags used by the compiler during all build types." FORCE)
-    set(CMAKE_CXX_FLAGS_DEBUG "/MTd /Zi /Ob0 /Od /RTC1 /Gy /GR- /GS /Gm-" CACHE STRING "Flags used by the compiler during debug builds." FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "/MT /O2 /Ob2 /GL /GR-" CACHE STRING "Flags used by the compiler during release builds." FORCE)
-
-elseif(UNIX)
-elseif(APPLE)
-endif()
-
 add_library(${ProjectName} STATIC ${FILES})
 set_target_properties(${ProjectName} PROPERTIES OUTPUT_NAME_DEBUG "${ProjectName}d" OUTPUT_NAME_RELEASE "${ProjectName}")
+set_property(TARGET ${ProjectName} APPEND PROPERTY
+        COMPILE_DEFINITIONS $<$<CONFIG:DEBUG>:LENABLE_LOG>)
 
 if(MSVC)
     set_target_properties(${ProjectName} PROPERTIES
         STATIC_LIBRARY_FLAGS "/LIBPATH:\"${EXTERNAL_LIB_DIR}\" \"winmm.lib\" \"ws2_32.lib\""
         STATIC_LIBRARY_FLAGS_DEBUG "\"jemallocd.lib\""
         STATIC_LIBRARY_FLAGS_RELEASE "/LTCG \"jemalloc.lib\"")
-
-    set_property(TARGET ${ProjectName} APPEND PROPERTY
-        COMPILE_DEFINITIONS $<$<CONFIG:DEBUG>:LENABLE_LOG>)
 elseif(UNIX)
 elseif(APPLE)
 endif()

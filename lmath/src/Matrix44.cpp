@@ -1223,7 +1223,7 @@ namespace lmath
 
     void Matrix44::lookAt(const Vector4& at)
     {
-        Vector4 xaxis, yaxis, zaxis = normalize(at);
+        Vector4 xaxis, yaxis, zaxis = Vector4::construct(normalize(at));
 
         f32 d = dot(zaxis, Vector4::Up);
         if(lmath::isEqual(d, -1.0f, 0.000001f)){
@@ -1235,8 +1235,8 @@ namespace lmath
             return;
         }
 
-        xaxis = normalize(cross3(Vector4::Up, zaxis));
-        yaxis = cross3(zaxis, xaxis);
+        xaxis = Vector4::construct(normalize(cross3(Vector4::Up, zaxis)));
+        yaxis = Vector4::construct(cross3(zaxis, xaxis));
 
         m_[0][0] = xaxis.x_; m_[0][1] = xaxis.y_; m_[0][2] = xaxis.z_; m_[0][3] = 0.0f;
         m_[1][0] = yaxis.x_; m_[1][1] = yaxis.y_; m_[1][2] = yaxis.z_; m_[1][3] = 0.0f;
@@ -1273,8 +1273,8 @@ namespace lmath
         Vector4 xaxis, yaxis;
 
         Vector4 up = (lmath::isEqual(zaxis.y_, 1.0f))? Vector4::Backward : Vector4::Up;
-        xaxis = normalize(cross3(up, zaxis));
-        yaxis = cross3(zaxis, xaxis);
+        xaxis = Vector4::construct(normalize(cross3(up, zaxis)));
+        yaxis = Vector4::construct(cross3(zaxis, xaxis));
 
         m_[0][0] = xaxis.x_; m_[0][1] = xaxis.y_; m_[0][2] = xaxis.z_; m_[0][3] = -dot(eye, xaxis);
         m_[1][0] = yaxis.x_; m_[1][1] = yaxis.y_; m_[1][2] = yaxis.z_; m_[1][3] = -dot(eye, yaxis);
@@ -1299,11 +1299,11 @@ namespace lmath
 
     void Matrix44::viewPointAlign(const Matrix44& view, const Vector4& position)
     {
-        Vector4 axis(position.x_-view(0,3), position.y_-view(1,3), position.z_-view(2,3), 0.0f);
+        Vector4 axis = {position.x_-view(0,3), position.y_-view(1,3), position.z_-view(2,3), 0.0f};
         f32 l = axis.lengthSqr();
         if(lmath::isZeroPositive(l)){
             axis.set(view(2,0), view(2,1), view(2,2), 0.0f);
-            axis = normalize(axis);
+            axis = Vector4::construct(normalize(axis));
         }else{
             axis /= lmath::sqrt(l);
         }
@@ -1312,16 +1312,16 @@ namespace lmath
 
     void Matrix44::axisAlign(const Vector4& axis, const Matrix44& view, const Vector4& position)
     {
-        Vector4 zaxis = normalize(axis);
+        Vector4 zaxis = Vector4::construct(normalize(axis));
 
-        Vector4 yaxis(view(1,0), view(1,1), view(1,2), 0.0f);
+        Vector4 yaxis = {view(1,0), view(1,1), view(1,2), 0.0f};
         f32 d = dot(yaxis, zaxis);
         if(0.999f<d){
             yaxis.set(-view(2,0), -view(2,1), -view(2,2), 0.0f);
         }
 
-        Vector4 xaxis = normalize(cross3(yaxis, zaxis));
-        yaxis = cross3(zaxis, xaxis);
+        Vector4 xaxis = Vector4::construct(normalize(cross3(yaxis, zaxis)));
+        yaxis = Vector4::construct(cross3(zaxis, xaxis));
 
         m_[0][0] = xaxis.x_; m_[0][1] = yaxis.x_; m_[0][2] = zaxis.x_; m_[0][3] = position.x_;
         m_[1][0] = xaxis.y_; m_[1][1] = yaxis.y_; m_[1][2] = zaxis.y_; m_[1][3] = position.y_;
@@ -1545,6 +1545,10 @@ namespace lmath
     //------------------------------------------------------------------------------------------------
     void lookAt(Matrix44& view, Matrix44& invview, const Vector4& eye, const Vector4& at, const Vector4& up)
     {
+        LASSERT(lmath::isZero(eye.w_));
+        LASSERT(lmath::isZero(at.w_));
+        LASSERT(lmath::isZero(up.w_));
+
         lm128 xaxis, yaxis, zaxis, teye;
         teye = _mm_loadu_ps(&eye.x_);
 
@@ -1582,14 +1586,16 @@ namespace lmath
 
     void lookAt(Matrix44& view, Matrix44& invview, const Vector3& eye, const Vector3& at, const Vector3& up)
     {
-        lookAt(view, invview, Vector4(eye), Vector4(at), Vector4(up));
+        lookAt(view, invview, Vector4::construct(eye), Vector4::construct(at), Vector4::construct(up));
     }
 
     void lookAt(Matrix44& view, Matrix44& invview, const Vector4& at)
     {
-        Vector4 xaxis, yaxis, zaxis = normalize(at);
+        LASSERT(lmath::isZero(at.w_));
 
-        f32 d = dot(zaxis, Vector4::Up);
+        Vector4 xaxis, yaxis, zaxis = Vector4::construct(normalize(at));
+
+        f32 d = zaxis.y_;
         if(lmath::isEqual(d, -1.0f, 0.000001f)){
             view.setRotateX(-PI_2);
             invview.setRotateX(PI_2);
@@ -1601,11 +1607,8 @@ namespace lmath
             return;
         }
 
-        xaxis = normalize(cross3(Vector4::Up, zaxis));
-        yaxis = normalize(cross3(zaxis, xaxis));
-        f32 dxz = dot(xaxis,zaxis);
-        f32 dxy = dot(xaxis, yaxis);
-        f32 dyz = dot(yaxis, zaxis);
+        xaxis = Vector4::construct(normalize(cross3(Vector4::Up, zaxis)));
+        yaxis = Vector4::construct(normalize(cross3(zaxis, xaxis)));
 
         view.m_[0][0] = xaxis.x_; view.m_[0][1] = xaxis.y_; view.m_[0][2] = xaxis.z_; view.m_[0][3] = 0.0f;
         view.m_[1][0] = yaxis.x_; view.m_[1][1] = yaxis.y_; view.m_[1][2] = yaxis.z_; view.m_[1][3] = 0.0f;
@@ -1620,17 +1623,26 @@ namespace lmath
 
     void lookAt(Matrix44& view, Matrix44& invview, const Vector3& at)
     {
-        lookAt(view, invview, Vector4(at));
+        lookAt(view, invview, Vector4::construct(at));
     }
 
     void lookAt(Matrix44& view, Matrix44& invview, const Vector4& eye, const Quaternion& rotation)
     {
+        LASSERT(lmath::isZero(eye.w_));
+
         Vector4 zaxis = rotate(rotation, Vector4::Forward);
         Vector4 xaxis, yaxis;
 
-        Vector4 up = (lmath::isEqual(zaxis.y_, 1.0f))? Vector4::Backward : Vector4::Up;
-        xaxis = normalize(cross3(up, zaxis));
-        yaxis = normalize(cross3(zaxis, xaxis));
+        Vector4 up;
+        if(zaxis.y_<-0.999f){
+            up = Vector4::Forward;
+        }else if(0.999f<zaxis.y_){
+            up = Vector4::Backward;
+        }else{
+            up = Vector4::Up;
+        }
+        xaxis = Vector4::construct(normalize(cross3(up, zaxis)));
+        yaxis = Vector4::construct(normalize(cross3(zaxis, xaxis)));
 
         view.m_[0][0] = xaxis.x_; view.m_[0][1] = xaxis.y_; view.m_[0][2] = xaxis.z_; view.m_[0][3] = -dot(eye, xaxis);
         view.m_[1][0] = yaxis.x_; view.m_[1][1] = yaxis.y_; view.m_[1][2] = yaxis.z_; view.m_[1][3] = -dot(eye, yaxis);
@@ -1645,7 +1657,7 @@ namespace lmath
 
     void lookAt(Matrix44& view, Matrix44& invview, const Vector3& eye, const Quaternion& rotation)
     {
-        lookAt(view, invview, Vector4(eye), rotation);
+        lookAt(view, invview, Vector4::construct(eye), rotation);
     }
 
     void perspective(Matrix44& proj, Matrix44& invproj, f32 width, f32 height, f32 znear, f32 zfar)

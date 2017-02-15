@@ -9,7 +9,7 @@
 #include <lcore/Array.h>
 #include <lcore/io/VirtualFileSystem.h>
 #include <lgraphics/Enumerations.h>
-#include "resource/Resource.h"
+#include "Resource.h"
 
 namespace lgfx
 {
@@ -22,7 +22,6 @@ namespace lgfx
 namespace lfw
 {
     class Model;
-    class AnimModel;
     class Geometry;
     class Mesh;
     class Material;
@@ -48,14 +47,7 @@ namespace lfw
         @return オブジェクト
         @param filepath ... ファイルパス
         */
-        Model* loadModel(s32 setID, const Char* filepath);
-
-        /**
-        @brief オブジェクトロード
-        @return オブジェクト
-        @param filepath ... ファイルパス
-        */
-        AnimModel* loadAnimModel(s32 setID, const Char* filepath);
+        void loadModel(Model*& model, Skeleton*& skeleton, s32 setID, const Char* filepath);
 
         void setReserveGeometryData(bool enable)
         {
@@ -66,6 +58,8 @@ namespace lfw
         {
             convertRefractiveIndex_ = enable;
         }
+
+        LoadTexture* loadTextures(const Char* filepath);
 
         static bool save(const Char* filepath, Model& model, LoadTexture* textures, Skeleton* skeleton);
 
@@ -78,6 +72,7 @@ namespace lfw
         ModelLoader& operator=(const ModelLoader&);
 
         void setDirectoryPath(const Char* path);
+        void clearFileStream(lcore::FileProxy* file);
 
         /**
         @brief ヘッダロード
@@ -92,7 +87,7 @@ namespace lfw
         @param 出力。モデル
         */
         bool loadInternal(Model& model);
-        bool loadSkeleton(AnimModel& model);
+        bool loadSkeleton(Skeleton*& skeleton);
         bool loadTextures(s32 setID, Model& model);
         void calcBoundingSphere(Model& model);
 

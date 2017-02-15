@@ -14,6 +14,7 @@
 #include "TestVFSPack.h"
 #include "TestFileSystem.h"
 #include "TestSort.h"
+#include "TestRectPack.h"
 
 int main(int argc, char** argv)
 {

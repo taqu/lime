@@ -50,8 +50,6 @@ namespace
     class DebugMemory
     {
     public:
-        static const lcore::s32 DebugInfoFileNameLength = 63;
-
         struct MemoryInfo
         {
             inline void reset()
@@ -78,7 +76,7 @@ namespace
             void* memory_;
             lcore::u32 id_;
             lcore::s32 line_;
-            lcore::Char file_[DebugInfoFileNameLength+1];
+            const lcore::Char* file_;
         };
 
         DebugMemory()
@@ -111,9 +109,6 @@ namespace
     void DebugMemory::pushMemoryInfo(void* ptr, const lcore::Char* file, lcore::s32 line)
     {
         lcore::CSLock lock(debugCS_);
-        //if(!debugInfoMemorySpace_.valid()){
-        //    return;
-        //}
 
         if(breakAtMalloc_ && breakMallocId_ == id_){
             breakAtMalloc_ = false;
@@ -122,30 +117,11 @@ namespace
 #endif
         }
         MemoryInfo* info = (MemoryInfo*)je_malloc(sizeof(MemoryInfo));
-        //MemoryInfo* info = (MemoryInfo*)debugInfoMemorySpace_.allocate(sizeof(MemoryInfo));
         info->reset();
         info->memory_ = ptr;
         info->id_ = id_++;
         info->line_ = line;
-        info->file_[0] = lcore::CharNull;
-
-
-        lcore::s32 len = 0;
-        const lcore::Char* name = "";
-
-        if(NULL != file){
-            len = lcore::strlen_s32(file);
-            const lcore::Char* slash = lcore::rFindChr(len, file, '\\');
-            if(NULL != slash){
-                name = slash + 1;
-                len = lcore::strlen_s32(name);
-                len = lcore::minimum(DebugInfoFileNameLength, len);
-            }
-        }
-
-        for(lcore::s32 i=0; i<=len; ++i){
-            info->file_[i] = name[i];
-        }
+        info->file_ = file;
 
         info->link(memoryInfoTop_.next_);
     }
@@ -159,9 +135,6 @@ namespace
         while(info != &memoryInfoTop_){
             if(info->memory_ == ptr){
                 info->unlink();
-                //if(debugInfoMemorySpace_.valid()){
-                //    debugInfoMemorySpace_.deallocate(info);
-                //}
                 je_free(info);
                 break;
             }
@@ -199,13 +172,11 @@ namespace
 
 void* lcore_malloc(std::size_t size)
 {
-    //return dlmalloc(size);
     return je_malloc(size);
 }
 
 void* lcore_malloc(std::size_t size, std::size_t alignment)
 {
-    //return dlmemalign(alignment, size);
     return je_aligned_alloc(alignment, size);
 }
 
@@ -216,7 +187,6 @@ void lcore_free(void* ptr)
         debugMemory_->popMemoryInfo(ptr);
     }
 #endif
-    //dlfree(ptr);
     je_free(ptr);
 }
 
@@ -227,7 +197,6 @@ void lcore_free(void* ptr, std::size_t /*alignment*/)
         debugMemory_->popMemoryInfo(ptr);
     }
 #endif
-    //dlfree(ptr);
     je_free(ptr);
 }
 
@@ -237,7 +206,6 @@ void* lcore_malloc(std::size_t size, const char* file, int line)
 void* lcore_malloc(std::size_t size, const char*, int)
 #endif
 {
-    //void* ptr = dlmalloc(size);
     void* ptr = je_malloc(size);
 
 #ifdef LCORE_DEBUG_MEMORY_INFO
@@ -254,7 +222,6 @@ void* lcore_malloc(std::size_t size, std::size_t alignment, const char* file, in
 void* lcore_malloc(std::size_t size, std::size_t alignment, const char*, int)
 #endif
 {
-    //void* ptr = dlmemalign(alignment, size);
     void* ptr = je_aligned_alloc(alignment, size);
 
 #ifdef LCORE_DEBUG_MEMORY_INFO
@@ -267,7 +234,6 @@ void* lcore_malloc(std::size_t size, std::size_t alignment, const char*, int)
 
 void* lcore_realloc(void* ptr, std::size_t size)
 {
-    //ptr = dlrealloc(ptr, size);
     ptr = je_realloc(ptr, size);
     return ptr;
 }
@@ -365,8 +331,6 @@ namespace
     void beginMalloc()
     {
         if(NULL == debugMemory_){
-            //debugInfoMemorySpace_.create(DebugInfoMemorySize);
-            //void* ptr = debugInfoMemorySpace_.allocate(sizeof(DebugMemory));
             void* ptr = je_malloc(sizeof(DebugMemory));
             debugMemory_ = LPLACEMENT_NEW(ptr) DebugMemory();
         }
@@ -377,10 +341,8 @@ namespace
         if(NULL != debugMemory_){
             debugMemory_->print();
             debugMemory_->~DebugMemory();
-            //debugInfoMemorySpace_.deallocate(debugMemory_);
             je_free(debugMemory_);
             debugMemory_ = NULL;
-            //debugInfoMemorySpace_.destroy();
         }
     }
 #endif
@@ -532,6 +494,30 @@ namespace
          t.u_ = sign | (exponent<<23) | (fraction<<13);
 
         return t.f_;
+    }
+
+    s8 floatTo8SNORM(f32 f)
+    {
+        s32 s = static_cast<s32>(f*128);
+        return static_cast<s8>(lcore::clamp(s, -128, 127));
+    }
+
+    u8 floatTo8UNORM(f32 f)
+    {
+        u32 s = static_cast<u32>(f*255 + 0.5f);
+        return static_cast<u8>((255<s)? 255 : s);
+    }
+
+    s16 floatTo16SNORM(f32 f)
+    {
+        s32 s = static_cast<s32>(f*32768);
+        return static_cast<s16>(lcore::clamp(s, -32768, 32767));
+    }
+
+    u16 floatTo16UNORM(f32 f)
+    {
+        u32 s = static_cast<u32>(f*65535 + 0.5f);
+        return static_cast<u16>((65535<s)? 65535 : s);
     }
 
 #define LCORE_POPULATIONCOUNT(val)\
@@ -1087,6 +1073,17 @@ namespace
         va_end(cargs);
         return count;
 #endif
+    }
+
+    void replace(Char* str, Char dst, Char src)
+    {
+        LASSERT(NULL != str);
+        while(CharNull != *str){
+            if(src == *str){
+                *str = dst;
+            }
+            ++str;
+        }
     }
 
     //---------------------------------------------------------

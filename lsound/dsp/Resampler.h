@@ -7,7 +7,7 @@
 */
 #include "../lsound.h"
 #include "dsp.h"
-#include <speex/speex_resampler.h>
+#include "../speexdsp/speex_resampler.h"
 
 namespace lsound
 {

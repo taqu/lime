@@ -427,6 +427,30 @@ LCORE_RANDOM_XORSHIFT128PLUS_PROC
     }
 #undef LCORE_RANDOM_XORSHIFT128PLUS32_PROC
 
+    f32 RandXorshift128Plus32::frand()
+    {
+        u32 t = rand();
+
+        static const u32 m0 = 0x3F800000U;
+        static const u32 m1 = 0x007FFFFFU;
+        t = m0|(t&m1);
+        return (*(f32*)&t)- 0.999999881f;
+    }
+
+    f32 RandXorshift128Plus32::frand2()
+    {
+        u32 t = rand();
+
+        static const u32 m0 = 0x3F800000U;
+        static const u32 m1 = 0x007FFFFFU;
+        t = m0|(t&m1);
+        return (*(f32*)&t) - 1.000000000f;
+    }
+
+    f64 RandXorshift128Plus32::drand()
+    {
+        return rand()*(1.0/4294967295.0); 
+    }
 
     void RandXorshift128Plus32::swap(RandXorshift128Plus32& rhs)
     {

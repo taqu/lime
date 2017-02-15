@@ -17,26 +17,31 @@ namespace lmath
     class Vector2
     {
     public:
-        Vector2()
-        {}
+        static Vector2 construct(f32 xy)
+        {
+            return {xy, xy};
+        }
 
-        Vector2(f32 x, f32 y)
-            :x_(x), y_(y)
-        {}
+        static Vector2 construct(f32 x, f32 y)
+        {
+            return {x, y};
+        }
 
-        explicit Vector2(f32 xy)
-            :x_(xy)
-            ,y_(xy)
-        {}
+        static Vector2 zero()
+        {
+            return {0.0f, 0.0f};
+        }
+
+        static Vector2 one()
+        {
+            return {1.0f, 1.0f};
+        }
 
         void set(f32 x, f32 y)
         {
             x_ = x;
             y_ = y;
         }
-
-        inline Vector2& zero();
-        inline Vector2& one();
 
         inline f32 operator[](s32 index) const;
         inline f32& operator[](s32 index);
@@ -85,18 +90,6 @@ namespace lmath
     //--- 実装
     //---
     //--------------------------------------------
-    inline Vector2& Vector2::zero()
-    {
-        x_ = y_ = 0.0f;
-        return *this;
-    }
-
-    inline Vector2& Vector2::one()
-    {
-        x_ = y_ = 1.0f;
-        return *this;
-    }
-
     inline f32 Vector2::operator[](s32 index) const
     {
         LASSERT(0<=index && index < 2);
@@ -111,7 +104,7 @@ namespace lmath
 
     inline Vector2 Vector2::operator-() const
     {
-        return Vector2(-x_, -y_);
+        return {-x_, -y_};
     }
 
     inline Vector2& Vector2::operator+=(const Vector2& v)
@@ -187,28 +180,28 @@ namespace lmath
 
     inline Vector2 operator+(const Vector2& v0, const Vector2& v1)
     {
-        return Vector2(v0.x_+v1.x_, v0.y_+v1.y_);
+        return {v0.x_+v1.x_, v0.y_+v1.y_};
     }
 
     inline Vector2 operator-(const Vector2& v0, const Vector2& v1)
     {
-        return Vector2(v0.x_-v1.x_, v0.y_-v1.y_);
+        return {v0.x_-v1.x_, v0.y_-v1.y_};
     }
 
     inline Vector2 operator*(f32 f, const Vector2& v)
     {
-        return Vector2(f*v.x_, f*v.y_);
+        return {f*v.x_, f*v.y_};
     }
 
     inline Vector2 operator*(const Vector2& v, f32 f)
     {
-        return Vector2(v.x_*f, v.y_*f);
+        return {v.x_*f, v.y_*f};
     }
 
     inline Vector2 operator/(const Vector2& v, f32 f)
     {
         f32 inv = 1.0f/f;
-        return Vector2(v.x_*inv, v.y_*inv);
+        return {v.x_*inv, v.y_*inv};
     }
 
     inline f32 dot(const Vector2& v0, const Vector2& v1)
@@ -233,22 +226,22 @@ namespace lmath
 
     inline Vector2 add(const Vector2& v0, const Vector2& v1)
     {
-        return Vector2(v0.x_+v1.x_, v0.y_+v1.y_);
+        return {v0.x_+v1.x_, v0.y_+v1.y_};
     }
 
     inline Vector2 sub(const Vector2& v0, const Vector2& v1)
     {
-        return Vector2(v0.x_-v1.x_, v0.y_-v1.y_);
+        return {v0.x_-v1.x_, v0.y_-v1.y_};
     }
 
     inline Vector2 mul(f32 f, const Vector2& v)
     {
-        return Vector2(f*v.x_, f*v.y_);
+        return {f*v.x_, f*v.y_};
     }
 
     inline Vector2 mul(const Vector2& v, f32 f)
     {
-        return Vector2(v.x_*f, v.y_*f);
+        return {v.x_*f, v.y_*f};
     }
 
     Vector2 muladd(f32 f, const Vector2& v0, const Vector2& v1);

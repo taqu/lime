@@ -74,6 +74,9 @@ namespace lmath
             r_ = radius;
         }
 
+        void translate(const lmath::Vector3& position);
+        void translate(const lmath::Vector4& position);
+
         /**
         @brief 点に外接する球を計算
         */

@@ -31,6 +31,7 @@ namespace lgfx
         void begin(lgfx::ContextRef& context);
         void end(lgfx::ContextRef& context);
 
+        s32 getFrames() const{return frames_;}
         s32 getCurrentFrame() const{ return current_;}
         bool checkInGPUUse(s32 frame) const{ return events_[frame].flag_ == FrameSyncFlag_InGPUUse;}
 

@@ -25,7 +25,7 @@ namespace lgfx
         DynamicBuffer();
         ~DynamicBuffer();
 
-        void initialize(s32 totalSize);
+        void initialize(FrameSyncQuery* frameSyncQuery, s32 totalSize);
         void terminate();
 
         void begin();
@@ -54,9 +54,9 @@ namespace lgfx
     }
 
     template<class Buffer, class Creator>
-    void DynamicBuffer<Buffer, Creator>::initialize(s32 totalSize)
+    void DynamicBuffer<Buffer, Creator>::initialize(FrameSyncQuery* frameSyncQuery, s32 totalSize)
     {
-        ringBuffer_.initialize(totalSize);
+        ringBuffer_.initialize(frameSyncQuery, totalSize, frameSyncQuery->getFrames());
         buffer_ = creator_type::create(totalSize);
     }
 

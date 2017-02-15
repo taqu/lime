@@ -12,20 +12,9 @@ namespace lmath
     class Quaternion
     {
     public:
-        Quaternion()
-        {}
-;
-        inline Quaternion& operator=(const Quaternion& rhs);
-
-        Quaternion(f32 w, f32 x, f32 y, f32 z)
-            :w_(w),
-            x_(x),
-            y_(y),
-            z_(z)
-        {}
-
-        ~Quaternion()
-        {}
+        inline static Quaternion construct(f32 w, f32 x, f32 y, f32 z);
+        inline static Quaternion construct(const Quaternion& q);
+        inline static Quaternion identity();
 
         inline void set(f32 w, f32 x, f32 y, f32 z);
         void set(const Vector4& v);
@@ -34,7 +23,7 @@ namespace lmath
         inline f32& operator[](s32 index);
 
         /// 単位四元数
-        inline Quaternion& identity();
+        inline Quaternion& setIdentity();
 
         void setRotateX(f32 radian);
         void setRotateY(f32 radian);
@@ -173,17 +162,23 @@ namespace lmath
     extern LALIGN16 u32 QuaternionMulMask2_[4];
 #endif
 
-    inline Quaternion& Quaternion::operator=(const Quaternion& rhs)
+    inline Quaternion Quaternion::construct(f32 w, f32 x, f32 y, f32 z)
     {
-#if defined(LMATH_USE_SSE)
-        lm128 t = load(rhs);
-        store(*this, t);
-#else
-        set(rhs.w_, rhs.x_, rhs.y_, rhs.z_);
-#endif
-        return *this;
+        return {w, x, y, z};
     }
 
+    inline Quaternion Quaternion::construct(const Quaternion& q)
+    {
+        Quaternion r;
+        _mm_storeu_ps(&r.x_, _mm_loadu_ps(&q.x_));
+        return r;
+    }
+
+    inline Quaternion Quaternion::identity()
+    {
+        Quaternion r;
+        return r.setIdentity();
+    }
 
     inline void Quaternion::set(f32 w, f32 x, f32 y, f32 z)
     {
@@ -221,14 +216,12 @@ namespace lmath
 
     //---------------------------------------
     // 単位四元数
-    inline Quaternion& Quaternion::identity()
+    inline Quaternion& Quaternion::setIdentity()
     {
 #if defined(LMATH_USE_SSE)
         const f32 one = 1.0f;
-
         lm128 t = _mm_load_ss(&one);
         _mm_storeu_ps(&w_, t);
-
 #else
         w_ = 1.0f;
         x_ = y_ = z_ = 0.0f;
@@ -275,7 +268,7 @@ namespace lmath
 
         return store(r0);
 #else
-        return Quaternion(q.w_, -q.x_, -q.y_, -q.z_);
+        return {q.w_, -q.x_, -q.y_, -q.z_};
 #endif
     }
 

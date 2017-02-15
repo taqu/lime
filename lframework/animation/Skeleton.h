@@ -6,6 +6,7 @@
 @date 2016/11/24 create
 */
 #include "lanim.h"
+#include <lcore/intrusive_ptr.h>
 #include <lcore/Buffer.h>
 #include "Joint.h"
 
@@ -17,6 +18,8 @@ namespace lfw
     class Skeleton
     {
     public:
+        typedef lcore::intrusive_ptr<Skeleton> pointer;
+
         Skeleton();
         explicit Skeleton(s32 numJoints);
         ~Skeleton();
@@ -65,7 +68,7 @@ namespace lfw
 
         /// スワップ
         void swap(Skeleton& rhs);
-        void copyTo(Skeleton& dst);
+        bool copyTo(Skeleton& dst);
 
         static bool serialize(lcore::ostream& os, Skeleton& skeleton);
         static bool deserialize(Skeleton& skeleton, lcore::istream& is);
@@ -73,6 +76,10 @@ namespace lfw
         Skeleton(const Skeleton&);
         Skeleton& operator=(const Skeleton&);
 
+        friend void intrusive_ptr_addref(Skeleton* skeleton);
+        friend void intrusive_ptr_release(Skeleton* skeleton);
+
+        s32 referenceCount_;
         Name name_;
         s32 numJoints_;
         Joint* joints_;
@@ -163,6 +170,19 @@ namespace lfw
         LASSERT(0<=diff && diff<numJoints_);
 
         return static_cast<u8>(diff);
+    }
+
+    inline void intrusive_ptr_addref(Skeleton* skeleton)
+    {
+        ++skeleton->referenceCount_;
+    }
+
+    inline void intrusive_ptr_release(Skeleton* skeleton)
+    {
+        --skeleton->referenceCount_;
+        if(0 == skeleton->referenceCount_){
+            LDELETE_RAW(skeleton);
+        }
     }
 }
 #endif //INC_LFRAMEWORK_SKELETON_H__

@@ -21,7 +21,7 @@ namespace lmath
     {
         origin_.zero();
         direction_.zero();
-        invDirection_ = Vector3(LMATH_INFINITY);
+        invDirection_ = Vector3::construct(LMATH_INFINITY);
         t_ = 0.0f;
     }
 
@@ -44,7 +44,7 @@ namespace lmath
 
     void Ray::setDirection(const lmath::Vector4& direction)
     {
-        direction_ = direction;
+        direction_ = Vector3::construct(direction);
         invertDirection();
     }
 
@@ -56,7 +56,7 @@ namespace lmath
 
     void Ray::setDirection(const lmath::Vector4& direction, const lmath::Vector4& invDirection)
     {
-        direction_ = direction;
-        invDirection_ = invDirection;
+        direction_ = Vector3::construct(direction);
+        invDirection_ = Vector3::construct(invDirection);
     }
 }

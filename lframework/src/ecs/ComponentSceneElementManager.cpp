@@ -97,7 +97,7 @@ namespace lfw
             components_[index]->onDestroy();
             LDELETE(components_[index]);
         }
-        ids_.destroy(ID(0, index));
+        ids_.destroy(ID::construct(0, index));
     }
 
     Behavior* ComponentSceneElementManager::getBehavior(ID id)
@@ -179,10 +179,12 @@ namespace lfw
             Camera& camera = cameras_[i].camera_;
             const Behavior* behavior = components_[cameras_[i].componentIndex_];
             Entity entity = getData(behavior->getID()).entity_;
-            NameString& name = entity.getName();
             const ComponentGeometric* geometric = entity.getGeometric();
             lmath::Matrix44& view = camera.getViewMatrix();
-            view.lookAt(geometric->getPosition(), geometric->getRotation());
+            lmath::Matrix44& invview = camera.getInvViewMatrix();
+            lookAt(view, invview, geometric->getPosition(), geometric->getRotation());
+            lmath::Vector4& eyePosition = camera.getEyePosition();
+            eyePosition = geometric->getPosition();
             camera.updateMatrix();
         }
 

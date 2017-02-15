@@ -1,0 +1,49 @@
+#include "Common.ps"
+
+Texture2D<float4> gbuffAlbedo : register(t0);
+Texture2D<float4> gbuffSpecular : register(t1);
+Texture2D<float4> gbuffNormal : register(t2);
+Texture2D<float2> gbuffVelocity : register(t3);
+Texture2D<float> gbuffDepth : register(t4);
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+float4 main(VSOutput input) : SV_TARGET0
+{
+    float2 uv = input.tex;
+    uint2 location = uv*screenSize;
+
+    float4 albedo = gbuffAlbedo[location];
+    float4 specular = gbuffSpecular[location];
+    float4 normal = gbuffNormal[location];
+    float2 velocity = gbuffVelocity[location];
+    float depth = gbuffDepth[location];
+    float shadow = texShadowAccum.SampleLevel(samLinear, uv, 0);
+
+    float3 N = normal.xyz;
+    float roughness = specular.w;
+    float metalic = albedo.w;
+    shadow *= normal.w;
+    float ambientOcclusion = 1.0;
+
+    float3 screen;
+    screen.xy = uv * float2(2.0,-2.0) + float2(-1.0,1.0);
+    screen.z = depth;
+    float3 worldPos = screenToWorld(screen, minvvp1);
+
+    float3 V = normalize(cameraPos.xyz - worldPos);
+    float3 L = dlDir.xyz;
+    EnvironmentLight envLight;
+    envLight.diffuse_ = irradianceDiffuse(texIrradiance, samLinear, N);
+    envLight.specular_ = radianceSpecular(texRadiance, samLinear, N, V, roughness, specularMapMipLevels);
+
+    float4 color;
+    color.rgb = lightSurface(N, V, L, dlColor.xyz, albedo.xyz, roughness, metalic, ambientOcclusion, envLight);
+    color.rgb = max(0, color.rgb-shadow);
+    color.a = 1;
+    return color;
+}

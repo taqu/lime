@@ -552,9 +552,9 @@ namespace lcore
         return count;
     }
 
-    s32 DirectoryProxyOS::findChild(s32 length, const Char* name) const
+    s32 DirectoryProxyOS::findChild(s32 /*length*/, const Char* name) const
     {
-        LASSERT(0<=length);
+        //LASSERT(0<=length);
         LASSERT(NULL != name);
 
         const String& tmpPath = getSearchPath();
@@ -613,9 +613,9 @@ namespace lcore
         return status;
     }
 
-    fs::FileStatus DirectoryProxyOS::getStatus(s32 length, const Char* name) const
+    fs::FileStatus DirectoryProxyOS::getStatus(s32 /*length*/, const Char* name) const
     {
-        LASSERT(0<=length);
+        //LASSERT(0<=length);
         LASSERT(NULL != name);
         fs::FileStatus status;
         lcore::memset(&status, 0, sizeof(fs::FileStatus));
@@ -684,9 +684,9 @@ namespace lcore
         return NULL;
     }
 
-    FileProxy* DirectoryProxyOS::openFile(s32 length, const Char* name)
+    FileProxy* DirectoryProxyOS::openFile(s32 /*length*/, const Char* name)
     {
-        LASSERT(0<=length);
+        //LASSERT(0<=length);
         LASSERT(NULL != name);
 
         String& tmpPath = getSearchPath();
@@ -752,9 +752,9 @@ namespace lcore
         return NULL;
     }
 
-    DirectoryProxy* DirectoryProxyOS::openDirectory(s32 length, const Char* name)
+    DirectoryProxy* DirectoryProxyOS::openDirectory(s32 /*length*/, const Char* name)
     {
-        LASSERT(0<=length);
+        //LASSERT(0<=length);
         LASSERT(NULL != name);
         String& tmpPath = getSearchPath();
 
@@ -992,5 +992,58 @@ namespace lcore
         proxies_[size_][ExpandSize-1].next_ = NULL;
         top_ = proxies_[size_];
         ++size_;
+    }
+
+    //--------------------------------------------
+    //---
+    //--- FileProxyOSRaw
+    //---
+    //--------------------------------------------
+    FileProxyOSRaw::FileProxyOSRaw(LHANDLE handle)
+        :handle_(handle)
+    {
+        LASSERT(NULL != handle_);
+    }
+
+    FileProxyOSRaw::~FileProxyOSRaw()
+    {
+        if(NULL != handle_){
+            CloseHandle(handle_);
+            handle_ = NULL;
+        }
+    }
+
+    bool FileProxyOSRaw::isCompressed() const
+    {
+        return false;
+    }
+
+    s64 FileProxyOSRaw::getUncompressedSize() const
+    {
+        LARGE_INTEGER size;
+        size.QuadPart = 0;
+        return GetFileSizeEx(handle_, &size)? size.QuadPart : 0;
+    }
+
+    s64 FileProxyOSRaw::getCompressedSize() const
+    {
+        LARGE_INTEGER size;
+        size.QuadPart = 0;
+        return GetFileSizeEx(handle_, &size)? size.QuadPart : 0;
+    }
+
+    s64 FileProxyOSRaw::read(s64 offset, s64 size, u8* buffer) const
+    {
+        return File::read(handle_, offset, size, buffer);
+    }
+
+    s64 FileProxyOSRaw::write(s64 offset, s64 size, u8* data)
+    {
+        return File::write(handle_, offset, size, data);
+    }
+
+    bool FileProxyOSRaw::thisParent(VirtualFileSystemBase* vfs) const
+    {
+        return false;
     }
 }

@@ -5,14 +5,16 @@
 @author t-sakai
 @date 2016/11/16 create
 */
-#include "lframework.h"
+#include "../lframework.h"
 #include <lcore/intrusive_ptr.h>
 
 namespace lfw
 {
     struct TextureParameter
     {
-        u8 reserved_;
+        void initialize();
+
+        u8 sRGB_;
         u8 filterType_;
         u8 addressUVW_;
         u8 compFunc_;

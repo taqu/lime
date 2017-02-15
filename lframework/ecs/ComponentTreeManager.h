@@ -9,7 +9,7 @@
 #include "ECSTree.h"
 #include <lcore/Array.h>
 #include <lcore/BitSet.h>
-#include "Application.h"
+#include "../Application.h"
 
 namespace lfw
 {
@@ -21,6 +21,8 @@ namespace lfw
         typedef ECSNodeConstIterator<ComponentType> const_iterator;
 
         typedef lcore::Array<Entity> EntityArray;
+
+        typedef bool (*TraverseCallBack)(s32 depth, const ComponentType& component, void* userData);
 
         static const u32 Flag_Dirty = 0x01U<<0;
 
@@ -63,7 +65,8 @@ namespace lfw
         inline const Entity* end() const;
 
         ComponentType* find(const Char* path);
-
+        inline void traverse(TraverseCallBack func, void* userData);
+        inline void traverse(TraverseCallBack funcBegin, TraverseCallBack funcEnd,void* userData);
     protected:
         ComponentTreeManager(const ComponentTreeManager&);
         ComponentTreeManager& operator=(const ComponentTreeManager&);
@@ -73,13 +76,16 @@ namespace lfw
 
         bool updateRootFlags(const Entity& entity);
         void updateFlags(const Entity& entity);
-        void destroyRecurse(u16 id);
+        void destroyRecurse(u16 index);
+        void traverse(s32 depth, const ECSNode* node, TraverseCallBack func, void* userData);
+        void traverse(s32 depth, const ECSNode* node, TraverseCallBack funcBegin, TraverseCallBack funcEnd, void* userData);
 
         lcore::BitSet32 flags_;
         IDTable ids_;
         ComponentType* components_;
         NameString* names_;
         lcore::ArrayPOD<Operation> operations_;
+        lcore::ArrayPOD<Operation> workOperations_;
         ECSEntityTree entityTree_;
     };
 
@@ -130,7 +136,7 @@ namespace lfw
         names_[index].clear();
 
         entityTree_.destroy(index);
-        ids_.destroy(ID(0, index));
+        ids_.destroy(ID::construct(0, index));
     }
 
     template<class ComponentType>
@@ -254,7 +260,16 @@ namespace lfw
     template<class ComponentType>
     void ComponentTreeManager<ComponentType>::add(ID id, Operation::Type type)
     {
-        Operation op = {static_cast<u16>(type), id.index()};
+        for(s32 i=0; i<operations_.size(); ++i){
+            if(operations_[i].id() == id){
+                operations_[i].type_ = type;
+                flags_.set(Flag_Dirty);
+                return;
+            }
+        }
+        Operation op;
+        op.type_ = type;
+        op.id_ = id;
         operations_.push_back(op);
         flags_.set(Flag_Dirty);
     }
@@ -298,8 +313,7 @@ namespace lfw
         IDConstAccess access = ecsManager.getComponents(entity);
         LASSERT(ECSCategory_Logical == access[0].category() || ECSCategory_Geometric == access[0].category());
         ComponentType* component = getTreeComponent(access[0]);
-        const ECSNode& node = getNode(component->getID());
-        LASSERT(node.parent() != ECSNode::Root);
+        LASSERT(getNode(component->getID()).parent() != ECSNode::Root);
 
         const Entity& parent = getEntity(component->getID());
         bool parentUpdate = ecsManager.checkFlag(parent, EntityFlag_Update);
@@ -321,18 +335,23 @@ namespace lfw
     template<class ComponentType>
     bool ComponentTreeManager<ComponentType>::update()
     {
-        for(s32 i=0; i<operations_.size(); ++i){
-            switch(operations_[i].type())
-            {
-            case Operation::Type_Create:
-                break;
-            case Operation::Type_Destroy:
-            default:
-                destroyRecurse(operations_[i].index());
-                break;
+        if(0 < operations_.size ()) {
+            workOperations_.resize(operations_.size());
+            lcore::memcpy(&workOperations_[0], &operations_[0], sizeof(Operation)*operations_.size());
+            operations_.clear();
+            for(s32 i = 0; i < workOperations_.size (); ++i){
+                switch(workOperations_[i].type())
+                {
+                case Operation::Type_Create:
+                    break;
+                case Operation::Type_Destroy:
+                default:
+                    destroyRecurse(workOperations_[i].id().index());
+                    break;
+                }
             }
+            workOperations_.clear();
         }
-        operations_.clear();
 
         if(flags_.check(Flag_Dirty)){
             flags_.reset(Flag_Dirty);
@@ -444,7 +463,52 @@ namespace lfw
             destroyRecurse(node.child());
         }
         Entity entity = entityTree_.getEntity(id);
-        ECSManager::getInstance().destroyEntity(entity);
+        if(ECSManager::getInstance ().isValidEntity(entity)) {
+            ECSManager::getInstance ().destroyEntity(entity);
+        }
+    }
+
+    template<class ComponentType>
+    inline void ComponentTreeManager<ComponentType>::traverse(TraverseCallBack func, void* userData)
+    {
+        LASSERT(NULL != func);
+        traverse(0, &entityTree_.getRoot(), func, userData);
+    }
+
+    template<class ComponentType>
+    inline void ComponentTreeManager<ComponentType>::traverse(TraverseCallBack funcBegin, TraverseCallBack funcEnd, void* userData)
+    {
+        LASSERT(NULL != funcBegin);
+        LASSERT(NULL != funcEnd);
+        traverse(0, &entityTree_.getRoot(), funcBegin, funcEnd, userData);
+    }
+
+    template<class ComponentType>
+    void ComponentTreeManager<ComponentType>::traverse(s32 depth, const ECSNode* node, TraverseCallBack func, void* userData)
+    {
+        s32 numChildren = node->numChildren();
+        u16 child = node->child();
+        for(s32 i=0; i<numChildren; ++i){
+            const ECSNode* childNode = &entityTree_.get(child);
+            func(depth, components_[childNode->index()], userData);
+            traverse(depth+1, childNode, func, userData);
+            child = childNode->next();
+        }
+    }
+
+    template<class ComponentType>
+    void ComponentTreeManager<ComponentType>::traverse(s32 depth, const ECSNode* node, TraverseCallBack funcBegin, TraverseCallBack funcEnd, void* userData)
+    {
+        s32 numChildren = node->numChildren();
+        u16 child = node->child();
+        for(s32 i=0; i<numChildren; ++i){
+            const ECSNode* childNode = &entityTree_.get(child);
+            if(funcBegin(depth, components_[childNode->index()], userData)){
+                traverse(depth+1, childNode, funcBegin, funcEnd, userData);
+                funcEnd(depth, components_[childNode->index()], userData);
+            }
+            child = childNode->next();
+        }
     }
 }
 #endif //INC_LFRAMEWORK_COMPONENTTREEMANAGER_H__

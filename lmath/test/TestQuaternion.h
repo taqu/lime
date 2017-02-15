@@ -27,7 +27,7 @@ namespace lmath
         lmath::Vector4 direction;
         for(s32 i=-100; i<100; ++i){
             direction.set(1.0f, static_cast<f32>(i)/100.0f, random.frand(), 0.0f);
-            direction = normalize(direction);
+            direction = lmath::Vector4::construct(normalize(direction));
             quat.lookAt(direction);
             lmath::Vector4 d;
             quat.getDireciton(d);

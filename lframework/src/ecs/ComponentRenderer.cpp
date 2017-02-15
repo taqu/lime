@@ -38,6 +38,12 @@ namespace
         return componentManager->getData(getID()).entity_;
     }
 
+    Entity ComponentRenderer::getEntity()
+    {
+        ComponentRendererManager* componentManager = getManager();
+        return componentManager->getData(getID()).entity_;
+    }
+
     u32 ComponentRenderer::getType() const
     {
         ComponentRendererManager* componentManager = getManager();

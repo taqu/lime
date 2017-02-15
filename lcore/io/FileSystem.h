@@ -30,6 +30,7 @@ namespace fs
     {
         VFSType_Pack = 0,
         VFSType_OS = 1,
+        VFSType_OSRaw = 2,
     };
 
     struct FileStatus

@@ -30,17 +30,11 @@ namespace lfw
         /// ÉXÉèÉbÉv
         void swap(Material& rhs);
 
-#ifdef LIME_NPBR
-        lmath::Vector4 diffuse_; //rgba
-        lmath::Vector4 specular_; //rgb shininess
-        lmath::Vector4 ambient_; //rgb refractive index of fresnel
-        lmath::Vector4 shadow_; //rgb roughness
-#else
         lmath::Vector4 diffuse_; //rgba
         lmath::Vector4 specular_; //rgb roughness
         lmath::Vector4 ambient_; //rgb ambient refractive index of fresnel
         lmath::Vector4 shadow_; //rgb metalic
-#endif
+
         u32 flags_;
         lgfx::BlendStateRef blendState_;
         s8 textureIDs_[TextureType_Num];
@@ -71,7 +65,7 @@ namespace lfw
 
     inline bool Material::isRecieveShadow() const
     {
-        return 0 != (flags_ & MaterialFlag_RecieveShadow);
+        return 0 != (flags_ & MaterialFlag_ReceiveShadow);
     }
 
     inline bool Material::isTransparent() const

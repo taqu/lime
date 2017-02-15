@@ -28,7 +28,7 @@ namespace lfw
     enum MaterialFlag
     {
         MaterialFlag_CastShadow = 0x01U << 0,
-        MaterialFlag_RecieveShadow = 0x01U << 1,
+        MaterialFlag_ReceiveShadow = 0x01U << 1,
         MaterialFlag_RefractiveIndex = 0x01U << 2, //shadow_.w_ ‚ªrefractive index‚©
 
         MaterialFlag_Transparent = 0x01U<<16,

@@ -39,6 +39,7 @@ namespace lfw
 
         inline lmath::Vector4& getPosition(u16 id);
         inline lmath::Quaternion& getRotation(u16 id);
+        inline lmath::Vector3& getScale(u16 id);
         inline lmath::Matrix44& getMatrix(u16 id);
     protected:
         ComponentGeometricManager(const ComponentGeometricManager&);
@@ -46,6 +47,7 @@ namespace lfw
 
         lmath::Vector4* positions_;
         lmath::Quaternion* rotations_;
+        lmath::Vector3* scales_;
         lmath::Matrix44* matrices_;
     };
 
@@ -59,6 +61,12 @@ namespace lfw
     {
         LASSERT(0<=id && id<ids_.capacity());
         return rotations_[id];
+    }
+
+    inline lmath::Vector3& ComponentGeometricManager::getScale(u16 id)
+    {
+        LASSERT(0<=id && id<ids_.capacity());
+        return scales_[id];
     }
 
     inline lmath::Matrix44& ComponentGeometricManager::getMatrix(u16 id)

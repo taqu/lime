@@ -39,7 +39,7 @@ namespace lfw
 
         lmath::Vector4 translation_;
         lmath::Quaternion rotation_;
-        lmath::Vector4 scale_;
+        lmath::Vector3 scale_;
         lmath::Matrix44 world0_;
         lmath::Matrix44 world1_;
 

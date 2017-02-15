@@ -186,6 +186,21 @@ namespace lcore
         */
         u32 rand();
 
+        /**
+        @brief 0 - 1の乱数生成
+        */
+        f32 frand();
+
+        /**
+        @brief 0.0 - 0.999999881の乱数生成
+        */
+        f32 frand2();
+
+        /**
+        @brief 0 - 1の乱数生成
+        */
+        f64 drand();
+
         void swap(RandXorshift128Plus32& rhs);
     private:
         u64 s0_;
@@ -248,6 +263,7 @@ namespace random
     template<class T, class U>
     U range_ropen(T& random, U vmin, U vmax)
     {
+        LASSERT(vmin<=vmax);
         return static_cast<U>(random.frand2()*(vmax-vmin)) + vmin;
     }
 
@@ -257,6 +273,7 @@ namespace random
     template<class T>
     f32 range_ropen(T& random, f32 vmin, f32 vmax)
     {
+        LASSERT(vmin<=vmax);
         return (vmax-vmin)*random.frand2() + vmin;
     }
 
@@ -267,8 +284,7 @@ namespace random
     U range_rclose(T& random, U vmin, U vmax)
     {
         LASSERT(vmin<=vmax);
-        u32 i = random.rand() % (vmax - vmin + 1);
-        return vmin + static_cast<U>(i);
+        return static_cast<U>(random.frand2()*(vmax-vmin+1)) + vmin;
     }
 
     /**

@@ -45,7 +45,7 @@ namespace lsound
 
     using lcore::ClockType;
 
-    static const s16 NumMaxBuffers = 4;
+    static const s32 NumMaxBuffers = 4;
     static const s32 NumMaxPacks = 8;
     static const s32 BufferNumSamplesPerChannel = 5760;
     static const s32 BufferNumSamples = BufferNumSamplesPerChannel*2;

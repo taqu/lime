@@ -14,33 +14,21 @@ namespace lmath
     const LALIGN16 f32 Vector4::One[4] = {1.0f, 1.0f, 1.0f, 1.0f};
     const LALIGN16 f32 Vector4::Identity[4] = {0.0f, 0.0f, 0.0f, 1.0f};
 
-    const Vector4 Vector4::Forward(0.0f, 0.0f, 1.0f, 0.0f);
-    const Vector4 Vector4::Backward(0.0f, 0.0f, -1.0f, 0.0f);
-    const Vector4 Vector4::Up(0.0f, 1.0f, 0.0f, 0.0f);
-    const Vector4 Vector4::Down(0.0f, -1.0f, 0.0f, 0.0f);
-    const Vector4 Vector4::Right(1.0f, 0.0f, 0.0f, 0.0f);
-    const Vector4 Vector4::Left(-1.0f, 0.0f, 0.0f, 0.0f);
+    const Vector4 Vector4::Forward = {0.0f, 0.0f, 1.0f, 0.0f};
+    const Vector4 Vector4::Backward = {0.0f, 0.0f, -1.0f, 0.0f};
+    const Vector4 Vector4::Up = {0.0f, 1.0f, 0.0f, 0.0f};
+    const Vector4 Vector4::Down = {0.0f, -1.0f, 0.0f, 0.0f};
+    const Vector4 Vector4::Right = {1.0f, 0.0f, 0.0f, 0.0f};
+    const Vector4 Vector4::Left = {-1.0f, 0.0f, 0.0f, 0.0f};
 
-    Vector4::Vector4(const Vector3& v)
-        :x_(v.x_)
-        ,y_(v.y_)
-        ,z_(v.z_)
-        ,w_(0.0f)
+    Vector4 Vector4::construct(const Vector3& v)
     {
+        return {v.x_, v.y_, v.z_, 0.0f};
     }
 
-    Vector4::Vector4(const Vector3& v, f32 w)
-        :x_(v.x_)
-        ,y_(v.y_)
-        ,z_(v.z_)
-        ,w_(w)
+    Vector4 Vector4::construct(const Vector3& v, f32 w)
     {
-    }
-
-    Vector4& Vector4::operator=(const Vector3& rhs)
-    {
-        set(rhs.x_, rhs.y_, rhs.z_, 0.0f);
-        return *this;
+        return {v.x_, v.y_, v.z_, w};
     }
 
     void Vector4::set(const Vector3& v)
@@ -560,7 +548,7 @@ namespace lmath
         Quaternion conj = conjugate(rotation);
         Quaternion rot = mul(conj, v);
         rot = mul(rot, rotation);
-        return Vector4(rot.x_, rot.y_, rot.z_, v.w_);
+        return {rot.x_, rot.y_, rot.z_, v.w_};
     }
 
     Vector4 rotate(const Quaternion& rotation, const Vector4& v)
@@ -568,7 +556,7 @@ namespace lmath
         Quaternion conj = conjugate(rotation);
         Quaternion rot = mul(conj, v);
         rot = mul(rot, rotation);
-        return Vector4(rot.x_, rot.y_, rot.z_, v.w_);
+        return {rot.x_, rot.y_, rot.z_, v.w_};
     }
 
     return_type_vec4 floor(const Vector4& v)

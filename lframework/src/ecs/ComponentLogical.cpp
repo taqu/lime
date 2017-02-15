@@ -44,6 +44,12 @@ namespace
         return componentManager->getEntity(getID());
     }
 
+    Entity ComponentLogical::getEntity()
+    {
+        const ComponentLogicalManager* componentManager = getManager();
+        return componentManager->getEntity(getID());
+    }
+
     const NameString& ComponentLogical::getName() const
     {
         const ComponentLogicalManager* componentManager = getManager();
@@ -79,8 +85,7 @@ namespace
     {
         ComponentLogicalManager* componentManager = getManager();
         ECSNode& node = componentManager->getNode(getID());
-        ID id(node.parent());
-        return componentManager->get(id);
+        return componentManager->get(ID::construct(node.parent()));
     }
 
     void ComponentLogical::setParent(ComponentLogical* parent)

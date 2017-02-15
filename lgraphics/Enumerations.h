@@ -457,10 +457,21 @@ namespace lgfx
     {
         Blend_Zero = D3D11_BLEND_ZERO,
         Blend_One = D3D11_BLEND_ONE,
+        Blend_SrcColor = D3D11_BLEND_SRC_COLOR,
+        Blend_InvSrcColor = D3D11_BLEND_INV_SRC_COLOR,
         Blend_SrcAlpha = D3D11_BLEND_SRC_ALPHA,
         Blend_InvSrcAlpha = D3D11_BLEND_INV_SRC_ALPHA,
         Blend_DestAlpha = D3D11_BLEND_DEST_ALPHA,
-        Blend_InvDestAlpha = D3D11_BLEND_INV_DEST_ALPHA ,
+        Blend_InvDestAlpha = D3D11_BLEND_INV_DEST_ALPHA,
+        Blend_DestColor = D3D11_BLEND_DEST_COLOR,
+        Blend_InvDestColor = D3D11_BLEND_INV_DEST_COLOR,
+        Blend_SrcAlphaSAT = D3D11_BLEND_SRC_ALPHA_SAT,
+        Blend_BlendFactor = D3D11_BLEND_BLEND_FACTOR,
+        Blend_InvBlendFactor = D3D11_BLEND_INV_BLEND_FACTOR,
+        Blend_Src1Color = D3D11_BLEND_SRC1_COLOR,
+        Blend_InvSrc1Color = D3D11_BLEND_INV_SRC1_COLOR,
+        Blend_Src1Alpha = D3D11_BLEND_SRC1_ALPHA,
+        Blend_InvSrc1Alpha = D3D11_BLEND_INV_SRC1_ALPHA,
     };
 
     //--------------------------------------------------------
@@ -554,6 +565,19 @@ namespace lgfx
     {
         AsyncGetDataFlag_None = 0,
         AsyncGetDataFlag_DoNotFlush = D3D11_ASYNC_GETDATA_DONOTFLUSH,
+    };
+
+    enum FillMode
+    {
+        Fill_WireFrame = D3D11_FILL_WIREFRAME,
+        Fill_Solid = D3D11_FILL_SOLID,
+    };
+
+    enum CullMode
+    {
+        Cull_None = D3D11_CULL_NONE,
+        Cull_Front = D3D11_CULL_FRONT,
+        Cull_Back = D3D11_CULL_BACK,
     };
 
     /**

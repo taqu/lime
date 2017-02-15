@@ -1,0 +1,123 @@
+#include "Common.ps"
+#include "Volume.inc"
+#include "SignedDistance.inc"
+
+Texture2D<float4> texGradient : register(t1);
+SamplerState samLinearClamp: register(s1);
+
+float4 mapTimeToColor(float time)
+{
+    float4 color = texGradient.SampleLevel(samLinearClamp, float2(time,1), 0);
+    return color;
+}
+
+float4 mapDisplacementToColor(float time, float displacement)
+{
+    float u = (displacement*2-1)*uvExtent_ + time;
+    float4 color = texGradient.SampleLevel(samLinearClamp, float2(u,0), 0);
+    return color;
+}
+
+#if 0
+float2 cartesianToSpherical(float3 cartesian)
+{
+  float2 spherical;
+
+  spherical.x = atan2(cartesian.y, cartesian.x) * INV_PI;
+  spherical.y = cartesian.z;
+
+  return spherical * 0.5f + 0.5f;
+}
+
+float2 normal2SphericalUV(float3 n)
+{
+    return float2(atan2(n.y, n.x), acos(n.z)) * INV_PI;
+}
+#endif
+
+float square(float2 uv)
+{
+    uv = abs(uv);
+    float t = uv.x + uv.y;
+    return smoothstep(0.9, 1.0, t)*(1-smoothstep(1.0, 1.1, t));
+}
+
+#if 0
+#define ROOT3 (1.73205080757)
+#define HEXAGON_THRESHOLD (ROOT3*2)
+#define HEXAGON_LOWER (ROOT3*2-0.7)
+#define HEXAGON_UPPER (ROOT3*2+0.7)
+
+float hexagon(float2 uv)
+{
+    float x0 = 2*abs(uv.y);
+    float t0 = uv.x*ROOT3;
+    float x1 = abs(t0 - uv.y);
+    float x2 = abs(t0 + uv.y);
+    float t = x0 + x1 + x2;
+    return smoothstep(HEXAGON_LOWER, HEXAGON_THRESHOLD, t)*(1-smoothstep(HEXAGON_THRESHOLD, HEXAGON_UPPER, t));
+}
+
+float4 funcSphere(float3 pos, float3 spherePos, float time, float3 direction, float3 coordu, float3 coordv, in const VolumeConstant volumeConstant)
+{
+    float3 diff = pos-spherePos;
+    float radius = length(diff);
+    float3 normal = normalize(diff);
+    float cs = smoothstep(0.5, 1, dot(direction, normal));
+
+    float2 uv = 2*frac(mad(time, volumeConstant.noiseAnimation_.xy, float2(dot(normal, coordu), dot(normal,coordv))) * 3) - 1;
+    float disc = hexagon(uv);
+    float lower = volumeConstant.radius_*0.85;
+    float upper = volumeConstant.radius_*0.9;
+    float grad = step(lower, radius) * (1-step(upper, radius));
+    float4 color;
+    color.rgb = lerp(float3(0, 0, 1), float3(0.3,0.3,1), disc);
+
+    grad *= cs;
+    disc *= grad;
+    color.a = lerp(grad, disc, 0.5);
+    return color;
+}
+#endif
+
+float4 funcExplosion(
+    float3 pos,
+    float3 spherePos,
+    float time,
+    float radius,
+    float invRadius,
+    float displacementScale,
+    in const NoiseConstant noise)
+{
+    float n = fractalNoise(pos, noise.noiseScale_, time, noise);
+    float4 color = mapDisplacementToColor(time, saturate(n*uvDisplacement_));
+    return color;
+}
+
+float4 main(DSOutput input) : SV_TARGET0
+{
+    float time = input.timescale.x;
+    float radius = input.timescale.y * input.radius.x;
+
+    float3 start = mad(input.rayDirection, input.rayHitNearFar.x, cameraPos.xyz);
+    float3 end = mad(input.rayDirection, input.rayHitNearFar.y, cameraPos.xyz);
+
+    float step = stepSize_;
+    float3 stepV = input.rayDirection * step;
+    int numSteps = min(maxSteps_, (int)floor((input.rayHitNearFar.y - input.rayHitNearFar.x)/step));
+
+    float4 output = (float4)0;
+    float3 pos = start;
+    int steps = 0;
+
+    //float4 timeColor = mapTimeToColor(time);
+    float invRadius = 1/(max(radius, 0.00001));
+    float displacementScale = input.timescale.y * displacement_;
+    for(int i=0; i<numSteps && output.a<1; ++i){
+        float4 c=funcExplosion(pos, input.worldPos, time, radius, invRadius, displacementScale, noise_);
+        output = blend(c, output);
+        pos += stepV;
+    }
+    //output.a *= mapTimeToColor(time).a;
+    return output;
+}

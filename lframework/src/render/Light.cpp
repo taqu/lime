@@ -8,13 +8,14 @@
 namespace lfw
 {
     Light::Light()
-        :sortLayer_(0)
+        :type_(LightType_Direction)
+        ,sortLayer_(0)
         ,layerMask_(Layer_Default)
         ,radius_(1.0f)
         ,falloffAngle_(30.0f*DEG_TO_RAD)
         ,direction_(lmath::Vector4::Forward)
-        ,position_(0.0f)
-        ,lightColor_(1.0f)
+        ,position_(lmath::Vector4::construct(0.0f))
+        ,lightColor_(lmath::Vector4::construct(1.0f))
     {
     }
 
@@ -31,7 +32,7 @@ namespace lfw
             up = lmath::Vector4::Forward;
         }
 
-        lmath::Vector4 at = add(position_, direction_);
+        lmath::Vector4 at = lmath::Vector4::construct(add(position_, direction_));
         view.lookAt(position_, at, up);
     }
 
@@ -44,7 +45,7 @@ namespace lfw
             up = lmath::Vector4::Forward;
         }
 
-        lmath::Vector4 at = add(position_, direction_);
+        lmath::Vector4 at = lmath::Vector4::construct(add(position_, direction_));
         lookAt(view, invview, position_, at, up);
     }
 }

@@ -937,6 +937,11 @@ namespace lmath
         return _mm_div_ps(v0, v1);
     }
 
+    inline lmath::lm128 operator/(const lmath::lm128& v, lmath::f32 x)
+    {
+        return _mm_div_ps(v, _mm_set1_ps(x));
+    }
+
     inline lmath::lm128 sqrt(const lmath::lm128& v)
     {
         return _mm_sqrt_ps(v);
@@ -951,5 +956,28 @@ namespace lmath
     {
         return _mm_max_ps(v0, v1);
     }
+
+    inline lmath::lm128 muladd(const lmath::lm128& v0, const lmath::lm128& v1, const lmath::lm128& v2)
+    {
+        return _mm_add_ps(_mm_mul_ps(v0, v1), v2);
+    }
+
+    lmath::lm128 normalize(const lmath::lm128& v);
+
+    lmath::lm128 floor(const lmath::lm128& v);
+
+    lmath::lm128 ceil(const lmath::lm128& v);
+
+    //---------------------------------------------------------------------------------------------------
+    lmath::lm128 construct(lmath::f32 x, lmath::f32 y, lmath::f32 z);
+    lmath::lm128 construct(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 w);
+
+    lmath::lm128 normalize(lmath::f32 x, lmath::f32 y, lmath::f32 z);
+    lmath::lm128 normalizeLengthSqr(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 lengthSqr);
+    lmath::lm128 normalizeChecked(lmath::f32 x, lmath::f32 y, lmath::f32 z);
+
+    lmath::lm128 normalize(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 w);
+    lmath::lm128 normalizeLengthSqr(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 w, lmath::f32 lengthSqr);
+    lmath::lm128 normalizeChecked(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 w);
 
 #endif //INC_LMATH_H__

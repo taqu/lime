@@ -9,6 +9,11 @@
 #include <lmath/Matrix44.h>
 #include "../lframework.h"
 
+namespace lmath
+{
+    class Sphere;
+}
+
 namespace lfw
 {
     class Camera;
@@ -17,7 +22,7 @@ namespace lfw
     class ShadowMap
     {
     public:
-        static const s32 MaxCascades = LFW_CONFIG_SHADOW_MAXCASCADES;
+        static const s32 NumCascades = LFW_CONFIG_SHADOW_NUMCASCADES;
         static const u8 FitType_ToCascades = 0;
         static const u8 FitType_ToScene = 1;
 
@@ -28,7 +33,7 @@ namespace lfw
         ShadowMap();
         ~ShadowMap();
 
-        void initialize(s32 cascadeLevels, s32 resolution, f32 znear, f32 zfar, f32 logRatio=0.5f);
+        void initialize(s32 cascadeLevels, s32 resolution, f32 znear, f32 zfar, f32 logRatio=0.75f);
         void update(const Camera& camera, const Light& light);
 
         s32 getCascadeLevels() const
@@ -116,13 +121,15 @@ namespace lfw
 
         inline void getLightProjectionAlign16(lmath::Matrix44* dstAligned) const;
         inline void getLightViewProjectionAlign16(lmath::Matrix44* dstAligned) const;
+
+        bool contains(const lmath::Sphere& sphere) const;
     private:
         lmath::Vector4 sceneAABBMin_;
         lmath::Vector4 sceneAABBMax_;
 
         lmath::Matrix44* lightProjection_;
         lmath::Matrix44* lightViewProjection_;
-        u8 bufferMatrices_[sizeof(lmath::Matrix44)*MaxCascades*2 + 16];
+        u8 bufferMatrices_[sizeof(lmath::Matrix44)*NumCascades*2 + 16];
 
         s32 cascadeLevels_;
         s32 resolution_;
@@ -138,18 +145,18 @@ namespace lfw
         void createSceneAABBPoints(lmath::Vector4 dst[8]);
         void getNearFar(f32& nearPlane, f32& farPlane, lmath::Vector4& lightViewOrthoMin, lmath::Vector4& lightViewOrthoMax, lmath::Vector4* viewPoints);
 
-        f32 cascadePartitions_[MaxCascades+1];
+        f32 cascadePartitions_[NumCascades+1];
         //f32 cascadePartitionsFrustum_[MaxCascades+1];
     };
 
     inline void ShadowMap::getLightProjectionAlign16(lmath::Matrix44* dstAligned) const
     {
-        copyAlignedDstAlignedSrc16(dstAligned, lightProjection_, sizeof(lmath::Matrix44)*MaxCascades);
+        copyAlignedDstAlignedSrc16(dstAligned, lightProjection_, sizeof(lmath::Matrix44)*NumCascades);
     }
 
     inline void ShadowMap::getLightViewProjectionAlign16(lmath::Matrix44* dstAligned) const
     {
-        copyAlignedDstAlignedSrc16(dstAligned, lightViewProjection_, sizeof(lmath::Matrix44)*MaxCascades);
+        copyAlignedDstAlignedSrc16(dstAligned, lightViewProjection_, sizeof(lmath::Matrix44)*NumCascades);
     }
 }
 

@@ -10,14 +10,16 @@
 namespace lfw
 {
     Skeleton::Skeleton()
-        :numJoints_(0)
+        :referenceCount_(0)
+        ,numJoints_(0)
         ,joints_(NULL)
         ,jointNames_(NULL)
     {
     }
 
     Skeleton::Skeleton(s32 numJoints)
-        :numJoints_(numJoints)
+        :referenceCount_(0)
+        ,numJoints_(numJoints)
     {
         u32 total = (sizeof(Joint) + sizeof(Name)) * numJoints_;
 
@@ -45,6 +47,7 @@ namespace lfw
         numJoints_ = 0;
         LFREE(joints_);
         jointNames_ = NULL;
+        referenceCount_ = 0;
     }
 
     // 名前からジョイント検索
@@ -75,12 +78,13 @@ namespace lfw
     // スワップ
     void Skeleton::swap(Skeleton& rhs)
     {
+        lcore::swap(referenceCount_, rhs.referenceCount_);
         lcore::swap(numJoints_, rhs.numJoints_);
         lcore::swap(joints_, rhs.joints_);
         lcore::swap(jointNames_, rhs.jointNames_);
     }
 
-    void Skeleton::copyTo(Skeleton& dst)
+    bool Skeleton::copyTo(Skeleton& dst)
     {
         Skeleton tmp(numJoints_);
         dst.swap(tmp);
@@ -89,6 +93,7 @@ namespace lfw
             dst.joints_[i] = joints_[i];
             dst.jointNames_[i] = jointNames_[i];
         }
+        return true;
     }
 
     bool Skeleton::serialize(lcore::ostream& os, Skeleton& skeleton)

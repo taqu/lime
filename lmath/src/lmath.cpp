@@ -446,47 +446,37 @@ namespace lmath
 
     void criticallyDampedSpring(const Vector4& target, Vector4& current, Vector4& velocity, f32 timeStep, f32 maxVelocity)
     {
-        lmath::Vector4 difference = target - current;
-        const lmath::Vector4& springForce = difference;
-        lmath::Vector4 dampingForce = -2.0f * velocity;
+        return_type_vec4 difference = target - current;
+        const return_type_vec4& springForce = difference;
+        return_type_vec4 dampingForce = -2.0f * velocity;
 
-        lmath::Vector4 force = springForce + dampingForce;
-        velocity = muladd(timeStep, force, velocity);
+        return_type_vec4 force = springForce + dampingForce;
+        velocity = Vector4::construct(_mm_add_ps(_mm_mul_ps(_mm_set1_ps(timeStep), force), (lm128)velocity));
         f32 velocityMaginitude = velocity.length();
         if(maxVelocity<velocityMaginitude){
             velocity *= maxVelocity/velocityMaginitude;
         }
-        current = muladd(timeStep, velocity, current);
+        current = Vector4::construct(muladd(timeStep, velocity, current));
     }
 
     void criticallyDampedSpring(const Vector4& target, Vector4& current, Vector4& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity)
     {
-        lmath::Vector4 difference = target - current;
-        lmath::Vector4 sprintForce = mul(dampingRatio, difference);
-        lmath::Vector4 dampingForce = mul(-2.0f*sqrtf(dampingRatio), velocity);
+        return_type_vec4 difference = target - current;
+        return_type_vec4 sprintForce = _mm_mul_ps(_mm_set1_ps(dampingRatio), difference);
+        return_type_vec4 dampingForce = mul(-2.0f*sqrtf(dampingRatio), velocity);
 
-        lmath::Vector4 force = sprintForce + dampingForce;
-        velocity = muladd(timeStep, force, velocity);
+        return_type_vec4 force = sprintForce + dampingForce;
+        velocity = Vector4::construct(_mm_add_ps(_mm_mul_ps(_mm_set1_ps(timeStep), force), (lm128)velocity));
         f32 velocityMaginitude = velocity.length();
         if(maxVelocity<velocityMaginitude){
             velocity *= maxVelocity/velocityMaginitude;
         }
-        current = muladd(timeStep, velocity, current);
+        current = Vector4::construct(muladd(timeStep, velocity, current));
     }
 
     void criticallyDampedSpring2(const Vector4& target, Vector4& current, Vector4& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity)
     {
-        lmath::Vector4 difference = target - current;
-        lmath::Vector4 sprintForce = mul(sqrtDampingRatio*sqrtDampingRatio, difference);
-        lmath::Vector4 dampingForce = mul(-2.0f*sqrtDampingRatio, velocity);
-
-        lmath::Vector4 force = sprintForce + dampingForce;
-        velocity = muladd(timeStep, force, velocity);
-        f32 velocityMaginitude = velocity.length();
-        if(maxVelocity<velocityMaginitude){
-            velocity *= maxVelocity/velocityMaginitude;
-        }
-        current = muladd(timeStep, velocity, current);
+        criticallyDampedSpring(target, current, velocity, sqrtDampingRatio*sqrtDampingRatio, timeStep, maxVelocity);
     }
 
     f32 gain(f32 a, f32 b)
@@ -831,7 +821,7 @@ namespace lmath
         lm128 tv = mul(snTheta * csPhi, x);
         tv = (snTheta * snPhi) * y + tv;
         tv = (csTheta) * z + tv;
-        v = tv;
+        v = Vector4::construct(tv);
     }
 
     void cartesianToSpherical(f32& theta, f32& phi, f32 x, f32 y, f32 z)
@@ -907,7 +897,7 @@ namespace lmath
         f32 d = distance(current, target);
         f32 t = lcore::clamp01(d/maxDistance);
         t = lmath::smooth(t);
-        dst = lerp(current, target, t);
+        dst = Vector4::construct(lerp(current, target, t));
     }
 
     void smoothRotate(Vector4& dst, const Vector4& current, const Vector4& target, f32 maxRotate)
@@ -920,9 +910,9 @@ namespace lmath
         t = lmath::smooth(t);
 
         if(LMATH_F32_ANGLE_LIMIT1<=lcore::absolute(cosine)){
-            dst = lerp(current, target, t);
+            dst = Vector4::construct(lerp(current, target, t));
         }else{
-            dst = slerp(current, target, t, cosine);
+            dst = Vector4::construct(slerp(current, target, t, cosine));
         }
     }
 
@@ -1065,12 +1055,12 @@ namespace
         vt.y_ = t*t;
         vt.x_ = vt.y_ * t;
 
-        Vector4 tmp = mul(vt, curveCoeff);
+        Vector4 tmp = Vector4::construct(mul(vt, curveCoeff));
 
         lmath::Matrix44 param;
         param.set(p0, p1, p2, p3);
         
-        dst = mul(tmp, param);
+        dst = Vector4::construct(mul(tmp, param));
     }
 
     inline void calcCubic(f32& dst, f32 t, const Matrix44& curveCoeff, f32 p0, f32 p1, f32 p2, f32 p3)
@@ -1081,7 +1071,7 @@ namespace
         vt.y_ = t*t;
         vt.x_ = vt.y_ * t;
 
-        Vector4 tmp = mul(vt, curveCoeff);
+        Vector4 tmp = Vector4::construct(mul(vt, curveCoeff));
 
         dst = p0 * tmp.x_ + p1 * tmp.y_ + p2 * tmp.z_ + p3 * tmp.w_;
     }
@@ -1402,5 +1392,108 @@ dqconv.c
         q.x_ = -csh*snp*csb - snh*csp*snb;
         q.y_ =  csh*snp*snb - snh*csp*csb;
         q.z_ =  snh*snp*csb - csh*csp*snb;
+    }
+
+}
+
+lmath::lm128 normalize(const lmath::lm128& r0)
+{
+    lmath::lm128 r1 = r0;
+    lmath::lm128 tmp = _mm_mul_ps(r0, r0);
+    tmp = _mm_add_ps( _mm_shuffle_ps(tmp, tmp, 0x4E), tmp);
+    tmp = _mm_add_ps( _mm_shuffle_ps(tmp, tmp, 0xB1), tmp);
+
+    tmp = _mm_sqrt_ss(tmp);
+    tmp = _mm_shuffle_ps(tmp, tmp, 0);
+
+    r1 = _mm_div_ps(r1, tmp);
+    return r1;
+}
+
+lmath::lm128 floor(const lmath::lm128& tv0)
+{
+    lmath::lm128 tv1 = _mm_cvtepi32_ps(_mm_cvttps_epi32(tv0));
+
+    return _mm_sub_ps(tv1, _mm_and_ps(_mm_cmplt_ps(tv0, tv1), _mm_set1_ps(1.0f)));
+}
+
+lmath::lm128 ceil(const lmath::lm128& tv0)
+{
+    lmath::lm128 tv1 = _mm_cvtepi32_ps(_mm_cvttps_epi32(tv0));
+    return _mm_add_ps(tv1, _mm_and_ps(_mm_cmplt_ps(tv0, tv1), _mm_set1_ps(1.0f)));
+}
+
+//---------------------------------------------------------------------------------------------------
+lmath::lm128 construct(lmath::f32 x, lmath::f32 y, lmath::f32 z)
+{
+    return _mm_set_ps(0.0f, z, y, x);
+}
+
+lmath::lm128 construct(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 w)
+{
+    return _mm_set_ps(w, z, y, x);
+}
+
+lmath::lm128 normalize(lmath::f32 x, lmath::f32 y, lmath::f32 z)
+{
+    lmath::lm128 r0 = _mm_set_ps(0.0f, z, y, x);
+    lmath::lm128 r1 = r0;
+    r0 = _mm_mul_ps(r0, r0);
+    r0 = _mm_add_ps( _mm_shuffle_ps(r0, r0, 0x4E), r0);
+    r0 = _mm_add_ps( _mm_shuffle_ps(r0, r0, 0xB1), r0);
+
+    r0 = _mm_sqrt_ss(r0);
+    r0 = _mm_shuffle_ps(r0, r0, 0);
+
+    return _mm_div_ps(r1, r0);
+}
+
+lmath::lm128 normalizeLengthSqr(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 lengthSqr)
+{
+    lmath::lm128 r0 = _mm_set1_ps(lengthSqr);
+    lmath::lm128 r1 = _mm_set_ps(0.0f, z, y, x);
+    r0 = _mm_sqrt_ps(r0);
+    return _mm_div_ps(r1, r0);
+}
+
+lmath::lm128 normalizeChecked(lmath::f32 x, lmath::f32 y, lmath::f32 z)
+{
+    lmath::f32 l = x*x + y*y + z*z;
+    if(lmath::isZeroPositive(l)){
+        return _mm_setzero_ps();
+    }else{
+        return normalizeLengthSqr(x, y, z, l);
+    }
+}
+
+lmath::lm128 normalize(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 w)
+{
+    lmath::lm128 r0 = _mm_set_ps(w, z, y, x);
+    lmath::lm128 r1 = r0;
+    r0 = _mm_mul_ps(r0, r0);
+    r0 = _mm_add_ps( _mm_shuffle_ps(r0, r0, 0x4E), r0);
+    r0 = _mm_add_ps( _mm_shuffle_ps(r0, r0, 0xB1), r0);
+
+    r0 = _mm_sqrt_ss(r0);
+    r0 = _mm_shuffle_ps(r0, r0, 0);
+
+    return _mm_div_ps(r1, r0);
+}
+
+lmath::lm128 normalizeLengthSqr(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 w, lmath::f32 lengthSqr)
+{
+    lmath::lm128 r0 = _mm_set1_ps(lengthSqr);
+    lmath::lm128 r1 = _mm_set_ps(w, z, y, x);
+    r0 = _mm_sqrt_ps(r0);
+    return _mm_div_ps(r1, r0);
+}
+
+lmath::lm128 normalizeChecked(lmath::f32 x, lmath::f32 y, lmath::f32 z, lmath::f32 w)
+{
+    lmath::f32 l = x*x + y*y + z*z + w*w;
+    if(lmath::isZeroPositive(l)){
+        return _mm_setzero_ps();
+    }else{
+        return normalizeLengthSqr(x, y, z, w, l);
     }
 }

@@ -1,0 +1,19 @@
+Texture2D texColor : register(t0);
+SamplerState samLinear : register(s0);
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float4 color : COLOR;
+    float2 texcoord : TEXCOORD0;
+};
+
+float4 main(VSOutput input) : SV_Target
+{
+    float4 c = texColor.Sample(samLinear, input.texcoord);
+    float4 color;
+    color.rgb = c.g;
+    color.a = c.b;
+    color *= input.color;
+    return color;
+}

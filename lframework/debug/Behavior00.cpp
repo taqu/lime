@@ -29,7 +29,8 @@ namespace debug
         lfw::Resource::pointer resource = lfw::Resources::getInstance().load(setID, "sphere_bin.lm", lfw::ResourceType_Model);
 
         mesh_ = getEntity().addComponent<lfw::ComponentMeshRenderer>();
-        mesh_->setMesh(resource->cast<lfw::ResourceModel>()->get());
+        lfw::Model::pointer model = resource->cast<lfw::ResourceModel>()->clone();
+        mesh_->setMesh(model);
     }
 
     void Behavior00::onStart()

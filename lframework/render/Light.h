@@ -18,8 +18,11 @@ namespace lfw
         Light();
         ~Light();
 
-        inline s32 getSortLayer() const;
-        inline void setSortLayer(s32 layer);
+        inline s16 getType() const;
+        inline void setType(s16 type);
+
+        inline s16 getSortLayer() const;
+        inline void setSortLayer(s16 layer);
         inline s32 getLayerMask() const;
         inline void setLayerMask(s32 mask);
         inline f32 getRadius() const;
@@ -41,12 +44,12 @@ namespace lfw
         inline lmath::Vector4& getColor();
         inline void setColor(const lmath::Vector4& color);
     private:
-        s32 sortLayer_;
+        s16 type_;
+        s16 sortLayer_;
         s32 layerMask_;
         f32 radius_;
         f32 falloffAngle_;
 
-        //lmath::Matrix44 lightView_;
         lmath::Vector4 direction_;
         lmath::Vector4 position_;
 
@@ -54,12 +57,22 @@ namespace lfw
         lmath::Vector4 lightColor_;
     };
 
-    inline s32 Light::getSortLayer() const
+    inline s16 Light::getType() const
+    {
+        return type_;
+    }
+
+    inline void Light::setType(s16 type)
+    {
+        type_ = type;
+    }
+
+    inline s16 Light::getSortLayer() const
     {
         return sortLayer_;
     }
 
-    inline void Light::setSortLayer(s32 layer)
+    inline void Light::setSortLayer(s16 layer)
     {
         sortLayer_ = layer;
     }

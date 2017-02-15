@@ -73,6 +73,20 @@ namespace lmath
         }
     }
 
+    void Sphere::translate(const lmath::Vector3& position)
+    {
+        x_ += position.x_;
+        y_ += position.y_;
+        z_ += position.z_;
+    }
+
+    void Sphere::translate(const lmath::Vector4& position)
+    {
+        x_ += position.x_;
+        y_ += position.y_;
+        z_ += position.z_;
+    }
+
     // 点に外接する球を計算
     Sphere Sphere::circumscribed(const Vector3& p0, const Vector3& p1)
     {
@@ -208,7 +222,7 @@ namespace lmath
 
     void Sphere::combine(const Sphere& s0, const Sphere& s1)
     {
-        lmath::Vector4 dv = sub((const Vector4&)s0, (const Vector4&)s1);
+        Vector4 dv = Vector4::construct(sub((const Vector4&)s0, (const Vector4&)s1));
 
         f32 distance = lmath::sqrt(dv.x_*dv.x_ + dv.y_*dv.y_ + dv.z_*dv.z_);
 
@@ -223,14 +237,14 @@ namespace lmath
             d = (s0.r_<s1.r_)? s1.r_ : s0.r_;
             d = r - d;
 
-            (Vector4&)*this = lerp(s0, s1, d/distance);
+            (Vector4&)*this = Vector4::construct(lerp(s0, s1, d/distance));
             r_ = r;
         }
     }
 
     f32 Sphere::signedDistanceSqr(const Vector3& p) const
     {
-        Vector3 d(p.x_-x_, p.y_-y_, p.z_-z_);
+        Vector3 d = {p.x_-x_, p.y_-y_, p.z_-z_};
 
         return dot(d, d) - r_*r_;
     }

@@ -33,7 +33,7 @@ namespace lfw
         ECSManager& ecsManager = ECSManager::getInstance();
 
         for(s32 i=0; i<Size; ++i){
-            entities[i] = ecsManager.requestCreateLogical();
+            entities[i] = ecsManager.requestCreateLogical("");
             ASSERT_FALSE(entities[i].isNull());
 
             ComponentLogical* componentLogical = entities[i].getLogical();
@@ -68,7 +68,7 @@ namespace lfw
         Entity children[ChildSize];
 
         for(s32 i=0; i<ChildSize; ++i){
-            children[i] = ecsManager.requestCreateLogical();
+            children[i] = ecsManager.requestCreateLogical("");
             ASSERT_FALSE(entities[i].isNull());
 
             ComponentLogical* componentLogical = children[i].getLogical();
@@ -106,6 +106,7 @@ namespace lfw
             ecsManager.requestDestroy(entities[i]);
         }
         ecsManager.update();
+        ecsManager.postUpdate();
 
         for(s32 i=0; i<Size; ++i){
             EXPECT_FALSE(ecsManager.isValidEntity(entities[i]));

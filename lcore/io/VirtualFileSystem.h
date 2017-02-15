@@ -21,6 +21,8 @@ namespace lcore
     class FileProxy
     {
     public:
+        virtual ~FileProxy()
+        {}
         virtual bool isCompressed() const =0;
         virtual s64 getUncompressedSize() const =0;
         virtual s64 getCompressedSize() const =0;
@@ -30,8 +32,6 @@ namespace lcore
         virtual bool thisParent(VirtualFileSystemBase* vfs) const =0;
     protected:
         FileProxy()
-        {}
-        virtual ~FileProxy()
         {}
     };
 
@@ -395,6 +395,28 @@ namespace lcore
         s32 size_;
         Proxy* proxies_[Bins];
         Proxy* top_;
+    };
+
+    //--------------------------------------------
+    //---
+    //--- FileProxyOSRaw
+    //---
+    //--------------------------------------------
+    class FileProxyOSRaw : public FileProxy
+    {
+    public:
+        FileProxyOSRaw(LHANDLE handle);
+        virtual ~FileProxyOSRaw();
+
+        virtual bool isCompressed() const;
+        virtual s64 getUncompressedSize() const;
+        virtual s64 getCompressedSize() const;
+        virtual s64 read(s64 offset, s64 size, u8* buffer) const;
+        virtual s64 write(s64 offset, s64 size, u8* data);
+
+        virtual bool thisParent(VirtualFileSystemBase* vfs) const;
+    protected:
+        LHANDLE handle_;
     };
 }
 #endif //INC_LCORE_VIRTUALFILESYSTEM_H__

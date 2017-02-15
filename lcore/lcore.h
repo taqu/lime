@@ -288,6 +288,8 @@ namespace lcore
     typedef u64 ClockType;
 #endif
 
+    static const s32 SSE_ALIGN = 16;
+    static const s32 SSE_ALIGN_MASK = 15;
     static const Char CharNull = '\0';
     static const Char CharLF = '\n'; //Line Feed
     static const Char CharCR = '\r'; //Carriage Return
@@ -737,8 +739,12 @@ namespace lcore
     };
 
     u16 toBinary16Float(f32 f);
-
     f32 fromBinary16Float(u16 s);
+
+    s8 floatTo8SNORM(f32 f);
+    u8 floatTo8UNORM(f32 f);
+    s16 floatTo16SNORM(f32 f);
+    u16 floatTo16UNORM(f32 f);
 
     inline u8 populationCount(u8 v)
     {
@@ -1046,6 +1052,48 @@ namespace lcore
     u8 getLuminance(u8 r, u8 g, u8 b);
     f32 getLuminance(f32 r, f32 g, f32 b);
 
+    inline u16 getARGB4444(u32 argb)
+    {
+        u16 a = static_cast<u16>((argb>> 16)&0xF000U);
+        u16 r = static_cast<u16>((argb>> 12)&0x0F00U);
+        u16 g = static_cast<u16>((argb>>  8)&0x00F0U);
+        u16 b = static_cast<u16>((argb>>  4)&0x000FU);
+        return r|g|b|a;
+    }
+
+    inline u16 getABGR4444(u32 abgr)
+    {
+        u16 a = static_cast<u16>((abgr>> 16)&0xF000U);
+        u16 b = static_cast<u16>((abgr>> 12)&0x0F00U);
+        u16 g = static_cast<u16>((abgr>>  8)&0x00F0U);
+        u16 r = static_cast<u16>((abgr>>  4)&0x000FU);
+        return r|g|b|a;
+    }
+
+    inline u16 getRGBA4444(u32 rgba)
+    {
+        u16 r = static_cast<u16>((rgba>> 16)&0xF000U);
+        u16 g = static_cast<u16>((rgba>> 12)&0x0F00U);
+        u16 b = static_cast<u16>((rgba>>  8)&0x00F0U);
+        u16 a = static_cast<u16>((rgba>>  4)&0x000FU);
+        return r|g|b|a;
+    }
+
+    inline u32 getARGB4444(u8 a, u8 r, u8 g, u8 b)
+    {
+        return ((a&0xF0U) << 8) | ((r&0xF0U) << 4) | ((g&0xF0U)) | ((b&0xF0U) >> 4);
+    }
+
+    inline u32 getABGR4444(u8 a, u8 r, u8 g, u8 b)
+    {
+        return ((a&0xF0U) << 8) | ((b&0xF0U) << 4) | ((g&0xF0U)) | ((r&0xF0U) >> 4);
+    }
+
+    inline u32 getRGBA4444(u8 a, u8 r, u8 g, u8 b)
+    {
+        return ((r&0xF0U) << 8) | ((g&0xF0U) << 4) | ((b&0xF0U)) | ((a&0xF0U) >> 4);
+    }
+
     enum RefractiveIndex
     {
         RefractiveIndex_Vacuum =0,
@@ -1249,6 +1297,7 @@ namespace lcore
     //---------------------------------------------------------
     s32 scprintf(const Char* format, ...);
     s32 vscprintf(const Char* format, va_list args);
+    void replace(Char* str, Char dst, Char src);
 
 //#define LSNPRINTF(BUFF, N, FORM, ...) s32 snprintf(Char* LRESTRICT (BUFF), u32 (N), const Char* LRESTRICT (FORM), __VA_ARGS__);
 

@@ -6,13 +6,14 @@ set(ProjectName lframework)
 project(${ProjectName})
 
 set(CMAKE_CONFIGURATION_TYPES "Debug" "Release")
+set(SHADER_SOURCE_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/shader_source/")
 
 if(WIN32)
 set(LFW_INPUT_DIRECT_INPUT ON)
 endif()
 
-if(NOT FW_CONFIG_SHADOW_MAXCASCADES)
-set(FW_CONFIG_SHADOW_MAXCASCADES 4)
+if(NOT FW_CONFIG_SHADOW_NUMCASCADES)
+set(FW_CONFIG_SHADOW_NUMCASCADES 2)
 endif()
 
 if(NOT FW_CONFIG_NAMESIZE)
@@ -23,8 +24,27 @@ if(NOT FW_CONFIG_FILENAMESIZE)
 set(FW_CONFIG_FILENAMESIZE 64)
 endif()
 
+if(NOT FW_CONFIG_COMPUTESHADER_NUMTHREADS_BITSHIFT)
+set(FW_CONFIG_COMPUTESHADER_NUMTHREADS_BITSHIFT 3)
+endif()
+
+if(NOT FW_CONFIG_COMPUTESHADER_NUMTHREADS)
+set(FW_CONFIG_COMPUTESHADER_NUMTHREADS 8)
+endif()
+
+if(NOT FW_CONFIG_DISABLE_GUI)
+set(LFW_CONFIG_ENABLE_GUI ON)
+endif()
+
+if(NOT FW_CONFIG_DISABLE_ONLYDEBUG_GUI)
+set(LFW_CONFIG_ENABLE_ONLYDEBUG_GUI ON)
+endif()
+
 # Set configuration
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/Config.h" NEWLINE_STYLE LF)
+configure_file("${SHADER_SOURCE_DIRECTORY}/Common.vs.in" "${SHADER_SOURCE_DIRECTORY}/Common.vs" NEWLINE_STYLE LF)
+configure_file("${SHADER_SOURCE_DIRECTORY}/Common.ps.in" "${SHADER_SOURCE_DIRECTORY}/Common.ps" NEWLINE_STYLE LF)
+configure_file("${SHADER_SOURCE_DIRECTORY}/Common.scs.in" "${SHADER_SOURCE_DIRECTORY}/Common.scs" NEWLINE_STYLE LF)
 
 include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -39,7 +59,9 @@ set(MODULES
     "/render"
     "/subsystem"
     "/resource"
-    "/animation")
+    "/animation"
+    "/physics"
+    "/gui")
 
 set(HEADERS "")
 set(SOURCES "")
@@ -68,23 +90,13 @@ set(OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 
-if(MSVC)
-    set(CMAKE_CXX_FLAGS "${DEFAULT_CXX_FLAGS}" CACHE STRING "Flags used by the compiler during all build types." FORCE)
-    set(CMAKE_CXX_FLAGS_DEBUG "/D_DEBUG /MTd /Zi /Ob0 /Od /RTC1 /Gy /GR- /GS /Gm-" CACHE STRING "Flags used by the compiler during debug builds." FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "/MT /O2 /Ob2 /GL /GR- /DNDEBUG" CACHE STRING "Flags used by the compiler during release builds." FORCE)
-
-    set(CMAKE_STATIC_LINKER_FLAGS "/INCREMENTAL:NO /LTCG" CACHE STRING "Flags used by the linker during release builds." FORCE)
-
-elseif(UNIX)
-elseif(APPLE)
-endif()
-
 add_library(${ProjectName} STATIC ${FILES})
 set_target_properties(${ProjectName} PROPERTIES OUTPUT_NAME_DEBUG "${ProjectName}d" OUTPUT_NAME_RELEASE "${ProjectName}")
 
 if(MSVC)
     set_target_properties(${ProjectName} PROPERTIES
-        STATIC_LIBRARY_FLAGS "/LIBPATH:\"${EXTERNAL_LIB_DIR}\" \"dinput8.lib\" \"imm32.lib\"")
+        STATIC_LIBRARY_FLAGS "/LIBPATH:\"${EXTERNAL_LIB_DIR}\" \"dinput8.lib\" \"imm32.lib\""
+        STATIC_LIBRARY_FLAGS_RELEASE "/LTCG")
 
 elseif(UNIX)
 elseif(APPLE)

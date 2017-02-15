@@ -7,6 +7,7 @@
 #include "render/Camera.h"
 #include "render/Light.h"
 #include "render/Frustum.h"
+#include <lmath/geometry/PrimitiveTest.h>
 
 namespace lfw
 {
@@ -26,7 +27,7 @@ namespace lfw
 
         u8* p = lcore::align16(bufferMatrices_);
         lightProjection_ = reinterpret_cast<lmath::Matrix44*>(p);
-        lightViewProjection_ = reinterpret_cast<lmath::Matrix44*>(p + sizeof(lmath::Matrix44)*MaxCascades);
+        lightViewProjection_ = reinterpret_cast<lmath::Matrix44*>(p + sizeof(lmath::Matrix44)*NumCascades);
     }
 
     ShadowMap::~ShadowMap()
@@ -45,7 +46,7 @@ namespace lfw
 
     void ShadowMap::update(const Camera& camera, const Light& light)
     {
-        const lmath::Matrix44& view = camera.getViewMatrix();
+        //const lmath::Matrix44& view = camera.getViewMatrix();
         const lmath::Matrix44& invView = camera.getInvViewMatrix();
 
         lmath::Matrix44 lightView;
@@ -54,7 +55,7 @@ namespace lfw
         lmath::Vector4 sceneAABBPointsInLightView[8];
         createSceneAABBPoints(sceneAABBPointsInLightView);
         for(s32 i=0; i<8; ++i){
-            sceneAABBPointsInLightView[i] = mul(lightView, sceneAABBPointsInLightView[i]);
+            sceneAABBPointsInLightView[i] = lmath::Vector4::construct(mul(lightView, sceneAABBPointsInLightView[i]));
         }
 
         f32 frustumIntervalBegin, frustumIntervalEnd;
@@ -66,11 +67,11 @@ namespace lfw
 
         lmath::Vector4 frustumPoints[8];
         f32 offsetForPCFBlur = static_cast<f32>(pcfBlurSize_*2+1)/resolution_;
-        lmath::Vector4 scaleForPCFBlur(0.5f*offsetForPCFBlur, 0.5f*offsetForPCFBlur, 0.0f, 0.0f);
+        lmath::Vector4 scaleForPCFBlur = lmath::Vector4::construct(0.5f*offsetForPCFBlur, 0.5f*offsetForPCFBlur, 0.0f, 0.0f);
         f32 invResolution = 1.0f/resolution_;
-        lmath::Vector4 vInvResolution(invResolution, invResolution, 0.0f, 0.0f);
+        lmath::Vector4 vInvResolution = lmath::Vector4::construct(invResolution, invResolution, 0.0f, 0.0f);
 
-        lmath::Vector4 worldUnitsPerTexel;
+        lmath::lm128 worldUnitsPerTexel;
         for(s32 cascade=0; cascade<cascadeLevels_; ++cascade){
             frustumIntervalBegin = (FitType_ToCascades == fitType_)? cascadePartitions_[cascade] : 0.0f;
             frustumIntervalEnd = cascadePartitions_[cascade+1];
@@ -81,59 +82,59 @@ namespace lfw
             lightViewOrthoMin.set(FLT_MAX, FLT_MAX, FLT_MAX, 1.0f);
             lightViewOrthoMax.set(-FLT_MAX, -FLT_MAX, -FLT_MAX, 1.0f);
 
-            lmath::Vector4 worldPoint;
+            lmath::lm128 worldPoint;
             for(s32 i=0; i<8; ++i){
                 //ワールド座標へ変換
-                frustumPoints[i] = mul(invView, frustumPoints[i]);
+                frustumPoints[i] = lmath::Vector4::construct(mul(invView, frustumPoints[i]));
                 //ライトの座標へ変換
                 worldPoint = mul(lightView, frustumPoints[i]);
-                lightViewOrthoMin = minimum(lightViewOrthoMin, worldPoint);
-                lightViewOrthoMax = maximum(lightViewOrthoMax, worldPoint);
+                lightViewOrthoMin = lmath::Vector4::construct(minimum(lightViewOrthoMin, worldPoint));
+                lightViewOrthoMax = lmath::Vector4::construct(maximum(lightViewOrthoMax, worldPoint));
             }
 
             switch(fitType_)
             {
             case FitType_ToCascades:
                 {
-                    lmath::Vector4 boarderOffset;
+                    lmath::lm128 boarderOffset;
                     boarderOffset = sub(lightViewOrthoMax, lightViewOrthoMin);
-                    boarderOffset *= scaleForPCFBlur;
-                    lightViewOrthoMin -= boarderOffset;
-                    lightViewOrthoMax += boarderOffset;
+                    boarderOffset = boarderOffset * scaleForPCFBlur;
+                    lightViewOrthoMin = lmath::Vector4::construct(lightViewOrthoMin - boarderOffset);
+                    lightViewOrthoMax = lmath::Vector4::construct(lightViewOrthoMax + boarderOffset);
 
                     worldUnitsPerTexel = sub(lightViewOrthoMax, lightViewOrthoMin);
-                    worldUnitsPerTexel *= vInvResolution;
+                    worldUnitsPerTexel = worldUnitsPerTexel * vInvResolution;
                 }
                 break;
 
             case FitType_ToScene:
             default:
                 {
-                    lmath::Vector4 diagonal;
-                    diagonal = sub(frustumPoints[0], frustumPoints[6]);
+                    lmath::Vector4 diagonal = lmath::Vector4::construct(sub(frustumPoints[0], frustumPoints[6]));
                     f32 cascadeBound = diagonal.length();
-                    lmath::Vector4 boarderOffset;
-                    boarderOffset = sub(lightViewOrthoMax, lightViewOrthoMin);
-                    boarderOffset = sub(diagonal, boarderOffset);
-                    boarderOffset *= 0.5f;
+                    lmath::lm128 tmpBoarderOffset;
+                    tmpBoarderOffset = sub(lightViewOrthoMax, lightViewOrthoMin);
+                    tmpBoarderOffset = diagonal - tmpBoarderOffset;
+                    tmpBoarderOffset = 0.5f * tmpBoarderOffset;
+                    lmath::Vector4 boarderOffset = lmath::Vector4::construct(tmpBoarderOffset);
                     boarderOffset.z_ = boarderOffset.w_ = 0.0f;
 
                     lightViewOrthoMin -= boarderOffset;
                     lightViewOrthoMax += boarderOffset;
                     f32 units = cascadeBound*invResolution;
-                    worldUnitsPerTexel.set(units, units, 0.0f, 0.0f);
+                    worldUnitsPerTexel = _mm_set_ps(0.0f, 0.0f, units, units);
                 }
                 break;
             }
 
             if(moveLightTexelSize_ == 1){
-                lightViewOrthoMin /= worldUnitsPerTexel;
-                lightViewOrthoMin = floor(lightViewOrthoMin);
-                lightViewOrthoMin *= worldUnitsPerTexel;
+                lmath::lm128 tmpLightViewOrthoMin = lightViewOrthoMin / worldUnitsPerTexel;
+                tmpLightViewOrthoMin = floor(tmpLightViewOrthoMin);
+                lightViewOrthoMin = lmath::Vector4::construct(tmpLightViewOrthoMin * worldUnitsPerTexel);
 
-                lightViewOrthoMax /= worldUnitsPerTexel;
-                lightViewOrthoMax = floor(lightViewOrthoMax);
-                lightViewOrthoMax *= worldUnitsPerTexel;
+                lmath::lm128 tmpLightViewOrthoMax = lightViewOrthoMax / worldUnitsPerTexel;
+                tmpLightViewOrthoMax = floor(tmpLightViewOrthoMax);
+                lightViewOrthoMax = lmath::Vector4::construct(tmpLightViewOrthoMax * worldUnitsPerTexel);
             }
 
             f32 nearPlane = 0.0f;
@@ -199,23 +200,27 @@ namespace lfw
     {
         static const lmath::Vector4 map[] = 
         { 
-            lmath::Vector4(0.5f, 0.5f, -0.5f, 0.5f),
-            lmath::Vector4(-0.5f, 0.5f, -0.5f, 0.5f),
-            lmath::Vector4(0.5f, -0.5f, -0.5f, 0.5f),
-            lmath::Vector4(-0.5f, -0.5f, -0.5f, 0.5f),
-            lmath::Vector4(0.5f, 0.5f, 0.5f, 0.5f),
-            lmath::Vector4(-0.5f, 0.5f, 0.5f, 0.5f),
-            lmath::Vector4(0.5f, -0.5f, 0.5f, 0.5f),
-            lmath::Vector4(-0.5f, -0.5f, 0.5f, 0.5f),
+            lmath::Vector4::construct(0.5f, 0.5f, -0.5f, 0.5f),
+            lmath::Vector4::construct(-0.5f, 0.5f, -0.5f, 0.5f),
+            lmath::Vector4::construct(0.5f, -0.5f, -0.5f, 0.5f),
+            lmath::Vector4::construct(-0.5f, -0.5f, -0.5f, 0.5f),
+            lmath::Vector4::construct(0.5f, 0.5f, 0.5f, 0.5f),
+            lmath::Vector4::construct(-0.5f, 0.5f, 0.5f, 0.5f),
+            lmath::Vector4::construct(0.5f, -0.5f, 0.5f, 0.5f),
+            lmath::Vector4::construct(-0.5f, -0.5f, 0.5f, 0.5f),
         };
 
-        lmath::Vector4 sceneCenter = add(sceneAABBMin_, sceneAABBMax_);
-        sceneCenter *= 0.5f;
+        lmath::return_type_vec4 sceneCenter = add(sceneAABBMin_, sceneAABBMax_);
+        sceneCenter = 0.5f * sceneCenter;
 
-        lmath::Vector4 sceneExtent = sub(sceneAABBMax_, sceneAABBMin_);
-
+        lmath::return_type_vec4 sceneExtent = sub(sceneAABBMax_, sceneAABBMin_);
         for(s32 i=0; i<8; ++i){
-            dst[i] = muladd(map[i], sceneExtent, sceneCenter);
+            dst[i] = lmath::Vector4::construct((lmath::lm128)muladd(map[i], sceneExtent, sceneCenter));
         }
+    }
+
+    bool ShadowMap::contains(const lmath::Sphere& sphere) const
+    {
+        return lmath::testSphereAABB(sphere, sceneAABBMin_, sceneAABBMax_);
     }
 }

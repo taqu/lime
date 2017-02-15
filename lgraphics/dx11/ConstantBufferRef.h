@@ -77,7 +77,9 @@ namespace lgfx
             CPUAccessFlag accessFlags,
             ResourceMisc miscFlags,
             u32 structureByteStride =0,
-            const void* data = NULL)
+            const void* data = NULL,
+            s32 pitch =0,
+            s32 slicePitch =0)
         {
             ID3D11Buffer* buffer = BufferBase::create(
                 size,
@@ -86,7 +88,9 @@ namespace lgfx
                 accessFlags,
                 miscFlags,
                 structureByteStride,
-                data);
+                data,
+                pitch,
+                slicePitch);
 
             return ConstantBufferRef(buffer);
         }

@@ -301,6 +301,16 @@ namespace lgfx
         void attachCS(lgfx::ContextRef& context, u32 index);
         void attachHS(lgfx::ContextRef& context, u32 index);
         void attachDS(lgfx::ContextRef& context, u32 index);
+
+        inline bool operator==(const ShaderResourceViewRef& rhs) const
+        {
+            return (view_ == rhs.view_);
+        }
+
+        inline bool operator!=(const ShaderResourceViewRef& rhs) const
+        {
+            return (view_ != rhs.view_);
+        }
     private:
         pointer_type view_;
     };

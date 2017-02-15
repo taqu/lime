@@ -15,7 +15,7 @@ namespace lfw
 {
     class ShadowMap;
 
-    struct LALIGN16 PerFrameConstantVS
+    struct LALIGN16 PerFrameConstant
     {
         f32 velocityScale_;
         f32 velocityMaxMagnitude_;
@@ -23,7 +23,7 @@ namespace lfw
         f32 reserved1_;
     };
 
-    struct LALIGN16 PerCameraConstantVS
+    struct LALIGN16 PerCameraConstant
     {
         lmath::Matrix44 view_; //view matrix
         lmath::Matrix44 invview_;
@@ -31,6 +31,7 @@ namespace lfw
         lmath::Matrix44 invprojection_;
         lmath::Matrix44 vp0_; //previous view projection
         lmath::Matrix44 vp1_; //current view projection
+        lmath::Matrix44 invvp1_;
         lmath::Vector4 cameraPos_;
         s32 screenWidth_;
         s32 screenHeight_;
@@ -38,21 +39,21 @@ namespace lfw
         f32 screenInvHeight_;
     };
 
-    struct LALIGN16 PerModelConstant0VS
+    struct LALIGN16 PerModelConstant0
     {
         lmath::Matrix44 world0_;
         lmath::Matrix44 world1_;
     };
 
-    struct LALIGN16 PerModelConstant1VS
+    struct LALIGN16 PerModelConstant1
     {
         lmath::Vector4 matrices0_[LGFX_CONFIG_MAX_SKINNING_MATRICES*3];
         lmath::Vector4 matrices1_[LGFX_CONFIG_MAX_SKINNING_MATRICES*3];
     };
 
-    struct LALIGN16 PerShadowMapConstantVS
+    struct LALIGN16 PerShadowMapConstant
     {
-        lmath::Matrix44 lvp_[LFW_CONFIG_SHADOW_MAXCASCADES];
+        lmath::Matrix44 lvp_[LFW_CONFIG_SHADOW_NUMCASCADES];
     };
 
     struct LALIGN16 PerCameraConstantDS
@@ -64,12 +65,20 @@ namespace lfw
         lmath::Vector4 cameraPos_;
     };
 
-    struct LALIGN16 PerFrameConstantPS
+    struct LALIGN16 PerLightConstant
     {
-        s32 screenWidth_;
-        s32 screenHeight_;
-        f32 screenInvWidth_;
-        f32 screenInvHeight_;
+        lmath::Vector4 dlDir_;
+        lmath::Vector4 dlColor_;
+
+        f32 shadowMapSize;
+        f32 specularMapMipLevels;
+        f32 invShadowMapSize;
+        s32 shadowMapUVToTexel;
+
+        f32 shadowMapMomentBias;
+        f32 shadowMapDepthBias;
+        f32 lightBleedingBias;
+        s32 clusterGridScale;
     };
 
     //struct LALIGN16 SceneConstantPS
@@ -132,29 +141,11 @@ namespace lfw
 
     struct LALIGN16 MaterialConstant
     {
-#ifdef LNPBR
-        lmath::Vector4 diffuse_; //rgba
-        lmath::Vector4 specular_; //rgb shininess
-        lmath::Vector4 ambient_; //rgb refractive index or fresnel
-        lmath::Vector4 shadow_; //rgb roughness
-#else
         lmath::Vector4 diffuse_; //rgba
         lmath::Vector4 specular_; //rgb roughness
         lmath::Vector4 ambient_; //rgb ambient shadow
         lmath::Vector4 shadow_; //rgb metalic
-#endif
     };
-
-    //struct LALIGN16 NodeConstant
-    //{
-    //    lmath::Matrix44 w_;
-    //};
-
-    //struct LALIGN16 NodeMotionVelocityConstant
-    //{
-    //    lmath::Matrix44 w0_;
-    //    lmath::Matrix44 w1_;
-    //};
 
     //void setSceneConstantVS(SceneConstantVS& dst, const Scene& scene, const ShadowMap& shadowMap);
     //void setSceneConstantDS(SceneConstantDS& dst, const Scene& scene);
@@ -168,5 +159,6 @@ namespace lfw
     //    f32 lightBleedingBias);
 
     //void setSceneConstantCameraMotionPS(SceneConstantCameraMotionPS& dst, const Scene& scene, f32 width, f32 height, f32 exposure, f32 maxMagnitude);
+
 }
 #endif //INC_LFRAMEWORK_SHADERCONSTANT_H__

@@ -6,6 +6,7 @@
 @date 2009/09/10 create
 */
 #include "lcore.h"
+#include <stdio.h>
 #include <stdarg.h>
 
 namespace lcore
@@ -295,6 +296,7 @@ namespace lcore
 
         void append(Char c);
         s32 pop_back();
+        inline void append(const Char* str);
         void append(s32 length, const Char* str);
 
         bool operator==(const String& rhs) const;
@@ -303,6 +305,7 @@ namespace lcore
         s32 printf(const Char* format, ...);
         String& operator=(const String& rhs);
         String& operator=(const Char* str);
+        inline void assign(const Char* str);
         void assign(s32 length, const Char* str);
         void assign(s32 length, const Char* str, FilterFunc filter);
         void swap(String& rhs);
@@ -373,6 +376,16 @@ namespace lcore
         length_ = 0;
         Char* buffer = getBuffer();
         buffer[0] = CharNull;
+    }
+
+    inline void String::append(const Char* str)
+    {
+        append(lcore::strlen_s32(str), str);
+    }
+
+    inline void String::assign(const Char* str)
+    {
+        assign(lcore::strlen_s32(str), str);
     }
 
     s32 compare(const String& str0, const String& str1);

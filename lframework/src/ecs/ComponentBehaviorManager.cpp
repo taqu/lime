@@ -68,7 +68,7 @@ namespace lfw
             components_[index]->onDestroy();
             LDELETE(components_[index]);
         }
-        ids_.destroy(ID(0, index));
+        ids_.destroy(ID::construct(0, index));
     }
 
     Behavior* ComponentBehaviorManager::getBehavior(ID id)

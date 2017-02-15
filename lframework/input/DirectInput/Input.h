@@ -20,6 +20,7 @@ namespace linput
         /**
         */
         Error initialize(const InitParam& param);
+        bool initialize(linput::DeviceType type, WINDOW_HANDLE hWnd);
         void terminate();
 
         void update();

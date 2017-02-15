@@ -7,7 +7,8 @@
 */
 #include "../lframework.h"
 #include <lcore/Array.h>
-#include "Frustum.h"
+#include "SamplerSet.h"
+#include "DepthStencil.h"
 
 namespace lmath
 {
@@ -72,22 +73,21 @@ namespace lfw
         inline s32 getRenderPath() const;
         void setRenderPath(s32 path);
 
+        void beginDeferredLighting(const Light& light);
+        void endDeferredLighting(const Light& light);
+
         inline const Camera& getCamera() const;
-        inline void setCamera(const Camera* camera);
+        inline Camera& getCamera();
+        inline void setCamera(Camera* camera);
         inline const ShadowMap& getShadowMap();
         inline void setShadowMap(const ShadowMap* shadowMap);
+        inline DepthStencil& getShadowMapDepthStencil();
+
         inline lgfx::ContextRef& getContext();
         inline void setContext(lgfx::ContextRef* context);
 
         inline lgfx::ConstantBufferTableSet& getConsantBuffer();
         inline void setConstantBuffer(lgfx::ConstantBufferTableSet* constantBufferTableSet);
-
-        //void setSceneConstantVS(const Scene& scene, const ShadowMap& shadowMap);
-        //void setSceneConstantDS(const Scene& scene);
-        //void setSceneConstantPS(const SceneConstantPS& src, const Scene& scene, const LightClusterConstantPS& lightCluster);
-
-        inline lgfx::ConstantBufferRef* getSceneConstantVS();
-        inline lgfx::ConstantBufferRef* getSceneConstantPS();
 
         lgfx::ConstantBufferRef* createConstantBuffer(u32 size);
         lgfx::ConstantBufferRef* createConstantBuffer(u32 size, const void* data);
@@ -97,31 +97,25 @@ namespace lfw
         bool setConstantAligned16(Shader shader, s32 index, u32 size, const void* data);
         bool setConstantMatricesAligned16(Shader shader, s32 index, s32 num, const lmath::Matrix34* matrices);
 
-        inline const Frustum& getWorldFrustum() const;
-        void updateWorldFrustum(const Camera& camera);
-
         void attachDepthShader(DepthShader type);
         inline void setDepthShaderVS(DepthShader type, lgfx::VertexShaderRef& vs);
         inline void setDepshShaderGS(lgfx::GeometryShaderRef& gs);
+        void resetDefaultSamplerSet();
     private:
         RenderContext(const RenderContext&);
         RenderContext& operator=(const RenderContext&);
 
         s32 renderPath_;
-        const Camera* camera_;
+        Camera* camera_;
         const ShadowMap* shadowMap_;
+        DepthStencil shadowMapDepthStencil_;
+
         lgfx::ContextRef* context_;
         lgfx::ConstantBufferTableSet* constantBufferTableSet_;
 
-        //lgfx::ConstantBufferRef* sceneConstantBufferVS_;
-        //lgfx::ConstantBufferRef* sceneConstantBufferDS_;
-        //lgfx::ConstantBufferRef* sceneConstantBufferPS_;
-        //lgfx::ConstantBufferRef* lightClusterConstantBufferPS_;
-
-        Frustum cameraFrustum_;
-        Frustum worldFrustum_;
         lgfx::VertexShaderRef* depthShaderVS_[DepthShader_Num];
         lgfx::GeometryShaderRef* depthShaderGS_;
+        SamplerSet<3> samplerSet_;
     };
 
     inline s32 RenderContext::getRenderPath() const
@@ -134,7 +128,12 @@ namespace lfw
         return *camera_;
     }
 
-    inline void RenderContext::setCamera(const Camera* camera)
+    inline Camera& RenderContext::getCamera()
+    {
+        return *camera_;
+    }
+
+    inline void RenderContext::setCamera(Camera* camera)
     {
         camera_ = camera;
     }
@@ -147,6 +146,11 @@ namespace lfw
     inline void RenderContext::setShadowMap(const ShadowMap* shadowMap)
     {
         shadowMap_ = shadowMap;
+    }
+
+    inline DepthStencil& RenderContext::getShadowMapDepthStencil()
+    {
+        return shadowMapDepthStencil_;
     }
 
     inline lgfx::ContextRef& RenderContext::getContext()
@@ -167,22 +171,6 @@ namespace lfw
     inline void RenderContext::setConstantBuffer(lgfx::ConstantBufferTableSet* constantBuffer)
     {
         constantBufferTableSet_ = constantBuffer;
-    }
-
-    //inline lgfx::ConstantBufferRef* RenderContext::getSceneConstantVS()
-    //{
-    //    return sceneConstantBufferVS_;
-    //}
-
-    //inline lgfx::ConstantBufferRef* RenderContext::getSceneConstantPS()
-    //{
-    //    return sceneConstantBufferPS_;
-    //}
-
-
-    inline const Frustum& RenderContext::getWorldFrustum() const
-    {
-        return worldFrustum_;
     }
 
     inline void RenderContext::setDepthShaderVS(DepthShader type, lgfx::VertexShaderRef& vs)

@@ -24,6 +24,7 @@ namespace lfw
             ~Components();
 
             inline s16 size() const;
+            inline s32 bufferSize() const;
             inline s32 offset() const;
             ID get(s16 index) const;
             const ID* get() const;
@@ -92,6 +93,8 @@ namespace lfw
         inline const T* getComponent(ID id) const;
         template<class T>
         inline T* getComponent(ID id);
+
+        void removeComponent(ID id);
 
         inline bool operator==(const Entity& entity) const;
         inline bool operator!=(const Entity& entity) const;
@@ -179,6 +182,11 @@ namespace lfw
     inline s16 Entity::Components::size() const
     {
         return size_;
+    }
+
+    inline s32 Entity::Components::bufferSize() const
+    {
+        return capacity_<<2;
     }
 
     inline s32 Entity::Components::offset() const

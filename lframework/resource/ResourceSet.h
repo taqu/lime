@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2016/11/20 create
 */
-#include "lframework.h"
+#include "../lframework.h"
 #include <lcore/Array.h>
 #include "Resource.h"
 

@@ -40,22 +40,18 @@ namespace lfw
 
     void ComponentLight::onCreate()
     {
-        lcore::Log("onCreate");
     }
 
     void ComponentLight::onStart()
     {
-        lcore::Log("onStart");
     }
 
     void ComponentLight::update()
     {
-        lcore::Log("update");
     }
 
     void ComponentLight::onDestroy()
     {
-        lcore::Log("onDestroy");
     }
 
     s32 ComponentLight::getTargetLayerMask() const

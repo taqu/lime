@@ -49,6 +49,7 @@ namespace lgfx
         }
 
         if(FrameSyncFlag_InGPUUse == events_[current_].flag_){
+            lcore::Log("[lgfx] sync frame with flush");
             s32 count = 0;
             while(S_OK != context.getData(events_[current_].event_, NULL, 0, 0)){
                 if(BusyLoop<++count){

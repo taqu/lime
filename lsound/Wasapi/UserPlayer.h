@@ -6,7 +6,7 @@
 @date 2015/07/07 create
 */
 #include "../lsound.h"
-#include <lcore/async/SyncObject.h>
+#include <lcore/SyncObject.h>
 
 namespace lsound
 {

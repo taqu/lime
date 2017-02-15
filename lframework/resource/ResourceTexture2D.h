@@ -17,6 +17,8 @@ namespace lfw
         static const s32 Type = ResourceType_Texture2D;
 
         static ResourceTexture2D* load(const Char* path, s64 size, const u8* memory, const TextureParameter& param);
+        static ResourceTexture2D* create(u32 color, const TextureParameter& param);
+        static ResourceTexture2D* create(u32 width, u32 height, const u32* colors, const TextureParameter& param);
 
         virtual s32 getType() const
         {

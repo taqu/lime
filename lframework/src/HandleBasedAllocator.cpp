@@ -42,19 +42,26 @@ namespace lfw
         freemmap();
     }
 
-    HandleBasedAllocator::Handle HandleBasedAllocator::allocate(u32 size)
+    HandleBasedAllocator::Handle HandleBasedAllocator::allocate(s32 size)
     {
         Handle handle;
         if(size<=0){
             return handle;
         }
 
+#ifdef LFRAMEWORK_HANDLEBAEDALLOCATOR_DEBUG
+        size += 4;
+#endif
         if(MaxSize<size){
             handle.size_ = size;
             for(s32 i=0; i<capacityFreeAlloc_; ++i){
                 if(NULL == freeAllocs_[i]){
                     freeAllocs_[i] = LMALLOC(size);
                     handle.offset_ = i;
+#ifdef LFRAMEWORK_HANDLEBAEDALLOCATOR_DEBUG
+                    handle.size_ -= 4;
+                    setDebug(handle.size(), handle.offset());
+#endif
                     return handle;
                 }
             }
@@ -66,6 +73,10 @@ namespace lfw
             freeAllocs_ = freeAllocs;
             freeAllocs_[capacityFreeAlloc_] = LMALLOC(size);
             capacityFreeAlloc_ += NumFreeAlloc;
+#ifdef LFRAMEWORK_HANDLEBAEDALLOCATOR_DEBUG
+            handle.size_ -= 4;
+            setDebug(handle.size(), handle.offset());
+#endif
             return handle;
         }
         size = (size+MinMask) & ~MinMask;
@@ -73,7 +84,7 @@ namespace lfw
         s32 index = static_cast<s32>(size>>MinShift) - 1;
 
         for(;;){
-            u32 tmp = size;
+            s32 tmp = size;
             for(s32 i=index; i<TableSize; ++i){
                 if(0<=table_[i].next_){
                     s32 offset = table_[i].next_;
@@ -81,6 +92,10 @@ namespace lfw
                     handle.offset_ = offset;
                     table_[i].next_ = getLink(offset)->next_;
                     if(size == tmp){
+#ifdef LFRAMEWORK_HANDLEBAEDALLOCATOR_DEBUG
+                        handle.size_ -= 4;
+                        setDebug(handle.size(), handle.offset());
+#endif
                         return handle;
                     }
                     s32 diff = tmp-size;
@@ -89,6 +104,10 @@ namespace lfw
                     size = diff;
                     index = (size>>MinShift) - 1;
                     link(index, getLink(offset));
+#ifdef LFRAMEWORK_HANDLEBAEDALLOCATOR_DEBUG
+                    handle.size_ -= 4;
+                    setDebug(handle.size(), handle.offset());
+#endif
                     return handle;
                 }
                 tmp += MinSize;
@@ -97,20 +116,23 @@ namespace lfw
         }
     }
 
-    void HandleBasedAllocator::deallocate(Handle handle)
+    void HandleBasedAllocator::deallocate(s32 size, s32 offset)
     {
-        if(handle.offset_<0){
+        if(offset<0){
             return;
         }
-        if(MaxSize<handle.size_){
-            LASSERT(0<=handle.offset_ && handle.offset_<capacityFreeAlloc_);
-            LFREE(freeAllocs_[handle.offset_]);
-            handle.offset_ = Invalid;
+#ifdef LFRAMEWORK_HANDLEBAEDALLOCATOR_DEBUG
+        LASSERT(checkDebug(size, offset));
+        size += 4;
+#endif
+        if(MaxSize<size){
+            LASSERT(0<=offset && offset<capacityFreeAlloc_);
+            LFREE(freeAllocs_[offset]);
             return;
         }
 
-        s32 index = (handle.size_ >> MinShift) - 1;
-        link(index, getLink(handle.offset_));
+        s32 index = (size >> MinShift) - 1;
+        link(index, getLink(offset));
     }
 
     void HandleBasedAllocator::gatherFragments()
@@ -184,7 +206,7 @@ namespace lfw
     }
 
     //------------------------------------------------------
-    s32 HandleBasedAllocator::countTable(u32 size) const
+    s32 HandleBasedAllocator::countTable(s32 size) const
     {
         if(size<=0){
             return 0;
@@ -280,5 +302,30 @@ namespace lfw
         }
         link->next_ = prev->next_;
         prev->next_ = static_cast<s32>(reinterpret_cast<u8*>(link)-block_);
+    }
+
+    //------------------------------------------------------
+    void HandleBasedAllocator::setDebug(s32 size, s32 offset)
+    {
+        LASSERT(0<=size);
+        LASSERT(0<=offset);
+        s32* ptr = (size<=MaxSize)
+            ? reinterpret_cast<s32*>(block_ + offset)
+            : static_cast<s32*>(freeAllocs_[offset]);
+        *ptr = size;
+    }
+
+    //------------------------------------------------------
+    bool HandleBasedAllocator::checkDebug(s32 size, s32 offset) const
+    {
+        LASSERT(0<=size);
+        LASSERT(0<=offset);
+        const s32* ptr = (size<=MaxSize)
+            ? reinterpret_cast<const s32*>(block_ + offset)
+            : static_cast<const s32*>(freeAllocs_[offset]);
+        if(NULL == ptr){
+            return false;
+        }
+        return (*ptr == size);
     }
 }

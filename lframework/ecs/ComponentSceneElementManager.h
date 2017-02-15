@@ -36,7 +36,6 @@ namespace lfw
         typedef lcore::Array<CameraData> CameraArray;
         typedef lcore::Array<LightData> LightArray;
 
-
         struct Data: public ComponentDataCommon<Data>
         {
             s32 index_;
@@ -73,6 +72,9 @@ namespace lfw
         void sortLights();
 
         void postUpdateComponents();
+
+        template<class T>
+        inline T* getComponent(s32 index);
     protected:
         ComponentSceneElementManager(const ComponentSceneElementManager&);
         ComponentSceneElementManager& operator=(const ComponentSceneElementManager&);
@@ -143,6 +145,14 @@ namespace lfw
     inline bool lessSortData(const ComponentSceneElementManager::CameraData& d0, const ComponentSceneElementManager::CameraData& d1)
     {
         return d0.camera_.getSortLayer()<d1.camera_.getSortLayer();
+    }
+
+    template<class T>
+    inline T* ComponentSceneElementManager::getComponent(s32 index)
+    {
+        LASSERT(0<=index && index<ids_.capacity());
+        LASSERT(NULL != components_[index]);
+        return reinterpret_cast<T*>(components_[index]);
     }
 }
 #endif //INC_LFRAMEWORK_COMPONENTSCENEELEMENTMANAGER_H__

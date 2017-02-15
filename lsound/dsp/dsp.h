@@ -31,12 +31,12 @@ namespace lsound
 
     static inline LSbyte toByte(LSshort v)
     {
-        return static_cast<LSshort>((128.0f/32768.0f)*v);
+        return static_cast<LSbyte>((128.0f/32768.0f)*v);
     }
 
     static inline LSbyte toByte(LSfloat v)
     {
-        return static_cast<LSshort>(128.0f*v);
+        return static_cast<LSbyte>(128.0f*v);
     }
 
     typedef void(*ConvTypeFunc)(void* dst, const void* s, s32 numSamples);

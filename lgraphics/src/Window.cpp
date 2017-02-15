@@ -68,14 +68,14 @@ namespace lgfx
         rect.right = param.width_;
         rect.bottom = param.height_;
 
-        u32 style = 0;
-        u32 exStyle = 0;
+        u32 style = param.style_;
+        u32 exStyle = param.exStyle_;
         if(param.windowed_){
-            exStyle = WS_EX_CLIENTEDGE;
-            style = WS_SYSMENU | WS_BORDER | WS_CAPTION | WS_VISIBLE;
+            exStyle |= WS_EX_CLIENTEDGE;
+            style |= WS_SYSMENU | WS_BORDER | WS_CAPTION | WS_VISIBLE;
         }else{
-            style = WS_POPUP | WS_VISIBLE;
-            exStyle = WS_EX_APPWINDOW;
+            style |= WS_POPUP | WS_VISIBLE;
+            exStyle |= WS_EX_APPWINDOW;
             ShowCursor(FALSE);
         }
 
@@ -170,7 +170,7 @@ namespace lgfx
         ShowWindow(handle_.hWnd_, (enable)?SW_SHOW : SW_HIDE);
     }
 
-    void Window::getViewSize(u32& width, u32& height)
+    void Window::getViewSize(s32& width, s32& height)
     {
         RECT rect;
         if(TRUE == GetClientRect(handle_.hWnd_, &rect)){

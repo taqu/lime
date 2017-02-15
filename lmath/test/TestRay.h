@@ -21,7 +21,7 @@ namespace lmath
     TEST_F(TestRay, RayTriangleSingle00)
     {
         {
-            Ray ray(Vector3(-1.0f, -1.0f, -1.0f), normalize(Vector3(1.0f, 1.0f, 1.0f)), 100.0f);
+            Ray ray(Vector3::construct(-1.0f, -1.0f, -1.0f), normalize(Vector3::construct(1.0f, 1.0f, 1.0f)), 100.0f);
 
             Vector3 points[3] =
             {
@@ -50,7 +50,7 @@ namespace lmath
             sresult = testRayTriangleBoth(t,v,w, ray, points[0], points[2], points[1]);
             EXPECT_EQ(sresult, Result_Back);
 
-            ray = Ray(Vector3(-10.0f, -1.0f, -1.0f), normalize(Vector3(-10.0f, 1.0f, 1.0f)), 100.0f);
+            ray = Ray(Vector3::construct(-10.0f, -1.0f, -1.0f), normalize(Vector3::construct(-10.0f, 1.0f, 1.0f)), 100.0f);
             bresult = testRayTriangleFront(t,v,w, ray, points[0], points[1], points[2]);
             EXPECT_FALSE(bresult);
             bresult = testRayTriangleFront(t,v,w, ray, points[0], points[1], points[2]);
@@ -60,8 +60,8 @@ namespace lmath
         }
 
         {
-            Vector3 sp = Vector3(-1.0f, -1.0f, -1.0f);
-            Vector3 ep = Vector3(1.0f, 1.0f, 1.0f);
+            Vector3 sp = Vector3::construct(-1.0f, -1.0f, -1.0f);
+            Vector3 ep = Vector3::construct(1.0f, 1.0f, 1.0f);
 
             Vector3 points[3] =
             {
@@ -91,8 +91,8 @@ namespace lmath
             EXPECT_EQ(sresult, Result_Back);
 
 
-            sp = Vector3(-10.0f, -1.0f, -1.0f);
-            ep = Vector3(-10.0f, 1.0f, 1.0f);
+            sp = Vector3::construct(-10.0f, -1.0f, -1.0f);
+            ep = Vector3::construct(-10.0f, 1.0f, 1.0f);
             bresult = testRayTriangleFront(t,v,w, sp, ep, points[0], points[1], points[2]);
             EXPECT_FALSE(bresult);
             bresult = testRayTriangleFront(t,v,w, sp, ep, points[0], points[1], points[2]);
@@ -108,9 +108,9 @@ namespace lmath
         {
             Ray rays[3] =
             {
-                Ray(Vector3(-1.0f, -1.0f, -1.0f), normalize(Vector3(0.0f, 0.0f, 1.0f)), 100.0f),
-                Ray(Vector3( 1.0f,  2.0f, -1.0f), normalize(Vector3(0.0f, 0.0f, 1.0f)), 100.0f),
-                Ray(Vector3( 2.0f, -1.0f, -1.0f), normalize(Vector3(0.0f, 0.0f, 1.0f)), 100.0f),
+                Ray(Vector3::construct(-1.0f, -1.0f, -1.0f), normalize(Vector3::construct(0.0f, 0.0f, 1.0f)), 100.0f),
+                Ray(Vector3::construct( 1.0f,  2.0f, -1.0f), normalize(Vector3::construct(0.0f, 0.0f, 1.0f)), 100.0f),
+                Ray(Vector3::construct( 2.0f, -1.0f, -1.0f), normalize(Vector3::construct(0.0f, 0.0f, 1.0f)), 100.0f),
             };
 
             Vector3 points[3] =
@@ -155,7 +155,7 @@ namespace lmath
 
             lm128 vt,vv,vw;
 
-            Ray ray(Vector3(-1.0f, -1.0f, -1.0f), normalize(Vector3(1.0f, 1.0f, 1.0f)), 100.0f);
+            Ray ray(Vector3::construct(-1.0f, -1.0f, -1.0f), normalize(Vector3::construct(1.0f, 1.0f, 1.0f)), 100.0f);
 
             f32 px[3][4] =
             {

@@ -45,7 +45,7 @@ namespace lmath
 
         Vector3 normal() const
         {
-            return Vector3(nx_, ny_, nz_);
+            return {nx_, ny_, nz_};
         }
 
         f32 d() const

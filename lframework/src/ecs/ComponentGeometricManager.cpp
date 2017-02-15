@@ -17,12 +17,14 @@ namespace lfw
     {
         positions_ = LNEW lmath::Vector4[capacity];
         rotations_ = LNEW lmath::Quaternion[capacity];
+        scales_ = LNEW lmath::Vector3[capacity];
         matrices_ = LNEW lmath::Matrix44[capacity];
     }
 
     ComponentGeometricManager::~ComponentGeometricManager()
     {
         LDELETE_ARRAY(matrices_);
+        LDELETE_ARRAY(scales_);
         LDELETE_ARRAY(rotations_);
         LDELETE_ARRAY(positions_);
     }
@@ -40,11 +42,13 @@ namespace lfw
             s32 newCapacity = ids_.capacity();
             expand(positions_, capacity, newCapacity);
             expand(rotations_, capacity, newCapacity);
+            expand(scales_, capacity, newCapacity);
             expand(matrices_, capacity, newCapacity);
         }
         u16 index = id.index();
-        positions_[index].zero();
-        rotations_[index].identity();
+        positions_[index] = lmath::Vector4::zero();
+        rotations_[index].setIdentity();
+        scales_[index] = lmath::Vector3::one();
         matrices_[index].identity();
         return id;
     }
@@ -62,6 +66,7 @@ namespace lfw
         for(const u16* id = entityTree_.beginID(); id != entityTree_.endID(); ++id){
             u16 index = *id;
             rotations_[index].getMatrix(matrices_[index]);
+            matrices_[index](0,0) *= scales_[index].x_; matrices_[index](1,1) *= scales_[index].y_; matrices_[index](2,2) *= scales_[index].z_;
             matrices_[index].translate(positions_[index]);
 
             u16 parent = entityTree_.get(index).parent();

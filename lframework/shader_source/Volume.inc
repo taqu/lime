@@ -1,63 +1,85 @@
+#ifndef INC_VOLUME_INC_
+#define INC_VOLUME_INC_
 
-struct InOut
-{
-    nointerpolation uint vertexID : VERTEXID;
-};
+#define NUM_CASCADES (2)
 
-struct InOut2
+struct VSInOut
 {
-    nointerpolation uint vertexID : VERTEXID;
-    nointerpolation float3 coordu : COORDU;
-    nointerpolation float3 coordv : COORDV;
+    nointerpolation float3 position : POSITION;
+    nointerpolation float2 timescale : TIMESCALE; //time, scale
+    nointerpolation float2 radius : RADIUS; //radius, invRadius
 };
 
 struct DSOutput
 {
     float4 position : SV_POSITION;
     float3 worldPos : POSITION;
-    nointerpolation float3 vector0 : VECTOR0;
-    nointerpolation float time : TIME; 
-    nointerpolation int mode : MODE;
-    nointerpolation float3 coordu : COORDU;
-    nointerpolation float3 coordv : COORDV;
+    nointerpolation float2 timescale : TIMESCALE;
+    nointerpolation float2 radius : RADIUS;
     noperspective float2 rayHitNearFar : RAYHIT;
     noperspective float3 rayDirection : RAYDIR;
 };
 
-struct Vertex
+struct NoiseConstant
 {
-    float3 position;
-    float time;
-    float3 vector0;
-    int mode;
-};
-
-struct VolumeConstant
-{
-    int hullSteps_;
-    int hullOctaves_;
-    int maxSteps_;
-    float stepSize_;
-
-    float radius_;
-    float displacement_;
-    float2 uvScaleBias_;
-
-    float edgeSoftness_;
+    int noiseOctaves_;
     float3 noiseAnimation_;
 
     float noiseScale_;
     float noiseAmplitude_;
     float noisePersistence_;
     float noiseFrequency_;
-
-    int noiseOctaves_;
-    float invMaxNoise_;
-    float opacity_;
-    float skinThickness_;
 };
 
-StructuredBuffer<Vertex> vertexBuffer : register(t2);
+#ifndef DEF_PERFRAMECONSTANT
+#define DEF_PERFRAMECONSTANT
+cbuffer PerFrameConstant : register(b0)
+{
+    float velocityScale;
+    float velocityMaxMagnitude;
+    float reserved0;
+    float reserved1;
+};
+#endif
+
+#ifndef DEF_PERCAMERACONSTANT
+#define DEF_PERCAMERACONSTANT
+cbuffer PerCameraConstant : register(b2)
+{
+    float4x4 mview;
+    float4x4 minvview;
+    float4x4 mproj;
+    float4x4 minvproj;
+    float4x4 mvp0; //previous vew projection
+    float4x4 mvp1; //current view projection
+    float4 cameraPos;
+    int2 screenSize; //(screenWidth, screenHeight)
+    float2 screenInvSize; //(screenInvWidth, screenInvHeight)
+}
+#endif
+
+cbuffer VolumeConstant : register(b3)
+{
+    int maxSteps_;
+    float stepSize_;
+    float uvExtent_;
+    float uvDisplacement_;
+
+    float skinThickness_;
+    float displacement_;
+    float edgeSoftness_;
+    float opacity_;
+
+    NoiseConstant noise_;
+};
+
+cbuffer HullConstant : register(b4)
+{
+    float tesselationFactor;
+    float minDistance;
+    float invRange;
+    float tesselationMinFactor;
+};
 
 static const float3 CoordVectorTable[]=
 {
@@ -75,4 +97,4 @@ void calcCoordinate(out float3 u, out float3 v, float3 dir)
     u = normalize(cross(v, dir));
     v = normalize(cross(dir, u));
 }
-
+#endif //INC_VOLUME_INC_

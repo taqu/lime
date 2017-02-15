@@ -1,3 +1,5 @@
+#ifndef INC_SIGNEDDISTANCE_INC_
+#define INC_SIGNEDDISTANCE_INC_
 
 Texture3D<float> texNoiseVolume : register(t0);
 SamplerState samLinearWrap: register(s0);
@@ -38,7 +40,10 @@ float torus(float3 pos, float radius)
 
 float4 blend(float4 src, float4 dst)
 {
-    return mad(float4(src.rgb, 1), mad(src.a, -dst.a, src.a), dst);
+    float4 c;
+    c.rgb = src.a*src.rgb + (1-src.a)*dst.rgb;
+    c.a = src.a + dst.a;
+    return c;
 }
 
 float4 blendAdd(float4 src, float4 dst)
@@ -51,18 +56,18 @@ float sampleNoise(float3 uvw)
     return texNoiseVolume.SampleLevel(samLinearWrap, uvw, 0);
 }
 
-float fractalNoise(float3 pos, int octaves, float time, in const VolumeConstant volumeConstant)
+float fractalNoise(float3 pos, int octaves, float time, in const NoiseConstant noise)
 {
-    float3 animation = volumeConstant.noiseAnimation_ * time;
-    float3 uvw = pos * volumeConstant.noiseScale_ + animation;
-    float amplitude = volumeConstant.noiseAmplitude_;
+    float3 animation = noise.noiseAnimation_ * time;
+    float3 uvw = pos * noise.noiseScale_ + animation;
+    float amplitude = noise.noiseAmplitude_;
     float noiseValue = 0;
     for(int i=0; i<octaves; ++i){
-        noiseValue += abs(amplitude * sampleNoise(uvw));
-        amplitude *= volumeConstant.noisePersistence_;
-        uvw *= volumeConstant.noiseFrequency_;
+        noiseValue += amplitude * abs(sampleNoise(uvw));
+        amplitude *= noise.noisePersistence_;
+        uvw *= noise.noiseFrequency_;
     }
-    return noiseValue * volumeConstant.invMaxNoise_;
+    return noiseValue;
 }
 
 float signedDistancePrimitive(float3 pos, float3 spherePos, float radius)
@@ -76,14 +81,16 @@ float signedDistancePrimitiveDisplaced(
     float3 pos,
     float3 spherePos,
     float radius,
+    float invRadius,
+    float displacement,
     int octaves,
     float time,
-    in const VolumeConstant volumeConstant,
-    out float outDisplacement)
+    in const NoiseConstant noise)
 {
-    float3 diff = pos-spherePos;
-    outDisplacement = fractalNoise(pos, octaves, time, volumeConstant);
-
-    float signedDistance = sphere(diff, radius);
-    return signedDistance - outDisplacement * volumeConstant.displacement_;
+    float outDisplacement = fractalNoise(pos, octaves, time, noise) * displacement * radius;
+    return outDisplacement;
+    float signedDistance = sphere(pos-spherePos, radius) + outDisplacement;
+    return signedDistance * invRadius;
 }
+
+#endif //INC_SIGNEDDISTANCE_INC_

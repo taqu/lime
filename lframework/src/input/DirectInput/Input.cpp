@@ -89,45 +89,73 @@ namespace linput
             return Error_Init;
         }
 
-        DirectInputDevice* device = NULL;
-
         if(param.initDevices_[DevType_Keyboard]){
+            initialize(DevType_Keyboard, param.windowHandle_);
+        }
+
+        if(param.initDevices_[DevType_Mouse]){
+            initialize(DevType_Mouse, param.windowHandle_);
+        }
+
+        if(param.initDevices_[DevType_Joystick]){
+            initialize(DevType_Joystick, param.windowHandle_);
+        }
+        return Error_None;
+    }
+
+    bool Input::initialize(DeviceType type, WINDOW_HANDLE hWnd)
+    {
+        if(NULL != devices_[type]){
+            return true;
+        }
+        DirectInputDevice* device = NULL;
+        switch(type)
+        {
+        case DevType_Keyboard:
+        {
             device = createDevice(GUID_SysKeyboard);
 
             Keyboard* keyboard = LNEW Keyboard;
-            if(keyboard->initialize(param.windowHandle_, device)){
+            if(keyboard->initialize(hWnd, device)){
                 devices_[DevType_Keyboard] = keyboard;
+                return true;
             }else{
                 LDELETE(keyboard);
             }
         }
-
-        if(param.initDevices_[DevType_Mouse]){
+            break;
+        case DevType_Mouse:
+        {
             device = createDevice(GUID_SysMouse);
 
             Mouse* mouse = LNEW Mouse;
-            if(mouse->initialize(param.windowHandle_, device)){
+            if(mouse->initialize(hWnd, device)){
                 devices_[DevType_Mouse] = mouse;
+                return true;
             }else{
                 LDELETE(mouse);
             }
         }
-
-        if(param.initDevices_[DevType_Joystick]){
+            break;
+        case DevType_Joystick:
+        {
             EnumContext context(directInput_, 0);
 
-            hr = directInput_->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoySticks, (LPVOID)&context, DIEDFL_ATTACHEDONLY );
+            HRESULT hr = directInput_->EnumDevices(DI8DEVCLASS_GAMECTRL, EnumJoySticks, (LPVOID)&context, DIEDFL_ATTACHEDONLY);
 
             if(SUCCEEDED(hr) && context.device_ != NULL){
                 Joystick* joystick = LNEW Joystick;
-                if(joystick->initialize(param.windowHandle_, context.device_)){
+                if(joystick->initialize(hWnd, context.device_)){
                     devices_[DevType_Joystick] = joystick;
+                    return true;
                 }else{
                     LDELETE(joystick);
                 }
             }
         }
-        return Error_None;
+            break;
+        }
+        return false;
     }
 
     void Input::terminate()
