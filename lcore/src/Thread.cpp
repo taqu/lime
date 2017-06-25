@@ -16,6 +16,38 @@ namespace lcore
 #if defined(_WIN32) || defined(_WIN64)
     //----------------------------------------------------
     //---
+    //--- Thread Affinity
+    //---
+    //----------------------------------------------------
+    LHANDLE getCurrentProcess()
+    {
+        return GetCurrentProcess();
+    }
+
+    u64 getProcessAffinityMask(LHANDLE handle)
+    {
+        u64 processAffinity = 0;
+        u64 systemAffinity = 0;
+        return (TRUE == GetProcessAffinityMask(handle, &processAffinity, &systemAffinity))? processAffinity : 0;
+    }
+
+    bool setProcessAffinityMask(LHANDLE handle, u64 affinityMask)
+    {
+        return TRUE == SetProcessAffinityMask(handle, affinityMask);
+    }
+
+    LHANDLE getCurrentThread()
+    {
+        return GetCurrentThread();
+    }
+
+    u64 setThreadAffinityMask(LHANDLE handle, u64 affinityMask)
+    {
+        return SetThreadAffinityMask(handle, affinityMask);
+    }
+
+    //----------------------------------------------------
+    //---
     //--- Thread
     //---
     //----------------------------------------------------

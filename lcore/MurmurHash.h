@@ -30,5 +30,7 @@ namespace lcore
     void MurmurHash32Update4(MurmurHashContext32& context, const u8* data, u32 offset, u32 length);
     void MurmurHash32Tail(MurmurHashContext32& context, const u8* data, u32 offset, u32 length);
     u32 MurmurHash32Finalize(MurmurHashContext32& context);
+
+    u32 MurmurHash32(const u8* data, s32 length, u32 seed=88675123U);
 }
 #endif //INC_LCORE_MURMURHASH_H__

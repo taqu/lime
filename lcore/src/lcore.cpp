@@ -753,25 +753,6 @@ namespace
 #endif
     }
 
-    void Print(const Char* format, ...)
-    {
-        if(format == NULL){
-            return;
-        }
-
-        va_list ap;
-        va_start(ap, format);
-
-#if defined(ANDROID)
-        __android_log_vprint(ANDROID_LOG_DEBUG, "LIME", format, ap);
-#elif defined(_WIN32) || defined(_WIN64)
-        vprintf_s(format, ap);
-#else
-        vprintf(format, ap);
-#endif
-        va_end(ap);
-    }
-
 //    MemorySpace::MemorySpace()
 //        :mspace_(NULL)
 //    {
@@ -874,6 +855,69 @@ namespace
     //--- 文字列操作
     //---
     //---------------------------------------------------------
+    s32 printf(const Char* format, ...)
+    {
+        va_list args;
+        va_start(args, format);
+#ifdef _MSC_VER
+        s32 count = ::vprintf_s(format, args);
+#else
+        s32 count = ::vprintf(format, args);
+#endif
+        va_end(args);
+        return count;
+    }
+
+    s32 snprintf(Char* dst, lsize_t n, const Char* format, ...)
+    {
+        va_list args;
+        va_start(args, format);
+#ifdef _MSC_VER
+        s32 count = ::vsnprintf_s(dst, n, n, format, args);
+#else
+        s32 count = ::vsnprintf(dst, n, format, args);
+#endif
+        va_end(args);
+        return count;
+    }
+
+    s32 scprintf(const Char* format, ...)
+    {
+        va_list args;
+        va_start(args, format);
+#ifdef _MSC_VER
+        s32 count = ::_vscprintf(format, args);
+#else
+        s32 count = vsnprintf(NULL, 0, format, args);
+#endif
+        va_end(args);
+        return count;
+    }
+
+    s32 vscprintf(const Char* format, va_list args)
+    {
+#ifdef _MSC_VER
+        return ::_vscprintf(format, args);
+#else
+        va_list cargs;
+        va_copy(cargs, args);
+        s32 count = vsnprintf(NULL, 0, format, cargs);
+        va_end(cargs);
+        return count;
+#endif
+    }
+
+    void replace(Char* str, Char dst, Char src)
+    {
+        LASSERT(NULL != str);
+        while(CharNull != *str){
+            if(src == *str){
+                *str = dst;
+            }
+            ++str;
+        }
+    }
+
     //-------------------------------------------------------------
     // 後方から文字探索
     const Char* rFindChr(s32 length, const Char* src, Char c)
@@ -1047,43 +1091,6 @@ namespace
             }
         }
         return &path[length];
-    }
-
-    s32 scprintf(const Char* format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-#ifdef _MSC_VER
-        s32 count = ::_vscprintf(format, args);
-#else
-        s32 count = vsnprintf(NULL, 0, format, args);
-#endif
-        va_end(args);
-        return count;
-    }
-
-    s32 vscprintf(const Char* format, va_list args)
-    {
-#ifdef _MSC_VER
-        return ::_vscprintf(format, args);
-#else
-        va_list cargs;
-        va_copy(cargs, args);
-        s32 count = vsnprintf(NULL, 0, format, cargs);
-        va_end(cargs);
-        return count;
-#endif
-    }
-
-    void replace(Char* str, Char dst, Char src)
-    {
-        LASSERT(NULL != str);
-        while(CharNull != *str){
-            if(src == *str){
-                *str = dst;
-            }
-            ++str;
-        }
     }
 
     //---------------------------------------------------------
@@ -1458,18 +1465,19 @@ namespace
     //--- Hash Functions
     //---
     //---------------------------------------------------------
+#if 1
     /**
     */
-    u32 hash_Bernstein(const u8* v, u32 count)
-    {
-        u32 hash = 5381U;
+    //u32 hash_Bernstein(const u8* v, u32 count)
+    //{
+    //    u32 hash = 5381U;
 
-        for(u32 i=0; i<count; ++i){
-            //hash = 33*hash + v[i];
-            hash = ((hash<<5)+hash) + v[i];
-        }
-        return hash;
-    }
+    //    for(u32 i=0; i<count; ++i){
+    //        //hash = 33*hash + v[i];
+    //        hash = ((hash<<5)+hash) + v[i];
+    //    }
+    //    return hash;
+    //}
 
     /**
     */
@@ -1525,17 +1533,17 @@ namespace
 
     /**
     */
-    u32 hash_Bernstein(const Char* str)
-    {
-        u32 hash = 5381U;
+    //u32 hash_Bernstein(const Char* str)
+    //{
+    //    u32 hash = 5381U;
 
-        while(CharNull != *str){
-            //hash = 33*hash + static_cast<u8>(*str);
-            hash = ((hash<<5)+hash) + static_cast<u8>(*str);
-            ++str;
-        }
-        return hash;
-    }
+    //    while(CharNull != *str){
+    //        //hash = 33*hash + static_cast<u8>(*str);
+    //        hash = ((hash<<5)+hash) + static_cast<u8>(*str);
+    //        ++str;
+    //    }
+    //    return hash;
+    //}
 
     /**
     */
@@ -1564,4 +1572,5 @@ namespace
         }
         return hash;
     }
+#endif
 }

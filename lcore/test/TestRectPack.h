@@ -51,9 +51,9 @@ namespace lcore
         RectPack::Node nodes[Size*2];
         RectPack::Context context;
         for(s32 i=0; i<NumSamples; ++i){
-            u16 w = lcore::random::range_rclose(random, 1, 8);
+            u16 w = static_cast<u16>(lcore::random::range_rclose(random, 1, 8));
             EXPECT_TRUE(1<=w && w<=8);
-            u16 h = lcore::random::range_rclose(random, 1, 8);
+            u16 h = static_cast<u16>(lcore::random::range_rclose(random, 1, 8));
             EXPECT_TRUE(1<=h && h<=8);
             rects[i].ID() = i;
             rects[i].W() = w;

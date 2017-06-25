@@ -119,7 +119,7 @@ namespace lcore
         s32 size() const{ return size_;}
         handle_type create();
         void destroy(handle_type handle);
-        bool isValid(handle_type handle) const;
+        bool valid(handle_type handle) const;
         void clear();
 
         void swap(this_type& rhs);
@@ -262,7 +262,7 @@ namespace lcore
     }
 
     template<class T, s32 U>
-    bool HandleTable<T,U>::isValid(handle_type handle) const
+    bool HandleTable<T,U>::valid(handle_type handle) const
     {
         LASSERT(0<=handle.index() && handle.index()<nextId_);
         return (entries_[handle.index()].isUsed() && entries_[handle.index()].value_ == handle.value_);
@@ -313,6 +313,7 @@ namespace lcore
         s32 size() const{ return size_;}
         handle_type create();
         void destroy(handle_type handle);
+        inline bool valid(handle_type handle) const;
         void clear();
 
         void swap(this_type& rhs);
@@ -351,7 +352,7 @@ namespace lcore
         LASSERT(0<=capacity_);
         LASSERT(0<expandSize_);
         entries_ = LNEW handle_type[capacity_];
-        lcore::memset(entries_, 0, sizeof(handle_type)*capacity_);
+        lcore::memset(entries_, InvalidID, sizeof(handle_type)*capacity_);
     }
 
     template<class T>
@@ -375,7 +376,7 @@ namespace lcore
                 handle_type* entries = LNEW handle_type[newCapacity];
 
                 lcore::memcpy(entries, entries_, sizeof(handle_type)*capacity_);
-                lcore::memset(entries+capacity_, 0, sizeof(handle_type)*(newCapacity-capacity_));
+                lcore::memset(entries+capacity_, InvalidID, sizeof(handle_type)*(newCapacity-capacity_));
 
                 LDELETE_ARRAY(entries_);
                 capacity_ = newCapacity;
@@ -392,11 +393,17 @@ namespace lcore
     template<class T>
     void InsecureHandleTable<T>::destroy(handle_type handle)
     {
-        value_type index = handle;
-
+        LASSERT(0<=handle && handle<capacity_);
         --size_;
-        entries_[index] = freeList_;
-        freeList_ = index;
+        entries_[handle] = freeList_;
+        freeList_ = handle;
+    }
+
+    template<class T>
+    inline bool InsecureHandleTable<T>::valid(handle_type handle) const
+    {
+        LASSERT(0<=handle && handle<capacity_);
+        return handle == entries_[handle];
     }
 
     template<class T>
@@ -405,7 +412,7 @@ namespace lcore
         size_ = 0;
         nextId_ = 0;
         freeList_ = InvalidID;
-        lcore::memset(entries_, 0, sizeof(handle_type)*capacity_);
+        lcore::memset(entries_, InvalidID, sizeof(handle_type)*capacity_);
     }
 
     template<class T>

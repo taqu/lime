@@ -9,6 +9,8 @@
 
 namespace lcore
 {
+    u32 scramble(u32 v, u32 i);
+    u64 scramble(u64 v, u64 i);
 
     u32 getStaticSeed();
     u32 getDefaultSeed();
@@ -157,6 +159,11 @@ namespace lcore
         */
         u64 rand();
 
+        /**
+        @brief 0 - 1の乱数生成
+        */
+        f64 drand();
+
         void swap(RandXorshift128Plus& rhs);
     private:
         u64 s0_;
@@ -257,6 +264,7 @@ namespace lcore
 
 namespace random
 {
+    //----------------------------------------------------
     /**
     @brief [vmin, vmax)
     */
@@ -264,7 +272,7 @@ namespace random
     U range_ropen(T& random, U vmin, U vmax)
     {
         LASSERT(vmin<=vmax);
-        return static_cast<U>(random.frand2()*(vmax-vmin)) + vmin;
+        return static_cast<U>(random.rand() % (vmax-vmin)) + vmin;
     }
 
     /**
@@ -284,7 +292,7 @@ namespace random
     U range_rclose(T& random, U vmin, U vmax)
     {
         LASSERT(vmin<=vmax);
-        return static_cast<U>(random.frand2()*(vmax-vmin+1)) + vmin;
+        return static_cast<U>(random.rand() % (vmax-vmin+1)) + vmin;
     }
 
     /**
@@ -304,8 +312,8 @@ namespace random
     template<class T, class U>
     U range_ropen(T& random, U v)
     {
-        u32 i = random.rand() % v;
-        return static_cast<U>(i);
+        LASSERT(0<=v);
+        return static_cast<U>(random.rand() % v);
     }
 
     template<class T, class U>

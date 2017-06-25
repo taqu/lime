@@ -110,5 +110,101 @@ namespace lcore
         return sysconf(_SC_NPROCESSORS_ONLN);
 #endif
     }
+
+namespace
+{
+    s16 calcIDIn2Thread(u64 mask)
+    {
+        s16 id = 0;
+        while(0 != (mask >>= 2)){
+            ++id;
+        }
+        return id;
+    }
+
+    s16 calcIDIn1Thread(u64 mask)
+    {
+        s16 id = 0;
+        while(0 != (mask >>= 1)){
+            ++id;
+        }
+        return id;
+    }
+}
+
+    //---------------------------------------------------------
+    CPUInformation::CPUInformation()
+        :numCores_(0)
+    {
+    }
+
+    CPUInformation::~CPUInformation()
+    {
+    }
+
+    void CPUInformation::initialize()
+    {
+        numCores_ = 0;
+#if defined(_WIN32) || defined(_WIN64)
+
+        BYTE* buffer = NULL;
+        DWORD length = 0;
+
+        if(FALSE == GetLogicalProcessorInformationEx(RelationProcessorCore, NULL, &length)){
+            if(ERROR_INSUFFICIENT_BUFFER == GetLastError()){
+                buffer = (BYTE*)LMALLOC(length);
+                if(NULL == buffer){
+                    return;
+                }
+                if(FALSE == GetLogicalProcessorInformationEx(RelationProcessorCore, reinterpret_cast<SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*>(buffer), &length)){
+                    LFREE(buffer);
+                    return;
+                }
+            }else{
+                return;
+            }
+        }
+
+        DWORD offset=0;
+        while(offset<length){
+            SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX* info = reinterpret_cast<SYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX*>(buffer+offset);
+            if(length<(offset+info->Size)){
+                break;
+            }
+            for(s32 i=0; i<info->Processor.GroupCount; ++i){
+                if(0 == info->Processor.GroupMask[i].Mask){
+                    continue;
+                }
+                cores_[numCores_].groupMask_ = info->Processor.GroupMask[i].Mask;
+                cores_[numCores_].group_ = info->Processor.GroupMask[i].Group;
+                cores_[numCores_].numTHreads_ = (0 != (LTP_PC_SMT & info->Processor.Flags))? 2 : 1;
+
+                switch(cores_[numCores_].numTHreads_)
+                {
+                case 1:
+                    cores_[numCores_].id_ = calcIDIn1Thread(cores_[numCores_].groupMask_);
+                    break;
+                case 2:
+                    cores_[numCores_].id_ = calcIDIn2Thread(cores_[numCores_].groupMask_);
+                    break;
+                default:
+                    cores_[numCores_].id_ = static_cast<s16>(i);
+                    break;
+                }
+
+                if(MaxCores<=++numCores_){
+                    offset = length;
+                    break;
+                }
+            }
+            offset += info->Size;
+        }
+        LFREE(buffer);
+
+#elif defined(__linux__)
+        return;
+#endif
+    }
+
 #endif
 }

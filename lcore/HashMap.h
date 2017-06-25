@@ -6,6 +6,7 @@
 @date 2015/03/13 create
 */
 #include "lcore.h"
+#include "xxHash.h"
 
 namespace lcore
 {
@@ -51,9 +52,18 @@ namespace lcore
         const Char* str_;
     };
 
-    inline u32 calcHash(const StringWrapper& x)
+    namespace hash_detail
     {
-        return hash_FNV1(reinterpret_cast<const u8*>(x.str_),  x.length_);
+        template<class T>
+        inline u32 calcHash(const T& x)
+        {
+            return xxHash32(reinterpret_cast<const u8*>(&x), sizeof(T));
+        }
+
+        inline u32 calcHash(const StringWrapper& x)
+        {
+            return xxHash32(reinterpret_cast<const u8*>(x.str_), x.length_);
+        }
     }
 
 
@@ -139,166 +149,464 @@ namespace lcore
             return *bound;
         }
 
-        //------------------------------------------------------
-        /// newによるメモリアロケータ
-        template<class T>
-        class AllocatorNew
+        template<typename T>
+        u32 log2(T n)
         {
-        public:
-            typedef size_t size_type;
-            typedef ptrdiff_t difference_type;
-            typedef T* pointer;
-            typedef const T* const_pointer;
-            typedef T& reference;
-            typedef const T& const_reference;
-            typedef T value_type;
-
-            inline static pointer address(reference ref)
-            {
-                return &ref;
+            T x=1;
+            u32 p=0;
+            while(x<n){
+                x <<= 1;
+                ++p;
             }
+            return p;
+        }
+    }
 
-            inline static const_pointer address(const_reference ref)
-            {
-                return &ref;
-            }
+    struct HashMapHash
+    {
+        static const u32 HashMask = 0x7FFFFFFFU;
+        static const u32 OccupyFlag = 0x80000000U;
 
-            inline static size_type max_size()
-            {
-                size_type count = (size_type)(-1)/sizeof(value_type);
-                return ((0<count)? count : 1);
-            }
+        typedef u32 size_type;
 
-            inline static pointer allocate()
-            {
-                return pointer(LMALLOC(sizeof(value_type)));
-            }
+        void clear(){ hash_ = 0;}
+        bool isEmpty() const{ return 0 == (hash_&OccupyFlag);}
+        bool isOccupy() const{ return 0 != (hash_&OccupyFlag);}
+        void setOccupy(){ hash_ |= OccupyFlag;}
+        void setOccupy(size_type hash){ hash_ = OccupyFlag|hash;}
+        void setEmpty(){ hash_ &= HashMask;}
 
-            inline static pointer allocate(size_type count)
-            {
-                return pointer(LMALLOC(count*sizeof(value_type)));
-            }
+        size_type hash_;
+    };
 
-            inline static void deallocate(pointer ptr)
-            {
-                LFREE_RAW(ptr);
-            }
+    template<class Key, class Value>
+    struct HashMapKeyValuePair
+    {
+        typedef Key key_type;
+        typedef Value value_type;
 
-            inline static void construct(pointer ptr)
-            {
-                LPLACEMENT_NEW(static_cast<void*>(ptr)) value_type;
-            }
+        Key key_;
+        Value value_;
+    };
 
-            inline static void construct(pointer ptr, const_reference ref)
-            {
-                LPLACEMENT_NEW(static_cast<void*>(ptr)) value_type(ref);
-            }
+    struct HashMapKeyBucket
+    {
+        static const u32 HashMask = 0x7FFFFFFFU;
+        static const u32 OccupyFlag = 0x80000000U;
 
-            inline static void destruct(pointer ptr)
-            {
-                LASSERT(NULL != ptr);
-                ptr->~T();
-            }
-        };
+        void clear(){ hash_ = 0;}
+        bool isOccupy() const{ return 0 != (hash_&OccupyFlag);}
+        void setOccupy(){ hash_ |= OccupyFlag;}
+        void setEmpty(){ hash_ &= HashMask;}
 
-        /// newによるメモリアロケータ
-        template<class T>
-        class AllocatorNew<T*>
+        s32 index_;
+        s32 next_;
+        u32 hash_;
+    };
+
+    //-----------------------------------------------------------------------------
+    //---
+    //--- HashMap
+    //---
+    //-----------------------------------------------------------------------------
+    template<class Key, class Value, class MemoryAllocator=DefaultAllocator>
+    class HashMap
+    {
+    public:
+        static const u32 Align = 4;
+        static const u32 AlignMask = Align-1;
+
+        typedef Key key_type;
+        typedef Value value_type;
+        typedef HashMapKeyBucket bucket_type;
+        typedef MemoryAllocator memory_allocator;
+
+        typedef HashMap<Key, Value, MemoryAllocator> this_type;
+
+        typedef u32 size_type;
+
+        typedef hash_detail::type_traits<value_type> value_traits;
+        typedef typename value_traits::pointer value_pointer;
+        typedef typename value_traits::const_pointer const_value_pointer;
+        typedef typename value_traits::reference value_reference;
+        typedef typename value_traits::const_reference const_value_reference;
+        typedef typename value_traits::pointer pointer;
+        typedef typename value_traits::const_pointer const_pointer;
+        typedef typename value_traits::reference reference;
+        typedef typename value_traits::const_reference const_reference;
+        typedef typename value_traits::param_type value_param_type;
+        typedef typename value_traits::const_param_type const_value_param_type;
+
+
+        typedef hash_detail::type_traits<key_type> key_traits;
+        typedef typename key_traits::pointer key_pointer;
+        typedef typename key_traits::const_pointer const_key_pointer;
+        typedef typename key_traits::reference key_reference;
+        typedef typename key_traits::const_reference const_key_reference;
+        typedef typename key_traits::param_type key_param_type;
+        typedef typename key_traits::const_param_type const_key_param_type;
+
+        HashMap();
+        explicit HashMap(size_type capacity);
+        ~HashMap();
+
+        void initialize(size_type capacity)
         {
-        public:
-            typedef size_t size_type;
-            typedef ptrdiff_t difference_type;
-            typedef T** pointer;
-            typedef const T** const_pointer;
-            typedef T* reference;
-            typedef const T* const_reference;
-            typedef T* value_type;
+            destroy();
+            create(capacity);
+        }
 
-            inline static pointer address(reference ref)
-            {
-                return ref;
-            }
-
-            inline static const_pointer address(const_reference ref)
-            {
-                return ref;
-            }
-
-            inline static size_type max_size()
-            {
-                size_type count = (size_type)(-1)/sizeof(value_type);
-                return ((0<count)? count : 1);
-            }
-
-            inline static pointer allocate()
-            {
-                return pointer(LMALLOC(sizeof(value_type)));
-            }
-
-            inline static pointer allocate(size_type count)
-            {
-                return pointer(LMALLOC(count*sizeof(value_type)));
-            }
-
-            inline static void deallocate(pointer ptr)
-            {
-                LFREE_RAW(ptr);
-            }
-
-            inline static void construct(pointer ptr)
-            {
-                LPLACEMENT_NEW(static_cast<void*>(ptr)) value_type;
-            }
-
-            inline static void construct(pointer ptr, const_reference ref)
-            {
-                LPLACEMENT_NEW(static_cast<void*>(ptr)) value_type(const_cast<reference>(ref));
-            }
-
-            inline static void destruct(pointer)
-            {
-            }
-        };
-
-
-        template<class Allocator>
-        class ArrayAllocator
+        size_type capacity() const
         {
-        public:
-            typedef Allocator allocator_type;
-            typedef typename Allocator::pointer pointer;
-            typedef typename Allocator::size_type size_type;
-            typedef typename Allocator::value_type value_type;
+            return capacity_;
+        }
 
-            inline static pointer allocate(size_type count)
-            {
-                return allocator_type::allocate(count);
+        size_type size() const
+        {
+            return size_;
+        }
+
+        void clear();
+
+        bool valid(size_type pos) const
+        {
+            return (pos<capacity_);
+        }
+
+        size_type find(const_key_param_type key) const
+        {
+            return (0<capacity_)? find_(key, calcHash_(key)) : end();
+        }
+
+        bool insert(const_key_param_type key, const_value_param_type value);
+
+        void erase(const_key_param_type key);
+        void eraseAt(size_type pos);
+        void swap(this_type& rhs);
+
+        size_type begin() const;
+
+        size_type end() const
+        {
+            return capacity_;
+        }
+
+        size_type next(size_type pos) const;
+
+        reference getValue(size_type pos)
+        {
+            LASSERT(0<=pos && pos<capacity_);
+            return values_[pos];
+        }
+
+        const_reference getValue(size_type pos) const
+        {
+            LASSERT(0<=pos && pos<capacity_);
+            return values_[pos];
+        }
+
+        key_reference getKey(size_type pos)
+        {
+            LASSERT(0<=pos && pos<capacity_);
+            return keys_[pos];
+        }
+
+        const_key_reference getKey(size_type pos) const
+        {
+            LASSERT(0<=pos && pos<capacity_);
+            return keys_[pos];
+        }
+
+    private:
+        HashMap(const HashMap&) = delete;
+        HashMap& operator=(const HashMap&) = delete;
+
+        size_type calcHash_(const_key_param_type key) const
+        {
+            return hash_detail::calcHash(key) & bucket_type::HashMask;
+        }
+
+        static inline size_type align(size_type x)
+        {
+            return (x+AlignMask)&(~AlignMask);
+        }
+
+        void expand();
+
+        size_type find_(const_key_param_type key, size_type hash) const;
+        void erase_(size_type pos, u32 rawHash);
+
+        void create(size_type capacity);
+        void destroy();
+
+        size_type capacity_;
+        size_type size_;
+        s32 empty_;
+        s32 freeList_;
+        bucket_type* buckets_;
+        key_pointer keys_;
+        value_pointer values_;
+    };
+
+    template<class Key, class Value, class MemoryAllocator>
+    HashMap<Key, Value, MemoryAllocator>::HashMap()
+        :capacity_(0)
+        ,size_(0)
+        ,empty_(0)
+        ,freeList_(-1)
+        ,buckets_(NULL)
+        ,keys_(NULL)
+        ,values_(NULL)
+    {}
+
+    template<class Key, class Value, class MemoryAllocator>
+    HashMap<Key, Value, MemoryAllocator>::HashMap(size_type capacity)
+        :capacity_(0)
+        ,size_(0)
+        ,empty_(0)
+        ,freeList_(-1)
+        ,buckets_(NULL)
+        ,keys_(NULL)
+        ,values_(NULL)
+    {
+        create(capacity);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    HashMap<Key, Value, MemoryAllocator>::~HashMap()
+    {
+        destroy();
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void HashMap<Key, Value, MemoryAllocator>::clear()
+    {
+        for(size_type i=0; i<capacity_; ++i){
+            if(buckets_[i].isOccupy()){
+                keys_[i].~key_type();
+                values_[i].~value_type();
             }
+            buckets_[i].index_ = -1;
+            buckets_[i].next_ = -1;
+            buckets_[i].clear();
+        }
+        size_ = 0;
+        empty_ = 0;
+        freeList_ = -1;
+    }
 
-            inline static void deallocate(pointer ptr)
-            {
-                allocator_type::deallocate(ptr);
+    template<class Key, class Value, class MemoryAllocator>
+    typename HashMap<Key, Value, MemoryAllocator>::size_type
+        HashMap<Key, Value, MemoryAllocator>::find_(const_key_param_type key, size_type hash) const
+    {
+        s32 bucketPos = hash % capacity_;
+        hash |= bucket_type::OccupyFlag;
+        for(s32 i=buckets_[bucketPos].index_; 0<=i; i=buckets_[i].next_){
+#if 1
+            if(hash == buckets_[i].hash_ && key == keys_[i]){
+                return i;
             }
+#else
+            if(key == keys_[i]){
+                return i;
+            }
+#endif
+        }
+        return end();
+    }
 
-            inline static pointer construct(size_type count, pointer ptr)
-            {
-                pointer ptr = allocator_type::allocate(count);
-                for(size_type i=0; i<count; ++i){
-                    allocator_type::construct(&(ptr[i]));
+    template<class Key, class Value, class MemoryAllocator>
+    bool HashMap<Key, Value, MemoryAllocator>::insert(const_key_param_type key, const_value_param_type value)
+    {
+        size_type hash = calcHash_(key);
+        if(0<capacity_ && find_(key, hash) != end()){
+            return false;
+        }
+
+        s32 entryPos;
+        if(freeList_<0){
+            for(;;){
+                entryPos = (empty_<static_cast<s32>(capacity_))? empty_++ : -1;
+                if(0<=entryPos){
+                    break;
                 }
-                return ptr;
+                expand();
             }
+        }else{
+            entryPos = freeList_;
+            freeList_ = buckets_[freeList_].next_;
+        }
 
-            inline static void destruct(size_type count, pointer ptr)
-            {
-                for(size_type i=0; i<count; ++i){
-                    allocator_type::destruct(&(ptr[i]));
+        s32 bucketPos = hash % capacity_;
+        buckets_[entryPos].next_ = (buckets_[bucketPos].index_<0)? -1 : buckets_[bucketPos].index_;
+        buckets_[bucketPos].index_ = entryPos;
+        buckets_[entryPos].hash_ = hash | bucket_type::OccupyFlag;
+        construct(&keys_[entryPos], key);
+        construct(&values_[entryPos], value);
+        ++size_;
+        return true;
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void HashMap<Key, Value, MemoryAllocator>::erase(const_key_param_type key)
+    {
+        if(capacity_<=0){
+            return;
+        }
+        u32 rawHash = calcHash_(key);
+        size_type pos = find_(key, rawHash);
+        if(!valid(pos) || !buckets_[pos].isOccupy()){
+            return;
+        }
+        erase_(pos, rawHash);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void HashMap<Key, Value, MemoryAllocator>::eraseAt(size_type pos)
+    {
+        if(capacity_<=0){
+            return;
+        }
+        if(!valid(pos) || !buckets_[pos].isOccupy()){
+            return;
+        }
+        u32 rawHash = calcHash_(getKey(pos));
+        erase_(pos, rawHash);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void HashMap<Key, Value, MemoryAllocator>::erase_(size_type pos, u32 rawHash)
+    {
+        s32 bucketPos = rawHash % capacity_;
+
+        keys_[pos].~key_type();
+        values_[pos].~value_type();
+
+        s32 spos = static_cast<s32>(pos);
+        if(spos == buckets_[bucketPos].index_){
+            buckets_[bucketPos].index_ = buckets_[pos].next_;
+        }else{
+            s32 p;
+            for(p=buckets_[bucketPos].index_; buckets_[p].next_ != spos; p=buckets_[p].next_){
+#if _DEBUG
+                if(buckets_[p].next_<0){
+                    LASSERT(false);
                 }
+#endif
             }
-        };
+            buckets_[p].next_ = buckets_[pos].next_;
+        }
+        buckets_[pos].next_ = freeList_;
+        freeList_ = pos;
+        buckets_[pos].clear();
+        --size_;
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void HashMap<Key, Value, MemoryAllocator>::swap(this_type& rhs)
+    {
+        lcore::swap(capacity_, rhs.capacity_);
+        lcore::swap(size_, rhs.size_);
+        lcore::swap(empty_, rhs.empty_);
+        lcore::swap(freeList_, rhs.freeList_);
+        lcore::swap(buckets_, rhs.buckets_);
+        lcore::swap(keys_, rhs.keys_);
+        lcore::swap(values_, rhs.values_);
     }
 
 
+    template<class Key, class Value, class MemoryAllocator>
+    typename HashMap<Key, Value, MemoryAllocator>::size_type
+        HashMap<Key, Value, MemoryAllocator>::begin() const
+    {
+        for(size_type i=0; i<capacity_; ++i){
+            if(buckets_[i].isOccupy()){
+                return i;
+            }
+        }
+        return end();
+    }
+
+
+    template<class Key, class Value, class MemoryAllocator>
+    typename HashMap<Key, Value, MemoryAllocator>::size_type
+        HashMap<Key, Value, MemoryAllocator>::next(size_type pos) const
+    {
+        for(size_type i=pos+1; i<capacity_; ++i){
+            if(buckets_[i].isOccupy()){
+                return i;
+            }
+        }
+        return end();
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void HashMap<Key, Value, MemoryAllocator>::expand()
+    {
+        this_type tmp;
+        tmp.create(capacity_+1);
+
+
+        for(size_type i=0; i<capacity_; ++i){
+            if(buckets_[i].isOccupy()){
+#if _DEBUG
+                if(false == tmp.insert(keys_[i], values_[i])){
+                    LASSERT(false);
+                }
+#else
+                tmp.insert(keys_[i], values_[i]);
+#endif
+            }
+        }
+        tmp.swap(*this);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void HashMap<Key, Value, MemoryAllocator>::create(size_type capacity)
+    {
+        LASSERT(NULL == buckets_);
+        LASSERT(NULL == keys_);
+        LASSERT(NULL == values_);
+
+        capacity_ = hash_detail::next_prime(capacity);
+
+        size_type size_buckets = align(sizeof(bucket_type)*capacity_);
+        size_type size_keys = align(sizeof(key_type)*capacity_);
+        size_type size_values = sizeof(value_type)*capacity_;
+        size_type total_size = size_buckets + size_keys + size_values;
+
+        u8* mem = reinterpret_cast<u8*>(LALLOCATOR_MALLOC(memory_allocator, total_size));
+        buckets_ = reinterpret_cast<bucket_type*>(mem);
+        keys_ = reinterpret_cast<key_pointer>(mem+size_buckets);
+        values_ = reinterpret_cast<value_pointer>(mem+size_buckets+size_keys);
+
+        for(size_type i=0; i<capacity_; ++i){
+            buckets_[i].index_ = -1;
+            buckets_[i].next_ = -1;
+            buckets_[i].clear();
+        }
+        size_ = 0;
+        empty_ = 0;
+        freeList_ = -1;
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void HashMap<Key, Value, MemoryAllocator>::destroy()
+    {
+        clear();
+        capacity_ = 0;
+        LALLOCATOR_FREE(memory_allocator, buckets_);
+        keys_ = NULL;
+        values_ = NULL;
+    }
+
+
+    //-----------------------------------------------------------------------------
+    //---
+    //--- HopscotchHashMap
+    //---
+    //-----------------------------------------------------------------------------
+#if 1
     template<typename BitmapType>
     struct HashMapHopInfo
     {
@@ -360,54 +668,19 @@ namespace lcore
         bitmap_type hop_;
     };
 
-    template<class Key, class Value>
-    struct HashMapKeyValuePair
-    {
-        typedef Key key_type;
-        typedef Value value_type;
-
-        Key key_;
-        Value value_;
-    };
-
-    template<class Key, class Value>
-    struct HashMapHashKeyValueTuple
-    {
-        typedef Key key_type;
-        typedef Value value_type;
-
-        static const u32 HashMask = 0x7FFFFFFFU;
-        static const u32 OccupyFlag = 0x80000000U;
-
-        void clear(){ hash_ = 0;}
-        bool isOccupy() const{ return 0 != (hash_&OccupyFlag);}
-        void setOccupy(){ hash_ |= OccupyFlag;}
-        void resetOccupy(){ hash_ &= HashMask;}
-
-        s32 next_;
-        u32 hash_;
-        Key key_;
-        Value value_;
-    };
-
-    //-----------------------------------------------------------------------------
-    //---
-    //--- HashMap
-    //---
-    //-----------------------------------------------------------------------------
-    template<class Key,
-        class Value,
-        class KeyAllocator=hash_detail::AllocatorNew<Key>,
-        class ValueAllocator=hash_detail::AllocatorNew<Value>,
-        class KeyValueAllocator=hash_detail::AllocatorNew<HashMapHashKeyValueTuple<Key, Value> > >
-    class HashMap
+    template<class Key, class Value, typename BitmapType=u32, class MemoryAllocator=DefaultAllocator>
+    class HopscotchHashMap
     {
     public:
+        static const u32 Align = 4;
+        static const u32 AlignMask = Align-1;
+
+        typedef HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator> this_type;
+
         typedef Key key_type;
         typedef Value value_type;
-        typedef HashMapHashKeyValueTuple<Key, Value> keyvalue_type;
-
-        typedef HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator> this_type;
+        typedef HashMapHopInfo<BitmapType> hopinfo_type;
+        typedef MemoryAllocator memory_allocator;
 
         typedef u32 size_type;
 
@@ -432,44 +705,18 @@ namespace lcore
         typedef typename key_traits::param_type key_param_type;
         typedef typename key_traits::const_param_type const_key_param_type;
 
-        typedef keyvalue_type* keyvalue_pointer;
-        typedef const keyvalue_type* const_keyvalue_pointer;
-        typedef keyvalue_type& keyvalue_reference;
-        typedef const keyvalue_type& const_keyvalue_reference;
+        typedef hopinfo_type* hopinfo_pointer;
+        typedef const hopinfo_type* const_hopinfo_pointer;
+        typedef typename hopinfo_type::bitmap_type bitmap_type;
 
-        typedef KeyAllocator key_allocator;
-        typedef hash_detail::ArrayAllocator<key_allocator> key_array_allocator;
+        static const size_type bitmap_size = hopinfo_type::bitmap_size;
+        static const size_type bitmap_count = hopinfo_type::bitmap_count;
 
-        typedef ValueAllocator value_allocator;
-        typedef hash_detail::ArrayAllocator<value_allocator> value_array_allocator;
+        static const size_type InsertRange = 8*bitmap_count;
 
-        typedef KeyValueAllocator keyvalue_allocator;
-        typedef hash_detail::ArrayAllocator<keyvalue_allocator> keyvalue_array_allocator;
-
-        HashMap()
-            :capacity_(0)
-            ,size_(0)
-            ,empty_(0)
-            ,freeList_(-1)
-            ,buckets_(NULL)
-            ,keyvalues_(NULL)
-        {}
-
-        explicit HashMap(size_type capacity)
-            :capacity_(0)
-            ,size_(0)
-            ,empty_(0)
-            ,freeList_(-1)
-            ,buckets_(NULL)
-            ,keyvalues_(NULL)
-        {
-            create(capacity);
-        }
-
-        ~HashMap()
-        {
-            destroy();
-        }
+        HopscotchHashMap();
+        explicit HopscotchHashMap(size_type capacity);
+        ~HopscotchHashMap();
 
         void initialize(size_type capacity)
         {
@@ -517,190 +764,292 @@ namespace lcore
         reference getValue(size_type pos)
         {
             LASSERT(0<=pos && pos<capacity_);
-            return keyvalues_[pos].value_;
+            return values_[pos];
         }
 
         const_reference getValue(size_type pos) const
         {
             LASSERT(0<=pos && pos<capacity_);
-            return keyvalues_[pos].value_;
+            return values_[pos];
         }
 
         key_reference getKey(size_type pos)
         {
             LASSERT(0<=pos && pos<capacity_);
-            return keyvalues_[pos].key_;
+            return keys_[pos];
         }
 
         const_key_reference getKey(size_type pos) const
         {
             LASSERT(0<=pos && pos<capacity_);
-            return keyvalues_[pos].key_;
+            return keys_[pos];
         }
-
     private:
-        HashMap(const HashMap&);
-        HashMap& operator=(const HashMap&);
+        HopscotchHashMap(const HopscotchHashMap&) = delete;
+        HopscotchHashMap& operator=(const HopscotchHashMap&) = delete;
 
-        size_type calcHash_(const_key_param_type key) const
+        bool isEmpty(size_type pos) const
         {
-            return calcHash(key) & keyvalue_type::HashMask;
+            return hopinfoes_[pos].isEmpty();
         }
 
+        bool isOccupy(size_type pos) const
+        {
+            return hopinfoes_[pos].isOccupy();
+        }
+
+        inline static size_type calcHash_(const_key_param_type key)
+        {
+            return hash_detail::calcHash(key);
+        }
+
+        inline size_type hashToPos_(size_type hash) const
+        {
+            return hash%capacity_;
+        }
+
+        static inline size_type align_(size_type x)
+        {
+            return (x+AlignMask)&(~AlignMask);
+        }
+
+        inline size_type clamp_(size_type x) const
+        {
+            return (x<capacity_)? x : x-capacity_;
+        }
+
+        void moveEmpty(size_type& pos, size_type& distance);
         void expand();
 
         size_type find_(const_key_param_type key, size_type hash) const;
-        void erase_(size_type pos, u32 rawHash);
+        bool insert_(const_key_param_type key, const_value_param_type value, size_type hash);
 
         void create(size_type capacity);
         void destroy();
 
         size_type capacity_;
         size_type size_;
-        s32 empty_;
-        s32 freeList_;
-        s32* buckets_;
-        keyvalue_pointer keyvalues_;
+
+        hopinfo_pointer hopinfoes_;
+        key_pointer keys_;
+        value_pointer values_;
     };
 
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::HopscotchHashMap()
+        :capacity_(0)
+        ,size_(0)
+        ,hopinfoes_(NULL)
+        ,keys_(NULL)
+        ,values_(NULL)
+    {}
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::clear()
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::HopscotchHashMap(size_type capacity)
+        :size_(0)
+        ,hopinfoes_(NULL)
+        ,keys_(NULL)
+        ,values_(NULL)
     {
-        for(size_type i=0; i<capacity_; ++i){
-            buckets_[i] = -1;
-            //if(keyvalues_[i].isOccupy()){
-            //    value_allocator::destruct(&keyvalues_[i].value_);
-            //}
-            key_allocator::destruct(&keyvalues_[i].key_);
-            value_allocator::destruct(&keyvalues_[i].value_);
-            keyvalues_[i].next_ = -1;
-            keyvalues_[i].clear();
-        }
-        size_ = 0;
-        empty_ = 0;
-        freeList_ = -1;
+        create(capacity);
     }
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    typename HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::size_type
-        HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::find_(const_key_param_type key, size_type hash) const
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::~HopscotchHashMap()
     {
-        s32 bucketPos = hash % capacity_;
-        hash |= keyvalue_type::OccupyFlag;
-        for(s32 i=buckets_[bucketPos]; 0<=i; i=keyvalues_[i].next_){
-            if(hash == keyvalues_[i].hash_ && key == keyvalues_[i].key_){
-                return i;
+        destroy();
+    }
+
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::clear()
+    {
+        for(size_type i=0; i<capacity_; ++i){
+            if(isOccupy(i)){
+                keys_[i].~key_type();
+                values_[i].~value_type();
             }
+            hopinfoes_[i].clear();
         }
+        size_ = 0;
+    }
+
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    bool HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::insert(const_key_param_type key, const_value_param_type value)
+    {
+        if(capacity_ <= 0){
+            expand();
+            return insert_(key, value, calcHash_(key));
+        }
+        size_type hash = calcHash_(key);
+        size_type pos = find_(key, hash);
+        if(pos != end()){
+            return false;
+        }
+        return insert_(key, value, hash);
+    }
+
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    typename HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::size_type
+        HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::find_(const_key_param_type key, size_type hash) const
+    {
+        LASSERT(0<capacity_);
+        size_type pos = hashToPos_(hash);
+        LASSERT(pos<capacity_);
+        bitmap_type info = hopinfoes_[pos].getHop();
+
+        size_type d = 0;
+        while(0 != info){
+            if(info & 0x01U){
+                size_type p = clamp_(pos+d);
+                LASSERT(isOccupy(p));
+                if(keys_[p] == key){
+                    return p;
+                }
+            }
+            info >>= 1;
+            ++d;
+        }
+
         return end();
     }
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    bool HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::insert(const_key_param_type key, const_value_param_type value)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    bool HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::insert_(const_key_param_type key, const_value_param_type value, size_type hash)
     {
-        size_type hash = calcHash_(key);
-        if(0<capacity_ && find_(key, hash) != end()){
-            return false;
-        }
-
-        s32 entryPos;
-        if(freeList_<0){
-            for(;;){
-                entryPos = (empty_<static_cast<s32>(capacity_))? empty_++ : -1;
-                if(0<=entryPos){
+        size_type startPos = hashToPos_(hash);
+        size_type pos;
+        size_type d;
+        for(;;){
+            size_type range = (capacity_ < InsertRange) ? capacity_ : InsertRange;
+            d = 0;
+            pos = startPos;
+            do{
+                if(hopinfoes_[pos].isEmpty()){
                     break;
                 }
+                pos = clamp_(pos+1);
+                ++d;
+            } while(d < range);
+
+            if(range <= d){
                 expand();
+                startPos = hashToPos_(hash);
+                continue;
             }
-        }else{
-            entryPos = freeList_;
-            freeList_ = keyvalues_[freeList_].next_;
+
+            size_type size = (bitmap_count < capacity_) ? bitmap_count : capacity_;
+            while(size <= d){
+                moveEmpty(pos, d);
+            }
+            if(end() == pos){
+                expand();
+                startPos = hashToPos_(hash);
+                continue;
+            }
+            LASSERT(hopinfoes_[pos].isEmpty());
+            LASSERT(!hopinfoes_[startPos].checkHopFlag(d));
+            break;
         }
 
-        s32 bucketPos = hash % capacity_;
-        keyvalues_[entryPos].next_ = (buckets_[bucketPos]<0)? -1 : buckets_[bucketPos];
-        buckets_[bucketPos] = entryPos;
-        keyvalues_[entryPos].hash_ = hash | keyvalue_type::OccupyFlag;
-        keyvalues_[entryPos].key_ = key;
-        value_allocator::construct(&keyvalues_[entryPos].value_, value);
+        hopinfoes_[pos].setOccupy();
+        construct(&keys_[pos], key);
+        construct(&values_[pos], value);
+        hopinfoes_[startPos].setHopFlag(d);
         ++size_;
         return true;
     }
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::erase(const_key_param_type key)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::moveEmpty(size_type& pos, size_type& distance)
     {
-        if(capacity_<=0){
-            return;
-        }
-        u32 rawHash = calcHash_(key);
-        size_type pos = find_(key, rawHash);
-        if(!valid(pos) || !keyvalues_[pos].isOccupy()){
-            return;
-        }
-        erase_(pos, rawHash);
-    }
+        size_type size = (bitmap_count<capacity_)? bitmap_count : capacity_;
+        size_type offset = size-1;
+        size_type n = (offset<=pos)? pos-offset : capacity_-offset+pos;
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::eraseAt(size_type pos)
-    {
-        if(capacity_<=0){
-            return;
-        }
-        if(!valid(pos) || !keyvalues_[pos].isOccupy()){
-            return;
-        }
-        u32 rawHash = calcHash_(getKey(pos));
-        erase_(pos, rawHash);
-    }
+        for(s32 i=offset; 0<=i; --i){
+            bitmap_type hop = hopinfoes_[n].getHop();
+            for(s32 j=0; j<=i; ++j){
+                if(hop & (0x01U<<j)){
+                    size_type next_pos = clamp_(n+j);
+                    construct(&keys_[pos], lcore::move(keys_[next_pos]));
+                    construct(&values_[pos], lcore::move(values_[next_pos]));
+                    keys_[next_pos].~key_type();
+                    values_[next_pos].~value_type();
+                    hopinfoes_[pos].setOccupy();
+                    hopinfoes_[next_pos].setEmpty();
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::erase_(size_type pos, u32 rawHash)
-    {
-        s32 bucketPos = rawHash % capacity_;
-
-        value_allocator::destruct(&keyvalues_[pos].value_);
-        key_allocator::destruct(&keyvalues_[pos].key_);
-
-        s32 spos = static_cast<s32>(pos);
-        if(spos == buckets_[bucketPos]){
-            buckets_[bucketPos] = keyvalues_[pos].next_;
-        }else{
-            s32 p;
-            for(p=buckets_[bucketPos]; keyvalues_[p].next_ != spos; p=keyvalues_[p].next_){
-#if _DEBUG
-                if(keyvalues_[p].next_<0){
-                    LASSERT(false);
+                    hop &= ~(0x01U<<j);
+                    hop |= (0x01U<<i);
+                    hopinfoes_[n].setHop(hop);
+                    pos = next_pos;
+                    distance -= (i-j);
+                    return;
                 }
-#endif
             }
-            keyvalues_[p].next_ = keyvalues_[pos].next_;
+            n = clamp_(n+1);
         }
-        keyvalues_[pos].next_ = freeList_;
-        freeList_ = pos;
-        keyvalues_[pos].clear();
+        pos = end();
+        distance = 0;
+    }
+
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::erase(const_key_param_type key)
+    {
+        if(capacity_<=0){
+            return;
+        }
+
+        size_type hash = calcHash_(key);
+        size_type pos = find_(key, hash);
+
+        if(pos == end()){
+            return;
+        }
+
+        hopinfoes_[pos].setEmpty();
+        keys_[pos].~key_type();
+        values_[pos].~value_type();
+
+        hash = hashToPos_(hash);
+        size_type d = (hash<=pos)? pos-hash : (capacity_-hash + pos);
+        hopinfoes_[hash].clearHopFlag(d);
         --size_;
     }
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::swap(this_type& rhs)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::eraseAt(size_type pos)
+    {
+        LASSERT(valid(pos));
+
+        size_type hash = calcHash_(getKey(pos));
+
+        hopinfoes_[pos].setEmpty();
+        keys_[pos].~key_type();
+        values_[pos].~value_type();
+
+        hash = hashToPos_(hash);
+        size_type d = (hash<=pos)? pos-hash : (capacity_-hash + pos);
+        hopinfoes_[hash].clearHopFlag(d);
+        --size_;
+    }
+
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::swap(this_type& rhs)
     {
         lcore::swap(capacity_, rhs.capacity_);
         lcore::swap(size_, rhs.size_);
-        lcore::swap(empty_, rhs.empty_);
-        lcore::swap(freeList_, rhs.freeList_);
-        lcore::swap(buckets_, rhs.buckets_);
-        lcore::swap(keyvalues_, rhs.keyvalues_);
+        lcore::swap(hopinfoes_, rhs.hopinfoes_);
+        lcore::swap(keys_, rhs.keys_);
+        lcore::swap(values_, rhs.values_);
     }
 
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    typename HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::size_type
-        HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::begin() const
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    typename HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::size_type
+        HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::begin() const
     {
-        for(size_type i=0; i<capacity_; ++i){
-            if(keyvalues_[i].isOccupy()){
+        for(size_type i=0; i<end(); ++i){
+            if(isOccupy(i)){
                 return i;
             }
         }
@@ -708,99 +1057,120 @@ namespace lcore
     }
 
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    typename HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::size_type
-        HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::next(size_type pos) const
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    typename HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::size_type
+        HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::next(size_type pos) const
     {
-        for(size_type i=pos+1; i<capacity_; ++i){
-            if(keyvalues_[i].isOccupy()){
+        for(size_type i=pos+1; i<end(); ++i){
+            if(isOccupy(i)){
                 return i;
             }
         }
         return end();
     }
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::expand()
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::expand()
     {
         this_type tmp;
         tmp.create(capacity_+1);
 
-
         for(size_type i=0; i<capacity_; ++i){
-            if(keyvalues_[i].isOccupy()){
-#if _DEBUG
-                if(false == tmp.insert(keyvalues_[i].key_, keyvalues_[i].value_)){
-                    LASSERT(false);
-                }
-#else
-                tmp.insert(keyvalues_[i].key_, keyvalues_[i].value_);
-#endif
+            if(isOccupy(i)){
+                tmp.insert_(keys_[i], values_[i], tmp.calcHash_(keys_[i]));
             }
         }
         tmp.swap(*this);
     }
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::create(size_type capacity)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::create(size_type capacity)
     {
-        LASSERT(NULL == keyvalues_);
+        LASSERT(NULL == hopinfoes_);
+        LASSERT(NULL == keys_);
+        LASSERT(NULL == values_);
 
         capacity_ = hash_detail::next_prime(capacity);
-        buckets_ = LNEW s32[capacity_];
-        keyvalues_ = keyvalue_array_allocator::allocate(capacity_);
-        for(size_type i=0; i<capacity_; ++i){
-            buckets_[i] = -1;
-            keyvalues_[i].next_ = -1;
-            keyvalues_[i].clear();
-        }
-        size_ = 0;
-        empty_ = 0;
-        freeList_ = -1;
+
+        size_type size_infoes = align_(sizeof(hopinfo_type)*capacity_);
+        size_type size_keys = align_(sizeof(key_type)*capacity_);
+        size_type size_values = sizeof(value_type)*capacity_;
+        size_type total_size = size_infoes + size_keys + size_values;
+
+        u8* mem = reinterpret_cast<u8*>(LALLOCATOR_MALLOC(memory_allocator, total_size));
+        hopinfoes_ = reinterpret_cast<hopinfo_pointer>(mem);
+        keys_ = reinterpret_cast<key_pointer>(mem+size_infoes);
+        values_ = reinterpret_cast<value_pointer>(mem+size_infoes+size_keys);
+
+        lcore::memset(hopinfoes_, 0, size_infoes);
     }
 
-    template<class Key, class Value, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HashMap<Key, Value, KeyAllocator, ValueAllocator, KeyValueAllocator>::destroy()
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::destroy()
     {
-        for(size_type i=0; i<capacity_; ++i){
-            //if(keyvalues_[i].isOccupy()){
-            //    value_allocator::destruct(&keyvalues_[i].value_);
-            //}
-            key_allocator::destruct(&keyvalues_[i].key_);
-            value_allocator::destruct(&keyvalues_[i].value_);
-        }
+        clear();
+        LALLOCATOR_FREE(memory_allocator, hopinfoes_);
         capacity_ = size_ = 0;
-        empty_ = 0;
-        freeList_ = -1;
-        LDELETE_ARRAY(buckets_);
-        keyvalue_array_allocator::deallocate(keyvalues_);
-        keyvalues_ = NULL;
+        hopinfoes_ = NULL;
+        keys_ = NULL;
+        values_ = NULL;
     }
 
+#else
+    template<typename BitmapType>
+    struct HashMapHopInfo
+    {
+        typedef u32 size_type;
+        typedef BitmapType bitmap_type;
+        static const size_type bitmap_size = sizeof(bitmap_type);
+        static const size_type bitmap_count = bitmap_size*8;
 
-    //-----------------------------------------------------------------------------
-    //---
-    //--- HopscotchHashMap
-    //---
-    //-----------------------------------------------------------------------------
-    template<
-        class Key,
-        class Value,
-        typename BitmapType=u32,
-        class HopInfoAllocator=hash_detail::AllocatorNew<HashMapHopInfo<BitmapType> >,
-        class KeyAllocator=hash_detail::AllocatorNew<Key>,
-        class ValueAllocator=hash_detail::AllocatorNew<Value>,
-        class KeyValueAllocator=hash_detail::AllocatorNew<HashMapKeyValuePair<Key, Value> >
-    >
+        bitmap_type getHop() const
+        {
+            return hop_;
+        }
+
+        void setHop(bitmap_type hop)
+        {
+            hop_ = hop;
+        }
+
+        void setHopFlag(size_type pos)
+        {
+            hop_ |= (0x01U<<pos);
+        }
+
+        void clearHopFlag(size_type pos)
+        {
+            hop_ &= ~(0x01U<<pos);
+        }
+
+        bool checkHopFlag(size_type pos) const
+        {
+            return 0 != (hop_ & (0x01U<<pos));
+        }
+
+        void clear()
+        {
+            hop_ = 0;
+        }
+
+        bitmap_type hop_;
+    };
+
+    template<class Key, class Value, typename BitmapType=u32, class MemoryAllocator=DefaultAllocator>
     class HopscotchHashMap
     {
     public:
+        static const u32 Align = 4;
+        static const u32 AlignMask = Align-1;
+
+        typedef HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator> this_type;
         typedef Key key_type;
         typedef Value value_type;
         typedef HashMapHopInfo<BitmapType> hopinfo_type;
-        typedef HashMapKeyValuePair<Key, Value> keyvalue_type;
-
-        typedef HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator> this_type;
+        typedef HashMapHash hash_type;
+        typedef MemoryAllocator memory_allocator;
 
         typedef u32 size_type;
 
@@ -825,51 +1195,19 @@ namespace lcore
         typedef typename key_traits::param_type key_param_type;
         typedef typename key_traits::const_param_type const_key_param_type;
 
-        typedef keyvalue_type* keyvalue_pointer;
-        typedef const keyvalue_type* const_keyvalue_pointer;
-        typedef keyvalue_type& keyvalue_reference;
-        typedef const keyvalue_type& const_keyvalue_reference;
-
-        typedef KeyAllocator key_allocator;
-        typedef hash_detail::ArrayAllocator<key_allocator> key_array_allocator;
-
-        typedef ValueAllocator value_allocator;
-        typedef hash_detail::ArrayAllocator<value_allocator> value_array_allocator;
-
-        typedef KeyValueAllocator keyvalue_allocator;
-        typedef hash_detail::ArrayAllocator<keyvalue_allocator> keyvalue_array_allocator;
-
-
         typedef hopinfo_type* hopinfo_pointer;
         typedef const hopinfo_type* const_hopinfo_pointer;
         typedef typename hopinfo_type::bitmap_type bitmap_type;
+
+        typedef HashMapHash* hash_pointer;
         static const size_type bitmap_size = hopinfo_type::bitmap_size;
         static const size_type bitmap_count = hopinfo_type::bitmap_count;
 
-        static const size_type InsertRange = 8*bitmap_count;
+        static const size_type InsertRangeFactor = 8;
 
-        typedef HopInfoAllocator hopinfo_allocator;
-        typedef hash_detail::ArrayAllocator<hopinfo_allocator> hopinfo_array_allocator;
-
-        HopscotchHashMap()
-            :capacity_(0)
-            ,size_(0)
-            ,hopinfoes_(NULL)
-            ,keyvalues_(NULL)
-        {}
-
-        explicit HopscotchHashMap(size_type capacity)
-            :size_(0)
-            ,hopinfoes_(NULL)
-            ,keyvalues_(NULL)
-        {
-            create(capacity);
-        }
-
-        ~HopscotchHashMap()
-        {
-            destroy();
-        }
+        HopscotchHashMap();
+        explicit HopscotchHashMap(size_type capacity);
+        ~HopscotchHashMap();
 
         void initialize(size_type capacity)
         {
@@ -891,7 +1229,7 @@ namespace lcore
 
         bool valid(size_type pos) const
         {
-            return (pos<capacity_);
+            return (pos<padded_capacity_);
         }
 
         size_type find(const_key_param_type key) const
@@ -899,19 +1237,7 @@ namespace lcore
             return (0<capacity_)? find_(key, calcHash_(key)) : end();
         }
 
-        bool insert(const_key_param_type key, const_value_param_type value)
-        {
-            if(capacity_ <= 0){
-                expand();
-                return insert_(key, value, calcHash_(key));
-            }
-            size_type hash = calcHash_(key);
-            size_type pos = find_(key, hash);
-            if(pos != end()){
-                return false;
-            }
-            return insert_(key, value, hash);
-        }
+        bool insert(const_key_param_type key, const_value_param_type value);
 
         void erase(const_key_param_type key);
         void eraseAt(size_type pos);
@@ -921,51 +1247,61 @@ namespace lcore
 
         size_type end() const
         {
-            return capacity_;
+            return padded_capacity_;
         }
 
         size_type next(size_type pos) const;
 
         reference getValue(size_type pos)
         {
-            LASSERT(0<=pos && pos<capacity_);
-            return keyvalues_[pos].value_;
+            LASSERT(0<=pos && pos<padded_capacity_);
+            return values_[pos];
         }
 
         const_reference getValue(size_type pos) const
         {
-            LASSERT(0<=pos && pos<capacity_);
-            return keyvalues_[pos].value_;
+            LASSERT(0<=pos && pos<padded_capacity_);
+            return values_[pos];
         }
 
         key_reference getKey(size_type pos)
         {
-            LASSERT(0<=pos && pos<capacity_);
-            return keyvalues_[pos].key_;
+            LASSERT(0<=pos && pos<padded_capacity_);
+            return keys_[pos];
         }
 
         const_key_reference getKey(size_type pos) const
         {
-            LASSERT(0<=pos && pos<capacity_);
-            return keyvalues_[pos].key_;
+            LASSERT(0<=pos && pos<padded_capacity_);
+            return keys_[pos];
         }
     private:
-        HopscotchHashMap(const HopscotchHashMap&);
-        HopscotchHashMap& operator=(const HopscotchHashMap&);
+        HopscotchHashMap(const HopscotchHashMap&) = delete;
+        HopscotchHashMap& operator=(const HopscotchHashMap&) = delete;
 
         bool isEmpty(size_type pos) const
         {
-            return hopinfoes_[pos].isEmpty();
+            return hashes_[pos].isEmpty();
         }
 
         bool isOccupy(size_type pos) const
         {
-            return hopinfoes_[pos].isOccupy();
+            return hashes_[pos].isOccupy();
         }
 
-        size_type calcHash_(const_key_param_type key) const
+        inline static size_type calcHash_(const_key_param_type key)
         {
-            return calcHash(key) % capacity_;
+            return hash_detail::calcHash(key);
+        }
+
+        inline size_type hashToPos(size_type hash) const
+        {
+            return hash%capacity_;
+        }
+
+        static inline size_type align(size_type x)
+        {
+            return (x+AlignMask)&(~AlignMask);
         }
 
         void moveEmpty(size_type& pos, size_type& distance);
@@ -978,129 +1314,189 @@ namespace lcore
         void destroy();
 
         size_type capacity_;
+        size_type padded_capacity_;
         size_type size_;
 
         hopinfo_pointer hopinfoes_;
-        keyvalue_pointer keyvalues_;
+        hash_pointer hashes_;
+        key_pointer keys_;
+        value_pointer values_;
     };
 
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::HopscotchHashMap()
+        :capacity_(0)
+        ,padded_capacity_(0)
+        ,size_(0)
+        ,hopinfoes_(NULL)
+        ,hashes_(NULL)
+        ,keys_(NULL)
+        ,values_(NULL)
+    {}
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::clear()
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::HopscotchHashMap(size_type capacity)
+        :size_(0)
+        ,hopinfoes_(NULL)
+        ,hashes_(NULL)
+        ,keys_(NULL)
+        ,values_(NULL)
     {
-        for(size_type i=0; i<capacity_; ++i){
-            if(hopinfoes_[i].isOccupy()){
-                keyvalue_allocator::destruct(&keyvalues_[i]);
+        create(capacity);
+    }
+
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::~HopscotchHashMap()
+    {
+        destroy();
+    }
+
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::clear()
+    {
+        for(size_type i=0; i<padded_capacity_; ++i){
+            if(isOccupy(i)){
+                keys_[i].~key_type();
+                values_[i].~value_type();
             }
             hopinfoes_[i].clear();
+            hashes_[i].clear();
         }
         size_ = 0;
     }
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    typename HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::size_type
-        HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::find_(const_key_param_type key, size_type hash) const
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    bool HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::insert(const_key_param_type key, const_value_param_type value)
     {
-        size_type pos = hash;
+        if(capacity_ <= 0){
+            expand();
+            return insert_(key, value, calcHash_(key));
+        }
+        size_type hash = calcHash_(key);
+        size_type pos = find_(key, hash);
+        if(pos != end()){
+            return false;
+        }
+        return insert_(key, value, hash);
+    }
 
-        bitmap_type info = (pos<capacity_)? hopinfoes_[pos].getHop() : 0;
-
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    typename HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::size_type
+        HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::find_(const_key_param_type key, size_type hash) const
+    {
+        LASSERT(0<capacity_);
+        size_type pos = hashToPos(hash);
+        bitmap_type info = hopinfoes_[pos].getHop();
+        hash |= hash_type::OccupyFlag;
         while(0 != info){
-            if(info & 0x01U){
+            LASSERT(pos<padded_capacity_);
+            if(hashes_[pos].hash_ == hash){
                 LASSERT(isOccupy(pos));
-                if(keyvalues_[pos].key_ == key){
+                if(keys_[pos] == key){
                     return pos;
                 }
             }
             info >>= 1;
             ++pos;
-            pos %= capacity_;
         }
 
         return end();
     }
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    bool HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::insert_(const_key_param_type key, const_value_param_type value, size_type hash)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    bool HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::insert_(const_key_param_type key, const_value_param_type value, size_type hash)
     {
+        const size_type InsertRange = InsertRangeFactor*bitmap_count;
+
+        size_type startPos = hashToPos(hash);
         size_type pos;
         size_type d;
         for(;;){
-            size_type range = (capacity_ < InsertRange) ? capacity_ : InsertRange;
+            size_type range = (padded_capacity_ < InsertRange) ? padded_capacity_ : InsertRange;
+            if(padded_capacity_<(range+startPos)){
+                range = padded_capacity_-startPos;
+            }
             d = 0;
-            pos = hash;
+            pos = startPos;
             do{
-                if(hopinfoes_[pos].isEmpty()){
+                LASSERT(pos<padded_capacity_);
+                if(isEmpty(pos)){
                     break;
                 }
                 ++pos;
-                pos %= capacity_;
                 ++d;
             } while(d < range);
 
             if(range <= d){
                 expand();
-                hash = calcHash_(key);
+                startPos = hashToPos(hash);
                 continue;
             }
 
-            size_type size = (bitmap_count < capacity_) ? bitmap_count : capacity_;
-            while(size <= d){
+            LASSERT(!hopinfoes_[pos].checkHopFlag(0));
+            LASSERT(startPos == (pos-d));
+            LASSERT((startPos+d)<padded_capacity_);
+            while(bitmap_count <= d){
+                LASSERT(startPos <= ((s64)pos-d));
                 moveEmpty(pos, d);
             }
             if(end() == pos){
                 expand();
-                hash = calcHash_(key);
+                startPos = hashToPos(hash);
                 continue;
             }
-            LASSERT(hopinfoes_[pos].isEmpty());
-            LASSERT(!hopinfoes_[hash].checkHopFlag(d));
+            LASSERT(isEmpty(pos));
             break;
         }
-
-        hopinfoes_[pos].setOccupy();
-
-        key_allocator::construct(&keyvalues_[pos].key_, key);
-        value_allocator::construct(&keyvalues_[pos].value_, value);
-        hopinfoes_[hash].setHopFlag(d);
+        LASSERT(pos<padded_capacity_);
+        hashes_[pos].setOccupy(hash);
+        construct(&keys_[pos], key);
+        construct(&values_[pos], value);
+        hopinfoes_[startPos].setHopFlag(d);
         ++size_;
         return true;
     }
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::moveEmpty(size_type& pos, size_type& distance)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::moveEmpty(size_type& pos, size_type& distance)
     {
-        size_type size = (bitmap_count<capacity_)? bitmap_count : capacity_;
-        size_type offset = size-1;
-        size_type n = (offset<=pos)? pos-offset : capacity_-offset+pos;
+        LASSERT(bitmap_count<=distance);
+        size_type offset = bitmap_count - 1;
+        size_type n = pos - offset;
 
-        for(s32 i=offset; 0<=i; --i){
+        for(s32 i=offset; 0<i; --i){
+            LASSERT(n<padded_capacity_);
             bitmap_type hop = hopinfoes_[n].getHop();
             for(s32 j=0; j<=i; ++j){
                 if(hop & (0x01U<<j)){
-                    size_type next_pos = (n+j) % capacity_;
-                    keyvalue_allocator::construct(&keyvalues_[pos], keyvalues_[next_pos]);
-                    keyvalue_allocator::destruct(&keyvalues_[next_pos]);
-                    hopinfoes_[pos].setOccupy();
-                    hopinfoes_[next_pos].setEmpty();
+                    size_type next_pos = n+j;
+                    LASSERT(next_pos<padded_capacity_);
+                    //construct(&keys_[pos], keys_[next_pos]);
+                    //construct(&values_[pos], values_[next_pos]);
+                    construct(&keys_[pos], lcore::move(keys_[next_pos]));
+                    construct(&values_[pos], lcore::move(values_[next_pos]));
+                    hashes_[pos] = lcore::move(hashes_[next_pos]);
+                    keys_[next_pos].~key_type();
+                    values_[next_pos].~value_type();
+                    hashes_[next_pos].clear();
 
-                    hop &= ~(0x01U<<j);
-                    hop |= (0x01U<<i);
-                    hopinfoes_[n].setHop(hop);
+                    hopinfoes_[n].clearHopFlag(j);
+                    hopinfoes_[n].setHopFlag(i);
+
+                    LASSERT(next_pos<pos);
+                    distance -= pos-next_pos;
                     pos = next_pos;
-                    distance -= (i-j);
                     return;
                 }
             }
             ++n;
-            n %= capacity_;
         }
         pos = end();
         distance = 0;
     }
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::erase(const_key_param_type key)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::erase(const_key_param_type key)
     {
         if(capacity_<=0){
             return;
@@ -1113,45 +1509,56 @@ namespace lcore
             return;
         }
 
-        hopinfoes_[pos].setEmpty();
-        keyvalue_allocator::destruct(&keyvalues_[pos]);
+        hashes_[pos].clear();
+        keys_[pos].~key_type();
+        values_[pos].~value_type();
 
-        size_type d = (hash<=pos)? pos-hash : (capacity_-hash + pos);
-        hopinfoes_[hash].clearHopFlag(d);
+        size_type hopPos = hashToPos(hash);
+        LASSERT(hopPos<=pos);
+        //size_type d = (hopPos<=pos)? pos-hopPos : (padded_capacity_-hopPos + pos);
+        size_type d = pos-hopPos;
+        hopinfoes_[hopPos].clearHopFlag(d);
         --size_;
     }
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::eraseAt(size_type pos)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::eraseAt(size_type pos)
     {
         LASSERT(valid(pos));
 
         size_type hash = calcHash_(getKey(pos));
 
-        hopinfoes_[pos].setEmpty();
-        keyvalue_allocator::destruct(&keyvalues_[pos]);
+        hashes_[pos].clear();
+        keys_[pos].~key_type();
+        values_[pos].~value_type();
 
-        size_type d = (hash<=pos)? pos-hash : (capacity_-hash + pos);
-        hopinfoes_[hash].clearHopFlag(d);
+        size_type hopPos = hashToPos(hash);
+        LASSERT(hopPos<=pos);
+        //size_type d = (hopPos<=pos)? pos-hopPos : (padded_capacity_-hopPos + pos);
+        size_type d = pos-hopPos;
+        hopinfoes_[hopPos].clearHopFlag(d);
         --size_;
     }
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::swap(this_type& rhs)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::swap(this_type& rhs)
     {
         lcore::swap(capacity_, rhs.capacity_);
+        lcore::swap(padded_capacity_, rhs.padded_capacity_);
         lcore::swap(size_, rhs.size_);
         lcore::swap(hopinfoes_, rhs.hopinfoes_);
-        lcore::swap(keyvalues_, rhs.keyvalues_);
+        lcore::swap(hashes_, rhs.hashes_);
+        lcore::swap(keys_, rhs.keys_);
+        lcore::swap(values_, rhs.values_);
     }
 
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    typename HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::size_type
-        HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::begin() const
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    typename HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::size_type
+        HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::begin() const
     {
             for(size_type i=0; i<end(); ++i){
-                if(!isEmpty(i)){
+                if(isOccupy(i)){
                     return i;
                 }
             }
@@ -1159,61 +1566,508 @@ namespace lcore
         }
 
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    typename HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::size_type
-        HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::next(size_type pos) const
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    typename HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::size_type
+        HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::next(size_type pos) const
     {
         for(size_type i=pos+1; i<end(); ++i){
-            if(!isEmpty(i)){
+            if(isOccupy(i)){
                 return i;
             }
         }
         return end();
     }
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::expand()
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::expand()
     {
         this_type tmp;
         tmp.create(capacity_+1);
 
-        size_type itr = begin();
-        while(itr != end()){
-            keyvalue_type& keyvalue = keyvalues_[itr];
-            if(false == tmp.insert_(keyvalue.key_, keyvalue.value_, tmp.calcHash_(keyvalue.key_))){
-                LASSERT(false);
+        for(size_type i=0; i<padded_capacity_; ++i){
+            if(isOccupy(i)){
+                tmp.insert_(keys_[i], values_[i], tmp.calcHash_(keys_[i]));
             }
-
-            itr = next(itr);
         }
         tmp.swap(*this);
     }
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::create(size_type capacity)
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::create(size_type capacity)
     {
         LASSERT(NULL == hopinfoes_);
-        LASSERT(NULL == keyvalues_);
+        LASSERT(NULL == keys_);
+        LASSERT(NULL == values_);
 
         capacity_ = hash_detail::next_prime(capacity);
-        hopinfoes_ = hopinfo_array_allocator::allocate(capacity_);
-        for(size_type i=0; i<capacity_; ++i){
-            hopinfoes_[i].clear();
-        }
+        padded_capacity_ = capacity_ + hash_detail::log2(capacity_)*InsertRangeFactor;
 
-        keyvalues_ = keyvalue_array_allocator::allocate(capacity_);
+        size_type size_infoes = align(sizeof(hopinfo_type)*padded_capacity_);
+        size_type size_hashes = align(sizeof(HashMapHash)*padded_capacity_);
+        size_type size_keys = align(sizeof(key_type)*padded_capacity_);
+        size_type size_values = sizeof(value_type)*padded_capacity_;
+        size_type total_size = size_infoes + size_hashes + size_keys + size_values;
+
+        u8* mem = reinterpret_cast<u8*>(LALLOCATOR_MALLOC(memory_allocator, total_size));
+        hopinfoes_ = reinterpret_cast<hopinfo_pointer>(mem);
+        hashes_ = reinterpret_cast<hash_pointer>(mem+size_infoes);
+        keys_ = reinterpret_cast<key_pointer>(mem+size_infoes+size_hashes);
+        values_ = reinterpret_cast<value_pointer>(mem+size_infoes+size_hashes+size_keys);
+
+        for(size_type i=0; i<padded_capacity_; ++i){
+            hopinfoes_[i].clear();
+            hashes_[i].clear();
+        }
     }
 
-    template<class Key, class Value, typename BitmapType, class HopInfoAllocator, class KeyAllocator, class ValueAllocator, class KeyValueAllocator>
-    void HopscotchHashMap<Key, Value, BitmapType, HopInfoAllocator, KeyAllocator, ValueAllocator, KeyValueAllocator>::destroy()
+    template<class Key, class Value, typename BitmapType, class MemoryAllocator>
+    void HopscotchHashMap<Key, Value, BitmapType, MemoryAllocator>::destroy()
     {
         clear();
-        hopinfo_array_allocator::deallocate(hopinfoes_);
-        keyvalue_array_allocator::deallocate(keyvalues_);
+        LALLOCATOR_FREE(memory_allocator, hopinfoes_);
+        capacity_ = padded_capacity_ = size_ = 0;
+        hashes_ = NULL;
+        keys_ = NULL;
+        values_ = NULL;
+    }
+#endif
 
-        capacity_ = size_ = 0;
-        hopinfoes_ = NULL;
-        keyvalues_ = NULL;
+    //----------------------------------------------------------------
+    //---
+    //---
+    //---
+    //----------------------------------------------------------------
+    struct RHDistance
+    {
+        typedef s8 distance_type;
+
+        distance_type distance_;
+
+        inline distance_type distance() const
+        {
+            return distance_;
+        }
+
+        inline void set(distance_type d)
+        {
+            distance_ = d;
+        }
+
+        inline bool isEmpty() const
+        {
+            return distance_<0;
+        }
+
+        inline bool isOccupy() const
+        {
+            return 0<=distance_;
+        }
+
+        inline void setEmpty()
+        {
+            distance_ = -1;
+        }
+    };
+
+    /**
+    @brief Robin Hood Hashing
+    */
+    template<class Key, class Value, class MemoryAllocator=DefaultAllocator>
+    class RHHashMap
+    {
+    public:
+        static const u32 Align = 4;
+        static const u32 AlignMask = Align-1;
+
+        typedef RHHashMap<Key, Value, MemoryAllocator> this_type;
+        typedef Key key_type;
+        typedef Value value_type;
+        typedef MemoryAllocator memory_allocator;
+
+        typedef typename RHDistance::distance_type distance_type;
+        typedef u32 hash_type;
+        typedef u32 size_type;
+
+        typedef hash_detail::type_traits<value_type> value_traits;
+        typedef typename value_traits::pointer value_pointer;
+        typedef typename value_traits::const_pointer const_value_pointer;
+        typedef typename value_traits::reference value_reference;
+        typedef typename value_traits::const_reference const_value_reference;
+        typedef typename value_traits::pointer pointer;
+        typedef typename value_traits::const_pointer const_pointer;
+        typedef typename value_traits::reference reference;
+        typedef typename value_traits::const_reference const_reference;
+        typedef typename value_traits::param_type value_param_type;
+        typedef typename value_traits::const_param_type const_value_param_type;
+
+
+        typedef hash_detail::type_traits<key_type> key_traits;
+        typedef typename key_traits::pointer key_pointer;
+        typedef typename key_traits::const_pointer const_key_pointer;
+        typedef typename key_traits::reference key_reference;
+        typedef typename key_traits::const_reference const_key_reference;
+        typedef typename key_traits::param_type key_param_type;
+        typedef typename key_traits::const_param_type const_key_param_type;
+
+
+        RHHashMap();
+        explicit RHHashMap(size_type capacity);
+        ~RHHashMap();
+
+        inline size_type end() const;
+        inline size_type capacity() const;
+
+        void clear();
+        void reserve(size_type capacity);
+        bool insert(const_key_param_type key, const_value_param_type value);
+        void erase(const_key_param_type key);
+        void eraseAt(size_type pos);
+        size_type find(const_key_param_type key) const;
+
+        inline bool valid(size_type pos) const;
+        inline const_reference getValue(size_type pos) const;
+        inline reference getValue(size_type pos);
+
+        void swap(this_type& rhs);
+
+        size_type begin() const;
+        size_type next(size_type pos) const;
+    private:
+        RHHashMap(const this_type&) = delete;
+        this_type& operator=(const this_type&) = delete;
+
+        inline static hash_type calcHash_(const_key_param_type key)
+        {
+            return hash_detail::calcHash(key);
+        }
+
+        inline size_type hashToPos(hash_type hash) const
+        {
+            return hash%capacity_;
+        }
+        static inline size_type align(size_type x)
+        {
+            return (x+AlignMask)&(~AlignMask);
+        }
+        
+        inline void destroy(size_type pos);
+        inline void emplace(distance_type distance, size_type pos, const_key_param_type key, const_value_param_type value);
+        inline void replace(distance_type distance, size_type dst, size_type src);
+
+        size_type find_(hash_type hash, const_key_param_type key) const;
+        void reserve_(size_type capacity);
+        bool insert_(const_key_param_type key, const_value_param_type value);
+        void erase_(size_type pos);
+        void expand(size_type capacity);
+
+        size_type size_;
+        size_type capacity_;
+        size_type max_distance_;
+        size_type padded_capacity_;
+        RHDistance* distances_;
+        key_type* keys_;
+        value_type* values_;
+    };
+
+    template<class Key, class Value, class MemoryAllocator>
+    RHHashMap<Key,Value,MemoryAllocator>::RHHashMap()
+        :size_(0)
+        ,capacity_(0)
+        ,max_distance_(0)
+        ,padded_capacity_(0)
+        ,distances_(NULL)
+        ,keys_(NULL)
+        ,values_(NULL)
+    {
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    RHHashMap<Key,Value,MemoryAllocator>::RHHashMap(size_type capacity)
+        :size_(0)
+        ,distances_(NULL)
+    {
+        reserve_(capacity);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    RHHashMap<Key,Value,MemoryAllocator>::~RHHashMap()
+    {
+        clear();
+        LALLOCATOR_FREE(memory_allocator, distances_);
+        keys_ = NULL;
+        values_ = NULL;
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    inline typename RHHashMap<Key,Value,MemoryAllocator>::size_type RHHashMap<Key,Value,MemoryAllocator>::end() const
+    {
+        return padded_capacity_;
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    inline typename RHHashMap<Key,Value,MemoryAllocator>::size_type RHHashMap<Key,Value,MemoryAllocator>::capacity() const
+    {
+        return capacity_;
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void RHHashMap<Key,Value,MemoryAllocator>::clear()
+    {
+        for(size_type i=0; i<padded_capacity_; ++i){
+            if(distances_[i].isOccupy()){
+                destroy(i);
+            }
+        }
+        size_ = 0;
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void RHHashMap<Key,Value,MemoryAllocator>::reserve(size_type capacity)
+    {
+        if(capacity<=capacity_){
+            return;
+        }
+        if(size_<=0){
+            reserve_(capacity);
+        }else{
+            expand(capacity);
+        }
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    bool RHHashMap<Key,Value,MemoryAllocator>::insert(const_key_param_type key, const_value_param_type value)
+    {
+        key_type tkey(const_cast<key_param_type>(key));
+        value_type tvalue(const_cast<value_param_type>(value));
+        return insert_(tkey, tvalue);
+    }
+    
+    template<class Key, class Value, class MemoryAllocator>
+    void RHHashMap<Key, Value, MemoryAllocator>::erase(const_key_param_type key)
+    {
+        size_type pos = find(key);
+        if(valid(pos)){
+            erase_(pos);
+        }
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void RHHashMap<Key, Value, MemoryAllocator>::eraseAt(size_type pos)
+    {
+        if(valid(pos)){
+            erase_(pos);
+        }
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    typename RHHashMap<Key,Value,MemoryAllocator>::size_type RHHashMap<Key,Value,MemoryAllocator>::find(const_key_param_type key) const
+    {
+        if(capacity_<=0){
+            return end();
+        }
+        hash_type hash = calcHash_(key);
+        return find_(hash, key);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    inline bool RHHashMap<Key,Value,MemoryAllocator>::valid(size_type pos) const
+    {
+        return pos<end();
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    inline typename RHHashMap<Key,Value,MemoryAllocator>::const_reference RHHashMap<Key,Value,MemoryAllocator>::getValue(size_type pos) const
+    {
+        LASSERT(valid(pos));
+        return values_[pos];
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    inline typename RHHashMap<Key,Value,MemoryAllocator>::reference RHHashMap<Key,Value,MemoryAllocator>::getValue(size_type pos)
+    {
+        LASSERT(valid(pos));
+        return values_[pos];
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void RHHashMap<Key,Value,MemoryAllocator>::swap(this_type& rhs)
+    {
+        lcore::swap(size_, rhs.size_);
+        lcore::swap(capacity_, rhs.capacity_);
+        lcore::swap(max_distance_, rhs.max_distance_);
+        lcore::swap(padded_capacity_, rhs.padded_capacity_);
+        lcore::swap(distances_, rhs.distances_);
+        lcore::swap(keys_, rhs.keys_);
+        lcore::swap(values_, rhs.values_);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    inline void RHHashMap<Key,Value,MemoryAllocator>::destroy(size_type pos)
+    {
+        LASSERT(valid(pos));
+
+        distances_[pos].setEmpty();
+        keys_[pos].~key_type();
+        values_[pos].~value_type();
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    inline void RHHashMap<Key,Value,MemoryAllocator>::emplace(distance_type distance, size_type pos, const_key_param_type key, const_value_param_type value)
+    {
+        LASSERT(valid(pos));
+        LASSERT(distances_[pos].isEmpty());
+
+        distances_[pos].set(distance);
+        construct(&keys_[pos], key);
+        construct(&values_[pos], value);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    inline void RHHashMap<Key,Value,MemoryAllocator>::replace(distance_type distance, size_type dst, size_type src)
+    {
+        LASSERT(valid(dst));
+        LASSERT(valid(src));
+        LASSERT(distances_[dst].isEmpty());
+
+        distances_[dst].set(distance);
+        construct(&keys_[dst], move(keys_[src]));
+        construct(&values_[dst], move(values_[src]));
+        destroy(src);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    typename RHHashMap<Key,Value,MemoryAllocator>::size_type RHHashMap<Key,Value,MemoryAllocator>::find_(hash_type hash, const_key_param_type key) const
+    {
+        size_type pos = hashToPos(hash);
+        size_type pend = pos + max_distance_;
+        LASSERT(pend<=padded_capacity_);
+        for(size_type i=pos; i!=pend; ++i){
+            if(distances_[i].isOccupy() && key == keys_[i]){
+                return i;
+            }
+        }
+        return end();
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void RHHashMap<Key,Value,MemoryAllocator>::reserve_(size_type capacity)
+    {
+        LASSERT(size_<=0);
+
+        capacity_ = hash_detail::next_prime(capacity);
+        max_distance_ = hash_detail::log2(capacity_);
+        padded_capacity_ = capacity_ + max_distance_;
+
+        LALLOCATOR_FREE(memory_allocator, distances_);
+
+        size_type size_distances = align(sizeof(RHDistance)*padded_capacity_);
+        size_type size_keys = align(sizeof(key_type)*padded_capacity_);
+        size_type size_values = sizeof(value_type)*padded_capacity_;
+        size_type total_size = size_distances + size_keys + size_values;
+
+        u8* mem = reinterpret_cast<u8*>(LALLOCATOR_MALLOC(memory_allocator, total_size));
+        distances_ = reinterpret_cast<RHDistance*>(mem);
+        keys_ = reinterpret_cast<key_type*>(mem+size_distances);
+        values_ = reinterpret_cast<value_type*>(mem+size_distances+size_keys);
+
+        lcore::memset(distances_, -1, size_distances);
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    bool RHHashMap<Key,Value,MemoryAllocator>::insert_(const_key_param_type key, const_value_param_type value)
+    {
+        hash_type hash = calcHash_(key);
+
+        if(capacity_<=0){
+            expand(capacity_+1);
+        }else if(valid(find_(hash, key))){
+            return false;
+        }
+
+        size_type pos = hashToPos(hash);
+        size_type end = pos + max_distance_;
+
+        key_type tkey(key);
+        value_type tvalue(value);
+        for(;;){
+            distance_type d = 0;
+            for(size_type i=pos; i!=end; ++i,++d){
+                if(distances_[i].isEmpty()){
+                    emplace(d, i, key, value);
+                    return true;
+                }
+                if(distances_[i].distance_<d){
+                    lcore::swap(keys_[i], tkey);
+                    lcore::swap(values_[i], tvalue);
+                    lcore::swap(distances_[i].distance_, d);
+                }
+            }
+            expand(capacity_+1);
+            hash = calcHash_(tkey);
+            pos = hashToPos(hash);
+            end = pos + max_distance_;
+        }
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void RHHashMap<Key,Value,MemoryAllocator>::erase_(size_type pos)
+    {
+        destroy(pos);
+        --size_;
+#if 1
+        size_type end = pos + max_distance_;
+        distance_type d = 1;
+        for(size_type i=pos+1; i!=end; ++i,++d){
+            if(d<=distances_[i].distance_){
+                replace(distances_[i].distance_-d, pos, i);
+#if 1
+                return;
+#else
+                pos = i;
+                d = 0;
+#endif
+            }
+        }
+#endif
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    typename RHHashMap<Key, Value, MemoryAllocator>::size_type
+        RHHashMap<Key, Value, MemoryAllocator>::begin() const
+    {
+        for(size_type i=0; i<end(); ++i){
+            if(distances_[i].isOccupy()){
+                return i;
+            }
+        }
+        return end();
+    }
+
+
+    template<class Key, class Value, class MemoryAllocator>
+    typename RHHashMap<Key, Value, MemoryAllocator>::size_type
+        RHHashMap<Key, Value, MemoryAllocator>::next(size_type pos) const
+    {
+        for(size_type i=pos+1; i<end(); ++i){
+            if(distances_[i].isOccupy()){
+                return i;
+            }
+        }
+        return end();
+    }
+
+    template<class Key, class Value, class MemoryAllocator>
+    void RHHashMap<Key,Value,MemoryAllocator>::expand(size_type capacity)
+    {
+        this_type tmp(capacity);
+        size_type end = padded_capacity_;
+        for(size_type i=0; i!=end; ++i){
+            if(distances_[i].isOccupy()){
+                tmp.insert(keys_[i], values_[i]);
+            }
+        }
+        tmp.swap(*this);
     }
 }
 #endif //INC_LCORE_HASHMAP_H__
+

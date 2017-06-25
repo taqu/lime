@@ -1042,7 +1042,7 @@ namespace lcore
         return File::write(handle_, offset, size, data);
     }
 
-    bool FileProxyOSRaw::thisParent(VirtualFileSystemBase* vfs) const
+    bool FileProxyOSRaw::thisParent(VirtualFileSystemBase* /*vfs*/) const
     {
         return false;
     }

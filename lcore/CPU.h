@@ -109,7 +109,43 @@ namespace lcore
     @return 論理プロセッサ数
     */
     u32 getLogicalCPUCount();
+
 #endif
 
+    struct CPUCore
+    {
+        u64 groupMask_;
+        s32 group_;
+        s16 id_;
+        s16 numTHreads_;
+    };
+
+    class CPUInformation
+    {
+    public:
+        static const s32 MaxCores = 32;
+        static const s32 MaxLogicalCores = 64;
+
+        CPUInformation();
+        ~CPUInformation();
+
+        void initialize();
+
+        inline s32 getNumCores() const;
+        inline const CPUCore& getCore(s32 index) const;
+    private:
+        s32 numCores_;
+        CPUCore cores_[MaxCores];
+    };
+
+    inline s32 CPUInformation::getNumCores() const
+    {
+        return numCores_;
+    }
+
+    inline const CPUCore& CPUInformation::getCore(s32 index) const
+    {
+        return cores_[index];
+    }
 }
 #endif //INC_LCORE_CPU_H__

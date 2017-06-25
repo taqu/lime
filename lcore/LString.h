@@ -8,6 +8,7 @@
 #include "lcore.h"
 #include <stdio.h>
 #include <stdarg.h>
+#include "xxHash.h"
 
 namespace lcore
 {
@@ -254,9 +255,7 @@ namespace lcore
     template<s32 SIZE>
     inline u32 calcHash(const StaticString<SIZE>& str)
     {
-        const u8* v = static_cast<const u8*>(str.c_str());
-        u32 count = static_cast<u32>(str.size());
-        return hash_FNV1(v, count);
+        return xxHash32(static_cast<const u8*>(str.c_str()), str.size());
     }
 
     //--------------------------------------------
@@ -397,9 +396,7 @@ namespace lcore
 
     inline u32 calcHash(const String& str)
     {
-        const u8* v = reinterpret_cast<const u8*>(str.c_str());
-        u32 count = static_cast<u32>(str.length());
-        return hash_FNV1(v, count);
+        return xxHash32(reinterpret_cast<const u8*>(str.c_str()), str.length());
     }
 
     //--------------------------------------------

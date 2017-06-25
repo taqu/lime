@@ -77,7 +77,7 @@ namespace lcore
         //n/2からnのノードは子を持たないのでスキップ
         for(s32 k=n>>1; k>=1; --k){
             i=k;
-            x = v[k];
+            x = lcore::move(v[k]);
             //ノードkより下は, 子<=親が成立
             //ノードkの値を, サブツリーを子<=親を満たすように挿入
             //木の降下による挿入ソート
@@ -89,17 +89,17 @@ namespace lcore
                 if(!func(x, v[j])){
                     break;
                 }
-                v[i] = v[j];
+                v[i] = lcore::move(v[j]);
                 i = j;
             }
-            v[i] = x;
+            v[i] = lcore::move(x);
         }
 
         while(n>1){
             //v[1]が最大なので, v[n]を交換
             //子<=親が崩れるだめ, 木の降下による挿入ソート
-            x = v[n];
-            v[n] = v[1];
+            x = lcore::move(v[n]);
+            v[n] = lcore::move(v[1]);
             --n;
             i = 1;
             while((j=i<<1)<=n){
@@ -110,10 +110,10 @@ namespace lcore
                 if(!func(x, v[j])){
                     break;
                 }
-                v[i] = v[j];
+                v[i] = lcore::move(v[j]);
                 i = j;
             }
-            v[i] = x;
+            v[i] = lcore::move(x);
         }
     }
 

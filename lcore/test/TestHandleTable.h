@@ -39,7 +39,7 @@ namespace lcore
             handles[i] = handleTable.create();
         }
         for(s32 i=0; i<NumSamples; ++i){
-            EXPECT_TRUE(handleTable.isValid(handles[i]));
+            EXPECT_TRUE(handleTable.valid(handles[i]));
         }
         for(s32 i=0; i<HalfSamples; ++i){
             s32 idx = order[i];
@@ -47,16 +47,16 @@ namespace lcore
         }
         for(s32 i=0; i<HalfSamples; ++i){
             s32 idx = order[i];
-            EXPECT_FALSE(handleTable.isValid(handles[idx]));
+            EXPECT_FALSE(handleTable.valid(handles[idx]));
         }
         for(s32 i=HalfSamples; i<NumSamples; ++i){
             s32 idx = order[i];
-            EXPECT_TRUE(handleTable.isValid(handles[idx]));
+            EXPECT_TRUE(handleTable.valid(handles[idx]));
         }
         for(s32 i=HalfSamples; i<NumSamples; ++i){
             s32 idx = order[i];
             handleTable.destroy(handles[idx]);
-            EXPECT_FALSE(handleTable.isValid(handles[idx]));
+            EXPECT_FALSE(handleTable.valid(handles[idx]));
         }
     }
 }

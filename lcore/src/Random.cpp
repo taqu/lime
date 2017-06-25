@@ -78,15 +78,16 @@ namespace lcore
             return ((counter<<32) | t) ^ other;
         }
 
-        u32 scramble(u32 v, u32 i)
-        {
-            return (1812433253 * (v^(v >> 30)) + i);
-        }
+    }
 
-        u64 scramble(u64 v, u64 i)
-        {
-            return (1812433253 * (v^(v >> 41)) + i);
-        }
+    u32 scramble(u32 v, u32 i)
+    {
+        return (1812433253 * (v^(v >> 30)) + i);
+    }
+
+    u64 scramble(u64 v, u64 i)
+    {
+        return (1812433253 * (v^(v >> 41)) + i);
     }
 
     u32 getStaticSeed()
@@ -370,6 +371,15 @@ LCORE_RANDOM_XORSHIFT_PROC
     {
 LCORE_RANDOM_XORSHIFT128PLUS_PROC
         return r;
+    }
+
+    f64 RandXorshift128Plus::drand()
+    {
+        u64 t = rand();
+        static const u64 m0 = 0x3FF0000000000000U;
+        static const u64 m1 = 0x000FFFFFFFFFFFFFU;
+        t = m0|(t&m1);
+        return (*(f64*)&t)- 0.9999999999999998;
     }
 
     void RandXorshift128Plus::swap(RandXorshift128Plus& rhs)

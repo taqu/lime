@@ -1,6 +1,6 @@
 /**
 @file LOUDS.cpp
-@author t-salai
+@author t-sakai
 @date 2016/08/02 create
 */
 #include "LOUDS.h"

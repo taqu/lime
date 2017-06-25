@@ -145,6 +145,7 @@ namespace lcore
 
 
         void push_back(const T& t);
+        void push_back(T&& t);
         void pop_back();
 
         iterator begin(){ return items_;}
@@ -219,7 +220,36 @@ namespace lcore
 
             //コピーコンストラクタでコピー。古い要素のデストラクト
             for(s32 i=0; i<size_; ++i){
-                LPLACEMENT_NEW(&newItems[i]) T(items_[i]);
+                LPLACEMENT_NEW(&newItems[i]) T(lcore::move(items_[i]));
+                items_[i].~T();
+            }
+            LPLACEMENT_NEW(&newItems[size_]) T(t);
+
+            //古いバッファ破棄
+            LALLOCATOR_FREE(allocator_type, items_);
+
+            items_ = newItems;
+            ++size_;
+            capacity_ = newCapacity;
+
+        }else{
+            LPLACEMENT_NEW(&items_[size_]) T(t);
+            ++size_;
+        }
+    }
+
+
+    template<class T, class IncSize, class Allocator>
+    void Array<T, IncSize, Allocator>::push_back(T&& t)
+    {
+        if(capacity_<=size_){
+            //新しいバッファ確保
+            s32 newCapacity = inc_size_type::getNewCapacity(capacity_);
+            T *newItems = static_cast<T*>( LALLOCATOR_MALLOC(allocator_type, newCapacity*sizeof(T)) );
+
+            //コピーコンストラクタでコピー。古い要素のデストラクト
+            for(s32 i=0; i<size_; ++i){
+                LPLACEMENT_NEW(&newItems[i]) T(lcore::move(items_[i]));
                 items_[i].~T();
             }
             LPLACEMENT_NEW(&newItems[size_]) T(t);
@@ -311,7 +341,7 @@ namespace lcore
     {
         LASSERT(0<=index && index<size_);
         for(s32 i=index+1; i<size_; ++i){
-            items_[i-1] = items_[i];
+            items_[i-1] = lcore::move(items_[i]);
         }
         --size_;
         items_[size_].~T();
@@ -602,6 +632,7 @@ namespace lcore
         typedef T value_type;
 
         ArrayPOD();
+        ArrayPOD(this_type&& rhs); 
         explicit ArrayPOD(s32 capacity);
         ~ArrayPOD();
 
@@ -628,9 +659,11 @@ namespace lcore
         void resize(s32 size);
 
         void removeAt(s32 index);
+
+        this_type& operator=(this_type&& rhs);
     private:
-        ArrayPOD(const this_type&);
-        ArrayPOD& operator=(const this_type&);
+        ArrayPOD(const this_type&) = delete;
+        ArrayPOD& operator=(const this_type&) = delete;
 
         void expand();
 
@@ -645,6 +678,17 @@ namespace lcore
         ,size_(0)
         ,data_(NULL)
     {
+    }
+
+    template<class T, class IncSize, class Allocator>
+    ArrayPOD<T, IncSize, Allocator>::ArrayPOD(this_type&& rhs)
+        :capacity_(rhs.capacity_)
+        ,size_(rhs.size_)
+        ,data_(rhs.data_)
+    {
+        rhs.capacity_ = 0;
+        rhs.size_ = 0;
+        rhs.data_ = NULL;
     }
 
     template<class T, class IncSize, class Allocator>
@@ -762,6 +806,22 @@ namespace lcore
             data_[i-1] = data_[i];
         }
         --size_;
+    }
+
+    template<class T, class IncSize, class Allocator>
+    typename ArrayPOD<T, IncSize, Allocator>::this_type&
+        ArrayPOD<T, IncSize, Allocator>::operator=(this_type&& rhs)
+    {
+        if(this != &rhs){
+            LALLOCATOR_FREE(allocator_type, data_);
+            capacity_ = rhs.capacity_;
+            data_ = rhs.data_;
+            size_ = rhs.size_;
+            rhs.capacity_ = 0;
+            rhs.size_ = 0;
+            rhs.data_ = NULL;
+        }
+        return *this;
     }
 }
 

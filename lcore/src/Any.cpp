@@ -8,19 +8,12 @@
 
 namespace lcore
 {
-#ifdef _DEBUG
     Any::Any()
         :type_(Type_None)
-    {
-    }
-#else
-    Any::Any()
-        :type_(Type_Int)
         ,length_(0)
     {
-        value_.int_ = 0;
+        value_.str_ = NULL;
     }
-#endif
 
     Any::Any(const Any& rhs)
         :type_(rhs.type_)

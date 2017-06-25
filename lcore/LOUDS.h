@@ -2,7 +2,7 @@
 #define INC_LCORE_LOUDS_H__
 /**
 @file LOUDS.h
-@author t-salai
+@author t-sakai
 @date 2016/08/02 create
 */
 #include "lcore.h"

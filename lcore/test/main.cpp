@@ -2,6 +2,7 @@
 #include "TestCore.h"
 #include "TestString.h"
 #include "TestArray.h"
+#include "TestRandom.h"
 #include "TestHandleTable.h"
 #include "TestHashMap.h"
 #include "TestPool.h"
@@ -15,6 +16,8 @@
 #include "TestFileSystem.h"
 #include "TestSort.h"
 #include "TestRectPack.h"
+#include "TestThreadAffinity.h"
+#include "TestHash.h"
 
 int main(int argc, char** argv)
 {

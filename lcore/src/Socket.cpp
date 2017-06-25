@@ -74,9 +74,10 @@ namespace lcore
     void SocketSystem::printError(const Char* message)
     {
         if(message != NULL){
-            lcore::Print(message);
+            lcore::printf("%s (code %d)\n", message, getError());
+        }else{
+            lcore::printf("(code %d)\n", getError());
         }
-        lcore::Print("(code %d)\n", getError());
     }
 
     //----------------------------------------------------

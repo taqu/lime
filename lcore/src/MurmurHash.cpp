@@ -109,4 +109,45 @@ namespace lcore
         context.h1_ ^= context.totalLength_;
         return fmix32(context.h1_);
     }
+
+    u32 MurmurHash32(const u8* data, s32 length, u32 seed)
+    {
+        const s32 nblocks = length >> 2;
+        u32 h1 = seed;
+
+        //------------------------
+        const u32* blocks = (const u32*)(data+(nblocks<<2));
+        for(s32 i = -nblocks; i < 0; ++i){
+            u32 k1 = read32LE(blocks, i);
+            k1 *= c1_32;
+            k1 = rotl32(k1, 15);
+            k1 *= c2_32;
+
+            h1 ^= k1;
+            h1 = rotl32(h1, 13);
+            h1 = h1 * 5 + 0xe6546b64U;
+        }
+
+        //------------------------
+        const u8* tail = (data + (nblocks << 2));
+        u32 l1 = 0;
+        switch(length & 3)
+        {
+        case 3:
+            l1 ^= tail[2] << 16;
+        case 2:
+            l1 ^= tail[1] << 8;
+        case 1:
+            l1 ^= tail[0];
+            l1 *= c1_32;
+            l1 = rotl32(l1, 15);
+            l1 *= c2_32;
+            h1 ^= l1;
+            break;
+        }
+
+        //------------------------
+        h1 ^= length;
+        return fmix32(h1);
+    } 
 }

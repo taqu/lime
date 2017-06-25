@@ -7,12 +7,12 @@
 */
 
 //#define NOMINMAX
-#include <assert.h>
-#include <float.h>
-#include <limits>
+#include <cassert>
+#include <cfloat>
 #include <malloc.h>
-#include <string.h>
-#include <ctype.h>
+#include <cstring>
+#include <cctype>
+#include <limits>
 #include <new>
 
 
@@ -57,19 +57,23 @@ void operator delete[](void* ptr, const char* file, int line);
 
 
 #ifndef NULL
- #ifdef __cplusplus
+#ifdef __cplusplus
 //C++98 199711L
 //C++11 201103L
-   #define NULL nullptr
-  #if __cplusplus<201103L
-   #define NULL (0)
-  #else
- #endif
+    #if __cplusplus<201103L
+        #define NULL 0
+    #else
+        #ifdef NULL
+            #undef NULL
+        #endif
+        #define NULL nullptr
+    #endif
 
- #else
-  #define NULL ((void*)0)
- #endif
+#else
+    #define NULL ((void*)0)
 #endif
+#endif
+
 
 // Exception
 //-------------------
@@ -297,6 +301,20 @@ namespace lcore
 
     //---------------------------------------------------------
     //---
+    //---
+    //---
+    //---------------------------------------------------------
+    using std::move;
+    using std::forward;
+    using std::is_pod;
+    using std::true_type;
+    using std::false_type;
+    using std::declval;
+
+#define LSTATIC_ASSERT(exp, message) static_assert(exp, message)
+
+    //---------------------------------------------------------
+    //---
     //--- Allocator Function
     //---
     //---------------------------------------------------------
@@ -368,6 +386,35 @@ namespace lcore
         return LPLACEMENT_NEW(ptr) T();
     }
 
+    template<class T>
+    struct ConstructImpl
+    {
+        inline static T* construct(void* ptr, const T& x)
+        {
+            return LPLACEMENT_NEW(ptr) T(x);
+        }
+
+        inline static T* construct(void* ptr, T&& x)
+        {
+            return LPLACEMENT_NEW(ptr) T(x);
+        }
+    };
+
+    template<class T>
+    struct ConstructImpl<T*>
+    {
+        inline static T** construct(void* ptr, const T* x)
+        {
+            return LPLACEMENT_NEW(ptr) T*(const_cast<T*>(x));
+        }
+    };
+    template<class T>
+    inline T* construct(void* ptr, const T& x)
+    {
+        return ConstructImpl<T>::construct(ptr, x);
+    }
+
+
     //---------------------------------------------------------
     //---
     //--- numeric_limits
@@ -438,9 +485,9 @@ namespace lcore
     template<class T>
     inline void swap(T& l, T& r)
     {
-        T tmp(l);
-        l = r;
-        r = tmp;
+        T tmp(lcore::move(l));
+        l = lcore::move(r);
+        r = lcore::move(tmp);
     }
 
     template<class T>
@@ -773,7 +820,6 @@ namespace lcore
     void terminateSystem();
 
     void Log(const Char* format, ...);
-    void Print(const Char* format, ...);
 
     //class MemorySpace
     //{
@@ -948,7 +994,8 @@ namespace lcore
 #endif
     }
 
-    inline int memcmp(const void* buff0, const void* buff1, lsize_t size)
+
+    inline s32 memcmp(const void* buff0, const void* buff1, lsize_t size)
     {
         return ::memcmp(buff0, buff1, size);
     }
@@ -1295,11 +1342,12 @@ namespace lcore
     //--- 文字列操作
     //---
     //---------------------------------------------------------
+    s32 printf(const Char* format, ...);
+    s32 snprintf(Char* dst, lsize_t n, const Char* format, ...);
+
     s32 scprintf(const Char* format, ...);
     s32 vscprintf(const Char* format, va_list args);
     void replace(Char* str, Char dst, Char src);
-
-//#define LSNPRINTF(BUFF, N, FORM, ...) s32 snprintf(Char* LRESTRICT (BUFF), u32 (N), const Char* LRESTRICT (FORM), __VA_ARGS__);
 
     /**
     @brief 後方から文字探索
@@ -1544,9 +1592,10 @@ namespace lcore
     //--- Hash Functions
     //---
     //---------------------------------------------------------
+#if 1
     /**
     */
-    u32 hash_Bernstein(const u8* v, u32 count);
+    //u32 hash_Bernstein(const u8* v, u32 count);
 
     /**
     */
@@ -1566,7 +1615,7 @@ namespace lcore
 
     /**
     */
-    u32 hash_Bernstein(const Char* str);
+    //u32 hash_Bernstein(const Char* str);
 
     /**
     */
@@ -1575,12 +1624,8 @@ namespace lcore
     /**
     */
     u64 hash_FNV1a_64(const Char* str);
+#endif
 
-    template<class T>
-    inline u32 calcHash(const T& x)
-    {
-        return hash_FNV1(reinterpret_cast<const u8*>(&x), sizeof(T));
-    }
 }
 
 #endif //INC_LCORE_H__

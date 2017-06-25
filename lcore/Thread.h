@@ -13,6 +13,18 @@ namespace lcore
 #if defined(_WIN32) || defined(_WIN64)
     //----------------------------------------------------
     //---
+    //--- Thread Affinity
+    //---
+    //----------------------------------------------------
+    LHANDLE getCurrentProcess();
+    u64 getProcessAffinityMask(LHANDLE handle);
+    bool setProcessAffinityMask(LHANDLE handle, u64 affinityMask);
+
+    LHANDLE getCurrentThread();
+    u64 setThreadAffinityMask(LHANDLE handle, u64 affinityMask);
+
+    //----------------------------------------------------
+    //---
     //--- ThreadRaw
     //---
     //----------------------------------------------------
@@ -62,6 +74,7 @@ namespace lcore
         ThreadRaw& operator=(const ThreadRaw&);
 
         friend class MultipleWait;
+        friend class ThreadAffinity;
 
         void release();
 
@@ -132,6 +145,7 @@ namespace lcore
 
     private:
         friend class MultipleWait;
+        friend class ThreadAffinity;
 
         void release();
 
