@@ -1751,4 +1751,11 @@ namespace lmath
         invproj.m_[2][0] = 0.0f; invproj.m_[2][1] = 0.0f; invproj.m_[2][2] = 1.0f/invDepth; invproj.m_[2][3] = zfar;
         invproj.m_[3][0] = 0.0f; invproj.m_[3][1] = 0.0f; invproj.m_[3][2] = 0.0f; invproj.m_[3][3] = 1.0f;
     }
+
+    Vector4 getLinearZParameterReverseZ(f32 znear, f32 zfar)
+    {
+        f32 D = znear - zfar;
+        f32 invD = 1.0f/D;
+        return Vector4::construct(D, znear, -zfar*znear*invD, -zfar*invD);
+    }
 }

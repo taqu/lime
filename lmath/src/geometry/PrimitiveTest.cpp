@@ -22,10 +22,13 @@ namespace lmath
 
     //---------------------------------------------------------------------------------
     // 点から平面への距離を計算
+    f32 distancePointPlane(f32 x, f32 y, f32 z, const Plane& plane)
+    {
+        return plane.dot(x, y, z);
+    }
     f32 distancePointPlane(const lmath::Vector3& point, const Plane& plane)
     {
-        f32 t = plane.dot(point);
-        return t;
+        return plane.dot(point);
     }
 
     //---------------------------------------------------------------------------------
@@ -245,8 +248,8 @@ namespace lmath
     // 球と平面が交差するか
     bool testSpherePlane(f32 &t, const Sphere& sphere, const Plane& plane)
     {
-        t = distancePointPlane({sphere.x_, sphere.y_, sphere.z_}, plane);
-        return (t<=sphere.r_);
+        t = distancePointPlane(sphere.x_, sphere.y_, sphere.z_, plane);
+        return (lcore::absolute(t)<=sphere.r_);
     }
 
     //---------------------------------------------------------------------------------

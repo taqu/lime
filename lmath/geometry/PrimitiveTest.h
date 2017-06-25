@@ -33,6 +33,7 @@ namespace lmath
     @param plane ... 入力平面
     @notice 入力平面は正規化されている
     */
+    f32 distancePointPlane(f32 x, f32 y, f32 z, const Plane& plane);
     f32 distancePointPlane(const lmath::Vector3& point, const Plane& plane);
 
     //---------------------------------------------------------------------------------

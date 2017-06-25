@@ -6,6 +6,7 @@
 #include "TestQuaternion.h"
 #include "TestRay.h"
 #include "TestPrimitiveTest.h"
+#include "TestDepth.h"
 
 int main(int argc, char** argv)
 {

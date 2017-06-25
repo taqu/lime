@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.7)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/../CMakeCommon.txt")
 
@@ -47,6 +47,10 @@ if(MSVC)
     set_target_properties(${ProjectName} PROPERTIES
         STATIC_LIBRARY_FLAGS_DEBUG ""
         STATIC_LIBRARY_FLAGS_RELEASE "/LTCG")
+    if(1900 LESS MSVC_VERSION)
+        get_vs_property_group(VSPROPERTIES "EnableCppCoreCheck" "true")
+        write_vs_user(${ProjectName} ${VSPROPERTIES})
+    endif()
 elseif(UNIX)
 elseif(APPLE)
 endif()

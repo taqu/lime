@@ -33,6 +33,11 @@ namespace lmath
             ,d_(-lmath::dot(normal, point))
         {}
 
+        f32 dot(f32 x, f32 y, f32 z) const
+        {
+            return (nx_*x + ny_*y + nz_*z + d_);
+        }
+
         f32 dot(const lmath::Vector3& p) const
         {
             return (nx_*p.x_ + ny_*p.y_ + nz_*p.z_ + d_);

@@ -361,6 +361,13 @@ namespace lmath
     void ortho(Matrix44& proj, Matrix44& invproj, f32 width, f32 height, f32 znear, f32 zfar);
 
     void orthoReverseZ(Matrix44& proj, Matrix44& invproj, f32 width, f32 height, f32 znear, f32 zfar);
+
+    Vector4 getLinearZParameterReverseZ(f32 znear, f32 zfar);
+
+    inline f32 toLinearZ(f32 z, const Vector4& parameter)
+    {
+        return parameter.z_/(parameter.x_*z - parameter.y_) + parameter.w_;
+    }
 }
 
 #endif //INC_LMATH_MATRIX44_H__

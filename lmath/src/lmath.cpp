@@ -462,10 +462,10 @@ namespace lmath
     void criticallyDampedSpring(const Vector4& target, Vector4& current, Vector4& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity)
     {
         return_type_vec4 difference = target - current;
-        return_type_vec4 sprintForce = _mm_mul_ps(_mm_set1_ps(dampingRatio), difference);
+        return_type_vec4 springForce = _mm_mul_ps(_mm_set1_ps(dampingRatio), difference);
         return_type_vec4 dampingForce = mul(-2.0f*sqrtf(dampingRatio), velocity);
 
-        return_type_vec4 force = sprintForce + dampingForce;
+        return_type_vec4 force = springForce + dampingForce;
         velocity = Vector4::construct(_mm_add_ps(_mm_mul_ps(_mm_set1_ps(timeStep), force), (lm128)velocity));
         f32 velocityMaginitude = velocity.length();
         if(maxVelocity<velocityMaginitude){
