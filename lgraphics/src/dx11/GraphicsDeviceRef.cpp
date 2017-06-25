@@ -128,9 +128,9 @@ namespace lgfx
         ,depthStencilView_(NULL)
         ,depthStencilShaderResourceView_(NULL)
     {
-        viewport_.TopLeftX = viewport_.TopLeftY = viewport_.Width = viewport_.Height = 0.0f;
-        viewport_.MinDepth = 0.0f;
-        viewport_.MaxDepth = 1.0f;
+        viewport_.x_ = viewport_.y_ = viewport_.width_ = viewport_.height_ = 0.0f;
+        viewport_.minDepth_ = 0.0f;
+        viewport_.maxDepth_ = 1.0f;
 
         for(u32 i=0; i<LGFX_MAX_RENDER_TARGETS; ++i){
             blendFactors_[i] = 1.0f;
@@ -292,8 +292,8 @@ namespace lgfx
         D3D11_VIEWPORT vp;
         vp.Width = width;
         vp.Height = height;
-        vp.MinDepth = viewport_.MinDepth;
-        vp.MaxDepth = viewport_.MaxDepth;
+        vp.MinDepth = viewport_.minDepth_;
+        vp.MaxDepth = viewport_.maxDepth_;
         vp.TopLeftX = x;
         vp.TopLeftY = y;
         context_->RSSetViewports(1, &vp );
@@ -302,7 +302,14 @@ namespace lgfx
     //---------------------------------------------------------
     void ContextRef::setViewport(const Viewport& viewport)
     {
-        context_->RSSetViewports(1, &viewport);
+        D3D11_VIEWPORT vp;
+        vp.TopLeftX = viewport.x_;
+        vp.TopLeftY = viewport.y_;
+        vp.Width = viewport.width_;
+        vp.Height = viewport.height_;
+        vp.MinDepth = viewport_.minDepth_;
+        vp.MaxDepth = viewport_.maxDepth_;
+        context_->RSSetViewports(1, &vp);
     }
 
     //---------------------------------------------------------
@@ -314,7 +321,14 @@ namespace lgfx
     //---------------------------------------------------------
     void ContextRef::restoreDefaultViewport()
     {
-        context_->RSSetViewports(1, &viewport_);
+        D3D11_VIEWPORT vp;
+        vp.TopLeftX = viewport_.x_;
+        vp.TopLeftY = viewport_.y_;
+        vp.Width = viewport_.width_;
+        vp.Height = viewport_.height_;
+        vp.MinDepth = viewport_.minDepth_;
+        vp.MaxDepth = viewport_.maxDepth_;
+        context_->RSSetViewports(1, &vp);
     }
 
     //---------------------------------------------------------

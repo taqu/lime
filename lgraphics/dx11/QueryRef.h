@@ -28,8 +28,15 @@ namespace lgfx
             :AsynchronousRef(rhs)
         {}
 
+        QueryRef(QueryRef&& rhs)
+            :AsynchronousRef(rhs)
+        {}
+
         ~QueryRef()
         {}
+
+        QueryRef& operator=(const QueryRef& rhs);
+        QueryRef& operator=(QueryRef&& rhs);
     private:
         friend class Query;
 

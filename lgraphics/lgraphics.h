@@ -153,8 +153,16 @@ namespace lgfx
     };
 
     //-----------------------------------------------------------
-
-    typedef D3D11_VIEWPORT Viewport;
+    struct Viewport
+    {
+    public:
+        s32 x_;
+        s32 y_;
+        s32 width_;
+        s32 height_;
+        f32 minDepth_;
+        f32 maxDepth_;
+    };
 
     //-----------------------------------------------------------
     struct MappedSubresource

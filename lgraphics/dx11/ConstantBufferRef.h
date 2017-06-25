@@ -28,15 +28,15 @@ namespace lgfx
             :BufferRefBase(rhs)
         {}
 
+        ConstantBufferRef(ConstantBufferRef&& rhs)
+            :BufferRefBase(rhs)
+        {}
+
         ~ConstantBufferRef()
         {}
 
-        ConstantBufferRef& operator=(const ConstantBufferRef& rhs)
-        {
-            ConstantBufferRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        ConstantBufferRef& operator=(const ConstantBufferRef& rhs);
+        ConstantBufferRef& operator=(ConstantBufferRef&& rhs);
 
         void swap(ConstantBufferRef& rhs)
         {

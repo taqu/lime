@@ -123,43 +123,55 @@ namespace lgfx
     };
 
     //--------------------------------------------------------
-    enum ViewSRVDimension
+    enum SRVDimension
     {
-        ViewSRVDimension_Buffer = D3D11_SRV_DIMENSION_BUFFER,
-        ViewSRVDimension_Texture1D = D3D11_SRV_DIMENSION_TEXTURE1D,
-        ViewSRVDimension_Texture1DArray = D3D11_SRV_DIMENSION_TEXTURE1DARRAY,
-        ViewSRVDimension_Texture2D = D3D11_SRV_DIMENSION_TEXTURE2D,
-        ViewSRVDimension_Texture2DArray = D3D11_SRV_DIMENSION_TEXTURE2DARRAY,
-        //ViewSRVDimension_Texture2DMS = D3D11_SRV_DIMENSION_TEXTURE2DMS,
-        //ViewSRVDimension_Texture2DMSArray = D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY,
-        ViewSRVDimension_Texture3D = D3D11_SRV_DIMENSION_TEXTURE3D,
-        ViewSRVDimension_Cube = D3D11_SRV_DIMENSION_TEXTURECUBE,
-        ViewSRVDimension_CubeArray = D3D11_SRV_DIMENSION_TEXTURECUBEARRAY,
-        ViewSRVDimension_BufferEx = D3D11_SRV_DIMENSION_BUFFEREX,
+        SRVDimension_Buffer = D3D11_SRV_DIMENSION_BUFFER,
+        SRVDimension_Texture1D = D3D11_SRV_DIMENSION_TEXTURE1D,
+        SRVDimension_Texture1DArray = D3D11_SRV_DIMENSION_TEXTURE1DARRAY,
+        SRVDimension_Texture2D = D3D11_SRV_DIMENSION_TEXTURE2D,
+        SRVDimension_Texture2DArray = D3D11_SRV_DIMENSION_TEXTURE2DARRAY,
+        //SRVDimension_Texture2DMS = D3D11_SRV_DIMENSION_TEXTURE2DMS,
+        //SRVDimension_Texture2DMSArray = D3D11_SRV_DIMENSION_TEXTURE2DMSARRAY,
+        SRVDimension_Texture3D = D3D11_SRV_DIMENSION_TEXTURE3D,
+        SRVDimension_Cube = D3D11_SRV_DIMENSION_TEXTURECUBE,
+        SRVDimension_CubeArray = D3D11_SRV_DIMENSION_TEXTURECUBEARRAY,
+        SRVDimension_BufferEx = D3D11_SRV_DIMENSION_BUFFEREX,
     };
 
     //--------------------------------------------------------
-    enum ViewRTVDimension
+    enum RTVDimension
     {
-        //ViewRTVDimension_Buffer = D3D11_RTV_DIMENSION_BUFFER,
-        ViewRTVDimension_Texture1D = D3D11_RTV_DIMENSION_TEXTURE1D,
-        ViewRTVDimension_Texture1DArray = D3D11_RTV_DIMENSION_TEXTURE1DARRAY,
-        ViewRTVDimension_Texture2D = D3D11_RTV_DIMENSION_TEXTURE2D,
-        ViewRTVDimension_Texture2DArray = D3D11_RTV_DIMENSION_TEXTURE2DARRAY,
-        //ViewRTVDimension_Texture2DMS = D3D11_RTV_DIMENSION_TEXTURE2DMS,
-        //ViewRTVDimension_Texture2DMSArray = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY,
-        ViewRTVDimension_Texture3D = D3D11_RTV_DIMENSION_TEXTURE3D,
+        RTVDimension_Buffer = D3D11_RTV_DIMENSION_BUFFER,
+        RTVDimension_Texture1D = D3D11_RTV_DIMENSION_TEXTURE1D,
+        RTVDimension_Texture1DArray = D3D11_RTV_DIMENSION_TEXTURE1DARRAY,
+        RTVDimension_Texture2D = D3D11_RTV_DIMENSION_TEXTURE2D,
+        RTVDimension_Texture2DArray = D3D11_RTV_DIMENSION_TEXTURE2DARRAY,
+        //RTVDimension_Texture2DMS = D3D11_RTV_DIMENSION_TEXTURE2DMS,
+        //RTVDimension_Texture2DMSArray = D3D11_RTV_DIMENSION_TEXTURE2DMSARRAY,
+        RTVDimension_Texture3D = D3D11_RTV_DIMENSION_TEXTURE3D,
     };
 
     //--------------------------------------------------------
-    enum ViewDSVDimension
+    enum DSVDimension
     {
-        ViewDSVDimension_Texture1D = D3D11_DSV_DIMENSION_TEXTURE1D,
-        ViewDSVDimension_Texture1DArray = D3D11_DSV_DIMENSION_TEXTURE1DARRAY,
-        ViewDSVDimension_Texture2D = D3D11_DSV_DIMENSION_TEXTURE2D,
-        ViewDSVDimension_Texture2DArray = D3D11_DSV_DIMENSION_TEXTURE2DARRAY,
-        //ViewDSVDimension_Texture2DMS = D3D11_DSV_DIMENSION_TEXTURE2DMS,
-        //ViewDSVDimension_Texture2DMSArray = D3D11_DSV_DIMENSION_TEXTURE2DMSARRAY,
+        DSVDimension_Texture1D = D3D11_DSV_DIMENSION_TEXTURE1D,
+        DSVDimension_Texture1DArray = D3D11_DSV_DIMENSION_TEXTURE1DARRAY,
+        DSVDimension_Texture2D = D3D11_DSV_DIMENSION_TEXTURE2D,
+        DSVDimension_Texture2DArray = D3D11_DSV_DIMENSION_TEXTURE2DARRAY,
+        //DSVDimension_Texture2DMS = D3D11_DSV_DIMENSION_TEXTURE2DMS,
+        //DSVDimension_Texture2DMSArray = D3D11_DSV_DIMENSION_TEXTURE2DMSARRAY,
+    };
+
+    //--------------------------------------------------------
+    enum UAVDimension
+    {
+        UAVDimension_Unknown = D3D11_UAV_DIMENSION_UNKNOWN,
+        UAVDimension_Buffer = D3D11_UAV_DIMENSION_BUFFER,
+        UAVDimension_Texture1D = D3D11_UAV_DIMENSION_TEXTURE1D,
+        UAVDimension_Texture1DArray = D3D11_UAV_DIMENSION_TEXTURE1DARRAY,
+        UAVDimension_Texture2D = D3D11_UAV_DIMENSION_TEXTURE2D,
+        UAVDimension_Texture2DArray = D3D11_UAV_DIMENSION_TEXTURE2DARRAY,
+        UAVDimension_Texture3D = D3D11_UAV_DIMENSION_TEXTURE3D,
     };
 
     //--------------------------------------------------------
@@ -509,17 +521,6 @@ namespace lgfx
         StencilOp_Invert = D3D11_STENCIL_OP_INVERT,
         StencilOp_Incr = D3D11_STENCIL_OP_INCR,
         StencilOp_Decr = D3D11_STENCIL_OP_DECR,
-    };
-
-    enum UAVDimension
-    {
-        UAVDimension_Unknown = D3D11_UAV_DIMENSION_UNKNOWN,
-        UAVDimension_Buffer = D3D11_UAV_DIMENSION_BUFFER,
-        UAVDimension_Texture1D = D3D11_UAV_DIMENSION_TEXTURE1D,
-        UAVDimension_Texture1DArray = D3D11_UAV_DIMENSION_TEXTURE1DARRAY,
-        UAVDimension_Texture2D = D3D11_UAV_DIMENSION_TEXTURE2D,
-        UAVDimension_Texture2DArray = D3D11_UAV_DIMENSION_TEXTURE2DARRAY,
-        UAVDimension_Texture3D = D3D11_UAV_DIMENSION_TEXTURE3D,
     };
 
     enum UAVFlag

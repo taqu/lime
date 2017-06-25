@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2016/11/09 create
 */
-#include "RingBuffer.h"
+#include "NBuffer.h"
 #include "BufferCreator.h"
 
 namespace lgfx
@@ -39,7 +39,7 @@ namespace lgfx
 
         buffer_type& getBuffer(){ return buffer_;}
     private:
-        RingBuffer ringBuffer_;
+        NBuffer nbuffer_;
         buffer_type buffer_;
     };
 
@@ -56,7 +56,7 @@ namespace lgfx
     template<class Buffer, class Creator>
     void DynamicBuffer<Buffer, Creator>::initialize(FrameSyncQuery* frameSyncQuery, s32 totalSize)
     {
-        ringBuffer_.initialize(frameSyncQuery, totalSize, frameSyncQuery->getFrames());
+        nbuffer_.initialize(frameSyncQuery, totalSize, frameSyncQuery->getFrames());
         buffer_ = creator_type::create(totalSize);
     }
 
@@ -64,25 +64,25 @@ namespace lgfx
     void DynamicBuffer<Buffer, Creator>::terminate()
     {
         buffer_.destroy();
-        ringBuffer_.terminate();
+        nbuffer_.terminate();
     }
 
     template<class Buffer, class Creator>
     void DynamicBuffer<Buffer, Creator>::begin()
     {
-        ringBuffer_.begin();
+        nbuffer_.begin();
     }
 
     template<class Buffer, class Creator>
     void DynamicBuffer<Buffer, Creator>::end()
     {
-        ringBuffer_.end();
+        nbuffer_.end();
     }
 
     template<class Buffer, class Creator>
     bool DynamicBuffer<Buffer, Creator>::map(lgfx::ContextRef& context, u32 subresource, u32 size, lgfx::MappedSubresourceTransientBuffer& mapped)
     {
-        RingBuffer::Resource resource = ringBuffer_.allocate(size);
+        NBuffer::Resource resource = nbuffer_.allocate(size);
         if(resource.sizeInBytes_<=0){
             return false;
         }

@@ -217,6 +217,13 @@ namespace lgfx
         }
     }
 
+    PixelShaderRef::PixelShaderRef(PixelShaderRef&& rhs)
+        :ShaderRefBase(rhs)
+        ,shader_(rhs.shader_)
+    {
+        rhs.shader_ = NULL;
+    }
+
     void PixelShaderRef::destroy()
     {
         LDXSAFE_RELEASE(shader_);
@@ -228,6 +235,26 @@ namespace lgfx
         context.setPixelShader(shader_);
     }
 
+    PixelShaderRef& PixelShaderRef::operator=(const PixelShaderRef& rhs)
+    {
+        PixelShaderRef(rhs).swap(*this);
+        return *this;
+    }
+
+    PixelShaderRef& PixelShaderRef::operator=(PixelShaderRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            shader_ = rhs.shader_;
+            rhs.shader_ = NULL;
+        }
+        return *this;
+    }
+
+    void PixelShaderRef::swap(PixelShaderRef& rhs)
+    {
+        lcore::swap(shader_, rhs.shader_);
+    }
 
     //------------------------------------------------------------
     //---
@@ -243,6 +270,13 @@ namespace lgfx
         }
     }
 
+    VertexShaderRef::VertexShaderRef(VertexShaderRef&& rhs)
+        :ShaderRefBase(rhs)
+        ,shader_(rhs.shader_)
+    {
+        rhs.shader_ = NULL;
+    }
+
     void VertexShaderRef::destroy()
     {
         LDXSAFE_RELEASE(shader_);
@@ -254,6 +288,26 @@ namespace lgfx
         context.setVertexShader(shader_);
     }
 
+    VertexShaderRef& VertexShaderRef::operator=(const VertexShaderRef& rhs)
+    {
+        VertexShaderRef(rhs).swap(*this);
+        return *this;
+    }
+
+    VertexShaderRef& VertexShaderRef::operator=(VertexShaderRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            shader_ = rhs.shader_;
+            rhs.shader_ = NULL;
+        }
+        return *this;
+    }
+
+    void VertexShaderRef::swap(VertexShaderRef& rhs)
+    {
+        lcore::swap(shader_, rhs.shader_);
+    }
 
     //------------------------------------------------------------
     //---
@@ -269,6 +323,13 @@ namespace lgfx
         }
     }
 
+    GeometryShaderRef::GeometryShaderRef(GeometryShaderRef&& rhs)
+        :ShaderRefBase(rhs)
+        ,shader_(rhs.shader_)
+    {
+        rhs.shader_ = NULL;
+    }
+
     void GeometryShaderRef::destroy()
     {
         LDXSAFE_RELEASE(shader_);
@@ -278,6 +339,26 @@ namespace lgfx
     void GeometryShaderRef::attach(ContextRef& context) const
     {
         context.setGeometryShader(shader_);
+    }
+
+    GeometryShaderRef& GeometryShaderRef::operator=(const GeometryShaderRef& rhs)
+    {
+        GeometryShaderRef(rhs).swap(*this);
+        return *this;
+    }
+    GeometryShaderRef& GeometryShaderRef::operator=(GeometryShaderRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            shader_ = rhs.shader_;
+            rhs.shader_ = NULL;
+        }
+        return *this;
+    }
+
+    void GeometryShaderRef::swap(GeometryShaderRef& rhs)
+    {
+        lcore::swap(shader_, rhs.shader_);
     }
 
     //------------------------------------------------------------
@@ -294,6 +375,13 @@ namespace lgfx
         }
     }
 
+    ComputeShaderRef::ComputeShaderRef(ComputeShaderRef&& rhs)
+        :ShaderRefBase(rhs)
+        ,shader_(rhs.shader_)
+    {
+        rhs.shader_ = NULL;
+    }
+
     void ComputeShaderRef::destroy()
     {
         LDXSAFE_RELEASE(shader_);
@@ -305,6 +393,27 @@ namespace lgfx
         context.setComputeShader(shader_);
     }
 
+    ComputeShaderRef& ComputeShaderRef::operator=(const ComputeShaderRef& rhs)
+    {
+        ComputeShaderRef(rhs).swap(*this);
+        return *this;
+    }
+
+    ComputeShaderRef& ComputeShaderRef::operator=(ComputeShaderRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            shader_ = rhs.shader_;
+            rhs.shader_ = NULL;
+        }
+        return *this;
+    }
+
+    void ComputeShaderRef::swap(ComputeShaderRef& rhs)
+    {
+        lcore::swap(shader_, rhs.shader_);
+    }
+
     //------------------------------------------------------------
     //---
     //--- DomainShaderRef
@@ -312,11 +421,18 @@ namespace lgfx
     //------------------------------------------------------------
     DomainShaderRef::DomainShaderRef(const DomainShaderRef& rhs)
         :ShaderRefBase(rhs)
-        , shader_(rhs.shader_)
+        ,shader_(rhs.shader_)
     {
         if(shader_){
             shader_->AddRef();
         }
+    }
+
+    DomainShaderRef::DomainShaderRef(DomainShaderRef&& rhs)
+        :ShaderRefBase(rhs)
+        ,shader_(rhs.shader_)
+    {
+        rhs.shader_ = NULL;
     }
 
     void DomainShaderRef::destroy()
@@ -330,6 +446,27 @@ namespace lgfx
         context.setDomainShader(shader_);
     }
 
+    DomainShaderRef& DomainShaderRef::operator=(const DomainShaderRef& rhs)
+    {
+        DomainShaderRef(rhs).swap(*this);
+        return *this;
+    }
+
+    DomainShaderRef& DomainShaderRef::operator=(DomainShaderRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            shader_ = rhs.shader_;
+            rhs.shader_ = NULL;
+        }
+        return *this;
+    }
+
+    void DomainShaderRef::swap(DomainShaderRef& rhs)
+    {
+        lcore::swap(shader_, rhs.shader_);
+    }
+
     //------------------------------------------------------------
     //---
     //--- HullShaderRef
@@ -337,11 +474,18 @@ namespace lgfx
     //------------------------------------------------------------
     HullShaderRef::HullShaderRef(const HullShaderRef& rhs)
         :ShaderRefBase(rhs)
-        , shader_(rhs.shader_)
+        ,shader_(rhs.shader_)
     {
         if(shader_){
             shader_->AddRef();
         }
+    }
+
+    HullShaderRef::HullShaderRef(HullShaderRef&& rhs)
+        :ShaderRefBase(rhs)
+        ,shader_(rhs.shader_)
+    {
+        rhs.shader_ = NULL;
     }
 
     void HullShaderRef::destroy()
@@ -353,5 +497,26 @@ namespace lgfx
     void HullShaderRef::attach(ContextRef& context) const
     {
         context.setHullShader(shader_);
+    }
+
+    HullShaderRef& HullShaderRef::operator=(const HullShaderRef& rhs)
+    {
+        HullShaderRef(rhs).swap(*this);
+        return *this;
+    }
+
+    HullShaderRef& HullShaderRef::operator=(HullShaderRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            shader_ = rhs.shader_;
+            rhs.shader_ = NULL;
+        }
+        return *this;
+    }
+
+    void HullShaderRef::swap(HullShaderRef& rhs)
+    {
+        lcore::swap(shader_, rhs.shader_);
     }
 }

@@ -32,6 +32,7 @@ namespace lgfx
         {}
 
         BlendStateRef(const BlendStateRef& rhs);
+        BlendStateRef(BlendStateRef&& rhs);
 
         ~BlendStateRef()
         {
@@ -48,11 +49,8 @@ namespace lgfx
 
         void attach(ContextRef& context);
 
-        BlendStateRef& operator=(const BlendStateRef& rhs)
-        {
-            BlendStateRef(rhs).swap(*this);
-            return *this;
-        }
+        BlendStateRef& operator=(const BlendStateRef& rhs);
+        BlendStateRef& operator=(BlendStateRef&& rhs);
 
         void swap(BlendStateRef& rhs)
         {

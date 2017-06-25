@@ -21,6 +21,12 @@ namespace lgfx
         }
     }
 
+    BlobRef::BlobRef(BlobRef&& rhs)
+        :blob_(rhs.blob_)
+    {
+        rhs.blob_ = NULL;
+    }
+
     BlobRef::BlobRef(pointer_type blob)
         :blob_(blob)
     {
@@ -39,6 +45,22 @@ namespace lgfx
     lsize_t BlobRef::getSize()
     {
         return static_cast<lsize_t>(blob_->GetBufferSize());
+    }
+
+    BlobRef& BlobRef::operator=(const BlobRef& rhs)
+    {
+        BlobRef(rhs).swap(*this);
+        return *this;
+    }
+
+    BlobRef& BlobRef::operator=(BlobRef&& rhs)
+    {
+        if(this != &rhs){
+            LDXSAFE_RELEASE(blob_);
+            blob_ = rhs.blob_;
+            rhs.blob_ = NULL;
+        }
+        return *this;
     }
 
     s32 packBlob(s32 dstSize, u8* dst, BlobRef& blob, bool compress)

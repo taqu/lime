@@ -18,9 +18,31 @@ namespace lgfx
         }
     }
 
+    InputLayoutRef::InputLayoutRef(InputLayoutRef&& rhs)
+        :layout_(rhs.layout_)
+    {
+        rhs.layout_ = NULL;
+    }
+
     void InputLayoutRef::destroy()
     {
         LDXSAFE_RELEASE(layout_);
+    }
+
+    InputLayoutRef& InputLayoutRef::operator=(const InputLayoutRef& rhs)
+    {
+        InputLayoutRef(rhs).swap(*this);
+        return *this;
+    }
+
+    InputLayoutRef& InputLayoutRef::operator=(InputLayoutRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            layout_ = rhs.layout_;
+            rhs.layout_ = NULL;
+        }
+        return *this;
     }
 
     void InputLayoutRef::attach(ContextRef& context)

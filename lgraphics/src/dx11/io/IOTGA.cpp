@@ -862,7 +862,7 @@ namespace
         initData.slicePitch_ = 0;
         initData.mem_ = buffer;
         SRVDesc desc;
-        desc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
+        desc.dimension_ = lgfx::SRVDimension_Texture2D;
         desc.format_ = format;
         desc.tex2D_.mipLevels_ = 1;
         desc.tex2D_.mostDetailedMip_ = 0;

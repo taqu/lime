@@ -79,11 +79,11 @@ namespace io
 
         struct DDS_HEADER_DXT10
         {
-            DXGI_FORMAT format_;
-            D3D11_RESOURCE_DIMENSION dimension_;
-            UINT miscFlag_;
-            UINT arraySize_;
-            UINT reserved_;
+            u32 format_;
+            u32 dimension_;
+            u32 miscFlag_;
+            u32 arraySize_;
+            u32 reserved_;
         };
 
         // old format
@@ -446,12 +446,12 @@ namespace io
         viewDesc.format_ = format;
 
         if(arraySize>1){
-            viewDesc.dimension_ = ViewSRVDimension_Cube;
+            viewDesc.dimension_ = SRVDimension_Cube;
             viewDesc.texCube_.mostDetailedMip_ = 0;
             viewDesc.texCube_.mipLevels_ = mipmapLevel;
             misc = (lgfx::ResourceMisc)(misc | lgfx::ResourceMisc_TextureCube);
         }else{
-            viewDesc.dimension_ = ViewSRVDimension_Texture2D;
+            viewDesc.dimension_ = SRVDimension_Texture2D;
             viewDesc.tex2D_.mostDetailedMip_ = 0;
             viewDesc.tex2D_.mipLevels_ = mipmapLevel;
         }

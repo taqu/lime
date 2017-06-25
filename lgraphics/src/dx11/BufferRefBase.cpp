@@ -21,6 +21,12 @@ namespace lgfx
         }
     }
 
+    BufferRefBase::BufferRefBase(BufferRefBase&& rhs)
+        :buffer_(rhs.buffer_)
+    {
+        rhs.buffer_ = NULL;
+    }
+
     void BufferRefBase::destroy()
     {
         LDXSAFE_RELEASE(buffer_);

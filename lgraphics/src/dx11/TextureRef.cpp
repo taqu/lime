@@ -8,64 +8,124 @@
 
 namespace lgfx
 {
-    //--------------------------------------------------------
-    //---
-    //--- Texture1DRef
-    //---
-    //--------------------------------------------------------
-    Texture1DRef::Texture1DRef(const Texture1DRef& rhs)
-        :parent_type(rhs)
+    ResourceRef& ResourceRef::operator=(const ResourceRef& rhs)
     {
+        ResourceRef(rhs).swap(*this);
+        return *this;
     }
 
-    void Texture1DRef::destroy()
+    ResourceRef& ResourceRef::operator=(ResourceRef&& rhs)
     {
-        parent_type::destroy();
+        if(this != &rhs){
+            destroy();
+            resource_ = rhs.resource_;
+            rhs.resource_ = NULL;
+        }
+        return *this;
     }
 
-    //--------------------------------------------------------
-    //---
-    //--- Texture2DRef
-    //---
-    //--------------------------------------------------------
-    Texture2DRef::Texture2DRef(const Texture2DRef& rhs)
-        :parent_type(rhs)
+    ResourceRef& ResourceRef::operator=(Texture1DRef&& rhs)
     {
+        if(resource_ != rhs.resource_){
+            destroy();
+            resource_ = rhs.resource_;
+            rhs.resource_ = NULL;
+        }
+        return *this;
     }
 
-    void Texture2DRef::destroy()
+    ResourceRef& ResourceRef::operator=(Texture2DRef&& rhs)
     {
-        parent_type::destroy();
+        if(resource_ != rhs.resource_){
+            destroy();
+            resource_ = rhs.resource_;
+            rhs.resource_ = NULL;
+        }
+        return *this;
     }
 
-    //--------------------------------------------------------
-    //---
-    //--- Texture3DRef
-    //---
-    //--------------------------------------------------------
-    Texture3DRef::Texture3DRef(const Texture3DRef& rhs)
-        :parent_type(rhs)
+    ResourceRef& ResourceRef::operator=(Texture3DRef&& rhs)
     {
+        if(resource_ != rhs.resource_){
+            destroy();
+            resource_ = rhs.resource_;
+            rhs.resource_ = NULL;
+        }
+        return *this;
     }
 
-    void Texture3DRef::destroy()
+    ResourceRef& ResourceRef::operator=(BufferRef&& rhs)
     {
-        parent_type::destroy();
+        if(resource_ != rhs.resource_){
+            destroy();
+            resource_ = rhs.resource_;
+            rhs.resource_ = NULL;
+        }
+        return *this;
     }
 
-    //--------------------------------------------------------
-    //---
-    //--- BufferRef
-    //---
-    //--------------------------------------------------------
-    BufferRef::BufferRef(const BufferRef& rhs)
-        :parent_type(rhs)
+    Texture1DRef& Texture1DRef::operator=(const Texture1DRef& rhs)
     {
+        Texture1DRef(rhs).swap(*this);
+        return *this;
     }
 
-    void BufferRef::destroy()
+    Texture1DRef& Texture1DRef::operator=(Texture1DRef&& rhs)
     {
-        parent_type::destroy();
+        if(this != &rhs){
+            destroy();
+            resource_ = rhs.resource_;
+            rhs.resource_ = NULL;
+        }
+        return *this;
+    }
+
+    Texture2DRef& Texture2DRef::operator=(const Texture2DRef& rhs)
+    {
+        Texture2DRef(rhs).swap(*this);
+        return *this;
+    }
+
+    Texture2DRef& Texture2DRef::operator=(Texture2DRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            resource_ = rhs.resource_;
+            rhs.resource_ = NULL;
+        }
+        return *this;
+    }
+
+    Texture3DRef& Texture3DRef::operator=(const Texture3DRef& rhs)
+    {
+        Texture3DRef(rhs).swap(*this);
+        return *this;
+    }
+
+    Texture3DRef& Texture3DRef::operator=(Texture3DRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            resource_ = rhs.resource_;
+            rhs.resource_ = NULL;
+        }
+        return *this;
+    }
+
+    BufferRef& BufferRef::operator=(const BufferRef& rhs)
+    {
+        BufferRef(rhs).swap(*this);
+        return *this;
+    }
+
+    BufferRef& BufferRef::operator=(BufferRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            resource_ = rhs.resource_;
+            rhs.resource_ = NULL;
+        }
+        return *this;
     }
 
     //--------------------------------------------------------

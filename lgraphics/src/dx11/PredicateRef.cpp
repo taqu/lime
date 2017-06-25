@@ -13,6 +13,22 @@ namespace lgfx
     {
     }
 
+    PredicateRef& PredicateRef::operator=(const PredicateRef& rhs)
+    {
+        PredicateRef(rhs).swap(*this);
+        return *this;
+    }
+
+    PredicateRef& PredicateRef::operator=(PredicateRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            asynchronous_ =  rhs.asynchronous_;
+            rhs.asynchronous_ = NULL;
+        }
+        return *this;
+    }
+
     PredicateRef Predicate::create(
             QueryType type,
             QueryMiscFlag flag)

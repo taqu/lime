@@ -24,24 +24,21 @@ namespace lgfx
             :BufferRefBase(rhs)
         {}
 
-        ~StructuredBufferRef()
+        StructuredBufferRef(StructuredBufferRef&& rhs)
+            :BufferRefBase(rhs)
         {}
 
-        StructuredBufferRef& operator=(const StructuredBufferRef& rhs)
-        {
-            StructuredBufferRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
-
-        void swap(StructuredBufferRef& rhs)
-        {
-            BufferRefBase::swap(rhs);
-        }
+        ~StructuredBufferRef()
+        {}
 
         void attach(ContextRef& context, u32 startSlot, u32 stride, u32 offsetInBytes);
 
         void attachStreamOut(ContextRef& context, u32 offsetInBytes);
+
+        StructuredBufferRef& operator=(const StructuredBufferRef& rhs);
+        StructuredBufferRef& operator=(StructuredBufferRef&& rhs);
+
+        void swap(StructuredBufferRef& rhs);
     private:
         friend class StructuredBuffer;
 

@@ -24,10 +24,18 @@ namespace lgfx
         typedef ID3D11Asynchronous* pointer_type;
         typedef pointer_type const* pointer_array_type;
 
-        void destroy()
+        AsynchronousRef()
+            :asynchronous_(NULL)
+        {}
+        AsynchronousRef(const AsynchronousRef& rhs);
+        AsynchronousRef(AsynchronousRef&& rhs);
+
+        ~AsynchronousRef()
         {
-            LDXSAFE_RELEASE(asynchronous_);
+            destroy();
         }
+
+        void destroy();
 
         pointer_type get(){ return asynchronous_;}
         operator pointer_type(){ return asynchronous_;}
@@ -43,40 +51,17 @@ namespace lgfx
             return asynchronous_->GetDataSize();
         }
 
-        AsynchronousRef& operator=(const AsynchronousRef& rhs)
-        {
-            AsynchronousRef(rhs).swap(*this);
-            return *this;
-        }
+        AsynchronousRef& operator=(const AsynchronousRef& rhs);
+        AsynchronousRef& operator=(AsynchronousRef&& rhs);
 
-        void swap(AsynchronousRef& rhs)
-        {
-            lcore::swap(asynchronous_, rhs.asynchronous_);
-        }
+        void swap(AsynchronousRef& rhs);
     protected:
         friend class GraphicsDeviceRef;
         friend class ContextRef;
 
-        AsynchronousRef()
-            :asynchronous_(NULL)
-        {}
-
-        AsynchronousRef(const AsynchronousRef& rhs)
-            :asynchronous_(rhs.asynchronous_)
-        {
-            if(asynchronous_){
-                asynchronous_->AddRef();
-            }
-        }
-
         explicit AsynchronousRef(pointer_type asynchronous)
             :asynchronous_(asynchronous)
         {
-        }
-
-        ~AsynchronousRef()
-        {
-            destroy();
         }
 
         pointer_type asynchronous_;

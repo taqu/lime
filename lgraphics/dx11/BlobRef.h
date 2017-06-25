@@ -19,6 +19,7 @@ namespace lgfx
 
         BlobRef();
         BlobRef(const BlobRef& rhs);
+        BlobRef(BlobRef&& rhs);
         explicit BlobRef(pointer_type blob);
         ~BlobRef();
 
@@ -31,11 +32,8 @@ namespace lgfx
         void* getPointer();
         lsize_t getSize();
 
-        BlobRef& operator=(const BlobRef& rhs)
-        {
-            BlobRef(rhs).swap(*this);
-            return *this;
-        }
+        BlobRef& operator=(const BlobRef& rhs);
+        BlobRef& operator=(BlobRef&& rhs);
 
         void swap(BlobRef& rhs)
         {

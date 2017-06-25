@@ -37,6 +37,7 @@ namespace lgfx
 
         DepthStencilStateRef();
         DepthStencilStateRef(const DepthStencilStateRef& rhs);
+        DepthStencilStateRef(DepthStencilStateRef&& rhs);
         ~DepthStencilStateRef();
 
         void destroy();
@@ -48,6 +49,7 @@ namespace lgfx
         bool valid() const;
 
         DepthStencilStateRef& operator=(const DepthStencilStateRef& rhs);
+        DepthStencilStateRef& operator=(DepthStencilStateRef&& rhs);
         void swap(DepthStencilStateRef& rhs);
     private:
         friend class DepthStencilState;

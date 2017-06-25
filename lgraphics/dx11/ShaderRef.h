@@ -45,10 +45,10 @@ namespace lgfx
 
         PixelShaderRef()
             :shader_(NULL)
-        {
-        }
+        {}
 
         PixelShaderRef(const PixelShaderRef& rhs);
+        PixelShaderRef(PixelShaderRef&& rhs);
 
         ~PixelShaderRef()
         {
@@ -63,18 +63,10 @@ namespace lgfx
 
         void attach(ContextRef& context) const;
 
-        PixelShaderRef& operator=(const PixelShaderRef& rhs)
-        {
-            PixelShaderRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        PixelShaderRef& operator=(const PixelShaderRef& rhs);
+        PixelShaderRef& operator=(PixelShaderRef&& rhs);
 
-        void swap(PixelShaderRef& rhs)
-        {
-            lcore::swap(shader_, rhs.shader_);
-        }
-
+        void swap(PixelShaderRef& rhs);
     private:
         friend class Shader;
         template<int T> friend class ShaderCompiler;
@@ -104,10 +96,11 @@ namespace lgfx
 
          VertexShaderRef()
             :shader_(NULL)
-        {
-        }
+        {}
 
         VertexShaderRef(const VertexShaderRef& rhs);
+        VertexShaderRef(VertexShaderRef&& rhs);
+
 
         ~VertexShaderRef()
         {
@@ -122,18 +115,10 @@ namespace lgfx
 
         void attach(ContextRef& context) const;
 
-        VertexShaderRef& operator=(const VertexShaderRef& rhs)
-        {
-            VertexShaderRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        VertexShaderRef& operator=(const VertexShaderRef& rhs);
+        VertexShaderRef& operator=(VertexShaderRef&& rhs);
 
-        void swap(VertexShaderRef& rhs)
-        {
-            lcore::swap(shader_, rhs.shader_);
-        }
-
+        void swap(VertexShaderRef& rhs);
     private:
         friend class Shader;
         template<int T> friend class ShaderCompiler;
@@ -163,10 +148,10 @@ namespace lgfx
 
         GeometryShaderRef()
             :shader_(NULL)
-        {
-        }
+        {}
 
         GeometryShaderRef(const GeometryShaderRef& rhs);
+        GeometryShaderRef(GeometryShaderRef&& rhs);
 
         ~GeometryShaderRef()
         {
@@ -181,18 +166,10 @@ namespace lgfx
 
         void attach(ContextRef& context) const;
 
-        GeometryShaderRef& operator=(const GeometryShaderRef& rhs)
-        {
-            GeometryShaderRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        GeometryShaderRef& operator=(const GeometryShaderRef& rhs);
+        GeometryShaderRef& operator=(GeometryShaderRef&& rhs);
 
-        void swap(GeometryShaderRef& rhs)
-        {
-            lcore::swap(shader_, rhs.shader_);
-        }
-
+        void swap(GeometryShaderRef& rhs);
     private:
         friend class Shader;
         template<int T> friend class ShaderCompiler;
@@ -221,10 +198,10 @@ namespace lgfx
 
         ComputeShaderRef()
             :shader_(NULL)
-        {
-        }
+        {}
 
         ComputeShaderRef(const ComputeShaderRef& rhs);
+        ComputeShaderRef(ComputeShaderRef&& rhs);
 
         ~ComputeShaderRef()
         {
@@ -240,18 +217,10 @@ namespace lgfx
         void attach(ContextRef& context) const;
 
 
-        ComputeShaderRef& operator=(const ComputeShaderRef& rhs)
-        {
-            ComputeShaderRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        ComputeShaderRef& operator=(const ComputeShaderRef& rhs);
+        ComputeShaderRef& operator=(ComputeShaderRef&& rhs);
 
-        void swap(ComputeShaderRef& rhs)
-        {
-            lcore::swap(shader_, rhs.shader_);
-        }
-
+        void swap(ComputeShaderRef& rhs);
     private:
         friend class Shader;
         template<int T> friend class ShaderCompiler;
@@ -281,10 +250,10 @@ namespace lgfx
 
         DomainShaderRef()
             :shader_(NULL)
-        {
-        }
+        {}
 
         DomainShaderRef(const DomainShaderRef& rhs);
+        DomainShaderRef(DomainShaderRef&& rhs);
 
         ~DomainShaderRef()
         {
@@ -299,18 +268,10 @@ namespace lgfx
 
         void attach(ContextRef& context) const;
 
-        DomainShaderRef& operator=(const DomainShaderRef& rhs)
-        {
-            DomainShaderRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        DomainShaderRef& operator=(const DomainShaderRef& rhs);
+        DomainShaderRef& operator=(DomainShaderRef&& rhs);
 
-        void swap(DomainShaderRef& rhs)
-        {
-            lcore::swap(shader_, rhs.shader_);
-        }
-
+        void swap(DomainShaderRef& rhs);
     private:
         friend class Shader;
         template<int T> friend class ShaderCompiler;
@@ -340,10 +301,10 @@ namespace lgfx
 
         HullShaderRef()
             :shader_(NULL)
-        {
-        }
+        {}
 
         HullShaderRef(const HullShaderRef& rhs);
+        HullShaderRef(HullShaderRef&& rhs);
 
         ~HullShaderRef()
         {
@@ -358,18 +319,10 @@ namespace lgfx
 
         void attach(ContextRef& context) const;
 
-        HullShaderRef& operator=(const HullShaderRef& rhs)
-        {
-            HullShaderRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        HullShaderRef& operator=(const HullShaderRef& rhs);
+        HullShaderRef& operator=(HullShaderRef&& rhs); 
 
-        void swap(HullShaderRef& rhs)
-        {
-            lcore::swap(shader_, rhs.shader_);
-        }
-
+        void swap(HullShaderRef& rhs);
     private:
         friend class Shader;
         template<int T> friend class ShaderCompiler;

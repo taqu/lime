@@ -26,6 +26,7 @@ namespace lgfx
         {}
 
         InputLayoutRef(const InputLayoutRef& rhs);
+        InputLayoutRef(InputLayoutRef&& rhs);
 
         ~InputLayoutRef()
         {
@@ -40,12 +41,8 @@ namespace lgfx
 
         bool valid() const{ return (NULL != layout_);}
 
-        InputLayoutRef& operator=(const InputLayoutRef& rhs)
-        {
-            InputLayoutRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        InputLayoutRef& operator=(const InputLayoutRef& rhs);
+        InputLayoutRef& operator=(InputLayoutRef&& rhs);
 
         void swap(InputLayoutRef& rhs)
         {

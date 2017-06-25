@@ -22,9 +22,15 @@ namespace lgfx
         typedef ID3D11RasterizerState* pointer_type;
         typedef pointer_type const* pointer_array_type;
 
-        RasterizerStateRef();
+        RasterizerStateRef()
+            :state_(NULL)
+        {}
         RasterizerStateRef(const RasterizerStateRef& rhs);
-        ~RasterizerStateRef();
+        RasterizerStateRef(RasterizerStateRef&& rhs);
+        ~RasterizerStateRef()
+        {
+            destroy();
+        }
 
         void destroy();
 
@@ -32,9 +38,10 @@ namespace lgfx
         operator pointer_type(){ return state_;}
         operator pointer_array_type(){ return &state_;}
 
-        bool valid() const;
+        bool valid() const{return NULL != state_;}
 
         RasterizerStateRef& operator=(const RasterizerStateRef& rhs);
+        RasterizerStateRef& operator=(RasterizerStateRef&& rhs);
         void swap(RasterizerStateRef& rhs);
     private:
         friend class RasterizerState;

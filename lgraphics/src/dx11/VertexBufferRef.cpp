@@ -32,4 +32,25 @@ namespace lgfx
             &buffer_,
             &offsetInBytes);
     }
+
+    VertexBufferRef& VertexBufferRef::operator=(const VertexBufferRef& rhs)
+    {
+        VertexBufferRef(rhs).swap(*this);
+        return *this;
+    }
+
+    VertexBufferRef& VertexBufferRef::operator=(VertexBufferRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            buffer_ = rhs.buffer_;
+            rhs.buffer_ = NULL;
+        }
+        return *this;
+    }
+
+    void VertexBufferRef::swap(VertexBufferRef& rhs)
+    {
+        BufferRefBase::swap(rhs);
+    }
 }

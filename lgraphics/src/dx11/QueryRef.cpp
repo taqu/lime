@@ -13,6 +13,22 @@ namespace lgfx
     {
     }
 
+    QueryRef& QueryRef::operator=(const QueryRef& rhs)
+    {
+        QueryRef(rhs).swap(*this);
+        return *this;
+    }
+
+    QueryRef& QueryRef::operator=(QueryRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            asynchronous_ =  rhs.asynchronous_;
+            rhs.asynchronous_ = NULL;
+        }
+        return *this;
+    }
+
     QueryRef Query::create(
             QueryType type,
             QueryMiscFlag flag)

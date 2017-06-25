@@ -24,24 +24,21 @@ namespace lgfx
             :BufferRefBase(rhs)
         {}
 
-        ~VertexBufferRef()
+        VertexBufferRef(VertexBufferRef&& rhs)
+            :BufferRefBase(rhs)
         {}
 
-        VertexBufferRef& operator=(const VertexBufferRef& rhs)
-        {
-            VertexBufferRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
-
-        void swap(VertexBufferRef& rhs)
-        {
-            BufferRefBase::swap(rhs);
-        }
+        ~VertexBufferRef()
+        {}
 
         void attach(ContextRef& context, u32 startSlot, u32 stride, u32 offsetInBytes);
 
         void attachStreamOut(ContextRef& context, u32 offsetInBytes);
+
+        VertexBufferRef& operator=(const VertexBufferRef& rhs);
+        VertexBufferRef& operator=(VertexBufferRef&& rhs);
+
+        void swap(VertexBufferRef& rhs);
     private:
         friend class VertexBuffer;
 

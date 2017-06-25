@@ -31,6 +31,8 @@ namespace lgfx
         {}
 
         SamplerStateRef(const SamplerStateRef& rhs);
+        SamplerStateRef(SamplerStateRef&& rhs);
+
 
         ~SamplerStateRef()
         {
@@ -52,16 +54,10 @@ namespace lgfx
         void attachPS(ContextRef& context, u32 start);
         void attachCS(ContextRef& context, u32 start);
 
-        SamplerStateRef& operator=(const SamplerStateRef& rhs)
-        {
-            SamplerStateRef(rhs).swap(*this);
-            return *this;
-        }
+        SamplerStateRef& operator=(const SamplerStateRef& rhs);
+        SamplerStateRef& operator=(SamplerStateRef&& rhs);
 
-        void swap(SamplerStateRef& rhs)
-        {
-            lcore::swap(state_, rhs.state_);
-        }
+        void swap(SamplerStateRef& rhs);
     private:
         friend class SamplerState;
 

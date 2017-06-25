@@ -31,4 +31,25 @@ namespace lgfx
             &buffer_,
             &offsetInBytes);
     }
+
+    StructuredBufferRef& StructuredBufferRef::operator=(const StructuredBufferRef& rhs)
+    {
+        StructuredBufferRef(rhs).swap(*this);
+        return *this;
+    }
+
+    StructuredBufferRef& StructuredBufferRef::operator=(StructuredBufferRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            buffer_ = rhs.buffer_;
+            rhs.buffer_ = NULL;
+        }
+        return *this;
+    }
+
+    void StructuredBufferRef::swap(StructuredBufferRef& rhs)
+    {
+        BufferRefBase::swap(rhs);
+    }
 }

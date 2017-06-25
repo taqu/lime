@@ -9,6 +9,22 @@
 
 namespace lgfx
 {
+    ConstantBufferRef& ConstantBufferRef::operator=(const ConstantBufferRef& rhs)
+    {
+        ConstantBufferRef(rhs).swap(*this);
+        return *this;
+    }
+
+    ConstantBufferRef& ConstantBufferRef::operator=(ConstantBufferRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            buffer_ = rhs.buffer_;
+            rhs.buffer_ = NULL;
+        }
+        return *this;
+    }
+
     void ConstantBufferRef::attachVS(ContextRef& context, u32 start)
     {
         context.setVSConstantBuffers(start, 1, &buffer_);

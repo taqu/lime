@@ -24,15 +24,15 @@ namespace lgfx
             :BufferRefBase(rhs)
         {}
 
+        IndexBufferRef(IndexBufferRef&& rhs)
+            :BufferRefBase(rhs)
+        {}
+
         ~IndexBufferRef()
         {}
 
-        IndexBufferRef& operator=(const IndexBufferRef& rhs)
-        {
-            IndexBufferRef tmp(rhs);
-            tmp.swap(*this);
-            return *this;
-        }
+        IndexBufferRef& operator=(const IndexBufferRef& rhs);
+        IndexBufferRef& operator=(IndexBufferRef&& rhs);
 
         void swap(IndexBufferRef& rhs)
         {

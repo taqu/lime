@@ -58,6 +58,7 @@ namespace lgfx
         {}
 
         BufferRefBase(const BufferRefBase& rhs);
+        BufferRefBase(BufferRefBase&& rhs);
 
         explicit BufferRefBase(pointer_type buffer)
             :buffer_(buffer)

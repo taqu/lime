@@ -13,6 +13,22 @@ namespace lgfx
     {
     }
 
+    CounterRef& CounterRef::operator=(const CounterRef& rhs)
+    {
+        CounterRef(rhs).swap(*this);
+        return *this;
+    }
+
+    CounterRef& CounterRef::operator=(CounterRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            asynchronous_ = rhs.asynchronous_;
+            rhs.asynchronous_ = NULL;
+        }
+        return *this;
+    }
+
     CounterRef Counter::create(
             CounterType type)
     {

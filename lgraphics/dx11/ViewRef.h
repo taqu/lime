@@ -15,6 +15,14 @@ namespace lgfx
 {
     class ContextRef;
 
+    //--------------------------------------------------------
+    struct BufferRTV
+    {
+        u32 firstElement_;
+        u32 numElements_;
+    };
+
+
     struct Texture1DRTV
     {
         u32 mipSlice_;
@@ -49,9 +57,10 @@ namespace lgfx
     struct RTVDesc
     {
         DataFormat format_;
-        ViewRTVDimension dimension_;
+        RTVDimension dimension_;
         union
         {
+            BufferRTV buffer_;
             Texture1DRTV tex1D_;
             Texture1DArrayRTV tex1DArray_;
 
@@ -60,9 +69,11 @@ namespace lgfx
 
             Texture3DRTV tex3D_;
         };
+
+        static bool copy(D3D11_RENDER_TARGET_VIEW_DESC& viewDesc, const RTVDesc& desc);
     };
 
-
+    //--------------------------------------------------------
     struct Texture1DDSV
     {
         u32 mipSlice_;
@@ -91,7 +102,7 @@ namespace lgfx
     struct DSVDesc
     {
         DataFormat format_;
-        ViewDSVDimension dimension_;
+        DSVDimension dimension_;
         union
         {
             Texture1DDSV tex1D_;
@@ -100,8 +111,11 @@ namespace lgfx
             Texture2DDSV tex2D_;
             Texture2DArrayDSV tex2DArray_;
         };
+
+        static bool copy(D3D11_DEPTH_STENCIL_VIEW_DESC& viewDesc, const DSVDesc& desc);
     };
 
+    //--------------------------------------------------------
     struct BufferSRV
     {
         u32 firstElement_;
@@ -166,7 +180,7 @@ namespace lgfx
     struct SRVDesc
     {
         DataFormat format_;
-        ViewSRVDimension dimension_;
+        SRVDimension dimension_;
         union
         {
             BufferSRV buffer_;
@@ -187,6 +201,7 @@ namespace lgfx
         static bool copy(D3D11_SHADER_RESOURCE_VIEW_DESC& viewDesc, const SRVDesc& desc);
     };
 
+    //--------------------------------------------------------
     struct BufferUAV
     {
         u32 firstElement_;
@@ -240,8 +255,11 @@ namespace lgfx
 
             Texture3DUAV tex3D_;
         };
+
+        static bool copy(D3D11_UNORDERED_ACCESS_VIEW_DESC& viewDesc, const UAVDesc& desc);
     };
 
+    //--------------------------------------------------------
     struct SubResourceData
     {
         const void* mem_;
@@ -251,42 +269,24 @@ namespace lgfx
 
     //--------------------------------------------------------
     //---
-    //--- ShaderResourceViewRef
+    //--- ViewRefBase
     //---
     //--------------------------------------------------------
-    class ShaderResourceViewRef
+    template<class Derived, class T>
+    class ViewRefBase
     {
     public:
-        typedef ID3D11ShaderResourceView element_type;
-        typedef ID3D11ShaderResourceView* pointer_type;
+        typedef ViewRefBase<Derived, T> this_type;
+        typedef Derived derived_type;
+        typedef T element_type;
+        typedef T* pointer_type;
         typedef pointer_type const* pointer_array_type;
-
-        ShaderResourceViewRef()
-            :view_(NULL)
-        {}
-
-        ShaderResourceViewRef(const ShaderResourceViewRef& rhs);
-
-        explicit ShaderResourceViewRef(pointer_type view)
-            :view_(view)
-        {}
-
-        ~ShaderResourceViewRef()
-        {
-            destroy();
-        }
-
-        ShaderResourceViewRef& operator=(const ShaderResourceViewRef& rhs)
-        {
-            ShaderResourceViewRef(rhs).swap(*this);
-            return *this;
-        }
 
         void destroy();
 
         bool valid() const{ return (NULL != view_);}
 
-        void swap(ShaderResourceViewRef& rhs)
+        void swap(derived_type& rhs)
         {
             lcore::swap(view_, rhs.view_);
         }
@@ -294,6 +294,172 @@ namespace lgfx
         pointer_type get(){ return view_;}
         operator pointer_type(){ return view_;}
         operator pointer_array_type(){ return &view_; }
+
+    protected:
+        inline ViewRefBase();
+        ViewRefBase(const this_type& rhs);
+        ViewRefBase(this_type&& rhs);
+        inline explicit ViewRefBase(pointer_type view);
+        inline ~ViewRefBase();
+
+        pointer_type view_;
+    };
+
+    template<class Derived, class T>
+    inline ViewRefBase<Derived, T>::ViewRefBase()
+        :view_(NULL)
+    {
+    }
+
+    template<class Derived, class T>
+    ViewRefBase<Derived, T>::ViewRefBase(const this_type& rhs)
+        :view_(rhs.view_)
+    {
+        if(view_){
+            view_->AddRef();
+        }
+    }
+
+    template<class Derived, class T>
+    ViewRefBase<Derived, T>::ViewRefBase(this_type&& rhs)
+        :view_(rhs.view_)
+    {
+        rhs.view_ = NULL;
+    }
+
+    template<class Derived, class T>
+    inline ViewRefBase<Derived, T>::ViewRefBase(pointer_type view)
+        :view_(view)
+    {}
+
+    template<class Derived, class T>
+    inline ViewRefBase<Derived, T>::~ViewRefBase()
+    {
+        destroy();
+    }
+
+    template<class Derived, class T>
+    void ViewRefBase<Derived, T>::destroy()
+    {
+        LDXSAFE_RELEASE(view_);
+    }
+
+    //--------------------------------------------------------
+    //---
+    //--- ViewRef
+    //---
+    //--------------------------------------------------------
+    class ShaderResourceViewRef;
+    class RenderTargetViewRef;
+    class DepthStencilViewRef;
+    class UnorderedAccessViewRef;
+
+    class ViewRef : public ViewRefBase<ViewRef, ID3D11View>
+    {
+    public:
+        typedef ViewRef this_type;
+        typedef ViewRefBase<ViewRef, ID3D11View> parent_type;
+        typedef ID3D11View element_type;
+        typedef ID3D11View* pointer_type;
+        typedef pointer_type const* pointer_array_type;
+
+        ViewRef()
+        {}
+
+        ViewRef(const ViewRef& rhs)
+            :parent_type(rhs)
+        {}
+        ViewRef(ViewRef&& rhs)
+            :parent_type(rhs)
+        {}
+
+        explicit ViewRef(pointer_type view)
+            :parent_type(view)
+        {}
+
+        ~ViewRef()
+        {}
+
+        ViewRef& operator=(const ViewRef& rhs);
+        ViewRef& operator=(ViewRef&& rhs);
+
+        ViewRef& operator=(ShaderResourceViewRef&& rhs);
+        ViewRef& operator=(RenderTargetViewRef&& rhs);
+        ViewRef& operator=(DepthStencilViewRef&& rhs);
+        ViewRef& operator=(UnorderedAccessViewRef&& rhs);
+
+        inline operator ID3D11ShaderResourceView*();
+        inline operator ID3D11RenderTargetView*();
+        inline operator ID3D11DepthStencilView*();
+        inline operator ID3D11UnorderedAccessView*();
+
+        inline bool operator==(const this_type& rhs) const
+        {
+            return (view_ == rhs.view_);
+        }
+
+        inline bool operator!=(const this_type& rhs) const
+        {
+            return (view_ != rhs.view_);
+        }
+    };
+
+    inline ViewRef::operator ID3D11ShaderResourceView*()
+    {
+        return reinterpret_cast<ID3D11ShaderResourceView*>(view_);
+    }
+
+    inline ViewRef::operator ID3D11RenderTargetView*()
+    {
+        return reinterpret_cast<ID3D11RenderTargetView*>(view_);
+    }
+
+    inline ViewRef::operator ID3D11DepthStencilView*()
+    {
+        return reinterpret_cast<ID3D11DepthStencilView*>(view_);
+    }
+
+    inline ViewRef::operator ID3D11UnorderedAccessView*()
+    {
+        return reinterpret_cast<ID3D11UnorderedAccessView*>(view_);
+    }
+
+    //--------------------------------------------------------
+    //---
+    //--- ShaderResourceViewRef
+    //---
+    //--------------------------------------------------------
+    class ShaderResourceViewRef : public ViewRefBase<ShaderResourceViewRef, ID3D11ShaderResourceView>
+    {
+    public:
+        typedef ShaderResourceViewRef this_type;
+        typedef ViewRefBase<ShaderResourceViewRef, ID3D11ShaderResourceView> parent_type;
+        typedef ID3D11ShaderResourceView element_type;
+        typedef ID3D11ShaderResourceView* pointer_type;
+        typedef pointer_type const* pointer_array_type;
+
+        friend class ViewRef;
+
+        ShaderResourceViewRef()
+        {}
+
+        ShaderResourceViewRef(const this_type& rhs)
+            :parent_type(rhs)
+        {}
+
+        ShaderResourceViewRef(this_type&& rhs)
+            :parent_type(rhs)
+        {}
+
+        explicit ShaderResourceViewRef(pointer_type view)
+            :parent_type(view)
+        {}
+
+        ~ShaderResourceViewRef()
+        {}
+
+        ShaderResourceViewRef& operator=(const ShaderResourceViewRef& rhs);
+        ShaderResourceViewRef& operator=(ShaderResourceViewRef&& rhs);
 
         void attachVS(lgfx::ContextRef& context, u32 index);
         void attachGS(lgfx::ContextRef& context, u32 index);
@@ -311,8 +477,6 @@ namespace lgfx
         {
             return (view_ != rhs.view_);
         }
-    private:
-        pointer_type view_;
     };
 
     //--------------------------------------------------------
@@ -320,50 +484,48 @@ namespace lgfx
     //--- RenderTargetViewRef
     //---
     //--------------------------------------------------------
-    class RenderTargetViewRef
+    class RenderTargetViewRef : public ViewRefBase<RenderTargetViewRef, ID3D11RenderTargetView>
     {
     public:
+        typedef RenderTargetViewRef this_type;
+        typedef ViewRefBase<RenderTargetViewRef, ID3D11RenderTargetView> parent_type;
         typedef ID3D11RenderTargetView element_type;
         typedef ID3D11RenderTargetView* pointer_type;
         typedef pointer_type const* pointer_array_type;
 
+        friend class ViewRef;
+
         RenderTargetViewRef()
-            :view_(NULL)
+            :parent_type(NULL)
         {}
 
-        RenderTargetViewRef(const RenderTargetViewRef& rhs);
+        RenderTargetViewRef(const RenderTargetViewRef& rhs)
+            :parent_type(rhs)
+        {}
+
+        RenderTargetViewRef(RenderTargetViewRef&& rhs)
+            :parent_type(rhs)
+        {}
 
         explicit RenderTargetViewRef(pointer_type view)
-            :view_(view)
+            :parent_type(view)
         {}
 
         ~RenderTargetViewRef()
+        {}
+
+        RenderTargetViewRef& operator=(const RenderTargetViewRef& rhs);
+        RenderTargetViewRef& operator=(RenderTargetViewRef&& rhs);
+
+        inline bool operator==(const RenderTargetViewRef& rhs) const
         {
-            destroy();
+            return (view_ == rhs.view_);
         }
 
-        RenderTargetViewRef& operator=(const RenderTargetViewRef& rhs)
+        inline bool operator!=(const RenderTargetViewRef& rhs) const
         {
-            RenderTargetViewRef(rhs).swap(*this);
-            return *this;
+            return (view_ != rhs.view_);
         }
-
-        void destroy();
-
-        bool valid() const{ return (NULL != view_);}
-
-        void swap(RenderTargetViewRef& rhs)
-        {
-            lcore::swap(view_, rhs.view_);
-        }
-
-        pointer_type get(){ return view_;}
-        operator pointer_type(){ return view_;}
-        operator pointer_array_type(){ return &view_; }
-
-        ShaderResourceViewRef createSRView(const SRVDesc& desc);
-    private:
-        pointer_type view_;
     };
 
     //--------------------------------------------------------
@@ -371,49 +533,47 @@ namespace lgfx
     //--- DepthStencilViewRef
     //---
     //--------------------------------------------------------
-    class DepthStencilViewRef
+    class DepthStencilViewRef : public ViewRefBase<DepthStencilViewRef, ID3D11DepthStencilView>
     {
     public:
+        typedef DepthStencilViewRef this_type;
+        typedef ViewRefBase<DepthStencilViewRef, ID3D11DepthStencilView> parent_type;
         typedef ID3D11DepthStencilView element_type;
         typedef ID3D11DepthStencilView* pointer_type;
         typedef pointer_type const* pointer_array_type;
 
+        friend class ViewRef;
+
         DepthStencilViewRef()
-            :view_(NULL)
         {}
 
-        DepthStencilViewRef(const DepthStencilViewRef& rhs);
+        DepthStencilViewRef(const DepthStencilViewRef& rhs)
+            :parent_type(rhs)
+        {}
+
+        DepthStencilViewRef(DepthStencilViewRef&& rhs)
+            :parent_type(rhs)
+        {}
 
         explicit DepthStencilViewRef(pointer_type view)
-            :view_(view)
+            :parent_type(view)
         {}
 
         ~DepthStencilViewRef()
+        {}
+
+        DepthStencilViewRef& operator=(const DepthStencilViewRef& rhs);
+        DepthStencilViewRef& operator=(DepthStencilViewRef&& rhs);
+
+        inline bool operator==(const DepthStencilViewRef& rhs) const
         {
-            destroy();
+            return (view_ == rhs.view_);
         }
 
-        DepthStencilViewRef& operator=(const DepthStencilViewRef& rhs)
+        inline bool operator!=(const DepthStencilViewRef& rhs) const
         {
-            DepthStencilViewRef(rhs).swap(*this);
-            return *this;
+            return (view_ != rhs.view_);
         }
-
-        void destroy();
-
-        bool valid() const{ return (NULL != view_);}
-
-        void swap(DepthStencilViewRef& rhs)
-        {
-            lcore::swap(view_, rhs.view_);
-        }
-
-        pointer_type get(){ return view_;}
-        operator pointer_type(){ return view_;}
-        operator pointer_array_type(){ return &view_; }
-
-    private:
-        pointer_type view_;
     };
 
     //--------------------------------------------------------
@@ -421,52 +581,53 @@ namespace lgfx
     //--- UnorderedAccessViewRef
     //---
     //--------------------------------------------------------
-    class UnorderedAccessViewRef
+    class UnorderedAccessViewRef : public ViewRefBase<UnorderedAccessViewRef, ID3D11UnorderedAccessView>
     {
     public:
+        typedef UnorderedAccessViewRef this_type;
+        typedef ViewRefBase<UnorderedAccessViewRef, ID3D11UnorderedAccessView> parent_type;
         typedef ID3D11UnorderedAccessView element_type;
         typedef ID3D11UnorderedAccessView* pointer_type;
         typedef pointer_type const* pointer_array_type;
 
+        friend class ViewRef;
+
         UnorderedAccessViewRef()
-            :view_(NULL)
         {}
 
-        UnorderedAccessViewRef(const UnorderedAccessViewRef& rhs);
+        UnorderedAccessViewRef(const UnorderedAccessViewRef& rhs)
+            :parent_type(rhs)
+        {}
+
+        UnorderedAccessViewRef(UnorderedAccessViewRef&& rhs)
+            :parent_type(rhs)
+        {}
 
         explicit UnorderedAccessViewRef(pointer_type view)
-            :view_(view)
+            :parent_type(view)
         {}
 
         ~UnorderedAccessViewRef()
+        {}
+
+        UnorderedAccessViewRef& operator=(const UnorderedAccessViewRef& rhs);
+        UnorderedAccessViewRef& operator=(UnorderedAccessViewRef&& rhs);
+
+        inline bool operator==(const UnorderedAccessViewRef& rhs) const
         {
-            destroy();
+            return (view_ == rhs.view_);
         }
 
-        UnorderedAccessViewRef& operator=(const UnorderedAccessViewRef& rhs)
+        inline bool operator!=(const UnorderedAccessViewRef& rhs) const
         {
-            UnorderedAccessViewRef(rhs).swap(*this);
-            return *this;
+            return (view_ != rhs.view_);
         }
-
-        void destroy();
-
-        bool valid() const{ return (NULL != view_);}
-
-        void swap(UnorderedAccessViewRef& rhs)
-        {
-            lcore::swap(view_, rhs.view_);
-        }
-
-        pointer_type get(){ return view_;}
-        operator pointer_type(){ return view_;}
-        operator pointer_array_type(){ return &view_; }
-    private:
-        pointer_type view_;
     };
 
     struct View
     {
+        static RenderTargetViewRef View::createRTView(const RTVDesc& desc, ID3D11Resource* resource);
+        static DepthStencilViewRef View::createDSView(const DSVDesc& desc, ID3D11Resource* resource);
         static ShaderResourceViewRef View::createSRView(const SRVDesc& desc, ID3D11Resource* resource);
         static UnorderedAccessViewRef View::createUAView(const UAVDesc& desc, ID3D11Resource* resource);
     };

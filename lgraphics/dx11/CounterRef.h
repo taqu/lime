@@ -26,8 +26,15 @@ namespace lgfx
             :AsynchronousRef(rhs)
         {}
 
+        CounterRef(CounterRef&& rhs)
+            :AsynchronousRef(rhs)
+        {}
+
         ~CounterRef()
         {}
+
+        CounterRef& operator=(const CounterRef& rhs);
+        CounterRef& operator=(CounterRef&& rhs);
     private:
         friend class Counter;
 

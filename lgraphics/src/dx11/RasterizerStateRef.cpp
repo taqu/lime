@@ -13,10 +13,6 @@ namespace lgfx
     //--- RasterizerStateRef
     //---
     //--------------------------------------
-    RasterizerStateRef::RasterizerStateRef()
-        :state_(NULL)
-    {}
-
     RasterizerStateRef::RasterizerStateRef(const RasterizerStateRef& rhs)
         :state_(rhs.state_)
     {
@@ -25,9 +21,10 @@ namespace lgfx
         }
     }
 
-    RasterizerStateRef::~RasterizerStateRef()
+    RasterizerStateRef::RasterizerStateRef(RasterizerStateRef&& rhs)
+        :state_(rhs.state_)
     {
-        destroy();
+        rhs.state_ = NULL;
     }
 
     void RasterizerStateRef::destroy()
@@ -39,14 +36,19 @@ namespace lgfx
         :state_(state)
     {}
 
-    bool RasterizerStateRef::valid() const
-    {
-        return (NULL != state_);
-    }
-
     RasterizerStateRef& RasterizerStateRef::operator=(const RasterizerStateRef& rhs)
     {
         RasterizerStateRef(rhs).swap(*this);
+        return *this;
+    }
+
+    RasterizerStateRef& RasterizerStateRef::operator=(RasterizerStateRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            state_ = rhs.state_;
+            rhs.state_ = NULL;
+        }
         return *this;
     }
 

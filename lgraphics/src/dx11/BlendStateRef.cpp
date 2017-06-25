@@ -21,6 +21,12 @@ namespace lgfx
         }
     }
 
+    BlendStateRef::BlendStateRef(BlendStateRef&& rhs)
+        :state_(rhs.state_)
+    {
+        rhs.state_ = NULL;
+    }
+
     void BlendStateRef::destroy()
     {
         LDXSAFE_RELEASE(state_);
@@ -29,6 +35,22 @@ namespace lgfx
     void BlendStateRef::attach(ContextRef& context)
     {
         context.setBlendState(state_);
+    }
+
+    BlendStateRef& BlendStateRef::operator=(const BlendStateRef& rhs)
+    {
+        BlendStateRef(rhs).swap(*this);
+        return *this;
+    }
+
+    BlendStateRef& BlendStateRef::operator=(BlendStateRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            state_ = rhs.state_;
+            rhs.state_ = NULL;
+        }
+        return *this;
     }
 
     bool BlendStateRef::getDesc(BlendStateDesc& desc)

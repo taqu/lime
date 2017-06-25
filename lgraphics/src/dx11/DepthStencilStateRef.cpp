@@ -25,6 +25,12 @@ namespace lgfx
         }
     }
 
+    DepthStencilStateRef::DepthStencilStateRef(DepthStencilStateRef&& rhs)
+        :state_(rhs.state_)
+    {
+        rhs.state_ = NULL;
+    }
+
     DepthStencilStateRef::~DepthStencilStateRef()
     {
         destroy();
@@ -47,6 +53,16 @@ namespace lgfx
     DepthStencilStateRef& DepthStencilStateRef::operator=(const DepthStencilStateRef& rhs)
     {
         DepthStencilStateRef(rhs).swap(*this);
+        return *this;
+    }
+
+    DepthStencilStateRef& DepthStencilStateRef::operator=(DepthStencilStateRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            state_ = rhs.state_;
+            rhs.state_ = NULL;
+        }
         return *this;
     }
 

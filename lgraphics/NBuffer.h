@@ -1,9 +1,9 @@
-#ifndef INC_LGRAPHICS_RINGBUFFER_H__
-#define INC_LGRAPHICS_RINGBUFFER_H__
+#ifndef INC_LGRAPHICS_NBUFFER_H__
+#define INC_LGRAPHICS_NBUFFER_H__
 /**
-@file RingBuffer.h
+@file NBuffer.h
 @author t-sakai
-@date 2016/11/07 create
+@date 2017/02/21 create
 */
 #include "lgraphics.h"
 #include "QueryRef.h"
@@ -15,27 +15,22 @@ namespace lgfx
 
     //--------------------------------------------------
     //---
-    //--- RingBuffer
+    //--- NBuffer
     //---
     //--------------------------------------------------
-    class RingBuffer
+    class NBuffer
     {
     public:
         static const s32 MaxSyncFrames = 8;
 
         struct Resource
         {
-            Resource(s32 offset, s32 size)
-                :offsetInBytes_(offset)
-                ,sizeInBytes_(size)
-            {}
-
             s32 offsetInBytes_;
             s32 sizeInBytes_;
         };
 
-        RingBuffer();
-        ~RingBuffer();
+        NBuffer();
+        ~NBuffer();
 
         void initialize(FrameSyncQuery* frameSyncQuery, s32 totalSize, s32 syncFrames);
         void terminate();
@@ -45,8 +40,8 @@ namespace lgfx
         void end();
 
     private:
-        RingBuffer(const RingBuffer&);
-        RingBuffer& operator=(const RingBuffer&);
+        NBuffer(const NBuffer&);
+        NBuffer& operator=(const NBuffer&);
 
         static const s16 Flag_None = 0;
         static const s16 Flag_Alloc = 1;
@@ -55,7 +50,6 @@ namespace lgfx
         {
             s16 flag_;
             s16 event_;
-            s32 end_;
         };
 
         inline s32 nextFrame(s32 frame) const
@@ -65,7 +59,7 @@ namespace lgfx
         }
 
         FrameSyncQuery* frameSyncQuery_;
-        s32 totalSize_;
+        s32 size_;
         s32 syncFrames_;
         s32 start_;
         s32 end_;
@@ -73,4 +67,4 @@ namespace lgfx
         Entry entries_[MaxSyncFrames];
     };
 }
-#endif //INC_LGRAPHICS_RINGBUFFER_H__
+#endif //INC_LGRAPHICS_NBUFFER_H__

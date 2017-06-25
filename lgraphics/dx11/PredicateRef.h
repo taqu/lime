@@ -27,9 +27,15 @@ namespace lgfx
         PredicateRef(const PredicateRef& rhs)
             :AsynchronousRef(rhs)
         {}
+        PredicateRef(PredicateRef&& rhs)
+            :AsynchronousRef(rhs)
+        {}
 
         ~PredicateRef()
         {}
+
+        PredicateRef& operator=(const PredicateRef& rhs);
+        PredicateRef& operator=(PredicateRef&& rhs);
     private:
         friend class Predicate;
 

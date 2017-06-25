@@ -21,6 +21,12 @@ namespace lgfx
         }
     }
 
+    SamplerStateRef::SamplerStateRef(SamplerStateRef&& rhs)
+        :state_(rhs.state_)
+    {
+        rhs.state_ = NULL;
+    }
+
     void SamplerStateRef::destroy()
     {
         LDXSAFE_RELEASE(state_);
@@ -56,6 +62,26 @@ namespace lgfx
         context.setCSSamplers(start, 1, &state_);
     }
 
+    SamplerStateRef& SamplerStateRef::operator=(const SamplerStateRef& rhs)
+    {
+        SamplerStateRef(rhs).swap(*this);
+        return *this;
+    }
+
+    SamplerStateRef& SamplerStateRef::operator=(SamplerStateRef&& rhs)
+    {
+        if(this != &rhs){
+            destroy();
+            state_ = rhs.state_;
+            rhs.state_ = NULL;
+        }
+        return *this;
+    }
+
+    void SamplerStateRef::swap(SamplerStateRef& rhs)
+    {
+        lcore::swap(state_, rhs.state_);
+    }
 
     //------------------------------------------------------------
     //---
