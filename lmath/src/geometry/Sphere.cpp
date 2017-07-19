@@ -273,4 +273,12 @@ namespace lmath
         return r.length();
 #endif
     }
+
+    void Sphere::getAABB(lmath::lm128& bmin, lmath::lm128& bmax) const
+    {
+        lmath::lm128 t0 = _mm_loadu_ps((const f32*)this);
+        lmath::lm128 r = _mm_set1_ps(r_);
+        bmin = _mm_sub_ps(t0, r);
+        bmax = _mm_add_ps(t0, r);
+    }
 }

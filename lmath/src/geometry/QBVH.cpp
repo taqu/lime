@@ -333,7 +333,7 @@ namespace
     void QBVHConstructor::getBBox(lmath::Vector3& bmin, lmath::Vector3& bmax, const Face* faces, u32 numFaces)
     {
         bmin.set(lcore::numeric_limits<f32>::maximum(), lcore::numeric_limits<f32>::maximum(), lcore::numeric_limits<f32>::maximum());
-        bmax.set(lcore::numeric_limits<f32>::minimum(), lcore::numeric_limits<f32>::minimum(), lcore::numeric_limits<f32>::minimum());
+        bmax.set(lcore::numeric_limits<f32>::lowest(), lcore::numeric_limits<f32>::lowest(), lcore::numeric_limits<f32>::lowest());
 
         lmath::Vector3 tmin, tmax;
         for(u32 i=0; i<numFaces; ++i){

@@ -40,7 +40,7 @@ namespace lmath
         void setInvalid()
         {
             bmin_.x_ = bmin_.y_ = bmin_.z_ = lcore::numeric_limits<f32>::maximum();
-            bmax_.x_ = bmax_.y_ = bmax_.z_ = -lcore::numeric_limits<f32>::maximum();
+            bmax_.x_ = bmax_.y_ = bmax_.z_ = lcore::numeric_limits<f32>::lowest();
         }
 
         Vector3 center() const
@@ -110,7 +110,7 @@ namespace lmath
         void setInvalid()
         {
             bmin_.x_ = bmin_.y_ = lcore::numeric_limits<f32>::maximum();
-            bmax_.x_ = bmax_.y_ = -lcore::numeric_limits<f32>::maximum();
+            bmax_.x_ = bmax_.y_ = lcore::numeric_limits<f32>::lowest();
         }
 
         Vector2 extent() const

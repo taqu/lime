@@ -31,7 +31,7 @@ namespace lmath
             if(isPositive(direction_[i])){
                 invDirection_[i] = (lmath::isZeroPositive(direction_[i]))? lcore::numeric_limits<f32>::maximum() : 1.0f/direction_[i];
             }else{
-                invDirection_[i] = (lmath::isZeroNegative(direction_[i]))? -lcore::numeric_limits<f32>::maximum() : 1.0f/direction_[i];
+                invDirection_[i] = (lmath::isZeroNegative(direction_[i]))? lcore::numeric_limits<f32>::lowest() : 1.0f/direction_[i];
             }
         }
     }

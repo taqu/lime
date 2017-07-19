@@ -140,6 +140,8 @@ namespace lmath
             return *((Vector4*)&x_);
         }
 
+        void getAABB(lmath::lm128& bmin, lmath::lm128& bmax) const;
+
         f32 x_;
         f32 y_;
         f32 z_;
