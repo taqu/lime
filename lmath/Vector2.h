@@ -65,7 +65,7 @@ namespace lmath
         inline bool isNan() const;
 
         friend Vector2 normalize(const Vector2& v);
-        friend Vector2 normalizeCheced(const Vector2& v);
+        friend Vector2 normalizeChecked(const Vector2& v);
         friend Vector2 operator+(const Vector2& v0, const Vector2& v1);
         friend Vector2 operator-(const Vector2& v0, const Vector2& v1);
         friend Vector2 operator*(f32 f, const Vector2& v);
@@ -81,6 +81,12 @@ namespace lmath
         friend Vector2 mul(f32 f, const Vector2& v);
         friend Vector2 mul(const Vector2& v, f32 f);
         friend Vector2 muladd(f32 f, const Vector2& v0, const Vector2& v1);
+
+        friend Vector2 minimum(const Vector2& v0, const Vector2& v1);
+        friend Vector2 maximum(const Vector2& v0, const Vector2& v1);
+
+        friend f32 minimum(const Vector2& v);
+        friend f32 maximum(const Vector2& v);
 
         f32 x_, y_;
     };
@@ -245,6 +251,26 @@ namespace lmath
     }
 
     Vector2 muladd(f32 f, const Vector2& v0, const Vector2& v1);
+
+    inline Vector2 minimum(const Vector2& v0, const Vector2& v1)
+    {
+        return {lcore::minimum(v0.x_, v1.x_), lcore::minimum(v0.y_, v1.y_)};
+    }
+
+    inline Vector2 maximum(const Vector2& v0, const Vector2& v1)
+    {
+        return {lcore::maximum(v0.x_, v1.x_), lcore::maximum(v0.y_, v1.y_)};
+    }
+
+    inline f32 minimum(const Vector2& v)
+    {
+        return lcore::minimum(v.x_, v.y_);
+    }
+
+    inline f32 maximum(const Vector2& v)
+    {
+        return lcore::maximum(v.x_, v.y_);
+    }
 }
 
 #endif //INC_LMATH_VECTOR2_H__

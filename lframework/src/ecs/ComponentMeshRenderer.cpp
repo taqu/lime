@@ -67,9 +67,12 @@ namespace
             return false;
         }
         const lmath::Vector4& position = getEntity().getGeometric()->getPosition();
+        const lmath::Vector3& scale = getEntity().getGeometric()->getScale();
+
         f32 depth = lmath::manhattanDistance3(queue.getCamera().getEyePosition(), position);
         lmath::Sphere sphere = model_->getSphere();
         sphere.translate(position);
+        sphere.radius() *= lmath::maximum(scale);
 
         if(checkFlag(Flag_ShadowCast)){
             if(queue.getShadowMap().contains(sphere)){

@@ -98,6 +98,8 @@ namespace lgfx
             DepthStencil_DEnableWDisable,
             DepthStencil_DEnableWEnableReverseZ,
             DepthStencil_DEnableWDisableReverseZ,
+            DepthStencil_DEnableWEnableGEReverseZ,
+            DepthStencil_DEnableWDisableGEReverseZ,
             DepthStencil_DDisableWEnable,
             DepthStencil_DDisableWDisable,
             DepthStencil_Num,

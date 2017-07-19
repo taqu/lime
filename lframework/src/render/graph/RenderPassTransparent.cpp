@@ -66,7 +66,7 @@ namespace graph
         lgfx::ShaderResourceView srvs(context, NULL, NULL, renderContext.getShadowMap().getSRV(), srvLinearDepth_);
         srvs.setPS(3);
 
-        context.setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWEnableReverseZ);
+        context.setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWEnableGEReverseZ);
 
         RenderQueue& renderQueue = renderContext.getRenderQueue();
         for(s32 i=0; i<renderQueue[RenderPath_Transparent].size_; ++i){

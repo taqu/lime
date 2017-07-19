@@ -28,7 +28,7 @@
 #include "MainCamera00.h"
 #include "Behavior00.h"
 #include "Particle00.h"
-//#include "VolumeParticle00.h"
+#include "VolumeParticle00.h"
 #include "Plane00.h"
 #include "BGMID.h"
 #include "SEID.h"
@@ -110,11 +110,13 @@ namespace debug
         particle00_ = ecsManager.requestCreateGeometric("Particle00");
         particle00_.addComponent<Particle00>();
 
-        //lfw::s32 setID=0;
-        //lfw::ResourceTexture2D* texGradient = lfw::Resources::getInstance().load(setID, "gradient.dds", lfw::ResourceType::ResourceType_Texture2D)->cast<lfw::ResourceTexture2D>();
-        //volumeParticle00_ = application.getECSManager().requestCreateGeometric("VolumeParticle00");
-        //VolumeParticle00* volumeParticle = volumeParticle00_.addComponent<VolumeParticle00>();
-        //volumeParticle->setTexture(texGradient->get(), texGradient->getShaderResourceView());
+        {
+            lfw::s32 setID=0;
+            lfw::ResourceTexture2D* texGradient = lfw::System::getResources().load(setID, "gradient.dds", lfw::ResourceType::ResourceType_Texture2D)->cast<lfw::ResourceTexture2D>();
+            volumeParticle00_ = ecsManager.requestCreateGeometric("VolumeParticle00");
+            VolumeParticle00* volumeParticle = volumeParticle00_.addComponent<VolumeParticle00>();
+            volumeParticle->setTexture(texGradient->get(), texGradient->getShaderResourceView());
+        }
 
 
         //
@@ -129,15 +131,17 @@ namespace debug
         UIText00->text().printf("test00\ntest00\ntest00");
         UIText00->updateText();
 
-        lfw::s32 setID=0;
-        lfw::ResourceTexture2D* texGradient = lfw::System::getResources().load(setID, "gradient.dds", lfw::ResourceType::ResourceType_Texture2D)->cast<lfw::ResourceTexture2D>();
-        lfw::Entity entityImage00 = ecsManager.requestCreateGeometric("Image00");
-        entityImage00.getGeometric()->setParent(canvasEntity.getGeometric());
-        lfw::ComponentUIImage* UIImage00 = entityImage00.addComponent<lfw::ComponentUIImage>();
-        UIImage00->setImage(texGradient->getShaderResourceView());
-        UIImage00->setRect(10.0f, 10.0f, 64.0f, 64.0f);
-        UIImage00->setUVRect(0.0f, 0.0f, 1.0f, 1.0f);
-        entityImage00.getGeometric()->setFirstSibling();
+        {
+            lfw::s32 setID=0;
+            lfw::ResourceTexture2D* texGradient = lfw::System::getResources().load(setID, "gradient.dds", lfw::ResourceType::ResourceType_Texture2D)->cast<lfw::ResourceTexture2D>();
+            lfw::Entity entityImage00 = ecsManager.requestCreateGeometric("Image00");
+            entityImage00.getGeometric()->setParent(canvasEntity.getGeometric());
+            lfw::ComponentUIImage* UIImage00 = entityImage00.addComponent<lfw::ComponentUIImage>();
+            UIImage00->setImage(texGradient->getShaderResourceView());
+            UIImage00->setRect(10.0f, 10.0f, 64.0f, 64.0f);
+            UIImage00->setUVRect(0.0f, 0.0f, 1.0f, 1.0f);
+            entityImage00.getGeometric()->setFirstSibling();
+        }
     }
 
     void Scene00::onStart()

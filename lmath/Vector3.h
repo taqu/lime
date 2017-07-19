@@ -116,6 +116,9 @@ namespace lmath
         friend Vector3 minimum(const Vector3& v0, const Vector3& v1);
         friend Vector3 maximum(const Vector3& v0, const Vector3& v1);
 
+        friend f32 minimum(const Vector3& v);
+        friend f32 maximum(const Vector3& v);
+
         /**
         @brief v0*v1 + v2
         */
@@ -369,6 +372,16 @@ namespace lmath
         return {lcore::maximum(v0.x_, v1.x_),
             lcore::maximum(v0.y_, v1.y_),
             lcore::maximum(v0.z_, v1.z_)};
+    }
+
+    inline f32 minimum(const Vector3& v)
+    {
+        return lcore::minimum(lcore::minimum(v.x_, v.y_), v.z_);
+    }
+
+    inline f32 maximum(const Vector3& v)
+    {
+        return lcore::maximum(lcore::maximum(v.x_, v.y_), v.z_);
     }
 
     // v0*v1 + v2

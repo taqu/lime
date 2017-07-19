@@ -74,9 +74,12 @@ namespace lfw
             return false;
         }
         const lmath::Vector4& position = getEntity().getGeometric()->getPosition();
+        const lmath::Vector3& scale = getEntity().getGeometric()->getScale();
+
         f32 depth = lmath::manhattanDistance3(queue.getCamera().getEyePosition(), position);
         lmath::Sphere sphere = model_->getSphere();
         sphere.translate(position);
+        sphere.radius() *= lmath::maximum(scale);
 
         if(checkFlag(Flag_ShadowCast)){
             if(queue.getShadowMap().contains(sphere)){
@@ -95,9 +98,8 @@ namespace lfw
         return true;
     }
 
-    void ComponentSkinningRenderer::drawDepth(RenderContext&)
+    void ComponentSkinningRenderer::drawDepth(RenderContext& renderContext)
     {
-#if 0
         lgfx::ContextRef& context = renderContext.getContext();
         const ShadowMap& shadowMap = renderContext.getShadowMap();
 
@@ -122,7 +124,6 @@ namespace lfw
                 context.drawIndexedInstanced(mesh.getNumIndices(), shadowMap.getCascadeLevels(), mesh.getIndexOffset(), 0, 0);
             }
         }
-#endif
     }
 
     void ComponentSkinningRenderer::drawGBuffer(RenderContext& renderContext)

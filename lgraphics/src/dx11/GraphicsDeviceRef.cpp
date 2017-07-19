@@ -756,6 +756,7 @@ namespace lgfx
             D3D11_DEPTH_STENCIL_DESC desc;
             lcore::memset(&desc, 0, sizeof(D3D11_DEPTH_STENCIL_DESC));
 
+            // 
             desc.DepthEnable = TRUE;
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
             desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_Less);
@@ -765,6 +766,7 @@ namespace lgfx
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWDisable]);
 
+            // Reverse Z
             desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_Greater);
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWEnableReverseZ]);
@@ -772,7 +774,16 @@ namespace lgfx
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWDisableReverseZ]);
 
+            desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_GreaterEqual);
+            desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+            device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWEnableGEReverseZ]);
+
+            desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+            device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWDisableGEReverseZ]);
+
+            // Disable comparing depth
             desc.DepthEnable = FALSE;
+            desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_Greater);
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DDisableWEnable]);
 

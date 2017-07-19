@@ -7,6 +7,7 @@
 #include <lcore/Random.h>
 #include <lframework/resource/Resources.h>
 #include <lframework/resource/ResourceTexture2D.h>
+#include "lframework/System.h"
 #include "lframework/Application.h"
 
 namespace debug
@@ -30,7 +31,7 @@ namespace debug
         static const lcore::s32 capacity = 64;
         resize(capacity);
         lfw::VolumeParticleVertex vertex;
-        vertex.position_ = lmath::Vector3::construct(0.0f, 0.0f, -0.5f);
+        vertex.position_ = lmath::Vector3::construct(0.0f, 2.0f, -0.5f);
         vertex.time_ = 0.0f;
         vertex.scale_ =  1.0f;
         vertex.radius_ = lcore::toBinary16Float(0.2f);
@@ -45,7 +46,7 @@ namespace debug
 
     void VolumeParticle00::update()
     {
-        lfw::Timer& timer = lfw::Application::getInstance().getTimer();
+        lfw::Timer& timer = lfw::System::getTimer();
 
         time_ += timer.getDeltaTime();
         if(1.0f<time_){

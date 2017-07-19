@@ -15,7 +15,9 @@
 #include <lgraphics/BlendStateRef.h>
 #include <lgraphics/SamplerStateRef.h>
 #include <lgraphics/ShaderRef.h>
+#include "../System.h"
 #include "../Application.h"
+#include "../resource/Resources.h"
 #include "PairArray.h"
 #include "ComponentRendererManager.h"
 #include "ComponentGeometric.h"
@@ -170,7 +172,7 @@ namespace lfw
     template<class U>
     void ComponentVolumeParticleRenderer<U>::onCreate()
     {
-        Resources& resources = Resources::getInstance();
+        Resources& resources = lfw::System::getResources();
         inputLayout_ = resources.getInputLayoutFactory().get(InputLayout_VolumeParticle);
         blendState_ = lgfx::BlendState::create(
             FALSE,
@@ -238,7 +240,7 @@ namespace lfw
 
             lgfx::SRVDesc srvDesc;
             srvDesc.format_ = lgfx::Data_R16_Float;
-            srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture3D;
+            srvDesc.dimension_ = lgfx::SRVDimension_Texture3D;
             srvDesc.tex3D_.mipLevels_ = 1;
             srvDesc.tex3D_.mostDetailedMip_ = 0;
             srvNoise_ = textureNoise_.createSRView (srvDesc);
@@ -305,7 +307,6 @@ namespace lfw
         lcore::memcpy(dst, src, size);
         vertexBuffer_.unmap(context, 0);
 
-        context.setRasterizerState(lgfx::ContextRef::Rasterizer_FillWireFrameNoCull);
         context.setRasterizerState(lgfx::ContextRef::Rasterizer_FillSolidNoCull);
         context.setInputLayout(inputLayout_);
         context.setBlendState(blendState_);
@@ -316,13 +317,13 @@ namespace lfw
         context.setVertexShader(vs_);
         context.setPixelShader(ps_);
 
-        lgfx::ShaderSamplerState::set(samLinearWrap_.get(), samLinear_.get());
-        lgfx::ShaderSamplerState::setDS(context, 0, 1);
-        lgfx::ShaderSamplerState::setPS(context, 0, 2);
+        lgfx::ShaderSamplerState samplerStates(context, samLinearWrap_, samLinear_);
+        samplerStates.setDS(0);
+        samplerStates.setPS(0);
 
-        lgfx::ShaderResourceView::set(srvNoise_.get(), srv_.get());
-        lgfx::ShaderResourceView::setDS(context, 0, 1);
-        lgfx::ShaderResourceView::setPS(context, 0, 2);
+        lgfx::ShaderResourceView srvs(context, srvNoise_, srv_);
+        srvs.setDS(0);
+        srvs.setPS(0);
 
         renderContext.setConstant(RenderContext::Shader_HS, 4, sizeof(HullConstant), &hullConstant_);
         lgfx::ConstantBufferRef* volumeConstant = renderContext.createConstantBuffer(sizeof(VolumeConstant), &volumeConstant_);
@@ -331,12 +332,19 @@ namespace lfw
 
         context.draw(vertices_.size(), 0);
 
+        context.clearVertexBuffers(0, 1);
         context.setDomainShader(NULL);
         context.setHullShader(NULL);
         context.setVertexShader(NULL);
         context.setPixelShader(NULL);
-        context.clearDSResources(1);
-        context.clearPSResources(2);
+
+        context.clearDSConstantBuffers(3, 1);
+        context.clearPSConstantBuffers(3, 1);
+        context.clearHSConstantBuffers(4, 1);
+        context.clearDSResources(0, 2);
+        context.clearPSResources(0, 2);
+        context.clearDSSamplers(0, 2);
+        context.clearPSSamplers(0, 2);
         vertexBuffer_.end();
     }
 
@@ -413,7 +421,7 @@ namespace lfw
         if(capacity<=vertices_.capacity()){
             return;
         }
-        lgfx::FrameSyncQuery& frameSync = Application::getInstance().getRenderer().getFrameSync();
+        lgfx::FrameSyncQuery& frameSync = lfw::System::getRenderer().getFrameSync();
         vertexBuffer_.terminate();
         static const s32 SyncFrames = 3;
         s32 totalSize = capacity*frameSync.getFrames()*sizeof(VolumeParticleVertex);

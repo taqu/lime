@@ -143,6 +143,9 @@ namespace lmath
         friend return_type_vec4 minimum(const Vector4& v0, const Vector4& v1);
         friend return_type_vec4 maximum(const Vector4& v0, const Vector4& v1);
 
+        friend f32 minimum(const Vector4& v);
+        friend f32 maximum(const Vector4& v);
+
         /**
         @brief v0*v1 + v2
         */
@@ -679,6 +682,16 @@ namespace lmath
         f32 w = lcore::maximum(v0.w_, v1.w_);
         return {x,y,z,w};
 #endif
+    }
+
+    inline f32 minimum(const Vector4& v)
+    {
+        return lcore::minimum(lcore::minimum(v.x_, v.y_), lcore::minimum(v.z_, v.w_));
+    }
+
+    inline f32 maximum(const Vector4& v)
+    {
+        return lcore::maximum(lcore::maximum(v.x_, v.y_), lcore::maximum(v.z_, v.w_));
     }
 
     /**
