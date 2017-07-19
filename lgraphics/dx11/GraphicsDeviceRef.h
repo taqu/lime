@@ -85,6 +85,7 @@ namespace lgfx
         {
             Rasterizer_FillSolid = 0,
             Rasterizer_FillSolidNoCull,
+            Rasterizer_FillSolidCounterClockwise,
             Rasterizer_FillWireFrame,
             Rasterizer_FillWireFrameNoCull,
             Rasterizer_DepthMap,
@@ -95,6 +96,8 @@ namespace lgfx
         {
             DepthStencil_DEnableWEnable =0,
             DepthStencil_DEnableWDisable,
+            DepthStencil_DEnableWEnableReverseZ,
+            DepthStencil_DEnableWDisableReverseZ,
             DepthStencil_DDisableWEnable,
             DepthStencil_DDisableWDisable,
             DepthStencil_Num,
@@ -155,7 +158,8 @@ namespace lgfx
         inline void dispatch(u32 xthreads, u32 ythreads, u32 zthreads);
         inline void dispatchIndirect(ID3D11Buffer* buffers, u32 alignedOffset);
 
-        void setViewport(f32 x, f32 y, f32 width, f32 height);
+        void getViewport(Viewport& viewport);
+        void setViewport(s32 x, s32 y, s32 width, s32 height);
         void setViewport(const Viewport& viewport);
         void setDefaultViewport(const Viewport& viewport);
 
@@ -254,29 +258,29 @@ namespace lgfx
             u32 srcRowPitch,
             u32 srcDepthPitch);
 
-        inline void clearVSResources(u32 numResources);
-        inline void clearGSResources(u32 numResources);
-        inline void clearPSResources(u32 numResources);
-        inline void clearCSResources(u32 numResources);
-        inline void clearDSResources(u32 numResources);
-        inline void clearHSResources(u32 numResources);
+        inline void clearVSResources(u32 start, u32 numResources);
+        inline void clearGSResources(u32 start, u32 numResources);
+        inline void clearPSResources(u32 start, u32 numResources);
+        inline void clearCSResources(u32 start, u32 numResources);
+        inline void clearDSResources(u32 start, u32 numResources);
+        inline void clearHSResources(u32 start, u32 numResources);
 
-        inline void clearVSSamplers(u32 numSamplers);
-        inline void clearGSSamplers(u32 numSamplers);
-        inline void clearPSSamplers(u32 numSamplers);
-        inline void clearCSSamplers(u32 numSamplers);
-        inline void clearDSSamplers(u32 numSamplers);
-        inline void clearHSSamplers(u32 numSamplers);
+        inline void clearVSSamplers(u32 start, u32 numSamplers);
+        inline void clearGSSamplers(u32 start, u32 numSamplers);
+        inline void clearPSSamplers(u32 start, u32 numSamplers);
+        inline void clearCSSamplers(u32 start, u32 numSamplers);
+        inline void clearDSSamplers(u32 start, u32 numSamplers);
+        inline void clearHSSamplers(u32 start, u32 numSamplers);
 
-        inline void clearVSConstantBuffers(u32 numBuffers);
-        inline void clearGSConstantBuffers(u32 numBuffers);
-        inline void clearPSConstantBuffers(u32 numBuffers);
-        inline void clearCSConstantBuffers(u32 numBuffers);
-        inline void clearDSConstantBuffers(u32 numBuffers);
-        inline void clearHSConstantBuffers(u32 numBuffers);
+        inline void clearVSConstantBuffers(u32 start, u32 numBuffers);
+        inline void clearGSConstantBuffers(u32 start, u32 numBuffers);
+        inline void clearPSConstantBuffers(u32 start, u32 numBuffers);
+        inline void clearCSConstantBuffers(u32 start, u32 numBuffers);
+        inline void clearDSConstantBuffers(u32 start, u32 numBuffers);
+        inline void clearHSConstantBuffers(u32 start, u32 numBuffers);
 
         inline void clearRenderTargets(u32 numResources);
-        inline void clearCSUnorderedAccessView(u32 numResources);
+        inline void clearCSUnorderedAccessView(u32 start, u32 numResources);
 
         inline void copyResource(ID3D11Resource* dst, u32 dstSubResource, u32 dstX, u32 dstY, u32 dstZ, ID3D11Resource* src, u32 srcSubResource, const Box* box);
         inline void copyResource(ID3D11Resource* dst, ID3D11Resource* src);
@@ -672,112 +676,112 @@ namespace lgfx
             srcDepthPitch);
     }
 
-    inline void ContextRef::clearVSResources(u32 numResources)
+    inline void ContextRef::clearVSResources(u32 start, u32 numResources)
     {
         LASSERT(numResources<MaxShaderResources);
-        context_->VSSetShaderResources(0, numResources, NULLResources);
+        context_->VSSetShaderResources(start, numResources, NULLResources);
     }
 
-    inline void ContextRef::clearGSResources(u32 numResources)
+    inline void ContextRef::clearGSResources(u32 start, u32 numResources)
     {
         LASSERT(numResources<MaxShaderResources);
-        context_->GSSetShaderResources(0, numResources, NULLResources);
+        context_->GSSetShaderResources(start, numResources, NULLResources);
     }
 
-    inline void ContextRef::clearPSResources(u32 numResources)
+    inline void ContextRef::clearPSResources(u32 start, u32 numResources)
     {
         LASSERT(numResources<MaxShaderResources);
-        context_->PSSetShaderResources(0, numResources, NULLResources);
+        context_->PSSetShaderResources(start, numResources, NULLResources);
     }
 
-    inline void ContextRef::clearCSResources(u32 numResources)
+    inline void ContextRef::clearCSResources(u32 start, u32 numResources)
     {
         LASSERT(numResources<MaxShaderResources);
-        context_->CSSetShaderResources(0, numResources, NULLResources);
+        context_->CSSetShaderResources(start, numResources, NULLResources);
     }
 
-    inline void ContextRef::clearDSResources(u32 numResources)
+    inline void ContextRef::clearDSResources(u32 start, u32 numResources)
     {
         LASSERT(numResources<MaxShaderResources);
-        context_->DSSetShaderResources(0, numResources, NULLResources);
+        context_->DSSetShaderResources(start, numResources, NULLResources);
     }
 
-    inline void ContextRef::clearHSResources(u32 numResources)
+    inline void ContextRef::clearHSResources(u32 start, u32 numResources)
     {
         LASSERT(numResources<MaxShaderResources);
-        context_->HSSetShaderResources(0, numResources, NULLResources);
+        context_->HSSetShaderResources(start, numResources, NULLResources);
     }
 
-    inline void ContextRef::clearVSSamplers(u32 numSamplers)
+    inline void ContextRef::clearVSSamplers(u32 start, u32 numSamplers)
     {
         LASSERT(numSamplers<MaxSamplerStates);
-        context_->VSSetSamplers(0, numSamplers, NULLSamplerStates);
+        context_->VSSetSamplers(start, numSamplers, NULLSamplerStates);
     }
 
-    inline void ContextRef::clearGSSamplers(u32 numSamplers)
+    inline void ContextRef::clearGSSamplers(u32 start, u32 numSamplers)
     {
         LASSERT(numSamplers<MaxSamplerStates);
-        context_->GSSetSamplers(0, numSamplers, NULLSamplerStates);
+        context_->GSSetSamplers(start, numSamplers, NULLSamplerStates);
     }
 
-    inline void ContextRef::clearPSSamplers(u32 numSamplers)
+    inline void ContextRef::clearPSSamplers(u32 start, u32 numSamplers)
     {
         LASSERT(numSamplers<=MaxSamplerStates);
-        context_->PSSetSamplers(0, numSamplers, NULLSamplerStates);
+        context_->PSSetSamplers(start, numSamplers, NULLSamplerStates);
     }
 
-    inline void ContextRef::clearCSSamplers(u32 numSamplers)
+    inline void ContextRef::clearCSSamplers(u32 start, u32 numSamplers)
     {
         LASSERT(numSamplers<MaxSamplerStates);
-        context_->CSSetSamplers(0, numSamplers, NULLSamplerStates);
+        context_->CSSetSamplers(start, numSamplers, NULLSamplerStates);
     }
 
-    inline void ContextRef::clearDSSamplers(u32 numSamplers)
+    inline void ContextRef::clearDSSamplers(u32 start, u32 numSamplers)
     {
         LASSERT(numSamplers<MaxSamplerStates);
-        context_->DSSetSamplers(0, numSamplers, NULLSamplerStates);
+        context_->DSSetSamplers(start, numSamplers, NULLSamplerStates);
     }
 
-    inline void ContextRef::clearHSSamplers(u32 numSamplers)
+    inline void ContextRef::clearHSSamplers(u32 start, u32 numSamplers)
     {
         LASSERT(numSamplers<MaxSamplerStates);
-        context_->HSSetSamplers(0, numSamplers, NULLSamplerStates);
+        context_->HSSetSamplers(start, numSamplers, NULLSamplerStates);
     }
 
-    inline void ContextRef::clearVSConstantBuffers(u32 numBuffers)
+    inline void ContextRef::clearVSConstantBuffers(u32 start, u32 numBuffers)
     {
         LASSERT(numBuffers<MaxBuffers);
-        context_->VSSetConstantBuffers(0, numBuffers, NULLBuffers);
+        context_->VSSetConstantBuffers(start, numBuffers, NULLBuffers);
     }
 
-    inline void ContextRef::clearGSConstantBuffers(u32 numBuffers)
+    inline void ContextRef::clearGSConstantBuffers(u32 start, u32 numBuffers)
     {
         LASSERT(numBuffers<MaxBuffers);
-        context_->GSSetConstantBuffers(0, numBuffers, NULLBuffers);
+        context_->GSSetConstantBuffers(start, numBuffers, NULLBuffers);
     }
 
-    inline void ContextRef::clearPSConstantBuffers(u32 numBuffers)
+    inline void ContextRef::clearPSConstantBuffers(u32 start, u32 numBuffers)
     {
         LASSERT(numBuffers<MaxBuffers);
-        context_->PSSetConstantBuffers(0, numBuffers, NULLBuffers);
+        context_->PSSetConstantBuffers(start, numBuffers, NULLBuffers);
     }
 
-    inline void ContextRef::clearCSConstantBuffers(u32 numBuffers)
+    inline void ContextRef::clearCSConstantBuffers(u32 start, u32 numBuffers)
     {
         LASSERT(numBuffers<MaxBuffers);
-        context_->CSSetConstantBuffers(0, numBuffers, NULLBuffers);
+        context_->CSSetConstantBuffers(start, numBuffers, NULLBuffers);
     }
 
-    inline void ContextRef::clearDSConstantBuffers(u32 numBuffers)
+    inline void ContextRef::clearDSConstantBuffers(u32 start, u32 numBuffers)
     {
         LASSERT(numBuffers<MaxBuffers);
-        context_->DSSetConstantBuffers(0, numBuffers, NULLBuffers);
+        context_->DSSetConstantBuffers(start, numBuffers, NULLBuffers);
     }
 
-    inline void ContextRef::clearHSConstantBuffers(u32 numBuffers)
+    inline void ContextRef::clearHSConstantBuffers(u32 start, u32 numBuffers)
     {
         LASSERT(numBuffers<MaxBuffers);
-        context_->HSSetConstantBuffers(0, numBuffers, NULLBuffers);
+        context_->HSSetConstantBuffers(start, numBuffers, NULLBuffers);
     }
 
     inline void ContextRef::clearRenderTargets(u32 numTargets)
@@ -786,10 +790,10 @@ namespace lgfx
         context_->OMSetRenderTargets(numTargets, NullTargets, NULL);
     }
 
-    inline void ContextRef::clearCSUnorderedAccessView(u32 numResources)
+    inline void ContextRef::clearCSUnorderedAccessView(u32 start, u32 numResources)
     {
         LASSERT(numResources<LGFX_MAX_RENDER_TARGETS);
-        context_->CSSetUnorderedAccessViews(0, numResources, (ID3D11UnorderedAccessView* const *)NullTargets, NULL);
+        context_->CSSetUnorderedAccessViews(start, numResources, (ID3D11UnorderedAccessView* const *)NullTargets, NULL);
     }
 
     inline void ContextRef::copyResource(ID3D11Resource* dst, u32 dstSubResource, u32 dstX, u32 dstY, u32 dstZ, ID3D11Resource* src, u32 srcSubResource, const Box* box)
@@ -902,7 +906,6 @@ namespace lgfx
         swapChain_->Present(syncInterval_, 0);
     }
 
-
     //--------------------------------------
     //---
     //--- ShaderResourceView
@@ -911,29 +914,41 @@ namespace lgfx
     class ShaderResourceView
     {
     public:
-        inline static void set(
+        inline ShaderResourceView(
+            ContextRef& context);
+
+        inline ShaderResourceView(
+            ContextRef& context,
+            ID3D11ShaderResourceView* res0);
+
+        inline ShaderResourceView(
+            ContextRef& context,
             ID3D11ShaderResourceView* res0,
             ID3D11ShaderResourceView* res1);
 
-        inline static void set(
+        inline ShaderResourceView(
+            ContextRef& context,
             ID3D11ShaderResourceView* res0,
             ID3D11ShaderResourceView* res1,
             ID3D11ShaderResourceView* res2);
 
-        inline static void set(
+        inline ShaderResourceView(
+            ContextRef& context,
             ID3D11ShaderResourceView* res0,
             ID3D11ShaderResourceView* res1,
             ID3D11ShaderResourceView* res2,
             ID3D11ShaderResourceView* res3);
 
-        inline static void set(
+        inline ShaderResourceView(
+            ContextRef& context,
             ID3D11ShaderResourceView* res0,
             ID3D11ShaderResourceView* res1,
             ID3D11ShaderResourceView* res2,
             ID3D11ShaderResourceView* res3,
             ID3D11ShaderResourceView* res4);
 
-        inline static void set(
+        inline ShaderResourceView(
+            ContextRef& context,
             ID3D11ShaderResourceView* res0,
             ID3D11ShaderResourceView* res1,
             ID3D11ShaderResourceView* res2,
@@ -941,39 +956,101 @@ namespace lgfx
             ID3D11ShaderResourceView* res4,
             ID3D11ShaderResourceView* res5);
 
-        inline static void setVS(ContextRef& context, u32 start, u32 num);
-        inline static void setHS(ContextRef& context, u32 start, u32 num);
-        inline static void setDS(ContextRef& context, u32 start, u32 num);
-        inline static void setGS(ContextRef& context, u32 start, u32 num);
-        inline static void setPS(ContextRef& context, u32 start, u32 num);
-        inline static void setCS(ContextRef& context, u32 start, u32 num);
+        inline ShaderResourceView& set(
+            ID3D11ShaderResourceView* res0);
 
-        static ID3D11ShaderResourceView* resources_[8];
+        inline ShaderResourceView& set(
+            ID3D11ShaderResourceView* res0,
+            ID3D11ShaderResourceView* res1);
+
+        inline ShaderResourceView& set(
+            ID3D11ShaderResourceView* res0,
+            ID3D11ShaderResourceView* res1,
+            ID3D11ShaderResourceView* res2);
+
+        inline ShaderResourceView& set(
+            ID3D11ShaderResourceView* res0,
+            ID3D11ShaderResourceView* res1,
+            ID3D11ShaderResourceView* res2,
+            ID3D11ShaderResourceView* res3);
+
+        inline ShaderResourceView& set(
+            ID3D11ShaderResourceView* res0,
+            ID3D11ShaderResourceView* res1,
+            ID3D11ShaderResourceView* res2,
+            ID3D11ShaderResourceView* res3,
+            ID3D11ShaderResourceView* res4);
+
+        inline ShaderResourceView& set(
+            ID3D11ShaderResourceView* res0,
+            ID3D11ShaderResourceView* res1,
+            ID3D11ShaderResourceView* res2,
+            ID3D11ShaderResourceView* res3,
+            ID3D11ShaderResourceView* res4,
+            ID3D11ShaderResourceView* res5);
+
+        inline ShaderResourceView& setVS(u32 start);
+        inline ShaderResourceView& setHS(u32 start);
+        inline ShaderResourceView& setDS(u32 start);
+        inline ShaderResourceView& setGS(u32 start);
+        inline ShaderResourceView& setPS(u32 start);
+        inline ShaderResourceView& setCS(u32 start);
+
+        inline ShaderResourceView& add(ID3D11ShaderResourceView* res);
+
+        ContextRef& context_;
+        u32 number_;
+        ID3D11ShaderResourceView* resources_[6];
     };
 
-    inline void ShaderResourceView::set(
+    inline ShaderResourceView::ShaderResourceView(
+        ContextRef& context)
+        :context_(context)
+        ,number_(0)
+    {
+    }
+
+    inline ShaderResourceView::ShaderResourceView(
+        ContextRef& context,
+        ID3D11ShaderResourceView* res0)
+        :context_(context)
+        ,number_(1)
+    {
+        resources_[0] = res0;
+    }
+
+    inline ShaderResourceView::ShaderResourceView(
+        ContextRef& context,
         ID3D11ShaderResourceView* res0,
         ID3D11ShaderResourceView* res1)
+        :context_(context)
+        ,number_(2)
     {
         resources_[0] = res0;
         resources_[1] = res1;
     }
 
-    inline void ShaderResourceView::set(
+    inline ShaderResourceView::ShaderResourceView(
+        ContextRef& context,
         ID3D11ShaderResourceView* res0,
         ID3D11ShaderResourceView* res1,
         ID3D11ShaderResourceView* res2)
+        :context_(context)
+        ,number_(3)
     {
         resources_[0] = res0;
         resources_[1] = res1;
         resources_[2] = res2;
     }
 
-    inline void ShaderResourceView::set(
+    inline ShaderResourceView::ShaderResourceView(
+        ContextRef& context,
         ID3D11ShaderResourceView* res0,
         ID3D11ShaderResourceView* res1,
         ID3D11ShaderResourceView* res2,
         ID3D11ShaderResourceView* res3)
+        :context_(context)
+        ,number_(4)
     {
         resources_[0] = res0;
         resources_[1] = res1;
@@ -981,12 +1058,15 @@ namespace lgfx
         resources_[3] = res3;
     }
 
-    inline void ShaderResourceView::set(
+    inline ShaderResourceView::ShaderResourceView(
+        ContextRef& context,
         ID3D11ShaderResourceView* res0,
         ID3D11ShaderResourceView* res1,
         ID3D11ShaderResourceView* res2,
         ID3D11ShaderResourceView* res3,
         ID3D11ShaderResourceView* res4)
+        :context_(context)
+        ,number_(5)
     {
         resources_[0] = res0;
         resources_[1] = res1;
@@ -995,13 +1075,16 @@ namespace lgfx
         resources_[4] = res4;
     }
 
-    inline void ShaderResourceView::set(
+    inline ShaderResourceView::ShaderResourceView(
+        ContextRef& context,
         ID3D11ShaderResourceView* res0,
         ID3D11ShaderResourceView* res1,
         ID3D11ShaderResourceView* res2,
         ID3D11ShaderResourceView* res3,
         ID3D11ShaderResourceView* res4,
         ID3D11ShaderResourceView* res5)
+        :context_(context)
+        ,number_(6)
     {
         resources_[0] = res0;
         resources_[1] = res1;
@@ -1011,34 +1094,126 @@ namespace lgfx
         resources_[5] = res5;
     }
 
-    inline void ShaderResourceView::setVS(ContextRef& context, u32 start, u32 num)
+    inline ShaderResourceView& ShaderResourceView::set(
+        ID3D11ShaderResourceView* res0)
     {
-        context.setVSResources(start, num, resources_);
+        number_ = 1;
+        resources_[0] = res0;
+        return *this;
     }
 
-    inline void ShaderResourceView::setHS(ContextRef& context, u32 start, u32 num)
+    inline ShaderResourceView& ShaderResourceView::set(
+        ID3D11ShaderResourceView* res0,
+        ID3D11ShaderResourceView* res1)
     {
-        context.setHSResources(start, num, resources_);
+        number_ = 2;
+        resources_[0] = res0;
+        resources_[1] = res1;
+        return *this;
     }
 
-    inline void ShaderResourceView::setDS(ContextRef& context, u32 start, u32 num)
+    inline ShaderResourceView& ShaderResourceView::set(
+        ID3D11ShaderResourceView* res0,
+        ID3D11ShaderResourceView* res1,
+        ID3D11ShaderResourceView* res2)
     {
-        context.setDSResources(start, num, resources_);
+        number_ = 3;
+        resources_[0] = res0;
+        resources_[1] = res1;
+        resources_[2] = res2;
+        return *this;
     }
 
-    inline void ShaderResourceView::setGS(ContextRef& context, u32 start, u32 num)
+    inline ShaderResourceView& ShaderResourceView::set(
+        ID3D11ShaderResourceView* res0,
+        ID3D11ShaderResourceView* res1,
+        ID3D11ShaderResourceView* res2,
+        ID3D11ShaderResourceView* res3)
     {
-        context.setGSResources(start, num, resources_);
+        number_ = 4;
+        resources_[0] = res0;
+        resources_[1] = res1;
+        resources_[2] = res2;
+        resources_[3] = res3;
+        return *this;
     }
 
-    inline void ShaderResourceView::setPS(ContextRef& context, u32 start, u32 num)
+    inline ShaderResourceView& ShaderResourceView::set(
+        ID3D11ShaderResourceView* res0,
+        ID3D11ShaderResourceView* res1,
+        ID3D11ShaderResourceView* res2,
+        ID3D11ShaderResourceView* res3,
+        ID3D11ShaderResourceView* res4)
     {
-        context.setPSResources(start, num, resources_);
+        number_ = 5;
+        resources_[0] = res0;
+        resources_[1] = res1;
+        resources_[2] = res2;
+        resources_[3] = res3;
+        resources_[4] = res4;
+        return *this;
     }
 
-    inline void ShaderResourceView::setCS(ContextRef& context, u32 start, u32 num)
+    inline ShaderResourceView& ShaderResourceView::set(
+        ID3D11ShaderResourceView* res0,
+        ID3D11ShaderResourceView* res1,
+        ID3D11ShaderResourceView* res2,
+        ID3D11ShaderResourceView* res3,
+        ID3D11ShaderResourceView* res4,
+        ID3D11ShaderResourceView* res5)
     {
-        context.setCSResources(start, num, resources_);
+        number_ = 6;
+        resources_[0] = res0;
+        resources_[1] = res1;
+        resources_[2] = res2;
+        resources_[3] = res3;
+        resources_[4] = res4;
+        resources_[5] = res5;
+        return *this;
+    }
+
+    inline ShaderResourceView& ShaderResourceView::add(ID3D11ShaderResourceView* res)
+    {
+        LASSERT(number_<6);
+        resources_[number_] = res;
+        ++number_;
+        return *this;
+    }
+
+    inline ShaderResourceView& ShaderResourceView::setVS(u32 start)
+    {
+        context_.setVSResources(start, number_, resources_);
+        return *this;
+    }
+
+    inline ShaderResourceView& ShaderResourceView::setHS(u32 start)
+    {
+        context_.setHSResources(start, number_, resources_);
+        return *this;
+    }
+
+    inline ShaderResourceView& ShaderResourceView::setDS(u32 start)
+    {
+        context_.setDSResources(start, number_, resources_);
+        return *this;
+    }
+
+    inline ShaderResourceView& ShaderResourceView::setGS(u32 start)
+    {
+        context_.setGSResources(start, number_, resources_);
+        return *this;
+    }
+
+    inline ShaderResourceView& ShaderResourceView::setPS(u32 start)
+    {
+        context_.setPSResources(start, number_, resources_);
+        return *this;
+    }
+
+    inline ShaderResourceView& ShaderResourceView::setCS(u32 start)
+    {
+        context_.setCSResources(start, number_, resources_);
+        return *this;
     }
 
     //--------------------------------------
@@ -1049,29 +1224,41 @@ namespace lgfx
     class ShaderSamplerState
     {
     public:
-        inline static void set(
+        inline ShaderSamplerState(
+            ContextRef& context);
+
+        inline ShaderSamplerState(
+            ContextRef& context,
+            ID3D11SamplerState* state0);
+
+        inline ShaderSamplerState(
+            ContextRef& context,
             ID3D11SamplerState* state0,
             ID3D11SamplerState* state1);
 
-        inline static void set(
+        inline ShaderSamplerState(
+            ContextRef& context,
             ID3D11SamplerState* state0,
             ID3D11SamplerState* state1,
             ID3D11SamplerState* state2);
 
-        inline static void set(
+        inline ShaderSamplerState(
+            ContextRef& context,
             ID3D11SamplerState* state0,
             ID3D11SamplerState* state1,
             ID3D11SamplerState* state2,
             ID3D11SamplerState* state3);
 
-        inline static void set(
+        inline ShaderSamplerState(
+            ContextRef& context,
             ID3D11SamplerState* state0,
             ID3D11SamplerState* state1,
             ID3D11SamplerState* state2,
             ID3D11SamplerState* state3,
             ID3D11SamplerState* state4);
 
-        inline static void set(
+        inline ShaderSamplerState(
+            ContextRef& context,
             ID3D11SamplerState* state0,
             ID3D11SamplerState* state1,
             ID3D11SamplerState* state2,
@@ -1079,39 +1266,99 @@ namespace lgfx
             ID3D11SamplerState* state4,
             ID3D11SamplerState* state5);
 
-        inline static void setVS(ContextRef& context, u32 start, u32 num);
-        inline static void setHS(ContextRef& context, u32 start, u32 num);
-        inline static void setDS(ContextRef& context, u32 start, u32 num);
-        inline static void setGS(ContextRef& context, u32 start, u32 num);
-        inline static void setPS(ContextRef& context, u32 start, u32 num);
-        inline static void setCS(ContextRef& context, u32 start, u32 num);
+        inline ShaderSamplerState& set(
+            ID3D11SamplerState* state0);
 
-        static ID3D11SamplerState* states_[8];
+        inline ShaderSamplerState& set(
+            ID3D11SamplerState* state0,
+            ID3D11SamplerState* state1);
+
+        inline ShaderSamplerState& set(
+            ID3D11SamplerState* state0,
+            ID3D11SamplerState* state1,
+            ID3D11SamplerState* state2);
+
+        inline ShaderSamplerState& set(
+            ID3D11SamplerState* state0,
+            ID3D11SamplerState* state1,
+            ID3D11SamplerState* state2,
+            ID3D11SamplerState* state3);
+
+        inline ShaderSamplerState& set(
+            ID3D11SamplerState* state0,
+            ID3D11SamplerState* state1,
+            ID3D11SamplerState* state2,
+            ID3D11SamplerState* state3,
+            ID3D11SamplerState* state4);
+
+        inline ShaderSamplerState& set(
+            ID3D11SamplerState* state0,
+            ID3D11SamplerState* state1,
+            ID3D11SamplerState* state2,
+            ID3D11SamplerState* state3,
+            ID3D11SamplerState* state4,
+            ID3D11SamplerState* state5);
+
+        inline ShaderSamplerState& setVS(u32 start);
+        inline ShaderSamplerState& setHS(u32 start);
+        inline ShaderSamplerState& setDS(u32 start);
+        inline ShaderSamplerState& setGS(u32 start);
+        inline ShaderSamplerState& setPS(u32 start);
+        inline ShaderSamplerState& setCS(u32 start);
+
+        ContextRef& context_;
+        u32 number_;
+        ID3D11SamplerState* states_[6];
     };
 
-    inline void ShaderSamplerState::set(
+    inline ShaderSamplerState::ShaderSamplerState(
+        ContextRef& context)
+        :context_(context)
+        ,number_(0)
+    {
+    }
+
+    inline ShaderSamplerState::ShaderSamplerState(
+        ContextRef& context,
+        ID3D11SamplerState* state0)
+        :context_(context)
+        ,number_(1)
+    {
+        states_[0] = state0;
+    }
+
+    inline ShaderSamplerState::ShaderSamplerState(
+        ContextRef& context,
         ID3D11SamplerState* state0,
         ID3D11SamplerState* state1)
+        :context_(context)
+        ,number_(2)
     {
         states_[0] = state0;
         states_[1] = state1;
     }
 
-    inline void ShaderSamplerState::set(
+    inline ShaderSamplerState::ShaderSamplerState(
+        ContextRef& context,
         ID3D11SamplerState* state0,
         ID3D11SamplerState* state1,
         ID3D11SamplerState* state2)
+        :context_(context)
+        ,number_(3)
     {
         states_[0] = state0;
         states_[1] = state1;
         states_[2] = state2;
     }
 
-    inline void ShaderSamplerState::set(
+    inline ShaderSamplerState::ShaderSamplerState(
+        ContextRef& context,
         ID3D11SamplerState* state0,
         ID3D11SamplerState* state1,
         ID3D11SamplerState* state2,
         ID3D11SamplerState* state3)
+        :context_(context)
+        ,number_(4)
     {
         states_[0] = state0;
         states_[1] = state1;
@@ -1119,12 +1366,15 @@ namespace lgfx
         states_[3] = state3;
     }
 
-    inline void ShaderSamplerState::set(
+    inline ShaderSamplerState::ShaderSamplerState(
+        ContextRef& context,
         ID3D11SamplerState* state0,
         ID3D11SamplerState* state1,
         ID3D11SamplerState* state2,
         ID3D11SamplerState* state3,
         ID3D11SamplerState* state4)
+        :context_(context)
+        ,number_(5)
     {
         states_[0] = state0;
         states_[1] = state1;
@@ -1133,13 +1383,16 @@ namespace lgfx
         states_[4] = state4;
     }
 
-    inline void ShaderSamplerState::set(
+    inline ShaderSamplerState::ShaderSamplerState(
+        ContextRef& context,
         ID3D11SamplerState* state0,
         ID3D11SamplerState* state1,
         ID3D11SamplerState* state2,
         ID3D11SamplerState* state3,
         ID3D11SamplerState* state4,
         ID3D11SamplerState* state5)
+        :context_(context)
+        ,number_(6)
     {
         states_[0] = state0;
         states_[1] = state1;
@@ -1149,34 +1402,118 @@ namespace lgfx
         states_[5] = state5;
     }
 
-    inline void ShaderSamplerState::setVS(ContextRef& context, u32 start, u32 num)
+    inline ShaderSamplerState& ShaderSamplerState::set(
+        ID3D11SamplerState* state0)
     {
-        context.setVSSamplers(start, num, states_);
+        number_ = 1;
+        states_[0] = state0;
+        return *this;
     }
 
-    inline void ShaderSamplerState::setHS(ContextRef& context, u32 start, u32 num)
+    inline ShaderSamplerState& ShaderSamplerState::set(
+        ID3D11SamplerState* state0,
+        ID3D11SamplerState* state1)
     {
-        context.setHSSamplers(start, num, states_);
+        number_ = 2;
+        states_[0] = state0;
+        states_[1] = state1;
+        return *this;
     }
 
-    inline void ShaderSamplerState::setDS(ContextRef& context, u32 start, u32 num)
+    inline ShaderSamplerState& ShaderSamplerState::set(
+        ID3D11SamplerState* state0,
+        ID3D11SamplerState* state1,
+        ID3D11SamplerState* state2)
     {
-        context.setDSSamplers(start, num, states_);
+        number_ = 3;
+        states_[0] = state0;
+        states_[1] = state1;
+        states_[2] = state2;
+        return *this;
     }
 
-    inline void ShaderSamplerState::setGS(ContextRef& context, u32 start, u32 num)
+    inline ShaderSamplerState& ShaderSamplerState::set(
+        ID3D11SamplerState* state0,
+        ID3D11SamplerState* state1,
+        ID3D11SamplerState* state2,
+        ID3D11SamplerState* state3)
     {
-        context.setGSSamplers(start, num, states_);
+        number_ = 4;
+        states_[0] = state0;
+        states_[1] = state1;
+        states_[2] = state2;
+        states_[3] = state3;
+        return *this;
     }
 
-    inline void ShaderSamplerState::setPS(ContextRef& context, u32 start, u32 num)
+    inline ShaderSamplerState& ShaderSamplerState::set(
+        ID3D11SamplerState* state0,
+        ID3D11SamplerState* state1,
+        ID3D11SamplerState* state2,
+        ID3D11SamplerState* state3,
+        ID3D11SamplerState* state4)
     {
-        context.setPSSamplers(start, num, states_);
+        number_ = 5;
+        states_[0] = state0;
+        states_[1] = state1;
+        states_[2] = state2;
+        states_[3] = state3;
+        states_[4] = state4;
+        return *this;
     }
 
-    inline void ShaderSamplerState::setCS(ContextRef& context, u32 start, u32 num)
+    inline ShaderSamplerState& ShaderSamplerState::set(
+        ID3D11SamplerState* state0,
+        ID3D11SamplerState* state1,
+        ID3D11SamplerState* state2,
+        ID3D11SamplerState* state3,
+        ID3D11SamplerState* state4,
+        ID3D11SamplerState* state5)
     {
-        context.setCSSamplers(start, num, states_);
+        number_ = 6;
+        states_[0] = state0;
+        states_[1] = state1;
+        states_[2] = state2;
+        states_[3] = state3;
+        states_[4] = state4;
+        states_[5] = state5;
+        return *this;
+    }
+
+    inline ShaderSamplerState& ShaderSamplerState::setVS(u32 start)
+    {
+        context_.setVSSamplers(start, number_, states_);
+        return *this;
+    }
+
+    inline ShaderSamplerState& ShaderSamplerState::setHS(u32 start)
+    {
+        context_.setHSSamplers(start, number_, states_);
+        return *this;
+    }
+
+    inline ShaderSamplerState& ShaderSamplerState::setDS(u32 start)
+    {
+        context_.setDSSamplers(start, number_, states_);
+        return *this;
+    }
+
+    inline ShaderSamplerState& ShaderSamplerState::setGS(u32 start)
+    {
+        context_.setGSSamplers(start, number_, states_);
+        return *this;
+    }
+
+    inline ShaderSamplerState& ShaderSamplerState::setPS(u32 start)
+    {
+        context_.setPSSamplers(start, number_, states_);
+        return *this;
+    }
+
+    inline ShaderSamplerState& ShaderSamplerState::setCS(u32 start)
+    {
+        context_.setCSSamplers(start, number_, states_);
+        return *this;
     }
 }
 #endif //INC_LGRAPHICS_DX11_GRAPHICSDEVICEREF_H__

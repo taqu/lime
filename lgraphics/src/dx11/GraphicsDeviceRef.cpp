@@ -128,7 +128,7 @@ namespace lgfx
         ,depthStencilView_(NULL)
         ,depthStencilShaderResourceView_(NULL)
     {
-        viewport_.x_ = viewport_.y_ = viewport_.width_ = viewport_.height_ = 0.0f;
+        viewport_.x_ = viewport_.y_ = viewport_.width_ = viewport_.height_ = 0;
         viewport_.minDepth_ = 0.0f;
         viewport_.maxDepth_ = 1.0f;
 
@@ -287,15 +287,27 @@ namespace lgfx
     }
 
     //---------------------------------------------------------
-    void ContextRef::setViewport(f32 x, f32 y, f32 width, f32 height)
+    void ContextRef::getViewport(Viewport& viewport)
+    {
+        u32 numViewports = 1;
+        D3D11_VIEWPORT vp;
+        context_->RSGetViewports(&numViewports, &vp);
+        viewport.x_ = static_cast<s32>(vp.TopLeftX);
+        viewport.y_ = static_cast<s32>(vp.TopLeftY);
+        viewport.width_ = static_cast<s32>(vp.Width);
+        viewport.height_ = static_cast<s32>(vp.Height);
+    }
+
+    //---------------------------------------------------------
+    void ContextRef::setViewport(s32 x, s32 y, s32 width, s32 height)
     {
         D3D11_VIEWPORT vp;
-        vp.Width = width;
-        vp.Height = height;
+        vp.Width = static_cast<f32>(width);
+        vp.Height = static_cast<f32>(height);
         vp.MinDepth = viewport_.minDepth_;
         vp.MaxDepth = viewport_.maxDepth_;
-        vp.TopLeftX = x;
-        vp.TopLeftY = y;
+        vp.TopLeftX = static_cast<f32>(x);
+        vp.TopLeftY = static_cast<f32>(y);
         context_->RSSetViewports(1, &vp );
     }
 
@@ -303,10 +315,10 @@ namespace lgfx
     void ContextRef::setViewport(const Viewport& viewport)
     {
         D3D11_VIEWPORT vp;
-        vp.TopLeftX = viewport.x_;
-        vp.TopLeftY = viewport.y_;
-        vp.Width = viewport.width_;
-        vp.Height = viewport.height_;
+        vp.TopLeftX = static_cast<f32>(viewport.x_);
+        vp.TopLeftY = static_cast<f32>(viewport.y_);
+        vp.Width = static_cast<f32>(viewport.width_);
+        vp.Height = static_cast<f32>(viewport.height_);
         vp.MinDepth = viewport_.minDepth_;
         vp.MaxDepth = viewport_.maxDepth_;
         context_->RSSetViewports(1, &vp);
@@ -322,10 +334,10 @@ namespace lgfx
     void ContextRef::restoreDefaultViewport()
     {
         D3D11_VIEWPORT vp;
-        vp.TopLeftX = viewport_.x_;
-        vp.TopLeftY = viewport_.y_;
-        vp.Width = viewport_.width_;
-        vp.Height = viewport_.height_;
+        vp.TopLeftX = static_cast<f32>(viewport_.x_);
+        vp.TopLeftY = static_cast<f32>(viewport_.y_);
+        vp.Width = static_cast<f32>(viewport_.width_);
+        vp.Height = static_cast<f32>(viewport_.height_);
         vp.MinDepth = viewport_.minDepth_;
         vp.MaxDepth = viewport_.maxDepth_;
         context_->RSSetViewports(1, &vp);
@@ -681,8 +693,16 @@ namespace lgfx
                 return false;
             }
 
+            rasterizerDesc.CullMode = (D3D11_CULL_MODE)Cull_Back;
+            rasterizerDesc.FrontCounterClockwise = TRUE;
+            hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_FillSolidCounterClockwise]);
+            if(FAILED(hr)){
+                return false;
+            }
+
             rasterizerDesc.FillMode = (D3D11_FILL_MODE)Fill_WireFrame;
             rasterizerDesc.CullMode = (D3D11_CULL_MODE)Cull_Back;
+            rasterizerDesc.FrontCounterClockwise = FALSE;
             hr = device_->CreateRasterizerState(&rasterizerDesc, &rasterizerStates_[Rasterizer_FillWireFrame]);
             if(FAILED(hr)){
                 return false;
@@ -738,19 +758,24 @@ namespace lgfx
 
             desc.DepthEnable = TRUE;
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
-            desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_Greater);
+            desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_Less);
             desc.StencilEnable = FALSE;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWEnable]);
 
-            desc.DepthEnable = TRUE;
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWDisable]);
+
+            desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_Greater);
+            desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
+            device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWEnableReverseZ]);
+
+            desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
+            device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWDisableReverseZ]);
 
             desc.DepthEnable = FALSE;
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DDisableWEnable]);
 
-            desc.DepthEnable = FALSE;
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DDisableWDisable]);
 
@@ -956,7 +981,7 @@ namespace lgfx
 
         context_->OMSetRenderTargets(1, &renderTargetView_, depthStencilView_);
 
-        Viewport viewport = {0.0f, 0.0f, static_cast<f32>(width), static_cast<f32>(height), 0.0f, 1.0f};
+        Viewport viewport = {0, 0, static_cast<s32>(width), static_cast<s32>(height), 0.0f, 1.0f};
         setDefaultViewport(viewport);
         restoreDefaultViewport();
         return true;
@@ -1043,19 +1068,4 @@ namespace lgfx
         }
         return DefferedContextRef(device_, deffered, *this);
     }
-
-
-    //--------------------------------------
-    //---
-    //--- ShaderResourceView
-    //---
-    //--------------------------------------
-    ID3D11ShaderResourceView* ShaderResourceView::resources_[8];
-
-    //--------------------------------------
-    //---
-    //--- ShaderSamplerState
-    //---
-    //--------------------------------------
-    ID3D11SamplerState* ShaderSamplerState::states_[8];
 }

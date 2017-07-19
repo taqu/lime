@@ -71,6 +71,7 @@ namespace lgfx
         };
 
         static bool copy(D3D11_RENDER_TARGET_VIEW_DESC& viewDesc, const RTVDesc& desc);
+        static bool copy(RTVDesc& desc, const D3D11_RENDER_TARGET_VIEW_DESC& viewDesc);
     };
 
     //--------------------------------------------------------
@@ -113,6 +114,7 @@ namespace lgfx
         };
 
         static bool copy(D3D11_DEPTH_STENCIL_VIEW_DESC& viewDesc, const DSVDesc& desc);
+        static bool copy(DSVDesc& desc, const D3D11_DEPTH_STENCIL_VIEW_DESC& viewDesc);
     };
 
     //--------------------------------------------------------
@@ -199,6 +201,7 @@ namespace lgfx
         };
 
         static bool copy(D3D11_SHADER_RESOURCE_VIEW_DESC& viewDesc, const SRVDesc& desc);
+        static bool copy(SRVDesc& desc, const D3D11_SHADER_RESOURCE_VIEW_DESC& viewDesc);
     };
 
     //--------------------------------------------------------
@@ -257,6 +260,7 @@ namespace lgfx
         };
 
         static bool copy(D3D11_UNORDERED_ACCESS_VIEW_DESC& viewDesc, const UAVDesc& desc);
+        static bool copy(UAVDesc& desc, const D3D11_UNORDERED_ACCESS_VIEW_DESC& viewDesc);
     };
 
     //--------------------------------------------------------
@@ -295,6 +299,10 @@ namespace lgfx
         operator pointer_type(){ return view_;}
         operator pointer_array_type(){ return &view_; }
 
+        SRVDesc getSRVDesc();
+        RTVDesc getRTVDesc();
+        DSVDesc getDSVDesc();
+        UAVDesc getUAVDesc();
     protected:
         inline ViewRefBase();
         ViewRefBase(const this_type& rhs);
@@ -344,6 +352,46 @@ namespace lgfx
         LDXSAFE_RELEASE(view_);
     }
 
+    template<class Derived, class T>
+    SRVDesc ViewRefBase<Derived, T>::getSRVDesc()
+    {
+        D3D11_SHADER_RESOURCE_VIEW_DESC viewDesc;
+        reinterpret_cast<ID3D11ShaderResourceView*>(view_)->GetDesc(&viewDesc);
+        SRVDesc desc;
+        SRVDesc::copy(desc, viewDesc);
+        return desc;
+    }
+
+    template<class Derived, class T>
+    RTVDesc ViewRefBase<Derived, T>::getRTVDesc()
+    {
+        D3D11_RENDER_TARGET_VIEW_DESC viewDesc;
+        reinterpret_cast<ID3D11RenderTargetView*>(view_)->GetDesc(&viewDesc);
+        RTVDesc desc;
+        RTVDesc::copy(desc, viewDesc);
+        return desc;
+    }
+
+    template<class Derived, class T>
+    DSVDesc ViewRefBase<Derived, T>::getDSVDesc()
+    {
+        D3D11_DEPTH_STENCIL_VIEW_DESC viewDesc;
+        reinterpret_cast<ID3D11DepthStencilView*>(view_)->GetDesc(&viewDesc);
+        DSVDesc desc;
+        DSVDesc::copy(desc, viewDesc);
+        return desc;
+    }
+
+    template<class Derived, class T>
+    UAVDesc ViewRefBase<Derived, T>::getUAVDesc()
+    {
+        D3D11_UNORDERED_ACCESS_VIEW_DESC viewDesc;
+        reinterpret_cast<ID3D11UnorderedAccessView*>(view_)->GetDesc(&viewDesc);
+        UAVDesc desc;
+        UAVDesc::copy(desc, viewDesc);
+        return desc;
+    }
+
     //--------------------------------------------------------
     //---
     //--- ViewRef
@@ -373,9 +421,15 @@ namespace lgfx
             :parent_type(rhs)
         {}
 
-        explicit ViewRef(pointer_type view)
-            :parent_type(view)
-        {}
+        ViewRef(const ShaderResourceViewRef& rhs);
+        ViewRef(const RenderTargetViewRef& rhs);
+        ViewRef(const DepthStencilViewRef& rhs);
+        ViewRef(const UnorderedAccessViewRef& rhs);
+
+
+        //explicit ViewRef(pointer_type view)
+        //    :parent_type(view)
+        //{}
 
         ~ViewRef()
         {}

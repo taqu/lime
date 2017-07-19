@@ -64,6 +64,14 @@ namespace lgfx
         return *this;
     }
 
+    ResourceRef ResourceRef::getResource(lgfx::ViewRef& view)
+    {
+        LASSERT(view.valid());
+        pointer_type resource = NULL;
+        view.get()->GetResource(&resource);
+        return ResourceRef(resource);
+    }
+
     Texture1DRef& Texture1DRef::operator=(const Texture1DRef& rhs)
     {
         Texture1DRef(rhs).swap(*this);

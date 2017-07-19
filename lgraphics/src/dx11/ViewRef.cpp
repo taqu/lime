@@ -45,6 +45,43 @@ namespace lgfx
         return true;
     }
 
+    bool RTVDesc::copy(RTVDesc& desc, const D3D11_RENDER_TARGET_VIEW_DESC& viewDesc)
+    {
+        desc.format_ = static_cast<DataFormat>(viewDesc.Format);
+        desc.dimension_ = static_cast<RTVDimension>(viewDesc.ViewDimension);
+        switch(desc.dimension_)
+        {
+        case RTVDimension_Texture1D:
+            desc.tex1D_.mipSlice_ = viewDesc.Texture1D.MipSlice;
+            break;
+
+        case RTVDimension_Texture1DArray:
+            desc.tex1DArray_.mipSlice_        = viewDesc.Texture1DArray.MipSlice;
+            desc.tex1DArray_.firstArraySlice_ = viewDesc.Texture1DArray.FirstArraySlice;
+            desc.tex1DArray_.arraySize_       = viewDesc.Texture1DArray.ArraySize;
+            break;
+
+        case RTVDimension_Texture2D:
+            desc.tex2D_.mipSlice_ = viewDesc.Texture2D.MipSlice;
+            break;
+
+        case RTVDimension_Texture2DArray:
+            desc.tex2DArray_.mipSlice_        = viewDesc.Texture2DArray.MipSlice;
+            desc.tex2DArray_.firstArraySlice_ = viewDesc.Texture2DArray.FirstArraySlice;
+            desc.tex2DArray_.arraySize_       = viewDesc.Texture2DArray.ArraySize;
+            break;
+
+        case RTVDimension_Texture3D:
+            desc.tex3D_.mipSlice_    = viewDesc.Texture3D.MipSlice;
+            desc.tex3D_.firstWSlice_ = viewDesc.Texture3D.FirstWSlice;
+            desc.tex3D_.wSize_       = viewDesc.Texture3D.WSize;
+            break;
+        default:
+            return false;
+        };
+        return true;
+    }
+
     bool DSVDesc::copy(D3D11_DEPTH_STENCIL_VIEW_DESC& viewDesc, const DSVDesc& desc)
     {
         viewDesc.Format = static_cast<DXGI_FORMAT>(desc.format_);
@@ -71,6 +108,38 @@ namespace lgfx
             viewDesc.Texture2DArray.MipSlice        = desc.tex2DArray_.mipSlice_;
             viewDesc.Texture2DArray.FirstArraySlice = desc.tex2DArray_.firstArraySlice_;
             viewDesc.Texture2DArray.ArraySize       = desc.tex2DArray_.arraySize_;
+            break;
+        default:
+            return false;
+        };
+        return true;
+    }
+
+    bool DSVDesc::copy(DSVDesc& desc, const D3D11_DEPTH_STENCIL_VIEW_DESC& viewDesc)
+    {
+        desc.format_ = static_cast<DataFormat>(viewDesc.Format);
+        desc.dimension_ = static_cast<DSVDimension>(viewDesc.ViewDimension);
+
+        switch(desc.dimension_)
+        {
+        case DSVDimension_Texture1D:
+            desc.tex1D_.mipSlice_ = viewDesc.Texture1D.MipSlice;
+            break;
+
+        case DSVDimension_Texture1DArray:
+            desc.tex1DArray_.mipSlice_ = viewDesc.Texture1DArray.MipSlice;
+            desc.tex1DArray_.firstArraySlice_ = viewDesc.Texture1DArray.FirstArraySlice;
+            desc.tex1DArray_.arraySize_ = viewDesc.Texture1DArray.ArraySize;
+            break;
+
+        case DSVDimension_Texture2D:
+            desc.tex2D_.mipSlice_ = viewDesc.Texture2D.MipSlice;
+            break;
+
+        case DSVDimension_Texture2DArray:
+            desc.tex2DArray_.mipSlice_ = viewDesc.Texture2DArray.MipSlice;
+            desc.tex2DArray_.firstArraySlice_ = viewDesc.Texture2DArray.FirstArraySlice;
+            desc.tex2DArray_.arraySize_ = viewDesc.Texture2DArray.ArraySize;
             break;
         default:
             return false;
@@ -137,6 +206,65 @@ namespace lgfx
         return true;
     }
 
+    bool SRVDesc::copy(SRVDesc& desc, const D3D11_SHADER_RESOURCE_VIEW_DESC& viewDesc)
+    {
+        desc.format_ = static_cast<DataFormat>(viewDesc.Format);
+        desc.dimension_ = static_cast<SRVDimension>(viewDesc.ViewDimension);
+
+        switch(desc.dimension_)
+        {
+        case SRVDimension_Buffer:
+            desc.buffer_.firstElement_ = viewDesc.Buffer.FirstElement;
+            desc.buffer_.numElements_ = viewDesc.Buffer.NumElements;
+            break;
+
+        case SRVDimension_Texture1D:
+            desc.tex1D_.mostDetailedMip_ = viewDesc.Texture1D.MostDetailedMip;
+            desc.tex1D_.mipLevels_ = viewDesc.Texture1D.MipLevels;
+            break;
+
+        case SRVDimension_Texture1DArray:
+            desc.tex1DArray_.mostDetailedMip_ = viewDesc.Texture1DArray.MostDetailedMip;
+            desc.tex1DArray_.mipLevels_ = viewDesc.Texture1DArray.MipLevels;
+            desc.tex1DArray_.firstArraySlice_ = viewDesc.Texture1DArray.FirstArraySlice;
+            desc.tex1DArray_.arraySize_ = viewDesc.Texture1DArray.ArraySize;
+            break;
+
+        case SRVDimension_Texture2D:
+            desc.tex2D_.mostDetailedMip_ = viewDesc.Texture2D.MostDetailedMip;
+            desc.tex2D_.mipLevels_ = viewDesc.Texture2D.MipLevels;
+            break;
+
+        case SRVDimension_Texture2DArray:
+            desc.tex2DArray_.mostDetailedMip_ = viewDesc.Texture2DArray.MostDetailedMip;
+            desc.tex2DArray_.mipLevels_ = viewDesc.Texture2DArray.MipLevels;
+            desc.tex2DArray_.firstArraySlice_ = viewDesc.Texture2DArray.FirstArraySlice;
+            desc.tex2DArray_.arraySize_ = viewDesc.Texture2DArray.ArraySize;
+            break;
+
+        case SRVDimension_Texture3D:
+            desc.tex3D_.mostDetailedMip_ = viewDesc.Texture2D.MostDetailedMip;
+            desc.tex3D_.mipLevels_ = viewDesc.Texture2D.MipLevels;
+            break;
+
+        case SRVDimension_Cube:
+            desc.texCube_.mostDetailedMip_ = viewDesc.TextureCube.MostDetailedMip;
+            desc.texCube_.mipLevels_ = viewDesc.TextureCube.MipLevels;
+            break;
+
+        case SRVDimension_CubeArray:
+            desc.texCubeArray_.mostDetailedMip_ = viewDesc.TextureCubeArray.MostDetailedMip;
+            desc.texCubeArray_.mipLevels_ = viewDesc.TextureCubeArray.MipLevels;
+            desc.texCubeArray_.first2DArraySlice_ = viewDesc.TextureCubeArray.First2DArrayFace;
+            desc.texCubeArray_.numCubes_ = viewDesc.TextureCubeArray.NumCubes;
+            break;
+
+        default:
+            return false;
+        };
+        return true;
+    }
+
     bool UAVDesc::copy(D3D11_UNORDERED_ACCESS_VIEW_DESC& viewDesc, const UAVDesc& desc)
     {
         viewDesc.Format = static_cast<DXGI_FORMAT>(desc.format_);
@@ -182,11 +310,87 @@ namespace lgfx
         return true;
     }
 
+    bool UAVDesc::copy(UAVDesc& desc, const D3D11_UNORDERED_ACCESS_VIEW_DESC& viewDesc)
+    {
+        desc.format_ = static_cast<DataFormat>(viewDesc.Format);
+        desc.dimension_ = static_cast<UAVDimension>(viewDesc.ViewDimension);
+
+        switch(desc.dimension_)
+        {
+        case UAVDimension_Buffer:
+            desc.buffer_.firstElement_ = viewDesc.Buffer.FirstElement;
+            desc.buffer_.numElements_ = viewDesc.Buffer.NumElements;
+            desc.buffer_.flags_ = viewDesc.Buffer.Flags;
+            break;
+
+        case UAVDimension_Texture1D:
+            desc.tex1D_.mipSlice_ = viewDesc.Texture1D.MipSlice;
+            break;
+
+        case UAVDimension_Texture1DArray:
+            desc.tex1DArray_.mipSlice_ = viewDesc.Texture1DArray.MipSlice;
+            desc.tex1DArray_.firstArraySlice_ = viewDesc.Texture1DArray.FirstArraySlice;
+            desc.tex1DArray_.arraySize_ = viewDesc.Texture1DArray.ArraySize;
+            break;
+
+        case UAVDimension_Texture2D:
+            desc.tex2D_.mipSlice_ = viewDesc.Texture2D.MipSlice;
+            break;
+
+        case UAVDimension_Texture2DArray:
+            desc.tex2DArray_.mipSlice_ = viewDesc.Texture2DArray.MipSlice;
+            desc.tex2DArray_.firstArraySlice_ = viewDesc.Texture2DArray.FirstArraySlice;
+            desc.tex2DArray_.arraySize_ = viewDesc.Texture2DArray.ArraySize;
+            break;
+
+        case UAVDimension_Texture3D:
+            desc.tex3D_.mipSlice_ = viewDesc.Texture3D.MipSlice;
+            desc.tex3D_.firstWSlice_ = viewDesc.Texture3D.FirstWSlice;
+            desc.tex3D_.wsize_ = viewDesc.Texture3D.WSize;
+            break;
+
+        default:
+            return false;
+        };
+        return true;
+    }
+
     //--------------------------------------------------------
     //---
     //--- ShaderResourceViewRef
     //---
     //--------------------------------------------------------
+    ViewRef::ViewRef(const ShaderResourceViewRef& rhs)
+        :parent_type(rhs.view_)
+    {
+        if(NULL != rhs.view_){
+            rhs.view_->AddRef();
+        }
+    }
+
+    ViewRef::ViewRef(const RenderTargetViewRef& rhs)
+        :parent_type(rhs.view_)
+    {
+        if(NULL != rhs.view_){
+            rhs.view_->AddRef();
+        }
+    }
+
+    ViewRef::ViewRef(const DepthStencilViewRef& rhs)
+        :parent_type(rhs.view_)
+    {
+        if(NULL != rhs.view_){
+            rhs.view_->AddRef();
+        }
+    }
+    ViewRef::ViewRef(const UnorderedAccessViewRef& rhs)
+        :parent_type(rhs.view_)
+    {
+        if(NULL != rhs.view_){
+            rhs.view_->AddRef();
+        }
+    }
+
     ViewRef& ViewRef::operator=(const ViewRef& rhs)
     {
         ViewRef(rhs).swap(*this);

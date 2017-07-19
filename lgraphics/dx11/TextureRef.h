@@ -20,7 +20,10 @@ namespace lgfx
 {
     class ContextRef;
 
+    typedef D3D11_BUFFER_DESC BufferDesc;
+    typedef D3D11_TEXTURE1D_DESC Texture1DDesc;
     typedef D3D11_TEXTURE2D_DESC Texture2DDesc;
+    typedef D3D11_TEXTURE3D_DESC Texture3DDesc;
 
     //--------------------------------------------------------
     //---
@@ -40,6 +43,11 @@ namespace lgfx
         pointer_type get() { return resource_;}
         operator pointer_type(){ return resource_;}
         operator pointer_array_type(){ return &resource_;}
+
+        void destroy()
+        {
+            LDXSAFE_RELEASE(resource_);
+        }
 
         bool valid() const{ return (NULL != resource_);}
 
@@ -69,6 +77,13 @@ namespace lgfx
         {
             return (resource_ != rhs.resource_);
         }
+
+        ResourceDimension getType();
+
+        void getDesc(BufferDesc& desc);
+        void getDesc(Texture1DDesc& desc);
+        void getDesc(Texture2DDesc& desc);
+        void getDesc(Texture3DDesc& desc);
     protected:
         ResourceRefBase& operator=(const ResourceRefBase&) = delete;
 
@@ -97,11 +112,6 @@ namespace lgfx
         ~ResourceRefBase()
         {
             destroy();
-        }
-
-        void destroy()
-        {
-            LDXSAFE_RELEASE(resource_);
         }
 
         pointer_type resource_;
@@ -166,6 +176,38 @@ namespace lgfx
         context.unmap(resource_, subresource);
     }
 
+    template<class Derived, class T>
+    ResourceDimension ResourceRefBase<Derived, T>::getType()
+    {
+        D3D11_RESOURCE_DIMENSION type;
+        resource_->GetType(&type);
+        return type;
+    }
+
+    template<class Derived, class T>
+    void ResourceRefBase<Derived, T>::getDesc(BufferDesc& desc)
+    {
+        reinterpret_cast<ID3D11Buffer*>(resource_)->GetDesc(&desc);
+    }
+
+    template<class Derived, class T>
+    void ResourceRefBase<Derived, T>::getDesc(Texture1DDesc& desc)
+    {
+        reinterpret_cast<ID3D11Texture1D*>(resource_)->GetDesc(&desc);
+    }
+
+    template<class Derived, class T>
+    void ResourceRefBase<Derived, T>::getDesc(Texture2DDesc& desc)
+    {
+        reinterpret_cast<ID3D11Texture2D*>(resource_)->GetDesc(&desc);
+    }
+
+    template<class Derived, class T>
+    void ResourceRefBase<Derived, T>::getDesc(Texture3DDesc& desc)
+    {
+        reinterpret_cast<ID3D11Texture3D*>(resource_)->GetDesc(&desc);
+    }
+
     //--------------------------------------------------------
     //---
     //--- ResourceRef
@@ -204,6 +246,10 @@ namespace lgfx
         ResourceRef& operator=(Texture2DRef&& rhs);
         ResourceRef& operator=(Texture3DRef&& rhs);
         ResourceRef& operator=(BufferRef&& rhs);
+
+        static ResourceRef getResource(lgfx::ViewRef& view);
+        
+
     private:
         explicit ResourceRef(ID3D11Resource* texture)
             :parent_type(texture)
@@ -239,6 +285,7 @@ namespace lgfx
         Texture1DRef& operator=(const Texture1DRef& rhs);
         Texture1DRef& operator=(Texture1DRef&& rhs);
 
+        operator ID3D11Resource*(){ return resource_;}
     private:
         friend class ResourceRef;
         friend class Texture;
@@ -274,11 +321,10 @@ namespace lgfx
         ~Texture2DRef()
         {}
 
-        inline void getDesc(Texture2DDesc& desc);
-
         Texture2DRef& operator=(const Texture2DRef& rhs);
         Texture2DRef& operator=(Texture2DRef&& rhs);
 
+        operator ID3D11Resource*(){ return resource_;}
     private:
         friend class ResourceRef;
         friend class Texture;
@@ -287,12 +333,6 @@ namespace lgfx
             :parent_type(texture)
         {}
     };
-
-    inline void Texture2DRef::getDesc(Texture2DDesc& desc)
-    {
-        LASSERT(valid());
-        resource_->GetDesc(&desc);
-    }
 
     //--------------------------------------------------------
     //---
@@ -323,6 +363,7 @@ namespace lgfx
         Texture3DRef& operator=(const Texture3DRef& rhs);
         Texture3DRef& operator=(Texture3DRef&& rhs);
 
+        operator ID3D11Resource*(){ return resource_;}
     private:
         friend class ResourceRef;
         friend class Texture;
@@ -361,6 +402,8 @@ namespace lgfx
 
         BufferRef& operator=(const BufferRef& rhs);
         BufferRef& operator=(BufferRef&& rhs);
+
+        operator ID3D11Resource*(){ return resource_;}
     private:
         friend class ResourceRef;
         friend class Texture;

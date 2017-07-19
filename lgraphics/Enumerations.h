@@ -175,6 +175,16 @@ namespace lgfx
     };
 
     //--------------------------------------------------------
+    enum ResourceDimension
+    {
+        ResourceDimension_Unknown = D3D11_RESOURCE_DIMENSION_UNKNOWN,
+        ResourceDimension_Buffer = D3D11_RESOURCE_DIMENSION_BUFFER,
+        ResourceDimension_Texture1D = D3D11_RESOURCE_DIMENSION_TEXTURE1D,
+        ResourceDimension_Texture2D = D3D11_RESOURCE_DIMENSION_TEXTURE2D,
+        ResourceDimension_Texture3D = D3D11_RESOURCE_DIMENSION_TEXTURE3D,
+    };
+
+    //--------------------------------------------------------
     enum Primitive
     {
         Primitive_None = D3D11_PRIMITIVE_TOPOLOGY_UNDEFINED,
