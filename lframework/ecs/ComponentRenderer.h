@@ -6,10 +6,10 @@
 @date 2016/10/18 create
 */
 #include "Component.h"
+#include <lmath/lmath.h>
 
 namespace lfw
 {
-    class Entity;
     class Camera;
     class RenderQueue;
     class RenderContext;
@@ -27,7 +27,7 @@ namespace lfw
         virtual ~ComponentRenderer();
 
         const Entity& getEntity() const;
-        Entity getEntity();
+        Entity& getEntity();
         virtual u32 getType() const;
 
         virtual void onCreate();
@@ -35,10 +35,12 @@ namespace lfw
         virtual void update();
         virtual void postUpdate();
         virtual void onDestroy();
-        virtual void addQueue(RenderQueue& queue);
+        virtual bool addQueue(RenderQueue& queue);
         virtual void drawDepth(RenderContext& renderContext);
+        virtual void drawGBuffer(RenderContext& renderContext);
         virtual void drawOpaque(RenderContext& renderContext);
         virtual void drawTransparent(RenderContext& renderContext);
+        virtual void getAABB(lmath::lm128& bmin, lmath::lm128& bmax);
 
         inline bool checkFlag(u32 flag) const;
         inline void setFlag(u32 flag);
@@ -50,8 +52,8 @@ namespace lfw
         inline void setSortLayer(s32 sortLayer);
 
     protected:
-        ComponentRenderer(const ComponentRenderer&);
-        ComponentRenderer& operator=(const ComponentRenderer&);
+        ComponentRenderer(const ComponentRenderer&) = delete;
+        ComponentRenderer& operator=(const ComponentRenderer&) = delete;
 
         ComponentRenderer();
 

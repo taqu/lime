@@ -4,6 +4,7 @@
 @date 2016/10/18 create
 */
 #include "ecs/ComponentRenderer.h"
+#include "System.h"
 #include "ecs/ECSManager.h"
 #include "ecs/ComponentRendererManager.h"
 #include "ecs/Entity.h"
@@ -17,7 +18,7 @@ namespace
 {
     inline ComponentRendererManager* getManager()
     {
-        return ECSManager::getInstance().getComponentManager<ComponentRendererManager>();
+        return System::getECSManager().getComponentManager<ComponentRendererManager>();
     }
 }
 
@@ -38,7 +39,7 @@ namespace
         return componentManager->getData(getID()).entity_;
     }
 
-    Entity ComponentRenderer::getEntity()
+    Entity& ComponentRenderer::getEntity()
     {
         ComponentRendererManager* componentManager = getManager();
         return componentManager->getData(getID()).entity_;
@@ -75,6 +76,10 @@ namespace
     {
     }
 
+    void ComponentRenderer::drawGBuffer(RenderContext&)
+    {
+    }
+
     void ComponentRenderer::drawOpaque(RenderContext&)
     {
     }
@@ -83,7 +88,14 @@ namespace
     {
     }
 
-    void ComponentRenderer::addQueue(RenderQueue&)
+    bool ComponentRenderer::addQueue(RenderQueue&)
     {
+        return false;
+    }
+
+    void ComponentRenderer::getAABB(lmath::lm128& bmin, lmath::lm128& bmax)
+    {
+        bmin = _mm_set1_ps(lcore::numeric_limits<f32>::maximum());
+        bmax = _mm_set1_ps(lcore::numeric_limits<f32>::lowest());
     }
 }

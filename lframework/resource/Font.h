@@ -19,7 +19,7 @@ namespace lfw
     class Font
     {
     public:
-        struct FontChar
+        struct Glyph
         {
             u16 id_;
             s16 xadvance_;
@@ -33,7 +33,7 @@ namespace lfw
         Font();
         ~Font();
 
-        const FontChar* find(u16 id) const;
+        const Glyph* find(u16 id) const;
         inline lgfx::PixelShaderRef* getPS();
         inline lgfx::PixelShaderRef* getPSOutline();
         inline lgfx::Texture2DRef& getTexture();
@@ -45,15 +45,15 @@ namespace lfw
         inline u16 getHeight() const;
         inline f32 getInvWidth() const;
         inline f32 getInvHeight() const;
-        inline s32 getNumChars() const;
-        inline const FontChar& getChar(s32 index) const;
+        inline s32 getNumGlyphes() const;
+        inline const Glyph& getGlyph(s32 index) const;
 
-        inline static bool less(const FontChar& lhs, const FontChar& rhs)
+        inline static bool less(const Glyph& lhs, const Glyph& rhs)
         {
             return (lhs.id_<rhs.id_);
         }
 
-        inline static s32 comp(const FontChar& x, const u16& id)
+        inline static s32 comp(const Glyph& x, const u16& id)
         {
             return (x.id_<id)? -1 : x.id_-id;
         }
@@ -69,8 +69,8 @@ namespace lfw
         u16 height_;
         f32 invWidth_;
         f32 invHeight_;
-        s32 numChars_;
-        FontChar* chars_;
+        s32 numGlyphes_;
+        Glyph* glyphes_;
 
         lgfx::PixelShaderRef* ps_;
         lgfx::PixelShaderRef* psOutline_;
@@ -128,15 +128,15 @@ namespace lfw
         return invHeight_;
     }
 
-    inline s32 Font::getNumChars() const
+    inline s32 Font::getNumGlyphes() const
     {
-        return numChars_;
+        return numGlyphes_;
     }
 
-    inline const Font::FontChar& Font::getChar(s32 index) const
+    inline const Font::Glyph& Font::getGlyph(s32 index) const
     {
-        LASSERT(0<=index && index<numChars_);
-        return chars_[index];
+        LASSERT(0<=index && index<numGlyphes_);
+        return glyphes_[index];
     }
 }
 #endif //INC_LFRAMEWORK_FONTMANAGER_H__

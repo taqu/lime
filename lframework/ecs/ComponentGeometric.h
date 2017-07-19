@@ -69,6 +69,9 @@ namespace lfw
         const lmath::Matrix44& getMatrix() const;
         lmath::Matrix44& getMatrix();
         void updateMatrix();
+
+        void lookAt(const lmath::Vector3& eye, const lmath::Vector3& at);
+        void lookAt(const lmath::Vector4& eye, const lmath::Vector4& at);
     };
 }
 #endif //INC_LFRAMEWORK_COMPONENTGEOMETRIC_H__

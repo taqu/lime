@@ -104,20 +104,20 @@ namespace lfw
             //    dst.texCubeArray_.first2DArraySlice_ = 0;
             //    dst.texCubeArray_.numCubes_ = desc.ArraySize;
             //} else{
-            srvDesc.dimension_ = lgfx::ViewSRVDimension_Cube;
+            srvDesc.dimension_ = lgfx::SRVDimension_Cube;
             srvDesc.texCube_.mostDetailedMip_ = 0;
             srvDesc.texCube_.mipLevels_ = desc.MipLevels;
             //}
 
         } else{
             if(1<desc.ArraySize){
-                srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2DArray;
+                srvDesc.dimension_ = lgfx::SRVDimension_Texture2DArray;
                 srvDesc.tex2DArray_.mostDetailedMip_ = 0;
                 srvDesc.tex2DArray_.mipLevels_ = desc.MipLevels;
                 srvDesc.tex2DArray_.firstArraySlice_ = 0;
                 srvDesc.tex2DArray_.arraySize_ = desc.ArraySize;
             } else{
-                srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
+                srvDesc.dimension_ = lgfx::SRVDimension_Texture2D;
                 srvDesc.tex2D_.mostDetailedMip_ = 0;
                 srvDesc.tex2D_.mipLevels_ = desc.MipLevels;
             }
@@ -156,7 +156,7 @@ namespace lfw
 
         lgfx::SRVDesc srvDesc;
         srvDesc.format_ = (param.sRGB_)? lgfx::Data_R8G8B8A8_UNorm_SRGB : lgfx::Data_R8G8B8A8_UNorm;
-        srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
+        srvDesc.dimension_ = lgfx::SRVDimension_Texture2D;
         srvDesc.tex2D_.mostDetailedMip_ = 0;
         srvDesc.tex2D_.mipLevels_ = 1;
         lgfx::ShaderResourceViewRef srv = texture.createSRView(srvDesc);
@@ -192,7 +192,7 @@ namespace lfw
 
         lgfx::SRVDesc srvDesc;
         srvDesc.format_ = (param.sRGB_)? lgfx::Data_R8G8B8A8_UNorm_SRGB : lgfx::Data_R8G8B8A8_UNorm;
-        srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
+        srvDesc.dimension_ = lgfx::SRVDimension_Texture2D;
         srvDesc.tex2D_.mostDetailedMip_ = 0;
         srvDesc.tex2D_.mipLevels_ = 1;
         lgfx::ShaderResourceViewRef srv = texture.createSRView(srvDesc);

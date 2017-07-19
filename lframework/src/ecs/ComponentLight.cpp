@@ -4,6 +4,7 @@
 @date 2016/11/29 create
 */
 #include "ecs/ComponentLight.h"
+#include "System.h"
 #include "ecs/ECSManager.h"
 #include "ecs/ComponentSceneElementManager.h"
 #include "ecs/Entity.h"
@@ -14,7 +15,7 @@ namespace lfw
     {
         inline ComponentSceneElementManager* getManager()
         {
-            return ECSManager::getInstance().getComponentManager<ComponentSceneElementManager>();
+            return System::getECSManager().getComponentManager<ComponentSceneElementManager>();
         }
     }
 
@@ -54,15 +55,15 @@ namespace lfw
     {
     }
 
-    s32 ComponentLight::getTargetLayerMask() const
+    const Light& ComponentLight::getLight() const
     {
         const ComponentSceneElementManager* componentManager = getManager();
-        return componentManager->geLight(getID()).getLayerMask();
+        return componentManager->geLight(getID());
     }
 
-    void ComponentLight::setTargetLayerMask(s32 layerMask)
+    Light& ComponentLight::getLight()
     {
         ComponentSceneElementManager* componentManager = getManager();
-        componentManager->geLight(getID()).setLayerMask(layerMask);
+        return componentManager->geLight(getID());
     }
 }

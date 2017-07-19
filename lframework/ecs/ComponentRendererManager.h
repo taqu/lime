@@ -42,6 +42,7 @@ namespace lfw
         void postUpdateComponents();
 
         inline const Data& getData(ID id) const;
+        inline Data& getData(ID id);
 
         inline ComponentRendererArray& getComponents();
     protected:
@@ -56,6 +57,11 @@ namespace lfw
     };
 
     inline const ComponentRendererManager::Data& ComponentRendererManager::getData(ID id) const
+    {
+        return data_[id.index()];
+    }
+
+    inline ComponentRendererManager::Data& ComponentRendererManager::getData(ID id)
     {
         return data_[id.index()];
     }

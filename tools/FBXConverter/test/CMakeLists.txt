@@ -57,8 +57,8 @@ set_target_properties(${ProjectTest} PROPERTIES OUTPUT_NAME_DEBUG "${ProjectTest
 
 if(MSVC)
     target_link_libraries(${ProjectTest} LCORE LMATH LGRAPHICS FBX GTEST)
+    get_vs_working_directory(TMPVS_PROPERTIES ${CMAKE_CURRENT_SOURCE_DIR})
+    write_vs_user(${ProjectTest} ${TMPVS_PROPERTIES})
 elseif(UNIX)
 elseif(APPLE)
 endif()
-
-set_vs_working_directory(${ProjectTest} ${CMAKE_CURRENT_SOURCE_DIR})

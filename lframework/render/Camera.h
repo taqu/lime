@@ -5,14 +5,13 @@
 @author t-sakai
 @date 2016/11/18 create
 */
+#include <lcore/Array.h>
 #include <lmath/lmath.h>
 #include <lmath/Matrix44.h>
 #include <lgraphics/DepthStencilStateRef.h>
 #include <lgraphics/ShaderRef.h>
 
 #include "../lframework.h"
-#include "RenderTarget.h"
-#include "DepthStencil.h"
 #include "SamplerSet.h"
 
 namespace lgfx
@@ -22,21 +21,22 @@ namespace lgfx
 
 namespace lfw
 {
+namespace graph
+{
+    class RenderPass;
+}
+
     class Camera
     {
     public:
+        typedef lcore::ArrayPOD<graph::RenderPass*> RenderPassArray;
+
         Camera();
+        Camera(Camera&& rhs);
         ~Camera();
 
-        void getRTSize(s32& width, s32& height);
-        void getRTSizeF32(f32& width, f32& height);
-
         const lgfx::Viewport& getViewport() const;
-        void setViewport(f32 x, f32 y, f32 width, f32 height);
-
-        inline bool isUseCameraRenderTarget() const;
-        inline RenderType getRenderType() const;
-        void setRenderType(RenderType type);
+        void setViewport(s32 x, s32 y, s32 width, s32 height);
 
         inline s32 getSortLayer() const;
         inline void setSortLayer(s32 layer);
@@ -102,9 +102,6 @@ namespace lfw
 
         void updateMatrix();
 
-        void beginDeferred(lgfx::ContextRef& context);
-        void endDeferred(lgfx::ContextRef& context);
-
         const lmath::Matrix44& getPrevViewProjMatrix() const
         {
             return prevVewProjMatrix_;
@@ -130,27 +127,26 @@ namespace lfw
 
         inline void setJitterSize(f32 width, f32 height);
 
+        inline const lmath::Vector4& getLinearZParameter() const;
+
         inline s8 getNumRenderTargets() const;
-        void setRenderTargets(const lgfx::Viewport& viewport, s8 numTargets, const RenderTarget* targets, const DepthStencil* depthStencil);
-        void clearRenderTargets();
-        void setDeferred();
 
-        inline lgfx::Texture2DRef::pointer_type getRTTexture(s32 index);
-        inline lgfx::RenderTargetViewRef::pointer_type getRTView(s32 index);
-        inline lgfx::ShaderResourceViewRef::pointer_type getSRView(s32 index);
-        inline lgfx::ShaderResourceViewRef::pointer_type* getSRViews();
+        //void constructLinearZ(lgfx::ContextRef& context);
+        //void addCameraMotion(lgfx::ContextRef& context);
 
-        inline DepthStencil& getDepthStencil();
+       inline  const RenderPassArray& getRenderPasses() const;
+       inline  RenderPassArray& getRenderPasses();
 
-        inline RenderTarget& getShadowAccumulatingRenderTarget();
-        inline lgfx::PixelShaderRef& getDeferredShadowAccumulatingPS();
+       void clearRenderPasses();
+       void addRenderPass(graph::RenderPass* renderPass);
+       void removeRenderPass(graph::RenderPass* renderPass);
+       s32 findRenderPass(graph::RenderPass* renderPass) const;
 
-        inline SamplerSet<3>& getDeferredSamplerSet();
-        inline lgfx::VertexShaderRef& getFullQuadVS();
-        inline lgfx::PixelShaderRef& getDeferredLightingPS();
-        inline lgfx::DepthStencilStateRef& getDeferredDepthStencilState();
-        inline RenderTarget& getDeferredLightingRenderTarget();
+       Camera& operator=(Camera&& rhs);
     private:
+        Camera(const Camera&) = delete;
+        Camera& operator=(const Camera&) = delete;
+
         static const s32 JitterPrime0 = 2;
         static const s32 JitterPrime1 = 3;
         static const s32 NumJitterSamples = 64;
@@ -195,39 +191,13 @@ namespace lfw
         ClearType clearType_;
         u8 clearStencil_;
         f32 clearDepth_;
-        s8 numRenderTargets_;
-        u8 useCameraRenderTargets_;
-        u8 renderType_;
-        u8 reserved_;
 
-        lgfx::DepthStencilStateRef deferredDepthStencilState_;
-        lgfx::Texture2DRef rtTextures_[lgfx::LGFX_MAX_RENDER_TARGETS];
-        lgfx::RenderTargetViewRef rtViews_[lgfx::LGFX_MAX_RENDER_TARGETS];
-        lgfx::ShaderResourceViewRef srViews_[lgfx::LGFX_MAX_RENDER_TARGETS];
-        DepthStencil depthStencil_;
+        lmath::Vector4 linearZParameter_;
+        s16 linearZDispatchX_;
+        s16 linearZDispatchY_;
 
-        lgfx::RenderTargetViewRef::pointer_type rtView_pointers_[lgfx::LGFX_MAX_RENDER_TARGETS];
-        lgfx::ShaderResourceViewRef::pointer_type srView_pointers_[lgfx::LGFX_MAX_RENDER_TARGETS];
-
-        RenderTarget shadowAccumulatingTarget_;
-        lgfx::PixelShaderRef deferredShadowAccumulatingPS_;
-
-        SamplerSet<3> deferredSamplerSet_;
-        lgfx::VertexShaderRef fullQuadVS_;
-        lgfx::PixelShaderRef deferredLightingPS_;
-        lgfx::DepthStencilStateRef deferredLightingDepthStencilState_;
-        RenderTarget deferredLightingRenderTarget_;
+        RenderPassArray renderPasses_;
     };
-
-    inline bool Camera::isUseCameraRenderTarget() const
-    {
-        return 0 != useCameraRenderTargets_;
-    }
-
-    inline RenderType Camera::getRenderType() const
-    {
-        return static_cast<RenderType>(renderType_);
-    }
 
     inline s32 Camera::getSortLayer() const
     {
@@ -346,6 +316,22 @@ namespace lfw
         generateJitterSamples();
     }
 
+    inline const lmath::Vector4& Camera::getLinearZParameter() const
+    {
+        return linearZParameter_;
+    }
+
+    inline  const Camera::RenderPassArray& Camera::getRenderPasses() const
+    {
+        return renderPasses_;
+    }
+
+    inline  Camera::RenderPassArray& Camera::getRenderPasses()
+    {
+        return renderPasses_;
+    }
+
+#if 0
     inline s8 Camera::getNumRenderTargets() const
     {
         return numRenderTargets_;
@@ -418,6 +404,12 @@ namespace lfw
     {
         return deferredLightingRenderTarget_;
     }
+
+    inline RenderTargetUAV& Camera::getLinearZRenderTarget()
+    {
+        return linearZRenderTarget_;
+    }
+#endif
 }
 
 #endif //INC_LFRAMEWORK_CAMERA_H__

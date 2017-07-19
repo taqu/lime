@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.7)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/../CMakeCommon.txt")
 
@@ -42,9 +42,7 @@ endif()
 
 # Set configuration
 configure_file("${CMAKE_CURRENT_SOURCE_DIR}/Config.h.in" "${CMAKE_CURRENT_SOURCE_DIR}/Config.h" NEWLINE_STYLE LF)
-configure_file("${SHADER_SOURCE_DIRECTORY}/Common.vs.in" "${SHADER_SOURCE_DIRECTORY}/Common.vs" NEWLINE_STYLE LF)
-configure_file("${SHADER_SOURCE_DIRECTORY}/Common.ps.in" "${SHADER_SOURCE_DIRECTORY}/Common.ps" NEWLINE_STYLE LF)
-configure_file("${SHADER_SOURCE_DIRECTORY}/Common.scs.in" "${SHADER_SOURCE_DIRECTORY}/Common.scs" NEWLINE_STYLE LF)
+configure_file("${SHADER_SOURCE_DIRECTORY}/Constants.inc.in" "${SHADER_SOURCE_DIRECTORY}/Constants.inc" NEWLINE_STYLE LF)
 
 include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR})
 
@@ -57,6 +55,7 @@ set(MODULES
     "/input"
     "/input/DirectInput"
     "/render"
+    "/render/graph"
     "/subsystem"
     "/resource"
     "/animation"
@@ -70,9 +69,9 @@ foreach(MODULE IN LISTS MODULES)
     set(HFILES "")
     set(CPPFILES "")
     set(CFILES "")
-    expand_files(HFILES "${ROOT_INCLUDE}${MODULE}/*h")
-    expand_files(CPPFILES "${ROOT_SOURCE}${MODULE}/*cpp")
-    expand_files(CFILES "${ROOT_SOURCE}${MODULE}/*c")
+    expand_files(HFILES "${ROOT_INCLUDE}${MODULE}/*.h")
+    expand_files(CPPFILES "${ROOT_SOURCE}${MODULE}/*.cpp")
+    expand_files(CFILES "${ROOT_SOURCE}${MODULE}/*.c")
 
     set(HEADERS ${HEADERS} ${HFILES})
     set(SOURCES ${SOURCES} ${CPPFILES} ${CFILES})
@@ -98,9 +97,12 @@ if(MSVC)
         STATIC_LIBRARY_FLAGS "/LIBPATH:\"${EXTERNAL_LIB_DIR}\" \"dinput8.lib\" \"imm32.lib\""
         STATIC_LIBRARY_FLAGS_RELEASE "/LTCG")
 
+    if(1900 LESS MSVC_VERSION)
+        get_vs_property_group(VSPROPERTIES "EnableCppCoreCheck" "true")
+        write_vs_user(${ProjectName} ${VSPROPERTIES})
+    endif()
 elseif(UNIX)
 elseif(APPLE)
 endif()
-
 add_subdirectory(test)
 add_subdirectory(debug)

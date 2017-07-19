@@ -1,7 +1,6 @@
 #ifndef INC_VOLUME_INC_
 #define INC_VOLUME_INC_
-
-#define NUM_CASCADES (2)
+#include "Constants.inc"
 
 struct VSInOut
 {
@@ -30,33 +29,6 @@ struct NoiseConstant
     float noisePersistence_;
     float noiseFrequency_;
 };
-
-#ifndef DEF_PERFRAMECONSTANT
-#define DEF_PERFRAMECONSTANT
-cbuffer PerFrameConstant : register(b0)
-{
-    float velocityScale;
-    float velocityMaxMagnitude;
-    float reserved0;
-    float reserved1;
-};
-#endif
-
-#ifndef DEF_PERCAMERACONSTANT
-#define DEF_PERCAMERACONSTANT
-cbuffer PerCameraConstant : register(b2)
-{
-    float4x4 mview;
-    float4x4 minvview;
-    float4x4 mproj;
-    float4x4 minvproj;
-    float4x4 mvp0; //previous vew projection
-    float4x4 mvp1; //current view projection
-    float4 cameraPos;
-    int2 screenSize; //(screenWidth, screenHeight)
-    float2 screenInvSize; //(screenInvWidth, screenInvHeight)
-}
-#endif
 
 cbuffer VolumeConstant : register(b3)
 {

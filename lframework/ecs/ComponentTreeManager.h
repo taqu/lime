@@ -6,10 +6,10 @@
 @date 2016/09/15 create
 */
 #include "ComponentManager.h"
+#include "System.h"
 #include "ECSTree.h"
 #include <lcore/Array.h>
 #include <lcore/BitSet.h>
-#include "../Application.h"
 
 namespace lfw
 {
@@ -53,7 +53,7 @@ namespace lfw
 
         void add(ID id, Operation::Type type);
         /**
-        @return ツリーの更新があったい場合true
+        @return ツリーの更新があった場合true
         */
         bool update();
 
@@ -169,7 +169,7 @@ namespace lfw
     template<class ComponentType>
     void ComponentTreeManager<ComponentType>::destroyAllEntries()
     {
-        ECSManager& ecsManager = ECSManager::getInstance();
+        ECSManager& ecsManager = System::getECSManager();
         ECSNode& root = getRoot();
         if(0 < root.numChildren()){
             ECSNode* child = &entityTree_.get(root.child());
@@ -277,7 +277,7 @@ namespace lfw
     template<class ComponentType>
     bool ComponentTreeManager<ComponentType>::updateRootFlags(const Entity& entity)
     {
-        ECSManager& ecsManager = ECSManager::getInstance();
+        ECSManager& ecsManager = System::getECSManager();
         bool update = ecsManager.checkFlag(entity, EntityFlag_UpdateSelf);
         bool render = ecsManager.checkFlag(entity, EntityFlag_RenderSelf);
 
@@ -306,16 +306,18 @@ namespace lfw
     template<class ComponentType>
     void ComponentTreeManager<ComponentType>::updateFlags(const Entity& entity)
     {
-        ECSManager& ecsManager = ECSManager::getInstance();
+        ECSManager& ecsManager = System::getECSManager();
         bool update = ecsManager.checkFlag(entity, EntityFlag_UpdateSelf);
         bool render = ecsManager.checkFlag(entity, EntityFlag_RenderSelf);
 
         IDConstAccess access = ecsManager.getComponents(entity);
         LASSERT(ECSCategory_Logical == access[0].category() || ECSCategory_Geometric == access[0].category());
         ComponentType* component = getTreeComponent(access[0]);
-        LASSERT(getNode(component->getID()).parent() != ECSNode::Root);
 
-        const Entity& parent = getEntity(component->getID());
+        const ECSNode& node = getNode(component->getID());
+        LASSERT(node.parent() != ECSNode::Root);
+
+        const Entity& parent = entityTree_.getEntity(node.parent());
         bool parentUpdate = ecsManager.checkFlag(parent, EntityFlag_Update);
         bool parentRender = ecsManager.checkFlag(parent, EntityFlag_Render);
 
@@ -462,9 +464,10 @@ namespace lfw
         while(0<node.numChildren()){
             destroyRecurse(node.child());
         }
+        ECSManager& ecsManager = System::getECSManager();
         Entity entity = entityTree_.getEntity(id);
-        if(ECSManager::getInstance ().isValidEntity(entity)) {
-            ECSManager::getInstance ().destroyEntity(entity);
+        if(ecsManager.isValidEntity(entity)) {
+            ecsManager.destroyEntity(entity);
         }
     }
 

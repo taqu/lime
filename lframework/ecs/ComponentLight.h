@@ -10,6 +10,7 @@
 namespace lfw
 {
     class Entity;
+    class Light;
 
     class ComponentLight : public Behavior
     {
@@ -28,8 +29,8 @@ namespace lfw
         virtual void update();
         virtual void onDestroy();
 
-        s32 getTargetLayerMask() const;
-        void setTargetLayerMask(s32 layerMask);
+        const Light& getLight() const;
+        Light& getLight();
     protected:
         ComponentLight(const ComponentLight&);
         ComponentLight& operator=(const ComponentLight&);

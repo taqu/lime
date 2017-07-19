@@ -5,6 +5,7 @@
 */
 #include "lframework.h"
 #include <lmath/lmath.h>
+#include <lcore/xxHash.h>
 
 namespace lfw
 {
@@ -99,8 +100,6 @@ namespace lfw
     u64 calcHash(const Char* path)
     {
         LASSERT(NULL != path);
-        u64 hash0 = lcore::hash_Bernstein(path);
-        u64 hash1 = lcore::hash_FNV1a(path);
-        return (hash1<<32) | hash0;
+        return lcore::xxHash64(reinterpret_cast<const u8*>(path), lcore::strlen_s32(path));
     }
 }

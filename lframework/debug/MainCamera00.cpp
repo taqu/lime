@@ -23,6 +23,7 @@ namespace debug
 
     void MainCamera00::onStart()
     {
+        ComponentCamera::onStart();
         lcore::Log("MainCamera00::onStart");
     }
 
@@ -34,5 +35,6 @@ namespace debug
     void MainCamera00::onDestroy()
     {
         lcore::Log("MainCamera00::onDestroy");
+        ComponentCamera::onDestroy();
     }
 }

@@ -4,6 +4,7 @@
 @date 2016/09/13 create
 */
 #include "ecs/ComponentBehavior.h"
+#include "System.h"
 #include "ecs/ECSManager.h"
 #include "ecs/ComponentBehaviorManager.h"
 #include "ecs/Entity.h"
@@ -14,7 +15,7 @@ namespace
 {
     inline ComponentBehaviorManager* getManager()
     {
-        return ECSManager::getInstance().getComponentManager<ComponentBehaviorManager>();
+        return System::getECSManager().getComponentManager<ComponentBehaviorManager>();
     }
 }
 

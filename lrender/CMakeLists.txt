@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.7)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/../CMakeCommon.txt")
 
@@ -51,6 +51,10 @@ if(MSVC)
         STATIC_LIBRARY_FLAGS "/LIBPATH:\"${EXTERNAL_LIB_DIR}\""
         STATIC_LIBRARY_FLAGS_DEBUG "\"zlibd.lib\" \"libpng16d.lib\" \"libjpegd.lib\""
         STATIC_LIBRARY_FLAGS_RELEASE "/LTCG \"zlib.lib\" \"libpng16.lib\" \"libjpeg.lib\"")
+    if(1900 LESS MSVC_VERSION)
+        get_vs_property_group(VSPROPERTIES "EnableCppCoreCheck" "true")
+        write_vs_user(${ProjectName} ${VSPROPERTIES})
+    endif()
 elseif(UNIX)
 elseif(APPLE)
 endif()

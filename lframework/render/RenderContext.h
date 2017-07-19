@@ -8,7 +8,9 @@
 #include "../lframework.h"
 #include <lcore/Array.h>
 #include "SamplerSet.h"
-#include "DepthStencil.h"
+#include "render/ShaderConstant.h"
+#include "render/ShadowMap.h"
+#include "ecs/ComponentSceneElementManager.h"
 
 namespace lmath
 {
@@ -35,9 +37,10 @@ namespace lfw
     class Camera;
     class Light;
 
-    class ShadowMap;
+    class Geometry;
 
     class ComponentRenderer;
+    class RenderQueue;
 
     class RenderContext
     {
@@ -73,15 +76,15 @@ namespace lfw
         inline s32 getRenderPath() const;
         void setRenderPath(s32 path);
 
-        void beginDeferredLighting(const Light& light);
-        void endDeferredLighting(const Light& light);
+        inline RenderQueue& getRenderQueue();
+        inline void setRenderQueue(RenderQueue* renderQueue);
 
-        inline const Camera& getCamera() const;
-        inline Camera& getCamera();
-        inline void setCamera(Camera* camera);
-        inline const ShadowMap& getShadowMap();
-        inline void setShadowMap(const ShadowMap* shadowMap);
-        inline DepthStencil& getShadowMapDepthStencil();
+        //void beginDeferredLighting(const Light& light);
+        //void endDeferredLighting(const Light& light);
+
+        inline const LightArray& getLights() const;
+        inline LightArray& getLights();
+        inline void setLights(LightArray&& lights);
 
         inline lgfx::ContextRef& getContext();
         inline void setContext(lgfx::ContextRef* context);
@@ -93,22 +96,29 @@ namespace lfw
         lgfx::ConstantBufferRef* createConstantBuffer(u32 size, const void* data);
 
         bool setConstant(Shader shader, s32 index, u32 size, const void* data);
+        bool setConstant(Shader shader, s32 index, u32 size, s32 num, s32 maxNum, const void* data);
         bool setConstantBuffer(Shader shader, s32 index, lgfx::ConstantBufferRef* constant);
         bool setConstantAligned16(Shader shader, s32 index, u32 size, const void* data);
-        bool setConstantMatricesAligned16(Shader shader, s32 index, s32 num, const lmath::Matrix34* matrices);
+        bool setConstantAligned16(Shader shader, s32 index, u32 size, s32 num, s32 maxNum, const void* data);
+        bool setConstantMatricesAligned16(Shader shader, s32 index, s32 num, s32 maxNum, const lmath::Matrix34* matrices);
 
         void attachDepthShader(DepthShader type);
         inline void setDepthShaderVS(DepthShader type, lgfx::VertexShaderRef& vs);
         inline void setDepshShaderGS(lgfx::GeometryShaderRef& gs);
-        void resetDefaultSamplerSet();
+        void setDefaultSampler(Shader shader);
+        void clearDefaultSampler(Shader shader);
+
+        inline ShadowMap& getShadowMap();
+        inline Geometry& getLightSphere();
     private:
-        RenderContext(const RenderContext&);
-        RenderContext& operator=(const RenderContext&);
+        RenderContext(const RenderContext&) = delete;
+        RenderContext& operator=(const RenderContext&) = delete;
 
         s32 renderPath_;
-        Camera* camera_;
-        const ShadowMap* shadowMap_;
-        DepthStencil shadowMapDepthStencil_;
+        LightArray lights_;
+        ShadowMap shadowMap_;
+
+        Geometry* geomLightSphere_;
 
         lgfx::ContextRef* context_;
         lgfx::ConstantBufferTableSet* constantBufferTableSet_;
@@ -116,6 +126,7 @@ namespace lfw
         lgfx::VertexShaderRef* depthShaderVS_[DepthShader_Num];
         lgfx::GeometryShaderRef* depthShaderGS_;
         SamplerSet<3> samplerSet_;
+        RenderQueue* renderQueue_;
     };
 
     inline s32 RenderContext::getRenderPath() const
@@ -123,34 +134,29 @@ namespace lfw
         return renderPath_;
     }
 
-    inline const Camera& RenderContext::getCamera() const
+    inline RenderQueue& RenderContext::getRenderQueue()
     {
-        return *camera_;
+        return *renderQueue_;
     }
 
-    inline Camera& RenderContext::getCamera()
+    inline void RenderContext::setRenderQueue(RenderQueue* renderQueue)
     {
-        return *camera_;
+        renderQueue_ = renderQueue;
     }
 
-    inline void RenderContext::setCamera(Camera* camera)
+    inline const LightArray& RenderContext::getLights() const
     {
-        camera_ = camera;
+        return lights_;
     }
 
-    inline const ShadowMap& RenderContext::getShadowMap()
+    inline LightArray& RenderContext::getLights()
     {
-        return *shadowMap_;
+        return lights_;
     }
 
-    inline void RenderContext::setShadowMap(const ShadowMap* shadowMap)
+    inline void RenderContext::setLights(LightArray&& lights)
     {
-        shadowMap_ = shadowMap;
-    }
-
-    inline DepthStencil& RenderContext::getShadowMapDepthStencil()
-    {
-        return shadowMapDepthStencil_;
+        lights_ = lights;
     }
 
     inline lgfx::ContextRef& RenderContext::getContext()
@@ -181,6 +187,16 @@ namespace lfw
     inline void RenderContext::setDepshShaderGS(lgfx::GeometryShaderRef& gs)
     {
         depthShaderGS_ = &gs;
+    }
+
+    inline ShadowMap& RenderContext::getShadowMap()
+    {
+        return shadowMap_;
+    }
+
+    inline Geometry& RenderContext::getLightSphere()
+    {
+        return *geomLightSphere_;
     }
 }
 #endif //INC_LFRAMEWORK_RENDERCONTEXT_H__

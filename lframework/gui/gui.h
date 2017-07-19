@@ -23,9 +23,10 @@ namespace lfw
 
         void begin();
         void render();
+        void end();
     private:
-        GUI(const GUI&);
-        GUI& operator=(const GUI&);
+        GUI(const GUI&) = delete;
+        GUI& operator=(const GUI&) = delete;
 
         class Resource;
 
@@ -38,5 +39,12 @@ namespace lfw
 
         Resource* resource_;
     };
+}
+
+namespace lfw
+{
+namespace gui
+{
+}
 }
 #endif //INC_LFRAMEWORK_GUI_H__

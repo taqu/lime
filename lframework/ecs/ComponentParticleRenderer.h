@@ -13,6 +13,7 @@
 #include <lgraphics/BlendStateRef.h>
 #include <lgraphics/SamplerStateRef.h>
 #include <lgraphics/ShaderRef.h>
+#include "../System.h"
 #include "../Application.h"
 #include "PairArray.h"
 #include "ComponentRendererManager.h"
@@ -56,10 +57,11 @@ namespace lfw
         virtual void update();
         virtual void postUpdate();
         virtual void onDestroy();
-        virtual void addQueue(RenderQueue& queue);
+        virtual bool addQueue(RenderQueue& queue);
         virtual void drawDepth(RenderContext& renderContext);
         virtual void drawOpaque(RenderContext& renderContext);
         virtual void drawTransparent(RenderContext& renderContext);
+        virtual void getAABB(lmath::lm128& bmin, lmath::lm128& bmax);
 
         void setTexture(lgfx::Texture2DRef& texture, lgfx::ShaderResourceViewRef& srv);
         inline s32 capacity() const;
@@ -104,7 +106,7 @@ namespace lfw
     template<class U>
     ComponentParticleRenderer<U>::ComponentParticleRenderer()
     {
-        particleConstant_[0] = 1.0e-3f;
+        particleConstant_[0] = 1.0e-1f;
         particleConstant_[1] = particleConstant_[2] = particleConstant_[3] = 0.0f;
     }
 
@@ -117,7 +119,7 @@ namespace lfw
     template<class U>
     void ComponentParticleRenderer<U>::onCreate()
     {
-        Resources& resources = Resources::getInstance();
+        Resources& resources = System::getResources();
         inputLayout_ = resources.getInputLayoutFactory().get(InputLayout_Particle);
         blendState_ = lgfx::BlendState::create(
             FALSE,
@@ -164,14 +166,15 @@ namespace lfw
     }
 
     template<class U>
-    void ComponentParticleRenderer<U>::addQueue(RenderQueue& queue)
+    bool ComponentParticleRenderer<U>::addQueue(RenderQueue& queue)
     {
         if(vertices_.size()<=0){
-            return;
+            return false;
         }
         const ComponentGeometric* geometric = getEntity().getGeometric();
         f32 depth = lmath::manhattanDistance3(queue.getCamera().getEyePosition(), geometric->getPosition());
         queue.add(RenderPath_Transparent, depth, this);
+        return true;
     }
 
     template<class U>
@@ -215,17 +218,23 @@ namespace lfw
         context.setGeometryShader(gs_);
         context.setPixelShader(ps_);
 
-        lgfx::ShaderResourceView::set(srv_.get(), renderContext.getCamera().getSRView(DeferredRT_Depth));
-        lgfx::ShaderResourceView::setPS(context, 0, 2);
-        context.setPSSamplers(0, 1, samLinear_);
+        lgfx::ShaderResourceView srvs(context, srv_);
+        srvs.setPS(0);
+
         renderContext.setConstant(RenderContext::Shader_PS, 4, sizeof(f32)*4, particleConstant_);
         context.draw(vertices_.size(), 0);
 
         context.setVertexShader(NULL);
         context.setGeometryShader(NULL);
         context.setPixelShader(NULL);
-        context.clearPSResources(2);
+        context.clearPSResources(0, 1);
         vertexBuffer_.end();
+    }
+
+    template<class U>
+    void ComponentParticleRenderer<U>::getAABB(lmath::lm128& bmin, lmath::lm128& bmax)
+    {
+        ComponentRenderer::getAABB(bmin, bmax);
     }
 
     template<class U>
@@ -295,7 +304,7 @@ namespace lfw
         if(capacity<=vertices_.capacity()){
             return;
         }
-        lgfx::FrameSyncQuery& frameSync = Application::getInstance().getRenderer().getFrameSync();
+        lgfx::FrameSyncQuery& frameSync = System::getRenderer().getFrameSync();
         vertexBuffer_.terminate();
         s32 totalSize = capacity*frameSync.getFrames()*sizeof(ParticleVertex);
         vertexBuffer_.initialize(&frameSync, totalSize);

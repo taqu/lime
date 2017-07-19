@@ -11,13 +11,15 @@
 #include <lsound/Context.h>
 #include <lsound/UserPlayer.h>
 
-#include <lframework/Application.h>
+#include <lframework/System.h>
 #include <lframework/input/Keyboard.h>
 #include <lframework/input/Mouse.h>
 #include <lframework/ecs/ECSManager.h>
 #include <lframework/ecs/ComponentGeometric.h>
+#include <lframework/ecs/ComponentCanvas.h>
 #include <lframework/ecs/ComponentLight.h>
-#include <lframework/ecs/ComponentSprite2D.h>
+#include <lframework/ecs/ComponentUIText.h>
+#include <lframework/ecs/ComponentUIImage.h>
 #include <lframework/resource/Resources.h>
 #include <lframework/resource/ResourceTexture2D.h>
 
@@ -26,9 +28,8 @@
 #include "MainCamera00.h"
 #include "Behavior00.h"
 #include "Particle00.h"
-#include "VolumeParticle00.h"
+//#include "VolumeParticle00.h"
 #include "Plane00.h"
-#include "Text00.h"
 #include "BGMID.h"
 #include "SEID.h"
 
@@ -51,7 +52,6 @@ namespace debug
     void Scene00::onCreate()
     {
         lsound::Context& context = lsound::Context::getInstance();
-        lfw::Application& application = lfw::Application::getInstance();
         context.loadResourcePack(0, "sound/BGM.pak", true);
         context.loadResourcePack(1, "sound/SE.pak", false);
         //bgmPlayer_ = context.createUserPlayer(0, BGM_BGM_MAOUDAMASHII_CYBER02);
@@ -59,61 +59,55 @@ namespace debug
         //bgmPlayer_->setGain(0.5f);
         //bgmPlayer_->play();
 
-        mainLight00Entity_ = application.getECSManager().requestCreateGeometric("MainLight00");
-        mainLight00Entity_.addComponent<lfw::ComponentLight>();
-        mainLight00Entity_.getGeometric()->getRotation().lookAt(lmath::Vector4::construct(normalize(lmath::Vector4::construct(0.2f, -1.0f, 0.0f, 0.0f))));
+        lfw::ECSManager& ecsManager = lfw::System::getECSManager();
+        mainLight00Entity_ = ecsManager.requestCreateGeometric("MainLight00");
+        lfw::ComponentLight* componentLight = mainLight00Entity_.addComponent<lfw::ComponentLight>();
+        mainLight00Entity_.getGeometric()->getRotation().lookAt(lmath::Vector4::construct(normalize(lmath::Vector4::construct(0.5f, -1.0f, 0.0f, 0.0f))));
+        lfw::Light& light = componentLight->getLight();
+        light.setCastShadow(true);
 
-        mainCamera00Entity_ = application.getECSManager().requestCreateGeometric("MainCamera00");
+        mainCamera00Entity_ = ecsManager.requestCreateGeometric("MainCamera00");
         debug::MainCamera00* mainCamera00 = mainCamera00Entity_.addComponent<debug::MainCamera00>();
-        mainCamera00->initializePerspective(60.0f, 0.01f, 100.0f, true);
-        mainCamera00->initializeDeferred(800, 600);
-        mainCamera00Entity_.getGeometric()->setPosition(lmath::Vector4::construct(0.5f, 1.5f, -2.0f, 0.0f));
+        mainCamera00->initialize(60.0f, 0.01f, 100.0f, 800, 600, true);
+        mainCamera00Entity_.getGeometric()->lookAt(lmath::Vector4::construct(0.0f, 2.0f, -4.0f, 0.0f), lmath::Vector4::construct(0.0f, 0.0f, 0.0f, 0.0f));
 
         lfw::ComponentGeometric* scene00Geometric = this->getEntity().getGeometric();
 
 #if 1
-        behaviorEntities_[0] = application.getECSManager().requestCreateGeometric("Behavior00");
-        behaviorEntities_[0].addComponent<debug::Behavior00>();
-        behaviorEntities_[0].getGeometric()->setParent(scene00Geometric);
-        behaviorEntities_[0].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 2.0f, 0.0f, 0.0f));
+        //behaviorEntities_[0] = application.getECSManager().requestCreateGeometric("Behavior00");
+        //behaviorEntities_[0].addComponent<debug::Behavior00>();
+        //behaviorEntities_[0].getGeometric()->setParent(scene00Geometric);
+        //behaviorEntities_[0].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 2.0f, 0.0f, 0.0f));
 
-        behaviorEntities_[1] = application.getECSManager().requestCreateGeometric("Behavior01");
-        behaviorEntities_[1].addComponent<debug::Behavior00>();
-        behaviorEntities_[1].getGeometric()->setParent(scene00Geometric);
-        behaviorEntities_[1].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 2.0f, 2.0f, 0.0f));
+        //behaviorEntities_[1] = application.getECSManager().requestCreateGeometric("Behavior01");
+        //behaviorEntities_[1].addComponent<debug::Behavior00>();
+        //behaviorEntities_[1].getGeometric()->setParent(scene00Geometric);
+        //behaviorEntities_[1].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 2.0f, 2.0f, 0.0f));
 
-        behaviorEntities_[2] = application.getECSManager().requestCreateGeometric("Behavior02");
-        behaviorEntities_[2].addComponent<debug::Behavior00>();
-        behaviorEntities_[2].getGeometric()->setParent(scene00Geometric);
-        behaviorEntities_[2].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 2.0f, 4.0f, 0.0f));
+        //behaviorEntities_[2] = application.getECSManager().requestCreateGeometric("Behavior02");
+        //behaviorEntities_[2].addComponent<debug::Behavior00>();
+        //behaviorEntities_[2].getGeometric()->setParent(scene00Geometric);
+        //behaviorEntities_[2].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 2.0f, 4.0f, 0.0f));
 
-        behaviorEntities_[3] = application.getECSManager().requestCreateGeometric("Behavior03");
+        behaviorEntities_[3] = ecsManager.requestCreateGeometric("Behavior03");
         behaviorEntities_[3].addComponent<debug::Behavior00>();
         behaviorEntities_[3].getGeometric()->setParent(scene00Geometric);
-        behaviorEntities_[3].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 2.0f, 6.0f, 0.0f));
+        behaviorEntities_[3].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 0.0f, 2.0f, 0.0f));
 
-        behaviorEntities_[4] = application.getECSManager().requestCreateGeometric("Behavior04");
+        behaviorEntities_[4] = ecsManager.requestCreateGeometric("Behavior04");
         behaviorEntities_[4].addComponent<debug::Behavior00>();
         behaviorEntities_[4].getGeometric()->setParent(scene00Geometric);
-        behaviorEntities_[4].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 2.0f, 8.0f, 0.0f));
+        behaviorEntities_[4].getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 0.0f, 0.0f, 0.0f));
         behaviorEntities_[4].getGeometric()->setScale(lmath::Vector3::construct(2.0f, 2.0f, 2.0f));
 #endif
 
-        lfw::Entity plane00Entity = application.getECSManager().requestCreateGeometric("Plane00");
+        lfw::Entity plane00Entity = ecsManager.requestCreateGeometric("Plane00");
         plane00Entity.addComponent<debug::Plane00>();
         plane00Entity.getGeometric()->setParent(scene00Geometric);
-        plane00Entity.getGeometric()->setPosition(lmath::Vector4::construct(0.0f, 0.0f, 0.0f, 0.0f));
+        plane00Entity.getGeometric()->setPosition(lmath::Vector4::construct(0.0f, -2.0f, 0.0f, 0.0f));
         plane00Entity.getGeometric()->setScale(lmath::Vector3::construct(10.0f, 10.0f, 10.0f));
 
-        sprite00_ = application.getECSManager().requestCreateGeometric("Sprite00");
-        lfw::ComponentSprite2D* sprite2d00 = sprite00_.addComponent<lfw::ComponentSprite2D>();
-        lfw::ResourceTexture2D* texWhite = lfw::Resources::getInstance().getEmptyTextureWhite()->cast<lfw::ResourceTexture2D>();
-        sprite2d00->setTexture(texWhite->get(), texWhite->getShaderResourceView());
-        //sprite2d00->setRect(lmath::Vector4(-1.0f, 1.0f, -0.9f, 0.9f));
-        sprite2d00->setScreenRect(0.0f, 0.0f, 20.0f, 20.0f);
-        sprite2d00->setTexcoord(0.0f, 0.0f, 1.0f, 1.0f);
-
-        particle00_ = application.getECSManager().requestCreateGeometric("Particle00");
+        particle00_ = ecsManager.requestCreateGeometric("Particle00");
         particle00_.addComponent<Particle00>();
 
         //lfw::s32 setID=0;
@@ -123,8 +117,27 @@ namespace debug
         //volumeParticle->setTexture(texGradient->get(), texGradient->getShaderResourceView());
 
 
-        lfw::Entity entityText00 = application.getECSManager().requestCreateGeometric("Text00");
-        entityText00.addComponent<Text00>();
+        //
+        lfw::Entity canvasEntity = ecsManager.requestCreateGeometric("Canvas");
+        lfw::ComponentCanvas* canvas = canvasEntity.addComponent<lfw::ComponentCanvas>();
+
+        lfw::Entity entityText00 = ecsManager.requestCreateGeometric("Text00");
+        entityText00.getGeometric()->setParent(canvasEntity.getGeometric());
+        lfw::ComponentUIText* UIText00 = entityText00.addComponent<lfw::ComponentUIText>();
+        UIText00->setFont(0);
+        UIText00->setRect(0.0f, 0.0f, 800.0f, 600.0f);
+        UIText00->text().printf("test00\ntest00\ntest00");
+        UIText00->updateText();
+
+        lfw::s32 setID=0;
+        lfw::ResourceTexture2D* texGradient = lfw::System::getResources().load(setID, "gradient.dds", lfw::ResourceType::ResourceType_Texture2D)->cast<lfw::ResourceTexture2D>();
+        lfw::Entity entityImage00 = ecsManager.requestCreateGeometric("Image00");
+        entityImage00.getGeometric()->setParent(canvasEntity.getGeometric());
+        lfw::ComponentUIImage* UIImage00 = entityImage00.addComponent<lfw::ComponentUIImage>();
+        UIImage00->setImage(texGradient->getShaderResourceView());
+        UIImage00->setRect(10.0f, 10.0f, 64.0f, 64.0f);
+        UIImage00->setUVRect(0.0f, 0.0f, 1.0f, 1.0f);
+        entityImage00.getGeometric()->setFirstSibling();
     }
 
     void Scene00::onStart()
@@ -133,8 +146,7 @@ namespace debug
 
     void Scene00::update()
     {
-        lfw::Application& application = lfw::Application::getInstance();
-        linput::Input& input = application.getInput();
+        linput::Input& input = lfw::System::getInput();
         const linput::Keyboard* keyboard = input.getKeyboard();
         const linput::Mouse* mouse = input.getMouse();
 
@@ -157,9 +169,9 @@ namespace debug
         }
 
         lmath::Vector4 forward = rotate(cameraRotation, lmath::Vector4::Forward);
-        forward *= 0.1f;
+        forward *= 0.075f;
         lmath::Vector4 right = rotate(cameraRotation, lmath::Vector4::Right);
-        right *= 0.1f;
+        right *= 0.075f;
 
         if(keyboard->isOn(linput::Key_W)){
             cameraTranslation += forward;

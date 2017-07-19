@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5)
+cmake_minimum_required(VERSION 3.7)
 
 include("${CMAKE_CURRENT_SOURCE_DIR}/../../CMakeCommon.txt")
 
@@ -50,11 +50,11 @@ target_link_libraries(${ProjectDebug} LCORE LMATH LGRAPHICS LSOUND INPUTLIB IMML
 target_link_libraries(${ProjectDebug} ${LCORE_DEPEND_LIBS} ${LMATH_DEPEND_LIBS} ${LGRAPHICS_DEPEND_LIBS})
 
 if(MSVC)
-set_target_properties(${ProjectDebug} PROPERTIES
+    set_target_properties(${ProjectDebug} PROPERTIES
         LINK_FLAGS_DEBUG "/SUBSYSTEM:WINDOWS"
         LINK_FLAGS_RELEASE "/LTCG /SUBSYSTEM:WINDOWS")
+    get_vs_working_directory(TMPVS_PROPERTIES ${CMAKE_CURRENT_SOURCE_DIR})
+    write_vs_user(${ProjectDebug} ${TMPVS_PROPERTIES})
 elseif(UNIX)
 elseif(APPLE)
 endif()
-
-set_vs_working_directory(${ProjectDebug} ${CMAKE_CURRENT_SOURCE_DIR})

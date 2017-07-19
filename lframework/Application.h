@@ -11,7 +11,6 @@
 #include "ecs/ECSInitParam.h"
 #include "render/RendererInitParam.h"
 #include "Timer.h"
-#include <lcore/io/FileSystem.h>
 
 namespace lsound
 {
@@ -20,10 +19,6 @@ namespace lsound
 
 namespace lfw
 {
-    class ECSManager;
-    class Renderer;
-    class CollideManager;
-
     class Application
     {
     public:
@@ -65,7 +60,6 @@ namespace lfw
             SoundInitParam soundParam_;
         };
 
-        static Application& getInstance(){ return *instance_;}
         static bool initApplication(InitParam& initParam, const char* title, WNDPROC wndProc);
         static void termApplication();
 
@@ -77,18 +71,9 @@ namespace lfw
 
         void setTerminate();
 
-        inline lgfx::Window& getWindow();
-        inline linput::Input& getInput();
-        inline Timer& getTimer();
-        inline lcore::FileSystem& getFileSystem();
-        inline CollideManager& getCollideManager();
-        inline Renderer& getRenderer();
-        ECSManager& getECSManager();
     protected:
-        Application(const Application&);
-        Application& operator=(const Application&);
-
-        static Application* instance_;
+        Application(const Application&) = delete;
+        Application& operator=(const Application&) = delete;
 
         Application();
         virtual ~Application();
@@ -109,39 +94,6 @@ namespace lfw
 
         linput::Input input_;
         Timer timer_;
-        lcore::FileSystem fileSystem_;
-        CollideManager* collideManager_;
-        Renderer* renderer_;
     };
-
-    inline lgfx::Window& Application::getWindow()
-    {
-        return window_;
-    }
-
-    inline linput::Input& Application::getInput()
-    {
-        return input_;
-    }
-
-    inline Timer& Application::getTimer()
-    {
-        return timer_;
-    }
-
-    inline lcore::FileSystem& Application::getFileSystem()
-    {
-        return fileSystem_;
-    }
-
-    inline CollideManager& Application::getCollideManager()
-    {
-        return *collideManager_;
-    }
-
-    inline Renderer& Application::getRenderer()
-    {
-        return *renderer_;
-    }
 }
 #endif //INC_LFRAMEWORK_APPLICATION_H__

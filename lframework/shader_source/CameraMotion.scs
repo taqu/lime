@@ -1,36 +1,31 @@
 #include "Common.scs"
 
-cbuffer SceneConstant : register(b0)
+Texture2D<float4> texDepthNormal : register(t0);
+Texture2D<float2> texVelocity : register(t1);
+RWTexture2D<float2> texFullVelocity : register(u0);
+
+float2 sampleVelocity(in float2 uv)
 {
-    float4x4 vp0;
-    float4x4 ivp1;
-    float2 size;
-    float exposure;
-    float maxMagnitude;
+    float4 v0 = texVelocity.GatherRed(samLinear, uv, 0);
+    float4 v1 = texVelocity.GatherGreen(samLinear, uv, 0);
+    return float2(dot(v0,(float4)1), dot(v1, (float4)1));
 }
-
-Texture2D<float> texDepth : register(t0);
-
-RWTexture2D<float2> texOut : register(u0);
 
 [numthreads(NUMTHREADS, NUMTHREADS, 1)]
 void main(uint3 threadID : SV_DispatchThreadID)
 {
-    //CHECKSIZE_RETURN(threadID, texOut);
-    uint width, height;
-    texOut.GetDimensions(width,height);
-    float depth = texDepth[threadID.xy].x;
+    float2 uv = (float2)threadID.xy * screenInvSize * 2.0;
+    float depth = sampleDepth(texDepthNormal, uv);
+    float2 velocity = sampleVelocity(uv);
 
-    float2 t = (float2)threadID.xy/float2(width, height)*float2(2,-2) + float2(-1, 1);
-    float4 screenSpacePosition1 = float4(t, depth, 1);
+    float2 t = uv*float2(2,-2) + float2(-1,1);
+    float4 screenSpacePosition1 = float4(t.x, t.y, depth, 1);
+    float4 worldPos1 = mul(screenSpacePosition1, minvvp1);
+    worldPos1 /= worldPos1.w;
+    float4 screenSpacePosition0 = mul(worldPos1, mvp0);
+    screenSpacePosition0 /= screenSpacePosition0.w;
 
-    float4 worldPos1 = mul(screenSpacePosition1, ivp1); worldPos1 /= worldPos1.w;
-    float4 screenSpacePosition0 = mul(worldPos1, vp0); screenSpacePosition0 /= screenSpacePosition0.w;
+    velocity += (screenSpacePosition1.xy-screenSpacePosition0.xy);
 
-    float2 screenSpaceMov = (screenSpacePosition1.xy-screenSpacePosition0.xy) * size;
-
-    float mag = length(screenSpaceMov);
-    screenSpaceMov = screenSpaceMov * min(mag, maxMagnitude) / (mag + 0.0001);
-
-    texOut[threadID.xy] = encodeVelocity(screenSpaceMov);
+    texFullVelocity[threadID.xy] = velocity;
 }

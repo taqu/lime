@@ -35,7 +35,7 @@ endforeach()
 
 set(FILES ${HEADERS} ${SOURCES})
 
-set(OUTPUT_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}/bin/")
+set(OUTPUT_DIRECTORY "${TOOLS_OUTDIR}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${OUTPUT_DIRECTORY}")
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${OUTPUT_DIRECTORY}")
 
@@ -56,8 +56,8 @@ set_target_properties(${ProjectName} PROPERTIES OUTPUT_NAME_DEBUG "${ProjectName
 if(MSVC)
     target_link_libraries(${ProjectName} "d3dcompiler.lib")
     target_link_libraries(${ProjectName} LCORE LMATH LGRAPHICS)
+    get_vs_working_directory(TMPVS_PROPERTIES ${CMAKE_CURRENT_SOURCE_DIR})
+    write_vs_user(${ProjectName} ${TMPVS_PROPERTIES})
 elseif(UNIX)
 elseif(APPLE)
 endif()
-
-set_vs_working_directory(${ProjectName} ${CMAKE_CURRENT_SOURCE_DIR})

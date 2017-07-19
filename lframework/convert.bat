@@ -13,6 +13,7 @@ pushd %SHADERDIR%
 %COMPILER% -vs -p5 -compress -text DeferredUVSkinning.vs %OUTDIR%DeferredUVSkinningVS.txt
 %COMPILER% -vs -p5 -compress -text DeferredNUV.vs %OUTDIR%DeferredNUVVS.txt
 %COMPILER% -vs -p5 -compress -text DeferredNUVSkinning.vs %OUTDIR%DeferredNUVSkinningVS.txt
+%COMPILER% -vs -p5 -compress -text DeferredLighting.vs %OUTDIR%DeferredLightingVS.txt
 
 %COMPILER% -ps -p5 -compress -text Deferred.ps %OUTDIR%DeferredPS.txt
 %COMPILER% -ps -p5 -compress -text DeferredUV.ps %OUTDIR%DeferredUVPS.txt
@@ -20,8 +21,9 @@ pushd %SHADERDIR%
 %COMPILER% -ps -p5 -compress -text DeferredTexCN.ps %OUTDIR%DeferredTexCNPS.txt
 
 %COMPILER% -ps -p5 -compress -force -text DeferredShadowAccumulating.ps %OUTDIR%DeferredShadowAccumulatingPS.txt
-%COMPILER% -ps -p5 -compress -force -text DeferredLighting.ps %OUTDIR%DeferredLightingPS.txt
-
+%COMPILER% -ps -p5 -compress -force -text DeferredLightingDirectional.ps %OUTDIR%DeferredLightingDirectionalPS.txt
+%COMPILER% -ps -p5 -compress -force -text DeferredLightingPoint.ps %OUTDIR%DeferredLightingPointPS.txt
+%COMPILER% -ps -p5 -compress -force -text DeferredLightingSpot.ps %OUTDIR%DeferredLightingSpotPS.txt
 
 %COMPILER% -vs -p5 -compress -text Forward.vs %OUTDIR%ForwardVS.txt
 %COMPILER% -vs -p5 -compress -text ForwardShadow.vs %OUTDIR%ForwardShadowVS.txt
@@ -47,6 +49,7 @@ pushd %SHADERDIR%
 
 
 %COMPILER% -vs -p5 -compress -text FullQuad.vs %OUTDIR%FullQuadVS.txt
+%COMPILER% -vs -p5 -compress -text FullQuadInstanced.vs %OUTDIR%FullQuadInstancedVS.txt
 %COMPILER% -ps -p5 -compress -text Copy.ps %OUTDIR%CopyPS.txt
 
 %COMPILER% -vs -p5 -compress -text Sprite2D.vs %OUTDIR%Sprite2DVS.txt
@@ -66,4 +69,9 @@ pushd %SHADERDIR%
 
 %COMPILER% -vs -p5 -compress -text UI.vs %OUTDIR%UIVS.txt
 %COMPILER% -ps -p5 -compress -text UI.ps %OUTDIR%UIPS.txt
+
+%COMPILER% -cs -p5 -compress -text LinearDepth.scs %OUTDIR%LinearDepthCS.txt
+%COMPILER% -cs -p5 -compress -text CameraMotion.scs %OUTDIR%CameraMotionCS.txt
+
+%COMPILER% -ps -p5 -compress -text DeferredIntegration.ps %OUTDIR%DeferredIntegrationPS.txt
 popd

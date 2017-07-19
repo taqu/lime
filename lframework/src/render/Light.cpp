@@ -8,13 +8,12 @@
 namespace lfw
 {
     Light::Light()
-        :type_(LightType_Direction)
+        :layerMask_(Layer_Default)
         ,sortLayer_(0)
-        ,layerMask_(Layer_Default)
-        ,radius_(1.0f)
-        ,falloffAngle_(30.0f*DEG_TO_RAD)
-        ,direction_(lmath::Vector4::Forward)
+        ,type_(LightType_Direction)
+        ,castShadow_(0)
         ,position_(lmath::Vector4::construct(0.0f))
+        ,direction_(lmath::Vector4::Forward)
         ,lightColor_(lmath::Vector4::construct(1.0f))
     {
     }
@@ -47,5 +46,26 @@ namespace lfw
 
         lmath::Vector4 at = lmath::Vector4::construct(add(position_, direction_));
         lookAt(view, invview, position_, at, up);
+    }
+
+    void Light::setDirectional(const lmath::Vector3& direction)
+    {
+        type_ = LightType_Direction;
+        position_ = lmath::Vector4::zero();
+        direction_.set(direction, 0.0f);
+    }
+
+    void Light::setPoint(const lmath::Vector3& position, f32 radius)
+    {
+        type_ = LightType_Point;
+        position_.set(position, radius);
+        direction_ = lmath::Vector4::zero();
+    }
+
+    void Light::setSpot(const lmath::Vector3& position, const lmath::Vector3& direction, f32 angle, f32 falloffAngle)
+    {
+        type_ = LightType_Spot;
+        position_.set(position, lmath::cosf(angle*0.5f));
+        direction_.set(direction, lmath::cosf(falloffAngle*0.5f));
     }
 }

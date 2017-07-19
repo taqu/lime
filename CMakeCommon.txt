@@ -4,17 +4,55 @@ function(expand_files FILES SOURCE)
     set(${FILES} ${SOURCES} PARENT_SCOPE)
 endfunction(expand_files)
 
-function(set_vs_working_directory projectname path)
+function(get_vs_version VS_VERSION)
+    if(MSVC_VERSION EQUAL 1900)
+        set(${VS_VERSION} 14.0 PARENT_SCOPE)
+    elseif(MSVC_VERSION EQUAL 1910)
+        set(${VS_VERSION} 15.0 PARENT_SCORE)
+    endif()
+endfunction(get_vs_version)
+
+function(get_vs_property_group VSPROPERTIES NAMES VALUES)
+    set(TMP "")
+    set(I 0)
+    foreach(N IN LISTS NAMES)
+        list(GET VALUES ${I} V)
+        set(TMP "${TMP}<${N}>${V}</${N}>\n")
+        math(EXPR I "${I}+1")
+    endforeach()
+    set(${VSPROPERTIES}
+    "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">
+        ${TMP}
+    </PropertyGroup>
+    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">
+        ${TMP}
+    </PropertyGroup>"
+    PARENT_SCOPE)
+endfunction(get_vs_property_group)
+
+function(get_vs_working_directory VSPROPERTIES path)
+    set(${VSPROPERTIES}
+    "<PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">
+        <LocalDebuggerWorkingDirectory>${path}</LocalDebuggerWorkingDirectory>
+        <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    </PropertyGroup>
+    <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">
+        <LocalDebuggerWorkingDirectory>${path}</LocalDebuggerWorkingDirectory>
+        <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+    </PropertyGroup>"
+    PARENT_SCOPE)
+endfunction(get_vs_working_directory)
+
+function(write_vs_user projectname VSPROPERTIES)
+    if(MSVC_VERSION EQUAL 1900)
+        set(VS_VERSION 14.0)
+    elseif(MSVC_VERSION EQUAL 1910)
+        set(VS_VERSION 15.0)
+    endif()
+
     file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/${projectname}.vcxproj.user"
-            "<?xml version=\"1.0\" encoding=\"utf-8\"?>
-<Project ToolsVersion=\"12.0\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">
-  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Debug|x64'\">
-    <LocalDebuggerWorkingDirectory>${path}</LocalDebuggerWorkingDirectory>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-  </PropertyGroup>
-  <PropertyGroup Condition=\"'$(Configuration)|$(Platform)'=='Release|x64'\">
-    <LocalDebuggerWorkingDirectory>${path}</LocalDebuggerWorkingDirectory>
-    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
-  </PropertyGroup>
-</Project>")
-endfunction(set_vs_working_directory)
+    "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+    <Project ToolsVersion=\"${VS_VERSION}\" xmlns=\"http://schemas.microsoft.com/developer/msbuild/2003\">
+        ${VSPROPERTIES}
+    </Project>")
+endfunction(write_vs_user)

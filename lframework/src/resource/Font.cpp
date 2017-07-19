@@ -5,6 +5,7 @@
 */
 #include "resource/Font.h"
 #include <lcore/Search.h>
+#include "System.h"
 #include "resource/Resources.h"
 
 namespace lfw
@@ -16,22 +17,22 @@ namespace lfw
         ,height_(0)
         ,invWidth_(0)
         ,invHeight_(0)
-        ,numChars_(0)
-        ,chars_(NULL)
+        ,numGlyphes_(0)
+        ,glyphes_(NULL)
     {
-        ShaderManager& shaderManager = Resources::getInstance().getShaderManager();
+        ShaderManager& shaderManager = System::getResources().getShaderManager();
         ps_ = &shaderManager.getPS(ShaderPS_Font);
         psOutline_ = &shaderManager.getPS(ShaderPS_FontOutline);
     }
 
     Font::~Font()
     {
-        LFREE(chars_);
+        LFREE(glyphes_);
     }
 
-    const Font::FontChar* Font::find(u16 id) const
+    const Font::Glyph* Font::find(u16 id) const
     {
-        s32 index = lcore::binarySearchIndex(numChars_, chars_, id, comp);
-        return (0<=index)? &chars_[index] : NULL;
+        s32 index = lcore::binarySearchIndex(numGlyphes_, glyphes_, id, comp);
+        return (0<=index)? &glyphes_[index] : NULL;
     }
 }

@@ -4,9 +4,9 @@
 @date 2016/05/09 create
 */
 #include "ecs/Entity.h"
+#include "System.h"
 #include "ecs/ECSManager.h"
 #include "HandleBasedAllocator.h"
-#include "Application.h"
 #include "ecs/ComponentLogical.h"
 #include "ecs/ComponentGeometric.h"
 
@@ -26,7 +26,7 @@ namespace lfw
 
     Entity::Components::~Components()
     {
-        ECSManager& ecsManager = ECSManager::getInstance();
+        ECSManager& ecsManager = System::getECSManager();
         HandleBasedAllocator& allocator = ecsManager.getComponentHandleAllocator();
         allocator.deallocate(bufferSize(), offset_);
 
@@ -38,13 +38,13 @@ namespace lfw
     ID Entity::Components::get(s16 index) const
     {
         LASSERT(0<=index && index<size_);
-        const HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
+        const HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
         return allocator.get<ID>(bufferSize(), offset_)[index];
     }
 
     const ID* Entity::Components::get() const
     {
-        const HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
+        const HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
         return allocator.getMaybeNull<ID>(bufferSize(), offset_);
     }
 
@@ -61,7 +61,7 @@ namespace lfw
     void Entity::Components::forceAdd(ID id)
     {
         LASSERT(0<id.category());
-        HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
+        HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
 
         ID* components = NULL;
         if(capacity_<=size_){
@@ -93,7 +93,7 @@ namespace lfw
     {
         LASSERT(0<=index && index<size_);
 
-        HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
+        HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
         ID* components = allocator.getMaybeNull<ID>(bufferSize(), offset_);
         if(components[index].category() == ECSCategory_Logical || components[index].category() == ECSCategory_Geometric){
             LASSERT(false);
@@ -112,7 +112,7 @@ namespace lfw
 
     void Entity::Components::forceRemove(ID id)
     {
-        HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
+        HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
         ID* components = allocator.getMaybeNull<ID>(bufferSize(), offset_);
         for(s16 i=0; i<size_; ++i){
             if(id == components[i]){
@@ -134,7 +134,7 @@ namespace lfw
     {
         static const s32 expand = HandleBasedAllocator::MinSize/sizeof(ID);
 
-        HandleBasedAllocator& allocator = ECSManager::getInstance().getComponentHandleAllocator();
+        HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
 
         s16 capacity = capacity_ + expand;
         s32 nextBufferSize = capacity*sizeof(ID);
@@ -165,7 +165,7 @@ namespace lfw
     //----------------------------------------------------------
     bool Entity::checkFlag(u8 flag) const
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         return manager.checkFlag(*this, flag);
     }
 
@@ -173,7 +173,7 @@ namespace lfw
     {
         LASSERT(0 == (flag & EntityFlag_Update));
         LASSERT(0 == (flag & EntityFlag_Render));
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         manager.setFlag(*this, flag);
     }
 
@@ -181,19 +181,19 @@ namespace lfw
     {
         LASSERT(0 == (flag & EntityFlag_Update));
         LASSERT(0 == (flag & EntityFlag_Render));
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         manager.resetFlag(*this, flag);
     }
 
     void Entity::addComponent(u8 category, u32 type, Behavior* behavior)
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         manager.addComponent(*this, category, type, behavior);
     }
 
     const NameString& Entity::getName() const
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         IDConstAccess access = manager.getComponents(*this);
         return (ECSCategory_Logical == access[0].category())
             ? manager.getLogical(*this, access[0])->getName()
@@ -202,7 +202,7 @@ namespace lfw
 
     NameString& Entity::getName()
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         IDConstAccess access = manager.getComponents(*this);
         return (ECSCategory_Logical == access[0].category())
             ? manager.getLogical(*this, access[0])->getName()
@@ -211,14 +211,14 @@ namespace lfw
 
     bool Entity::isLogical() const
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         IDConstAccess access = manager.getComponents(*this);
         return ECSCategory_Logical == access[0].category();
     }
 
     const ComponentLogical* Entity::getLogical() const
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         IDConstAccess access = manager.getComponents(*this);
         LASSERT(ECSCategory_Logical == access[0].category());
         return manager.getLogical(*this, access[0]);
@@ -226,7 +226,7 @@ namespace lfw
 
     ComponentLogical* Entity::getLogical()
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         IDConstAccess access = manager.getComponents(*this);
         LASSERT(ECSCategory_Logical == access[0].category());
         return manager.getLogical(*this, access[0]);
@@ -234,14 +234,14 @@ namespace lfw
 
     bool Entity::isGeometric() const
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         IDConstAccess access = manager.getComponents(*this);
         return ECSCategory_Geometric == access[0].category();
     }
 
     const ComponentGeometric* Entity::getGeometric() const
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         IDConstAccess access = manager.getComponents(*this);
         LASSERT(ECSCategory_Geometric == access[0].category());
         return manager.getGeometric(*this, access[0]);
@@ -249,7 +249,7 @@ namespace lfw
 
     ComponentGeometric* Entity::getGeometric()
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         IDConstAccess access = manager.getComponents(*this);
         LASSERT(ECSCategory_Geometric == access[0].category());
         return manager.getGeometric(*this, access[0]);
@@ -257,25 +257,25 @@ namespace lfw
 
     IDConstAccess Entity::getComponents() const
     {
-        const ECSManager& manager = ECSManager::getInstance();
+        const ECSManager& manager = System::getECSManager();
         return manager.getComponents(*this);
     }
 
     Behavior* Entity::getComponent(u8 category, u32 type)
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         return manager.getComponent(*this, category, type);
     }
 
     Behavior* Entity::getComponent(ID id)
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         return manager.getComponent(*this, id);
     }
 
     void Entity::removeComponent(ID id)
     {
-        ECSManager& manager = ECSManager::getInstance();
+        ECSManager& manager = System::getECSManager();
         Behavior* component = manager.getComponent(*this, id);
         if(NULL != component){
             manager.removeComponent(*this, id);

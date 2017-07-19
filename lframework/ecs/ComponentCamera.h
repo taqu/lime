@@ -8,8 +8,6 @@
 #include "Component.h"
 #include "ComponentSceneElementManager.h"
 
-struct D3D11_VIEWPORT;
-
 namespace lmath
 {
     class Vector3;
@@ -19,6 +17,7 @@ namespace lmath
 
 namespace lgfx
 {
+    struct Viewport;
     class Texture2DRef;
     class RenderTargetViewRef;
     class ShaderResourceViewRef;
@@ -53,25 +52,19 @@ namespace lfw
         virtual void update();
         virtual void onDestroy();
 
-        virtual void render(lfw::Camera& camera, RenderTask& renderTask);
-
-        virtual void deferredLighting(lfw::Camera& camera, RenderTask& renderTask);
-
-        void initializePerspective(
+        void initialize(
             f32 fovyDegree,
             f32 znear,
             f32 zfar,
+            s32 width,
+            s32 height,
             bool jitter);
 
-        void initializeDeferred(s32 width, s32 height);
+        virtual void resetRenderPasses();
+        virtual void render(RenderContext& renderContext);
 
-        const D3D11_VIEWPORT& getViewport() const;
-        void setViewport(f32 x, f32 y, f32 width, f32 height);
-
-        bool isUseCameraRenderTarget() const;
-
-        s32 getScreenWidth() const;
-        s32 getScreenHeight() const;
+        const lgfx::Viewport& getViewport() const;
+        void setViewport(s32 x, s32 y, s32 width, s32 height);
 
         s32 getSortLayer() const;
         void setSortLayer(s32 layer);
@@ -112,14 +105,9 @@ namespace lfw
         bool isJitter() const;
 
         void setJitterSize(f32 width, f32 height);
-
-        s16 getNumRenderTargets() const;
-        void setRenderTargets(const D3D11_VIEWPORT& viewport, s8 numTargets, const RenderTarget* targets, const DepthStencil* depthStencil);
-        void clearRenderTargets();
-
     protected:
-        ComponentCamera(const ComponentCamera&);
-        ComponentCamera& operator=(const ComponentCamera&);
+        ComponentCamera(const ComponentCamera&) = delete;
+        ComponentCamera& operator=(const ComponentCamera&) = delete;
     };
 }
 #endif //INC_LFRAMEWORK_COMPONENTCAMERA_H__

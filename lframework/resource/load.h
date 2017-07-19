@@ -21,7 +21,7 @@ namespace lfw
     static const u8 MaxNodes = 0xFEU;
     static const u8 InvalidNode = 0xFFU;
     static const u32 MaxNameSize = LFW_CONFIG_NAMESIZE;
-    static const u32 MaxNameLength = LFW_CONFIG_NAMELENGTH;
+    static const s32 MaxNameLength = LFW_CONFIG_NAMELENGTH;
     static const u32 MaxFileNameSize = LFW_CONFIG_FILENAMESIZE;
     static const u32 MaxFileNameLength = LFW_CONFIG_FILENAMELENGTH;
 

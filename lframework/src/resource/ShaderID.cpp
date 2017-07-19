@@ -52,6 +52,11 @@ namespace
 #include "../../shader/DeferredNUVSkinningVS.txt"
     };
 
+    const u8 shaderVS_DeferredLighting[] =
+    {
+#include "../../shader/DeferredLightingVS.txt"
+    };
+
     //-------------------------------------------
     const u8 shaderVS_Forward[] =
     {
@@ -118,6 +123,11 @@ namespace
 #include "../../shader/FullQuadVS.txt"
     };
 
+    const u8 shaderVS_FullQuadInstanced[] =
+    {
+#include "../../shader/FullQuadInstancedVS.txt"
+    };
+
     const u8 shaderVS_Sprite2D[] =
     {
 #include "../../shader/Sprite2DVS.txt"
@@ -140,7 +150,7 @@ namespace
 
     // GS
     //-------------------------------------------------------
-    const u8 shaderGS_LighDepth[] =
+    const u8 shaderGS_LightDepth[] =
     {
 #include "../../shader/LightDepthGS.txt"
     };
@@ -177,10 +187,25 @@ namespace
 #include "../../shader/DeferredShadowAccumulatingPS.txt"
     };
 
-    const u8 shaderPS_DeferredLighting[] =
+    const u8 shaderPS_DeferredLightingDirectional[] =
     {
-#include "../../shader/DeferredLightingPS.txt"
+#include "../../shader/DeferredLightingDirectionalPS.txt"
     };
+
+    const u8 shaderPS_DeferredLightingPoint[] =
+    {
+#include "../../shader/DeferredLightingPointPS.txt"
+    };
+    const u8 shaderPS_DeferredLightingSpot[] =
+    {
+#include "../../shader/DeferredLightingSpotPS.txt"
+    };
+
+    const u8 shaderPS_DeferredIntegration[] =
+    {
+#include "../../shader/DeferredIntegrationPS.txt"
+    };
+
 
     //-------------------------------------------
     const u8 shaderPS_Forward[] =
@@ -260,7 +285,15 @@ namespace
 
     // CS
     //-------------------------------------------------------
+    const u8 shaderCS_LinearDepth[] =
+    {
+#include "../../shader/LinearDepthCS.txt"
+    };
 
+    const u8 shaderCS_CameraMotion[] =
+    {
+#include "../../shader/CameraMotionCS.txt"
+    };
     
     // DS
     //-------------------------------------------------------
@@ -305,6 +338,7 @@ namespace
         shaderVS_DeferredUVSkinning,
         shaderVS_DeferredNUV,
         shaderVS_DeferredNUVSkinning,
+        shaderVS_DeferredLighting,
 
         shaderVS_Forward,
         shaderVS_ForwardShadow,
@@ -320,6 +354,7 @@ namespace
         shaderVS_ForwardNUVSkinningShadow,
 
         shaderVS_FullQuad,
+        shaderVS_FullQuadInstanced,
         shaderVS_Sprite2D,
         shaderVS_Particle,
         shaderVS_VolumeParticle,
@@ -338,6 +373,7 @@ namespace
         sizeof(shaderVS_DeferredUVSkinning),
         sizeof(shaderVS_DeferredNUV),
         sizeof(shaderVS_DeferredNUVSkinning),
+        sizeof(shaderVS_DeferredLighting),
 
         sizeof(shaderVS_Forward),
         sizeof(shaderVS_ForwardShadow),
@@ -353,6 +389,7 @@ namespace
         sizeof(shaderVS_ForwardNUVSkinningShadow),
 
         sizeof(shaderVS_FullQuad),
+        sizeof(shaderVS_FullQuadInstanced),
         sizeof(shaderVS_Sprite2D),
         sizeof(shaderVS_Particle),
         sizeof(shaderVS_VolumeParticle),
@@ -375,13 +412,13 @@ namespace
 
     const u8* DefaultShaderCompiledBytes::bytesGS_[] =
     {
-        shaderGS_LighDepth,
+        shaderGS_LightDepth,
         shaderGS_Particle,
     };
 
     const s32 DefaultShaderCompiledBytes::sizeGS_[] =
     {
-        sizeof(shaderGS_LighDepth),
+        sizeof(shaderGS_LightDepth),
         sizeof(shaderGS_Particle),
     };
 
@@ -405,7 +442,10 @@ namespace
         shaderPS_DeferredTexC,
         shaderPS_DeferredTexCN,
         shaderPS_DeferredShadowAccumulating,
-        shaderPS_DeferredLighting,
+        shaderPS_DeferredLightingDirectional,
+        shaderPS_DeferredLightingPoint,
+        shaderPS_DeferredLightingSpot,
+        shaderPS_DeferredIntegration,
 
         shaderPS_Forward,
         shaderPS_ForwardShadow,
@@ -433,7 +473,10 @@ namespace
         sizeof(shaderPS_DeferredTexC),
         sizeof(shaderPS_DeferredTexCN),
         sizeof(shaderPS_DeferredShadowAccumulating),
-        sizeof(shaderPS_DeferredLighting),
+        sizeof(shaderPS_DeferredLightingDirectional),
+        sizeof(shaderPS_DeferredLightingPoint),
+        sizeof(shaderPS_DeferredLightingSpot),
+        sizeof(shaderPS_DeferredIntegration),
 
         sizeof(shaderPS_Forward),
         sizeof(shaderPS_ForwardShadow),
@@ -458,25 +501,26 @@ namespace
     s32 DefaultShaderCompiledBytes::getSizeCS(s32 id)
     {
         LASSERT(0<=id && id<ShaderCS_Num);
-        //return sizeCS_[id];
-        return 0;
+        return sizeCS_[id];
     }
 
     const u8* DefaultShaderCompiledBytes::getBytesCS(s32 id)
     {
         LASSERT(0<=id && id<ShaderCS_Num);
-        //return bytesCS_[id];
-        return NULL;
+        return bytesCS_[id];
     }
 
-    //const u8* DefaultShaderCompiledBytes::bytesCS_[] =
-    //{
-    //};
+    const u8* DefaultShaderCompiledBytes::bytesCS_[] =
+    {
+        shaderCS_LinearDepth,
+        shaderCS_CameraMotion,
+    };
 
-    //const s32 DefaultShaderCompiledBytes::sizeCS_[] =
-    //{
-    //};
-
+    const s32 DefaultShaderCompiledBytes::sizeCS_[] =
+    {
+        sizeof(shaderCS_LinearDepth),
+        sizeof(shaderCS_CameraMotion),
+    };
 
     //-------------------------------------------------------
     s32 DefaultShaderCompiledBytes::getSizeDS(s32 id)

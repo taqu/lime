@@ -23,20 +23,25 @@ namespace lfw
     protected:
         virtual void SetUp()
         {
-            ECSManager::create(ECSManager::defaultInitParam());
+            ecsManager_ = ECSManager::create(ECSManager::defaultInitParam());
+            System::setECSManager(ecsManager_);
         }
 
         virtual void TearDown()
         {
-            ECSManager::destroy();
+            ECSManager::destroy(ecsManager_);
+            ecsManager_ = NULL;
+            System::clear();
         }
+
+        ECSManager* ecsManager_;
     };
 
     TEST_F(TestComponentBehavior, CreateComponent)
     {
         static const s32 Size = 256;
         Entity entities[Size];
-        ECSManager& ecsManager = ECSManager::getInstance();
+        ECSManager& ecsManager = *ecsManager_;
         for(s32 i=0; i<Size; ++i){
             entities[i] = ecsManager.requestCreateGeometric("");
             ASSERT_FALSE(entities[i].isNull());

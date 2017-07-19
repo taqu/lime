@@ -21,16 +21,23 @@ namespace lfw
         components_ = LNEW Behavior*[capacity];
         lcore::memset(components_, 0, sizeof(Behavior*)*capacity);
 
-        data_ = LNEW Data[capacity];
+        data_ = (Data*)LMALLOC(sizeof(Data)*capacity);
+        for(s32 i=0; i<capacity; ++i){
+            data_[i].setType(0);
+        }
     }
 
     ComponentSceneElementManager::~ComponentSceneElementManager()
     {
-        LDELETE_ARRAY(data_);
         for(s32 i=0; i<ids_.capacity(); ++i){
             LDELETE(components_[i]);
+            destroyData(i);
         }
+        LFREE(data_);
         LDELETE_ARRAY(components_);
+        cameras_.clear();
+        lights_.clear();
+        ids_.clear();
     }
 
     u8 ComponentSceneElementManager::category() const
@@ -47,11 +54,13 @@ namespace lfw
         if(capacity<ids_.capacity()){
             expand(components_, capacity, ids_.capacity());
             lcore::memset(components_+capacity, 0, sizeof(ComponentRenderer*)*(ids_.capacity()-capacity));
-            expand(data_, capacity, ids_.capacity());
+            expandData(ids_.capacity(), capacity);
         }
         s32 index = id.index();
         LDELETE(components_[index]);
         components_[index] = component;
+
+        LASSERT(data_[index].type()<=0);
 
         data_[index].entity_ = entity;
         data_[index].clear(type);
@@ -60,22 +69,16 @@ namespace lfw
         {
         case ECSType_Camera:
         {
-            data_[index].index_ = cameras_.size();
-            cameras_.resize(cameras_.size()+1);
-            CameraData& c = cameras_[cameras_.size()-1];
-            c.componentIndex_ = index;
-            c.camera_.setSortLayer(0);
-            c.camera_.setLayerMask(Layer_Default);
+            LPLACEMENT_NEW(&data_[index].camera_) Camera();
+
+            cameras_.push_back(index);
         }
             break;
         case ECSType_Light:
         {
-            data_[index].index_ = lights_.size();
-            lights_.resize(lights_.size()+1);
-            LightData& l = lights_[lights_.size()-1];
-            l.componentIndex_ = index;
-            l.light_.setSortLayer(0);
-            l.light_.setLayerMask(Layer_Default);
+            LPLACEMENT_NEW(&data_[index].light_) Light();
+
+            lights_.push_back(index);
         }
             break;
         default:
@@ -97,6 +100,7 @@ namespace lfw
             components_[index]->onDestroy();
             LDELETE(components_[index]);
         }
+        destroyData(index);
         ids_.destroy(ID::construct(0, index));
     }
 
@@ -148,24 +152,19 @@ namespace lfw
         }
     }
 
+    CameraArray ComponentSceneElementManager::getCameras()
+    {
+        return {cameras_.size(), &cameras_[0], data_};
+    }
+
+    LightArray ComponentSceneElementManager::getLights()
+    {
+        return {lights_.size(), &lights_[0], data_};
+    }
+
     void ComponentSceneElementManager::sortCameras()
     {
-        s32 count = 0;
-        for(s32 i=0; i<ids_.capacity(); ++i){
-            if(NULL == components_[i]){
-                continue;
-            }
-            if(ECSType_Camera != data_[i].type()){
-                continue;
-            }
-            cameras_[count].componentIndex_ = i;
-            ++count;
-        }
-        LASSERT(count == cameras_.size());
-        lcore::introsort(count, cameras_.begin(), lessSortData);
-        for(s32 i=0; i<count; ++i){
-            data_[cameras_[i].componentIndex_].index_ = i;
-        }
+        lcore::introsort(cameras_.size(), cameras_.begin(), LessSortData(data_));
     }
 
     void ComponentSceneElementManager::sortLights()
@@ -176,8 +175,9 @@ namespace lfw
     void ComponentSceneElementManager::postUpdateComponents()
     {
         for(s32 i=0; i<cameras_.size(); ++i){
-            Camera& camera = cameras_[i].camera_;
-            const Behavior* behavior = components_[cameras_[i].componentIndex_];
+            s32 index = cameras_[i];
+            Camera& camera = data_[index].camera_;
+            const Behavior* behavior = components_[index];
             Entity entity = getData(behavior->getID()).entity_;
             const ComponentGeometric* geometric = entity.getGeometric();
             lmath::Matrix44& view = camera.getViewMatrix();
@@ -189,11 +189,46 @@ namespace lfw
         }
 
         for(s32 i=0; i<lights_.size(); ++i){
-            LightData& light = lights_[i];
-            const Behavior* behavior = components_[light.componentIndex_];
+            s32 index = lights_[i];
+            Light& light = data_[index].light_;
+            const Behavior* behavior = components_[index];
             const ComponentGeometric* geometric = getData(behavior->getID()).entity_.getGeometric();
-            light.light_.setPosition(geometric->getPosition());
-            geometric->getRotation().getDireciton(light.light_.getDirection());
+            light.setPosition(geometric->getPosition());
+            geometric->getRotation().getDireciton(light.getDirection());
         }
+    }
+
+    void ComponentSceneElementManager::destroyData(s32 index)
+    {
+        switch(data_[index].type()){
+        case ECSType_Camera:
+            data_[index].camera_.~Camera();
+            break;
+        case ECSType_Light:
+            data_[index].light_.~Light();
+            break;
+        }
+        data_[index].setType(0);
+    }
+
+    void ComponentSceneElementManager::expandData(s32 newCapacity, s32 oldCapacity)
+    {
+        Data* data = (Data*)LMALLOC(sizeof(Data)*newCapacity);
+        for(s32 i=0; i<oldCapacity; ++i){
+            data[i].entity_ = data_[i].entity_;
+            data[i].typeFlags_ = data_[i].typeFlags_;
+            switch(data_[i].type()){
+            case ECSType_Camera:
+                data[i].camera_ = lcore::move(data_[i].camera_);
+                data_[i].camera_.~Camera();
+                break;
+            case ECSType_Light:
+                data[i].light_ = lcore::move(data_[i].light_);
+                data_[i].light_.~Light();
+                break;
+            }
+        }
+        LFREE(data_);
+        data_ = data;
     }
 }

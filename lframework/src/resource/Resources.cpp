@@ -12,8 +12,6 @@
 
 namespace lfw
 {
-    Resources* Resources::instance_ = NULL;
-
     void TextureParameter::initialize()
     {
         sRGB_ = 1;
@@ -23,13 +21,10 @@ namespace lfw
         borderColor_ = 0.0f;
     }
 
-    bool Resources::initialize(s32 numSets, lcore::FileSystem* fileSystem)
+    Resources* Resources::create(s32 numSets, lcore::FileSystem* fileSystem)
     {
-        if(NULL != instance_){
-            return true;
-        }
         numSets = lcore::maximum(1, numSets);
-        instance_ = LNEW Resources(numSets, fileSystem);
+        Resources* resources = LNEW Resources(numSets, fileSystem);
 
         TextureParameter texParam;
         texParam.sRGB_ = 0;
@@ -37,9 +32,9 @@ namespace lfw
         texParam.addressUVW_ = lgfx::TexAddress_Clamp;
         texParam.compFunc_ = lgfx::Cmp_Always;
         texParam.borderColor_ = 0.0f;
-        instance_->emptyTextureWhite_ = Resource::pointer(ResourceTexture2D::create(0xFFFFFFFFU, texParam));
-        instance_->emptyTextureBlack_ = Resource::pointer(ResourceTexture2D::create(0xFF000000U, texParam));
-        instance_->emptyTextureClear_ = Resource::pointer(ResourceTexture2D::create(0x00000000U, texParam));
+        resources->emptyTextureWhite_ = Resource::pointer(ResourceTexture2D::create(0xFFFFFFFFU, texParam));
+        resources->emptyTextureBlack_ = Resource::pointer(ResourceTexture2D::create(0xFF000000U, texParam));
+        resources->emptyTextureClear_ = Resource::pointer(ResourceTexture2D::create(0x00000000U, texParam));
 
         {
             static const u32 width = 128;
@@ -54,14 +49,17 @@ namespace lfw
                     colors[i*width + j] = (on)? 0xFFFFFFFFU : 0xFF000000U;
                 }
             }
-            instance_->textureChecker_ = Resource::pointer(ResourceTexture2D::create(width, height, colors, texParam));
+            resources->textureChecker_ = Resource::pointer(ResourceTexture2D::create(width, height, colors, texParam));
         }
-        return true;
+        return resources;
     }
 
-    void Resources::terminate()
+    void Resources::destroy(Resources* resources)
     {
-        LDELETE(instance_);
+        if(NULL == resources){
+            return;
+        }
+        LDELETE(resources);
     }
 
     Resources::Resources(s32 numSets, lcore::FileSystem* fileSystem)

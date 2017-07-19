@@ -37,6 +37,7 @@ namespace lfw
         s32 screenHeight_;
         f32 screenInvWidth_;
         f32 screenInvHeight_;
+        lmath::Vector4 linearZParam_;
     };
 
     struct LALIGN16 PerModelConstant0
@@ -54,6 +55,13 @@ namespace lfw
     struct LALIGN16 PerShadowMapConstant
     {
         lmath::Matrix44 lvp_[LFW_CONFIG_SHADOW_NUMCASCADES];
+        f32 cascadeScales_[LFW_CONFIG_SHADOW_MAXCASCADES];
+        lmath::Vector4 shadowMapLightDir_;
+
+        s32 shadowMapSize_;
+        f32 invShadowMapSize_;
+        f32 shadowMapDepthBias_;
+        f32 shadowMapSlopeScaledDepthBias_;
     };
 
     struct LALIGN16 PerCameraConstantDS
@@ -70,43 +78,11 @@ namespace lfw
         lmath::Vector4 dlDir_;
         lmath::Vector4 dlColor_;
 
-        f32 shadowMapSize;
-        f32 specularMapMipLevels;
-        f32 invShadowMapSize;
-        s32 shadowMapUVToTexel;
-
-        f32 shadowMapMomentBias;
-        f32 shadowMapDepthBias;
-        f32 lightBleedingBias;
-        s32 clusterGridScale;
+        f32 specularMapMipLevels_;
+        f32 lightBleedingBias_;
+        s32 clusterGridScale_;
+        f32 reserved0_;
     };
-
-    //struct LALIGN16 SceneConstantPS
-    //{
-    //    lmath::Vector4 dlDirection_;
-    //    lmath::Vector4 dlColor_;
-    //    lmath::Vector4 cameraPos_;
-
-    //    //f32 cameraNear_;
-    //    //f32 cameraFar_;
-    //    //f32 cameraRange_;
-    //    //f32 cameraInvRange_;
-
-    //    f32 specularMapMipLevels_;
-    //    f32 shadowMapSize_;
-    //    f32 invShadowMapSize_;
-    //    s32 shadowMapUVToTexel_;
-
-    //    f32 shadowMapMomentBias_;
-    //    f32 shadowMapDepthBias_;
-    //    f32 lightBreedingBias_;
-    //    s32 reserved0_;
-
-    //    s32 screenWidth_;
-    //    s32 screenHeight_;
-    //    f32 screenInvWidth_;
-    //    f32 screenInvHeight_;
-    //};
 
     //struct LALIGN16 LightClusterConstantPS
     //{

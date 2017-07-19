@@ -4,23 +4,25 @@
 @date 2016/11/06 create
 */
 #include "Application.h"
+#include <lcore/io/FileSystem.h>
 #include <lgraphics/Graphics.h>
 #include <lsound/Context.h>
+#include "System.h"
 #include "ecs/ECSManager.h"
 #include "physics/CollideManager.h"
 #include "render/Renderer.h"
 #include "resource/Resources.h"
+#include "render/graph/RenderGraph.h"
+
+#include "render/graph/RenderPassGBuffer.h"
 
 namespace lfw
 {
-    Application* Application::instance_ = NULL;
-
     bool Application::initApplication(InitParam& initParam, const char* title, WNDPROC wndProc)
     {
-        LDELETE(instance_);
-        instance_ = LNEW Application;
-        if(!instance_->initInternal(initParam, title, wndProc)){
-            LDELETE(instance_);
+        Application* instance = LNEW Application;
+        if(!instance->initInternal(initParam, title, wndProc)){
+            LDELETE(instance);
             return false;
         }
         return true;
@@ -28,16 +30,13 @@ namespace lfw
 
     void Application::termApplication()
     {
-        if(NULL != instance_){
-            instance_->termInternal();
-            LDELETE(instance_);
-        }
+        Application* application = &System::getApplication();
+        application->termInternal();
+        LDELETE(application);
     }
 
 
     Application::Application()
-        :collideManager_(NULL)
-        ,renderer_(NULL)
     {
     }
 
@@ -84,9 +83,12 @@ namespace lfw
 
     bool Application::initInternal(InitParam& initParam, const char* title, WNDPROC wndProc)
     {
-        //ウィンドウサイズ、ビューポートサイズはバックバッファと同じにする。
+        System::setApplication(this);
 
-        //ウィンドウ作成。デバイスのパラメータにウィンドウハンドルを渡す
+        //Initialize Window
+        //-----------------------------------------------------------------
+        //ウィンドウサイズ、ビューポートサイズはバックバッファと同じにする。
+        //デバイスのパラメータにウィンドウハンドルを渡す
         lgfx::Window::InitParam windowParam;
         windowParam.style_ = initParam.windowParam_.style_;
         windowParam.exStyle_ = initParam.windowParam_.exStyle_;
@@ -98,9 +100,11 @@ namespace lfw
         if(false == ret){
             return false;
         }
+        System::setWindow(&window_);
 
+        //Initialize Graphics
+        //-----------------------------------------------------------------
         initParam.gfxParam_.windowHandle_ = window_.getHandle().hWnd_;
-
 #if defined(_WIN32)
         ImmAssociateContext(initParam.gfxParam_.windowHandle_, NULL); //IME OFF
 #endif
@@ -109,17 +113,26 @@ namespace lfw
             return false;
         }
 
-        if(!ECSManager::create(initParam.ecsParam_)){
-            return false;
-        }
-
+        //Initialize Input
+        //-----------------------------------------------------------------
         initParam.inputParam_.windowHandle_ = initParam.gfxParam_.windowHandle_;
         if(linput::Error_None != input_.initialize(initParam.inputParam_)){
             return false;
         }
+        System::setInput(&input_);
 
+        //Initialize Timer
+        //-----------------------------------------------------------------
         timer_.reset();
+        System::setTimer(&timer_);
 
+        //Initialize FileSystem
+        //-----------------------------------------------------------------
+        lcore::FileSystem* fileSystem = LNEW lcore::FileSystem();
+        System::setFileSystem(fileSystem);
+
+        //Initialize Sound
+        //-----------------------------------------------------------------
         lsound::Context::InitParam soundInitParam;
         soundInitParam.numQueuedBuffers_ = initParam.soundParam_.numQueuedBuffers_;
         soundInitParam.maxPlayers_ = initParam.soundParam_.maxPlayers_;
@@ -131,45 +144,74 @@ namespace lfw
         lsound::Context& context = lsound::Context::getInstance();
         context.setGain(initParam.soundParam_.masterGain_);
 
-        Resources::initialize(4, &fileSystem_);
-        Resources::getInstance().getInputLayoutFactory().loadDefaults();
-        Resources::getInstance().getShaderManager().loadDefaultShaders();
-        ECSManager::getInstance().initialize();
+        //Initialize Resources
+        //-----------------------------------------------------------------
+        Resources* resources = Resources::create(4, fileSystem);
+        resources->getInputLayoutFactory().loadDefaults();
+        resources->getShaderManager().loadDefaultShaders();
 
-        switch(initParam.rendererParam_.renderType_)
-        {
-        case RenderType_Forward:
-            break;
-        case RenderType_Deferred:
-        {
-            if(initParam.rendererParam_.renderWidth_<=0){
-                initParam.rendererParam_.renderWidth_ = initParam.gfxParam_.backBufferWidth_;
-            }
-            if(initParam.rendererParam_.renderHeight_<=0){
-                initParam.rendererParam_.renderHeight_ = initParam.gfxParam_.backBufferHeight_;
-            }
+        if(initParam.rendererParam_.renderWidth_<=0){
+            initParam.rendererParam_.renderWidth_ = initParam.gfxParam_.backBufferWidth_;
         }
-            break;
+        if(initParam.rendererParam_.renderHeight_<=0){
+            initParam.rendererParam_.renderHeight_ = initParam.gfxParam_.backBufferHeight_;
         }
-        collideManager_ = LNEW CollideManager();
-        renderer_ = LNEW Renderer();
-        renderer_->initialize(initParam.gfxParam_.backBufferWidth_, initParam.gfxParam_.backBufferHeight_, initParam.rendererParam_);
+        System::setResources(resources);
+
+        //Initialize CollideManager
+        //-----------------------------------------------------------------
+        CollideManager* collideManager = LNEW CollideManager();
+        System::setCollideManager(collideManager);
+
+        //Initialize Renderer
+        //-----------------------------------------------------------------
+        initParam.rendererParam_.shadowMapFormat_ = initParam.gfxParam_.shadowMapFormat_;
+        Renderer* renderer = LNEW Renderer();
+        renderer->initialize(initParam.rendererParam_);
+        System::setRenderer(renderer);
+
+        //Initialize ECSManager
+        //-----------------------------------------------------------------
+        ECSManager* ecsManager = ECSManager::create(initParam.ecsParam_);
+        if(NULL == ecsManager){
+            return false;
+        }
+        System::setECSManager(ecsManager);
+
+        //Initialize RenderGraph
+        //-----------------------------------------------------------------
+        graph::RenderGraph* renderGraph = LNEW graph::RenderGraph();
+        System::setRenderGraph(renderGraph);
+
         return true;
     }
 
     void Application::termInternal()
     {
-        renderer_->terminate();
-        LDELETE(renderer_);
-        LDELETE(collideManager_);
-        ECSManager::getInstance().terminate();
-        Resources::terminate();
+        ECSManager* ecsManager = &System::getECSManager();
+        ECSManager::destroy(ecsManager);
+
+        Renderer* renderer = &System::getRenderer();
+        renderer->terminate();
+        LDELETE(renderer);
+
+        CollideManager* collideManager = &System::getCollideManager();
+        LDELETE(collideManager);
+
+        Resources* resources = &System::getResources();
+        Resources::destroy(resources);
+
         lsound::Context::terminate();
+
+        lcore::FileSystem* fileSystem = &System::getFileSystem();
+        LDELETE(fileSystem);
+
         input_.terminate();
-        ECSManager::destroy();
 
         lgfx::terminateGraphics();
         window_.terminate();
+
+        System::clear();
     }
 
     // 初期化
@@ -184,13 +226,15 @@ namespace lfw
         timer_.update();
         lsound::Context::getInstance().updateRequests();
 
-        renderer_->begin();
-        ECSManager& ecsManager = ECSManager::getInstance();
+        Renderer& renderer = System::getRenderer();
+        ECSManager& ecsManager = System::getECSManager();
+        CollideManager& collideManager = System::getCollideManager();
+
+        renderer.begin();
         ecsManager.update();
-        collideManager_->collideAll();
-        collideManager_->clear();
+        collideManager.collideAll();
         ecsManager.postUpdate();
-        renderer_->update();
+        renderer.update();
     }
 
     // 終了
@@ -198,8 +242,4 @@ namespace lfw
     {
     }
 
-    ECSManager& Application::getECSManager()
-    {
-        return ECSManager::getInstance();
-    }
 }

@@ -1,12 +1,4 @@
-
-cbuffer SceneConstant : register(b0)
-{
-    float4x4 vp0;
-    float4x4 ivp1;
-    float2 size;
-    float exposure;
-    float maxMagnitude;
-}
+#include "Common.ps"
 
 struct VSOutput
 {
@@ -15,20 +7,22 @@ struct VSOutput
 };
 
 Texture2D texDepth : register(t0);
-SamplerState samDepth : register( s0 );
 
 float2 main(VSOutput input) : SV_Target
 {
-    float depth = texDepth.Sample(samDepth, input.tex).r;
+    float depth = texDepth.Sample(samPoint, input.tex).r;
 
     float2 t = input.tex * float2(2, -2) + float2(-1, 1);
     float4 screenSpacePosition1 = float4(t, depth, 1);
 
-    float4 worldPos1 = mul(screenSpacePosition1, ivp1); worldPos1 /= worldPos1.w;
-    float4 screenSpacePosition0 = mul(worldPos1, vp0); screenSpacePosition0 /= screenSpacePosition0.w;
+    float4 worldPos1 = mul(screenSpacePosition1, minvvp1);
+    worldPos1 /= worldPos1.w;
+    float4 screenSpacePosition0 = mul(worldPos1, mvp0);
+    screenSpacePosition0 /= screenSpacePosition0.w;
 
-    float2 screenSpaceMov = (screenSpacePosition1.xy-screenSpacePosition0.xy) * size;
-    float mag = length(screenSpaceMov);
-    screenSpaceMov = screenSpaceMov * min(mag, maxMagnitude) / (mag + 0.0001);
-    return screenSpaceMov;
+    float2 velocity = (screenSpacePosition1.xy-screenSpacePosition0.xy) * screenSize;
+
+    float mag = length(velocity);
+    mag = (mag<0.001)? 0.0 : min(mag, velocityMaxMagnitude)/mag;
+    return velocity*mag;
 }

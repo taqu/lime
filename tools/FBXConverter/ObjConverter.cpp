@@ -83,7 +83,7 @@ namespace
         material_.specular_.one();
         material_.ambient_.set(0.0f, 0.0f, 0.0f, 1.33f);
         material_.shadow_.zero();
-        material_.flags_ = MaterialFlag_CastShadow | MaterialFlag_RecieveShadow | MaterialFlag_RefractiveIndex;
+        material_.flags_ = MaterialFlag_CastShadow | MaterialFlag_ReceiveShadow | MaterialFlag_RefractiveIndex;
         for(s32 i=0; i<TextureType_Num; ++i){
             material_.textureIDs_[i] = TextureType_Invalid;
         }
@@ -141,10 +141,10 @@ namespace
         s32 len = 0;
         s32 dlen = 0;
         if(NULL != directory){
-            dlen = lcore::strlen(directory);
+            dlen = lcore::strlen_s32(directory);
             len += dlen;
         }
-        len += lcore::strlen(filename) + 1;
+        len += lcore::strlen_s32(filename) + 1;
 
         Char* path = LNEW Char[len];
         path[0] = lcore::CharNull;
@@ -439,12 +439,12 @@ namespace
                 if(1<elements_.size()){
                     s32 index = materialPack.findTextureIndex(elements_[1]);
                     if(0<=index){
-                        material_->material_.textureIDs_[TextureType_Albedo] = index;
+                        material_->material_.textureIDs_[TextureType_Albedo] = static_cast<s8>(index);
 
                     }else{
                         LoadTexture texture = loadTexture(elements_[1]);
                         texture.type_ = TextureType_Albedo;
-                        material_->material_.textureIDs_[TextureType_Albedo] = materialPack.textures_.size();
+                        material_->material_.textureIDs_[TextureType_Albedo] = static_cast<s8>(materialPack.textures_.size());
                         materialPack.textures_.push_back(texture);
                     }
                 }
@@ -456,12 +456,12 @@ namespace
                 if(1<elements_.size()){
                     s32 index = materialPack.findTextureIndex(elements_[1]);
                     if(0<=index){
-                        material_->material_.textureIDs_[TextureType_Normal] = index;
+                        material_->material_.textureIDs_[TextureType_Normal] = static_cast<s8>(index);
 
                     } else{
                         LoadTexture texture = loadTexture(elements_[1]);
                         texture.type_ = TextureType_Normal;
-                        material_->material_.textureIDs_[TextureType_Normal] = materialPack.textures_.size();
+                        material_->material_.textureIDs_[TextureType_Normal] = static_cast<s8>(materialPack.textures_.size());
                         materialPack.textures_.push_back(texture);
                     }
                 }
@@ -511,7 +511,7 @@ namespace
             return false;
         }
 
-        s32 len = lcore::strlen(filepath);
+        s32 len = lcore::strlen_s32(filepath);
         LDELETE_ARRAY(directory_);
         directory_ = LNEW Char[len + 2];
         s32 dlen = lcore::extractDirectoryPath(directory_, len, filepath);
@@ -610,7 +610,7 @@ namespace
     {
         elements_.clear();
 
-        u32 i=0;
+        s32 i=0;
         while(i<line_.size()){
             elements_.push_back(&line_[i]);
             for(;i<line_.size(); ++i){
@@ -692,7 +692,7 @@ namespace
         v.position_ = -1;
         v.normal_ = -1;
         v.texcoord_ = -1;
-        v.material_ = currentMaterial_;
+        v.material_ = static_cast<s16>(currentMaterial_);
 
         s32 numElements = 1;
         Char* e[3] = {NULL, NULL, NULL};
@@ -757,14 +757,14 @@ namespace
         case Code_Position:
             {
                 numElements = getFaceElements(felems);
-                positions_.push_back(lmath::Vector3(felems[0], felems[1], felems[2]));
+                positions_.push_back(lmath::Vector3::construct(felems[0], felems[1], felems[2]));
             }
             return true;
 
         case Code_Normal:
             {
                 numElements = getFaceElements(felems);
-                lmath::Vector3 n(felems[0], felems[1], felems[2]);
+                lmath::Vector3 n = lmath::Vector3::construct(felems[0], felems[1], felems[2]);
                 n = normalizeChecked(n);
                 normals_.push_back(n);
             }
@@ -773,7 +773,7 @@ namespace
         case Code_Texcoord:
             {
                 numElements = getFaceElements(felems);
-                texcoords_.push_back(lmath::Vector2(felems[0], felems[1]));
+                texcoords_.push_back(lmath::Vector2::construct(felems[0], felems[1]));
             }
             return true;
 
@@ -859,7 +859,7 @@ namespace
         }
         WorkMesh tmp;
         tmp.geometry_ = 0;
-        tmp.material_ = currentMaterial_;
+        tmp.material_ = static_cast<s16>(currentMaterial_);
         tmp.indexOffset_ = vertices_.size();
         tmp.numIndices_ = 0;
         meshes_.push_back(tmp);
@@ -934,7 +934,7 @@ namespace
             tmpIndices[i].resize( materialPack_.materials_.size() );
             indexToIndex[i].resize( materialPack_.materials_.size() );
 
-            for(u32 j=0; j<materialPack_.materials_.size(); ++j){
+            for(s32 j=0; j<materialPack_.materials_.size(); ++j){
                 tmpPositions[i][j].push_back(Vector3Vector());
                 tmpNormals[i][j].push_back(U16Vector4Vector());
                 tmpTexcoords[i][j].push_back(U16Vector2Vector());
@@ -943,10 +943,10 @@ namespace
             }
         }
 
-        for(u32 i=0; i<vertices_.size(); ++i){
+        for(s32 i=0; i<vertices_.size(); ++i){
             const Vertex& v = vertices_[i];
 
-            s32 n = tmpPositions[v.type_][v.material_].size() - 1;
+            s32 n = static_cast<s32>(tmpPositions[v.type_][v.material_].size()) - 1;
             if(MaxVertices<=tmpPositions[v.type_][v.material_][n].size()){
                 tmpPositions[v.type_][v.material_].push_back(Vector3Vector());
                 tmpNormals[v.type_][v.material_].push_back(U16Vector4Vector());
@@ -1025,20 +1025,20 @@ namespace
                 break;
             };
 
-            for(u32 j=0; j<materialPack_.materials_.size(); ++j){
+            for(s32 j=0; j<materialPack_.materials_.size(); ++j){
 
                 for(u32 k=0; k<tmpPositions[i][j].size(); ++k){
                     if(tmpIndices[i][j][k].size()<=0){
                         continue;
                     }
                     Vector3Vector& positions = tmpPositions[i][j][k];
-                    U16Vector4Vector& normals = tmpNormals[i][j][k];
-                    U16Vector2Vector& tecoords = tmpTexcoords[i][j][k];
+                    //U16Vector4Vector& normals = tmpNormals[i][j][k];
+                    //U16Vector2Vector& tecoords = tmpTexcoords[i][j][k];
                     S32Vector& indices = tmpIndices[i][j][k];
 
                     LoadMesh mesh;
                     mesh.geometry_ = static_cast<s16>(geometries.size());
-                    mesh.material_ = static_cast<s32>(j);
+                    mesh.material_ = static_cast<s16>(j);
                     mesh.indexOffset_ = 0;
                     mesh.numIndices_ = indices.size();
                     mesh.sphere_ = lmath::Sphere::calcMiniSphere(&positions[0], positions.size());
@@ -1059,17 +1059,17 @@ namespace
         header.minor_ = 0;
         
         u32 offset = sizeof(LoadHeader);
-        header.elems_[Elem_Geometry].number_ = geometries.size();
+        header.elems_[Elem_Geometry].number_ = static_cast<u32>(geometries.size());
         header.elems_[Elem_Geometry].offset_ = offset;
-        offset += sizeof(LoadGeometry) * geometries.size();
+        offset += static_cast<u32>(sizeof(LoadGeometry) * geometries.size());
 
         header.elems_[Elem_Material].number_ = materialPack_.materials_.size();
         header.elems_[Elem_Material].offset_ = offset;
         offset += sizeof(LoadMaterial) * materialPack_.materials_.size();
 
-        header.elems_[Elem_Mesh].number_ = meshes.size();
+        header.elems_[Elem_Mesh].number_ = static_cast<u32>(meshes.size());
         header.elems_[Elem_Mesh].offset_ = offset;
-        offset += sizeof(LoadMesh) * meshes.size();
+        offset += static_cast<u32>(sizeof(LoadMesh) * meshes.size());
 
         header.elems_[Elem_Node].number_ = 1;
         header.elems_[Elem_Node].offset_ = offset;
@@ -1112,7 +1112,7 @@ namespace
                 break;
             };
 
-            for(u32 j=0; j<materialPack_.materials_.size(); ++j){
+            for(s32 j=0; j<materialPack_.materials_.size(); ++j){
 
                 for(u32 k=0; k<tmpPositions[i][j].size(); ++k){
                     if(tmpIndices[i][j][k].size()<=0){
@@ -1129,27 +1129,27 @@ namespace
                     switch(i)
                     {
                     case VType_P:
-                        for(u32 h=0; h<positions.size(); ++h){
+                        for(s32 h=0; h<positions.size(); ++h){
                             lcore::io::write(file, positions[h]);
                         }
                         break;
 
                     case VType_PU:
-                        for(u32 h=0; h<positions.size(); ++h){
+                        for(s32 h=0; h<positions.size(); ++h){
                             lcore::io::write(file, positions[h]);
                             lcore::io::write(file, tecoords[h]);
                         }
                         break;
 
                     case VType_PN:
-                        for(u32 h=0; h<positions.size(); ++h){
+                        for(s32 h=0; h<positions.size(); ++h){
                             lcore::io::write(file, positions[h]);
                             lcore::io::write(file, normals[h]);
                         }
                         break;
 
                     case VType_PNU:
-                        for(u32 h=0; h<positions.size(); ++h){
+                        for(s32 h=0; h<positions.size(); ++h){
                             lcore::io::write(file, positions[h]);
                             lcore::io::write(file, normals[h]);
                             lcore::io::write(file, tecoords[h]);
@@ -1157,8 +1157,8 @@ namespace
                         break;
                     };
 
-                    for(u32 i=0; i<indices.size(); ++i){
-                        u16 index = static_cast<u16>(indexMap[indices[i]]);
+                    for(s32 l=0; l<indices.size(); ++l){
+                        u16 index = static_cast<u16>(indexMap[indices[l]]);
                         lcore::io::write(file, index);
                     }
                     ++numGeometries;
@@ -1167,7 +1167,7 @@ namespace
         }
 
 
-        for(u32 i=0; i<materialPack_.materials_.size(); ++i){
+        for(s32 i=0; i<materialPack_.materials_.size(); ++i){
             lcore::io::write(file, materialPack_.materials_[i].material_);
         }
 
@@ -1185,7 +1185,7 @@ namespace
         lcore::io::write(file, node);
 
 
-        for(u32 i=0; i<materialPack_.textures_.size(); ++i){
+        for(s32 i=0; i<materialPack_.textures_.size(); ++i){
             lcore::io::write(file, materialPack_.textures_[i]);
         }
 

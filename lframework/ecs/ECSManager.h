@@ -27,9 +27,8 @@ namespace lfw
     public:
         inline static ECSInitParam defaultInitParam();
 
-        static inline ECSManager& getInstance(){return *instance_;}
-        static bool create(const ECSInitParam& initParam);
-        static void destroy();
+        static ECSManager* create(const ECSInitParam& initParam);
+        static void destroy(ECSManager* ecsManager);
 
         inline HandleBasedAllocator& getComponentHandleAllocator();
 
@@ -92,8 +91,6 @@ namespace lfw
         ECSManager(const ECSManager&);
         ECSManager& operator=(const ECSManager&);
 
-        static ECSManager* instance_;
-
         HandleBasedAllocator componentHandleAllocator_;
 
         HandleTable entityHandles_;
@@ -126,31 +123,31 @@ namespace lfw
 
     inline bool ECSManager::checkFlag(Entity entity, u8 flag) const
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         return 0 != (entityFlags_[entity.getHandle().index()] & flag);
     }
 
     inline void ECSManager::setFlag(Entity entity, u8 flag)
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         entityFlags_[entity.getHandle().index()] |= flag;
     }
 
     inline void ECSManager::resetFlag(Entity entity, u8 flag)
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         entityFlags_[entity.getHandle().index()] &= ~flag;
     }
 
     inline u32 ECSManager::getLayer(Entity entity) const
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         return entityLayers_[entity.getHandle().index()];
     }
 
     inline void ECSManager::setLayer(Entity entity, u32 layer)
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         entityLayers_[entity.getHandle().index()] = layer;
     }
 

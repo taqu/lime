@@ -26,8 +26,8 @@ namespace lfw
         ID ids[Size];
         Entity entities[Size];
         for(s32 i=0; i<Size; ++i){
-            ids[i] = ID(i);
-            entities[i].setHandle(Handle(i));
+            ids[i] = ID::construct(i);
+            entities[i].setHandle(Handle::construct(i));
         }
 
         //Create children of root

@@ -29,6 +29,7 @@ namespace debug
     private:
         lfw::ComponentCamera* camera_;
         lfw::ComponentMeshRenderer* mesh_;
+        lfw::f32 time_;
     };
 }
 #endif //INC_SAMPLES_BEHAVIOR00_H__

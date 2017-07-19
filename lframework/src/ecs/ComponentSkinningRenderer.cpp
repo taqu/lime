@@ -4,6 +4,7 @@
 @date 2016/10/18 create
 */
 #include "ecs/ComponentSkinningRenderer.h"
+#include "System.h"
 #include "ecs/ECSManager.h"
 #include "ecs/ComponentRendererManager.h"
 #include "ecs/ComponentGeometric.h"
@@ -21,7 +22,7 @@ namespace lfw
     {
         inline ComponentRendererManager* getManager()
         {
-            return ECSManager::getInstance().getComponentManager<ComponentRendererManager>();
+            return System::getECSManager().getComponentManager<ComponentRendererManager>();
         }
     }
 
@@ -67,10 +68,10 @@ namespace lfw
     {
     }
 
-    void ComponentSkinningRenderer::addQueue(RenderQueue& queue)
+    bool ComponentSkinningRenderer::addQueue(RenderQueue& queue)
     {
         if(NULL == model_){
-            return;
+            return false;
         }
         const lmath::Vector4& position = getEntity().getGeometric()->getPosition();
         f32 depth = lmath::manhattanDistance3(queue.getCamera().getEyePosition(), position);
@@ -91,10 +92,12 @@ namespace lfw
                 queue.add(RenderPath_Transparent, depth, this);
             }
         }
+        return true;
     }
 
-    void ComponentSkinningRenderer::drawDepth(RenderContext& renderContext)
+    void ComponentSkinningRenderer::drawDepth(RenderContext&)
     {
+#if 0
         lgfx::ContextRef& context = renderContext.getContext();
         const ShadowMap& shadowMap = renderContext.getShadowMap();
 
@@ -109,7 +112,7 @@ namespace lfw
             modelConstant0.world0_ = node.world0_;
             modelConstant0.world1_ = node.world1_;
 
-            renderContext.setConstant(RenderContext::Shader_VS, 3, sizeof(PerModelConstant0), &modelConstant0);
+            renderContext.setConstant(RenderContext::Shader_VS, 4, sizeof(PerModelConstant0), &modelConstant0);
 
             for(s32 j=0; j<node.numMeshes_; ++j){
                 Mesh& mesh = node.meshes_[j];
@@ -117,6 +120,60 @@ namespace lfw
                 context.setPrimitiveTopology(mesh.getType());
                 geometry.attach(context);
                 context.drawIndexedInstanced(mesh.getNumIndices(), shadowMap.getCascadeLevels(), mesh.getIndexOffset(), 0, 0);
+            }
+        }
+#endif
+    }
+
+    void ComponentSkinningRenderer::drawGBuffer(RenderContext& renderContext)
+    {
+        lgfx::ContextRef& context = renderContext.getContext();
+
+        renderContext.attachDepthShader(RenderContext::DepthShader_Normal);
+
+        PerModelConstant0 modelConstant;
+        for(s32 i=0; i<model_->getNumNodes(); ++i){
+            Node& node = model_->getNode(i);
+            if(node.numMeshes_<=0){
+                continue;
+            }
+            modelConstant.world0_ = node.world0_;
+            modelConstant.world1_ = node.world1_;
+
+            renderContext.setConstant(RenderContext::Shader_VS, 4, sizeof(PerModelConstant0), &modelConstant);
+
+            for(s32 j=0; j<node.numMeshes_; ++j){
+                Mesh& mesh = node.meshes_[j];
+                Geometry& geometry = *(mesh.getGeometry());
+                Material* material = mesh.getMaterial();
+                if(material->isTransparent()){
+                    continue;
+                }
+
+                ShaderSet* shaderSet = mesh.getShaderSet();
+                shaderSet->vs_.attach(context);
+                shaderSet->ds_.attach(context);
+                shaderSet->hs_.attach(context);
+                shaderSet->gs_.attach(context);
+                shaderSet->ps_.attach(context);
+
+                MaterialConstant* materialConstant = reinterpret_cast<MaterialConstant*>(&material->diffuse_);
+                renderContext.setConstant(RenderContext::Shader_PS, 4, sizeof(MaterialConstant), materialConstant);
+
+                lgfx::ShaderResourceView srvs(context);
+                for(s32 k=0; k<TextureType_Used; ++k){
+                    if(material->hasTexture(k)){
+                        Texture2D& tex = model_->getTexture(material->textureIDs_[k]);
+                        srvs.add(tex.srv_);
+                    } else{
+                        srvs.add(NULL);
+                    }
+                }
+                srvs.setPS(0);
+
+                context.setPrimitiveTopology(mesh.getType());
+                geometry.attach(context);
+                context.drawIndexed(mesh.getNumIndices(), mesh.getIndexOffset(), 0);
             }
         }
     }
@@ -136,13 +193,15 @@ namespace lfw
             modelConstant.world0_ = node.world0_;
             modelConstant.world1_ = node.world1_;
 
-            renderContext.setConstant(RenderContext::Shader_VS, 3, sizeof(PerModelConstant0), &modelConstant);
+            renderContext.setConstant(RenderContext::Shader_VS, 4, sizeof(PerModelConstant0), &modelConstant);
 
             for(s32 j=0; j<node.numMeshes_; ++j){
                 Mesh& mesh = node.meshes_[j];
                 Geometry& geometry = *(mesh.getGeometry());
                 Material* material = mesh.getMaterial();
-                //context.setBlendState(material->blendState_.get());
+                if(material->isTransparent()){
+                    continue;
+                }
 
                 ShaderSet* shaderSet = mesh.getShaderSet();
                 shaderSet->vs_.attach(context);
@@ -154,18 +213,16 @@ namespace lfw
                 MaterialConstant* materialConstant = reinterpret_cast<MaterialConstant*>(&material->diffuse_);
                 renderContext.setConstant(RenderContext::Shader_PS, 4, sizeof(MaterialConstant), materialConstant);
 
+                lgfx::ShaderResourceView srvs(context);
                 for(s32 k=0; k<TextureType_Used; ++k){
                     if(material->hasTexture(k)){
                         Texture2D& tex = model_->getTexture(material->textureIDs_[k]);
-                        lgfx::ShaderResourceView::resources_[k] = tex.srv_.get();
-                        lgfx::ShaderSamplerState::states_[k] = tex.sampler_.get();
+                        srvs.add(tex.srv_);
                     } else{
-                        lgfx::ShaderResourceView::resources_[k] = NULL;
-                        lgfx::ShaderSamplerState::states_[k] = NULL;
+                        srvs.add(NULL);
                     }
                 }
-                lgfx::ShaderResourceView::setPS(context, 0, TextureType_Used);
-                lgfx::ShaderSamplerState::setPS(context, 0, TextureType_Used);
+                srvs.setPS(0);
 
                 context.setPrimitiveTopology(mesh.getType());
                 geometry.attach(context);
@@ -189,12 +246,15 @@ namespace lfw
             modelConstant0.world0_ = node.world0_;
             modelConstant0.world1_ = node.world1_;
 
-            renderContext.setConstant(RenderContext::Shader_VS, 3, sizeof(PerModelConstant0), &modelConstant0);
+            renderContext.setConstant(RenderContext::Shader_VS, 4, sizeof(PerModelConstant0), &modelConstant0);
 
             for(s32 j=0; j<node.numMeshes_; ++j){
                 Mesh& mesh = node.meshes_[j];
                 Geometry& geometry = *(mesh.getGeometry());
                 Material* material = mesh.getMaterial();
+                if(!material->isTransparent()){
+                    continue;
+                }
                 context.setBlendState(material->blendState_.get());
 
                 ShaderSet* shaderSet = mesh.getShaderSet();
@@ -207,23 +267,39 @@ namespace lfw
                 MaterialConstant* materialConstant = reinterpret_cast<MaterialConstant*>(&material->diffuse_);
                 renderContext.setConstant(RenderContext::Shader_PS, 4, sizeof(MaterialConstant), materialConstant);
 
+                lgfx::ShaderResourceView srvs(context);
                 for(s32 k=0; k<TextureType_Used; ++k){
                     if(material->hasTexture(k)){
                         Texture2D& tex = model_->getTexture(material->textureIDs_[k]);
-                        lgfx::ShaderResourceView::resources_[k] = tex.srv_.get();
-                        lgfx::ShaderSamplerState::states_[k] = tex.sampler_.get();
+                        srvs.add(tex.srv_);
                     } else{
-                        lgfx::ShaderResourceView::resources_[k] = NULL;
-                        lgfx::ShaderSamplerState::states_[k] = NULL;
+                        srvs.add(NULL);
                     }
                 }
-                lgfx::ShaderResourceView::setPS(context, 0, TextureType_Used);
-                lgfx::ShaderSamplerState::setPS(context, 0, TextureType_Used);
+                srvs.setPS(0);
 
                 context.setPrimitiveTopology(mesh.getType());
                 geometry.attach(context);
                 context.drawIndexed(mesh.getNumIndices(), mesh.getIndexOffset(), 0);
             }
+        }
+    }
+
+    void ComponentSkinningRenderer::getAABB(lmath::lm128& bmin, lmath::lm128& bmax)
+    {
+        if(NULL != model_){
+            const ComponentGeometric* geometric = getEntity().getGeometric();
+            const lmath::Sphere& sphere = model_->getSphere();
+            const lmath::Vector3& scale = geometric->getScale();
+            const lmath::Vector4& translate = geometric->getPosition();
+
+            lmath::lm128 ts = _mm_set_ps(0.0f, scale.z_, scale.y_, scale.x_);
+            ts = _mm_mul_ps(ts, _mm_set1_ps(sphere.radius()));
+            lmath::lm128 tp = _mm_add_ps(_mm_loadu_ps(&sphere.x_), _mm_loadu_ps(&translate.x_));
+            bmin = _mm_sub_ps(tp,ts);
+            bmax = _mm_add_ps(tp, ts);
+        }else{
+            ComponentRenderer::getAABB(bmin, bmax);
         }
     }
 
@@ -333,7 +409,7 @@ namespace lfw
 
     void ComponentSkinningRenderer::resetShaderSet()
     {
-        ShaderManager& shaderManager = Resources::getInstance().getShaderManager();
+        ShaderManager& shaderManager = System::getResources().getShaderManager();
         for(s32 i=0; i<model_->getNumMeshes(); ++i){
             shaderManager.setShaderSet(model_->getMesh(i), ShaderSetFlag_None);
         }

@@ -4,9 +4,10 @@
 @date 2016/11/18 create
 */
 #include "render/Camera.h"
-#include <lgraphics/GraphicsDeviceRef.h>
+#include <lgraphics/Graphics.h>
 #include "resource/Resources.h"
 #include "resource/ShaderManager.h"
+#include "render/graph/RenderPass.h"
 
 namespace lfw
 {
@@ -22,13 +23,11 @@ namespace lfw
         ,jitterWidth_(0.0f)
         ,jitterHeight_(0.0f)
         ,sampleIndex_(0)
-        ,layerMask_(Layer_Default)
+        ,layerMask_(Layer_Default|Layer_Default2D)
         ,clearType_(ClearType_Color)
         ,clearStencil_(0)
         ,clearDepth_(0.0f)
-        ,numRenderTargets_(0)
-        ,useCameraRenderTargets_(0)
-        ,renderType_(RenderType_Deferred)
+        ,renderPasses_(4)
     {
         viewMatrix_.identity();
         invViewMatrix_.identity();
@@ -42,38 +41,52 @@ namespace lfw
         lcore::memset(samples_, 0, sizeof(Sample2D)*NumJitterSamples);
 
         viewport_ = lgfx::getDevice().getDefaultViewport();
+        linearZParameter_ = lmath::Vector4::construct(0.0f, -1.0f, 0.0f, 0.0f);
+    }
+
+    Camera::Camera(Camera&& rhs)
+        :viewMatrix_(rhs.viewMatrix_)
+        ,invViewMatrix_(rhs.invViewMatrix_)
+        ,projMatrix_(rhs.projMatrix_)
+        ,invProjMatrix_(rhs.invProjMatrix_)
+        ,viewProjMatrix_(rhs.viewProjMatrix_)
+        ,prevVewProjMatrix_(rhs.prevVewProjMatrix_)
+        ,eyePosition_(rhs.eyePosition_)
+
+        ,viewport_(rhs.viewport_)
+        ,znear_(rhs.znear_)
+        ,zfar_(rhs.zfar_)
+        ,width_(rhs.width_)
+        ,height_(rhs.height_)
+
+        ,aspect_(rhs.aspect_)
+        ,fovy_(rhs.fovy_)
+        ,isJitter_(rhs.isJitter_)
+        ,sortLayer_(rhs.sortLayer_)
+
+        ,jitterWidth_(rhs.jitterWidth_)
+        ,jitterHeight_(rhs.jitterHeight_)
+        ,sampleIndex_(rhs.sampleIndex_)
+        ,layerMask_(rhs.layerMask_)
+        ,clearColor_(rhs.clearColor_)
+        ,clearType_(rhs.clearType_)
+        ,clearStencil_(rhs.clearStencil_)
+        ,clearDepth_(rhs.clearDepth_)
+
+        ,linearZParameter_(rhs.linearZParameter_)
+        ,linearZDispatchX_(rhs.linearZDispatchX_)
+        ,linearZDispatchY_(rhs.linearZDispatchY_)
+
+        ,renderPasses_(lcore::move(rhs.renderPasses_))
+    {
+        for(s32 i=0; i<NumJitterSamples; ++i){
+            samples_[i] = rhs.samples_[i];
+        }
     }
 
     Camera::~Camera()
     {
-    }
-
-    void Camera::getRTSize(s32& width, s32& height)
-    {
-        if(0 != useCameraRenderTargets_){
-            lgfx::Texture2DDesc desc;
-            rtTextures_[0].getDesc(desc);
-            width = static_cast<s32>(desc.Width);
-            height = static_cast<s32>(desc.Height);
-        } else{
-            const lgfx::Viewport& viewport = lgfx::getDevice().getDefaultViewport();
-            width = static_cast<s32>(viewport.Width);
-            height = static_cast<s32>(viewport.Height);
-        }
-    }
-
-    void Camera::getRTSizeF32(f32& width, f32& height)
-    {
-        if(0 != useCameraRenderTargets_){
-            lgfx::Texture2DDesc desc;
-            rtTextures_[0].getDesc(desc);
-            width = static_cast<f32>(desc.Width);
-            height = static_cast<f32>(desc.Height);
-        } else{
-            const lgfx::Viewport& viewport = lgfx::getDevice().getDefaultViewport();
-            width = static_cast<f32>(viewport.Width);
-            height = static_cast<f32>(viewport.Height);
-        }
+        clearRenderPasses();
     }
 
     const lgfx::Viewport& Camera::getViewport() const
@@ -81,16 +94,17 @@ namespace lfw
         return viewport_;
     }
 
-    void Camera::setViewport(f32 x, f32 y, f32 width, f32 height)
+    void Camera::setViewport(s32 x, s32 y, s32 width, s32 height)
     {
-        viewport_.TopLeftX = x;
-        viewport_.TopLeftY = y;
-        viewport_.Width = width;
-        viewport_.Height = height;
-        viewport_.MinDepth = 0.0f;
-        viewport_.MaxDepth = 1.0f;
+        viewport_.x_ = x;
+        viewport_.y_ = y;
+        viewport_.width_ = width;
+        viewport_.height_ = height;
+        viewport_.minDepth_ = 0.0f;
+        viewport_.maxDepth_ = 1.0f;
     }
 
+#if 0
     void Camera::setRenderType(RenderType type)
     {
         renderType_ = static_cast<u8>(type);
@@ -127,10 +141,12 @@ namespace lfw
                 backDesc);
 
             setClearDepth(0.0f);
+            setDeferred();
         }
             break;
         }
     }
+#endif
 
     void Camera::setViewMatrix(const lmath::Matrix44& view)
     {
@@ -178,6 +194,7 @@ namespace lfw
 #endif
         aspect_ = width_/height_;
         fovy_ = lmath::calcFOVY(height_, znear_);
+        linearZParameter_ = lmath::getLinearZParameterReverseZ(znear_, zfar_);
     }
 
     // 透視投影
@@ -190,6 +207,7 @@ namespace lfw
         aspect_ = width/height;
         fovy_ = lmath::calcFOVY(height, znear);
         perspectiveReverseZ(projMatrix_, invProjMatrix_, width, height, znear, zfar);
+        linearZParameter_ = lmath::getLinearZParameterReverseZ(znear_, zfar_);
     }
 
     // 透視投影
@@ -202,6 +220,7 @@ namespace lfw
         aspect_ = aspect;
         fovy_ = fovy;
         perspectiveFovReverseZ(projMatrix_, invProjMatrix_, fovy, aspect, znear, zfar);
+        linearZParameter_ = lmath::getLinearZParameterReverseZ(znear_, zfar_);
     }
 
     // 透視投影
@@ -223,6 +242,7 @@ namespace lfw
         aspect_ = aspect;
         fovy_ = fovy;
         perspectiveFovReverseZ(projMatrix_, invProjMatrix_, fovy, aspect, znear, zfar);
+        linearZParameter_ = lmath::getLinearZParameterReverseZ(znear_, zfar_);
     }
 
     // 平行投影
@@ -235,6 +255,7 @@ namespace lfw
         aspect_ = width/height;
         fovy_ = 0.0f;
         orthoReverseZ(projMatrix_, invProjMatrix_, width, height, znear, zfar);
+        linearZParameter_ = lmath::Vector4::construct(0.0f, -1.0f, 0.0f, 0.0f);
     }
 
     void Camera::lookAt(const lmath::Vector4& eye, const lmath::Vector4& at, const lmath::Vector4& up)
@@ -276,205 +297,86 @@ namespace lfw
         viewProjMatrix_ *= viewMatrix_;
     }
 
-    //void Camera::beginForward(lgfx::ContextRef& context)
-    //{
-    //    if(0 != useCameraRenderTargets_){
-    //        context.setRenderTargets(numRenderTargets_, rtView_pointers_, depthStencil_.depthStencilView_.get());
-
-    //        switch(clearType_)
-    //        {
-    //        case ClearType_None:
-    //            break;
-    //        case ClearType_Depth:
-    //            context.clearDepthStencilView(depthStencil_.depthStencilView_.get(), lgfx::ClearFlag_Depth|lgfx::ClearFlag_Stencil, clearDepth_, clearStencil_);
-    //            break;
-    //        case ClearType_Color:
-    //            context.clearDepthStencilView(depthStencil_.depthStencilView_.get(), lgfx::ClearFlag_Depth|lgfx::ClearFlag_Stencil, clearDepth_, clearStencil_);
-    //            for(s8 i=0; i<numRenderTargets_; ++i){
-    //                context.clearRenderTargetView(rtViews_[i].get(), &clearColor_[0]);
-    //            }
-    //            break;
-    //        };
-    //        context.setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWEnable);
-
-    //    }else{
-    //        context.restoreDefaultRenderTargets();
-    //        switch(clearType_)
-    //        {
-    //        case ClearType_None:
-    //            break;
-    //        case ClearType_Depth:
-    //            context.clearDepthStencilView(context.getDepthStencilView(), lgfx::ClearFlag_Depth|lgfx::ClearFlag_Stencil, clearDepth_, clearStencil_);
-    //            break;
-    //        case ClearType_Color:
-    //            context.clearDepthStencilView(context.getDepthStencilView(), lgfx::ClearFlag_Depth|lgfx::ClearFlag_Stencil, clearDepth_, clearStencil_);
-    //            context.clearRenderTargetView(context.getBackBufferRTView(), &clearColor_[0]);
-    //            break;
-    //        };
-
-    //    }
-    //    context.setViewport(viewport_);
-    //}
-
-    void Camera::beginDeferred(lgfx::ContextRef& context)
+    void Camera::clearRenderPasses()
     {
-        context.setRenderTargets(numRenderTargets_, rtView_pointers_, depthStencil_.depthStencilView_.get());
+        for(s32 i=0; i<renderPasses_.size(); ++i){
+            renderPasses_[i]->destroy();
+            LDELETE(renderPasses_[i]);
+        }
+        renderPasses_.clear();
+    }
 
-        switch(clearType_)
-        {
-        case ClearType_None:
-            break;
-        case ClearType_Depth:
-            context.clearDepthStencilView(depthStencil_.depthStencilView_.get(), lgfx::ClearFlag_Depth|lgfx::ClearFlag_Stencil, clearDepth_, clearStencil_);
-            break;
-        case ClearType_Color:
-            context.clearDepthStencilView(depthStencil_.depthStencilView_.get(), lgfx::ClearFlag_Depth|lgfx::ClearFlag_Stencil, clearDepth_, clearStencil_);
-            for(s8 i=0; i<DeferredRT_Num; ++i){
-                context.clearRenderTargetView(rtViews_[i].get(), &clearColor_[0]);
+    void Camera::addRenderPass(graph::RenderPass* renderPass)
+    {
+        LASSERT(NULL != renderPass);
+        LASSERT(findRenderPass(renderPass)<0);
+        renderPasses_.push_back(renderPass);
+        renderPass->create(*this);
+    }
+
+    void Camera::removeRenderPass(graph::RenderPass* renderPass)
+    {
+        LASSERT(NULL != renderPass);
+        for(s32 i=0; i<renderPasses_.size(); ++i){
+            if(renderPass == renderPasses_[i]){
+                renderPasses_[i]->destroy();
+                LDELETE(renderPasses_[i]);
+                renderPasses_.removeAt(i);
+                return;
             }
-            break;
-        };
-        context.setDepthStencilState(deferredDepthStencilState_, 1);
-        context.setBlendState(lgfx::ContextRef::BlendState_NoAlpha);
-        context.setViewport(0.0f, 0.0f, viewport_.Width, viewport_.Height);
+        }
     }
 
-    void Camera::endDeferred(lgfx::ContextRef& context)
+    s32 Camera::findRenderPass(graph::RenderPass* renderPass) const
     {
-        context.clearRenderTargets(numRenderTargets_);
+        for(s32 i=0; i<renderPasses_.size(); ++i){
+            if(renderPass == renderPasses_[i]){
+                return i;
+            }
+        }
+        return -1;
     }
 
-    void Camera::setRenderTargets(const lgfx::Viewport& viewport, s8 numTargets, const RenderTarget* targets, const DepthStencil* depthStencil)
+    Camera& Camera::operator=(Camera&& rhs)
     {
-        LASSERT(0<=numTargets && numTargets<lgfx::LGFX_MAX_RENDER_TARGETS);
-        viewport_ = viewport;
-        numRenderTargets_ = numTargets;
-        for(s8 i=0; i<numRenderTargets_; ++i){
-            rtTextures_[i] = targets[i].texture_;
-            rtViews_[i] = targets[i].renderTargetView_;
-            srViews_[i] = targets[i].shaderResourceView_;
+        viewMatrix_ = rhs.viewMatrix_;
+        invViewMatrix_ = rhs.invViewMatrix_;
+        projMatrix_ = rhs.projMatrix_;
+        invProjMatrix_ = rhs.invProjMatrix_;
+        viewProjMatrix_ = rhs.viewProjMatrix_;
+        prevVewProjMatrix_ = rhs.prevVewProjMatrix_;
+        eyePosition_ = rhs.eyePosition_;
 
-            rtView_pointers_[i] = rtViews_[i];
-            srView_pointers_[i] = srViews_[i];
+        viewport_ = rhs.viewport_;
+        znear_ = rhs.znear_;
+        zfar_ = rhs.zfar_;
+        width_ = rhs.width_;
+        height_ = rhs.height_;
+
+        aspect_ = rhs.aspect_;
+        fovy_ = rhs.fovy_;
+        isJitter_ = rhs.isJitter_;
+        sortLayer_ = rhs.sortLayer_;
+
+        jitterWidth_ = rhs.jitterWidth_;
+        jitterHeight_ = rhs.jitterHeight_;
+        sampleIndex_ = rhs.sampleIndex_;
+        layerMask_ = rhs.layerMask_;
+        clearColor_ = rhs.clearColor_;
+        clearType_ = rhs.clearType_;
+        clearStencil_ = rhs.clearStencil_;
+        clearDepth_ = rhs.clearDepth_;
+
+        linearZParameter_ = rhs.linearZParameter_;
+        linearZDispatchX_ = rhs.linearZDispatchX_;
+        linearZDispatchY_ = rhs.linearZDispatchY_;
+
+        renderPasses_ = lcore::move(rhs.renderPasses_);
+
+        for(s32 i=0; i<NumJitterSamples; ++i){
+            samples_[i] = rhs.samples_[i];
         }
-        for(s8 i=numRenderTargets_; i<lgfx::LGFX_MAX_RENDER_TARGETS; ++i){
-            rtTextures_[i].destroy();
-            rtViews_[i].destroy();
-            srViews_[i].destroy();
-            rtView_pointers_[i] = NULL;
-            srView_pointers_[i] = NULL;
-        }
-        if(NULL != depthStencil){
-            depthStencil_ = *depthStencil;
-        }else{
-            depthStencil_.shaderResourceViewDepth_.destroy();
-            depthStencil_.shaderResourceViewStencil_.destroy();
-            depthStencil_.depthStencilView_.destroy();
-            depthStencil_.texture_.destroy();
-        }
-        useCameraRenderTargets_ = 1;
-    }
-
-    void Camera::clearRenderTargets()
-    {
-        numRenderTargets_ = 0;
-        for(s16 i=0; i<lgfx::LGFX_MAX_RENDER_TARGETS; ++i){
-            rtTextures_[i].destroy();
-            rtViews_[i].destroy();
-            srViews_[i].destroy();
-            rtView_pointers_[i] = NULL;
-            srView_pointers_[i] = NULL;
-        }
-        depthStencil_.shaderResourceViewDepth_.destroy();
-        depthStencil_.shaderResourceViewStencil_.destroy();
-        depthStencil_.depthStencilView_.destroy();
-        depthStencil_.texture_.destroy();
-        useCameraRenderTargets_ = 0;
-    }
-
-    void Camera::setDeferred()
-    {
-        ShaderManager& shaderManager = Resources::getInstance().getShaderManager();
-
-        lgfx::RTVDesc rtvDesc;
-        lgfx::SRVDesc srvDesc;
-
-        // Shadow Accumuration
-        //------------------------------------------------
-        shadowAccumulatingTarget_.texture_ = lgfx::Texture::create2D(
-            static_cast<s32>(viewport_.Width),
-            static_cast<s32>(viewport_.Height),
-            1,1,
-            lgfx::Data_R8_UNorm,
-            lgfx::Usage_Default,
-            lgfx::BindFlag_RenderTarget|lgfx::BindFlag_ShaderResource,
-            lgfx::CPUAccessFlag_None,
-            lgfx::ResourceMisc_None,
-            NULL);
-
-        rtvDesc.format_ = lgfx::Data_R8_UNorm;
-        rtvDesc.dimension_ = lgfx::ViewRTVDimension_Texture2D;
-        rtvDesc.tex2D_.mipSlice_ = 0;
-        shadowAccumulatingTarget_.renderTargetView_ = shadowAccumulatingTarget_.texture_.createRTView(rtvDesc);
-
-        srvDesc.format_ = lgfx::Data_R8_UNorm;
-        srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
-        srvDesc.tex2D_.mipLevels_ = 1;
-        srvDesc.tex2D_.mostDetailedMip_ = 0;
-        shadowAccumulatingTarget_.shaderResourceView_ = shadowAccumulatingTarget_.texture_.createSRView(srvDesc);
-        deferredShadowAccumulatingPS_ = shaderManager.getPS(ShaderPS_DeferredShadowAccumulating);
-
-        // Deferred Lighting Target
-        //------------------------------------------------
-        deferredSamplerSet_.create(
-            0,
-            lgfx::TexFilter_MinMagMipPoint,
-            lgfx::TexAddress_Clamp,
-            lgfx::TexAddress_Clamp,
-            lgfx::TexAddress_Clamp,
-            lgfx::Cmp_Always,
-            0.0f);
-        deferredSamplerSet_.create(
-            1,
-            lgfx::TexFilter_MinMagMipLinear,
-            lgfx::TexAddress_Clamp,
-            lgfx::TexAddress_Clamp,
-            lgfx::TexAddress_Clamp,
-            lgfx::Cmp_Always,
-            0.0f);
-        deferredSamplerSet_.create(
-            2,
-            lgfx::TexFilter_CompMinMagMipLinear,
-            lgfx::TexAddress_Clamp,
-            lgfx::TexAddress_Clamp,
-            lgfx::TexAddress_Clamp,
-            lgfx::Cmp_Less,
-            0.0f);
-
-        fullQuadVS_ = shaderManager.getVS(ShaderVS_FullQuad);
-        deferredLightingPS_ = shaderManager.getPS(ShaderPS_DeferredLighting);
-
-        deferredLightingRenderTarget_.texture_ = lgfx::Texture::create2D(
-            static_cast<s32>(viewport_.Width),
-            static_cast<s32>(viewport_.Height),
-            1,1,
-            lgfx::Data_R16G16B16A16_Float,
-            lgfx::Usage_Default,
-            lgfx::BindFlag_RenderTarget|lgfx::BindFlag_ShaderResource,
-            lgfx::CPUAccessFlag_None,
-            lgfx::ResourceMisc_None,
-            NULL);
-
-        rtvDesc.format_ = lgfx::Data_R16G16B16A16_Float;
-        rtvDesc.dimension_ = lgfx::ViewRTVDimension_Texture2D;
-        rtvDesc.tex2D_.mipSlice_ = 0;
-        deferredLightingRenderTarget_.renderTargetView_ = deferredLightingRenderTarget_.texture_.createRTView(rtvDesc);
-
-        srvDesc.format_ = lgfx::Data_R16G16B16A16_Float;
-        srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
-        srvDesc.tex2D_.mipLevels_ = 1;
-        srvDesc.tex2D_.mostDetailedMip_ = 0;
-        deferredLightingRenderTarget_.shaderResourceView_ = deferredLightingRenderTarget_.texture_.createSRView(srvDesc);
+        return *this;
     }
 
     void Camera::getEyePosition(lmath::Vector4& eye) const
@@ -494,4 +396,5 @@ namespace lfw
             samples_[i].y_ = (2.0f*lcore::halton(i, JitterPrime1) - 1.0f) * jitterHeight_;
         }
     }
+
 }

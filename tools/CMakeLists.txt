@@ -11,7 +11,7 @@ set(PROJECT_VERSION ${PROJECT_VERSION_MAJOR}.${PROJECT_VERSION_MINOR}.${PROJECT_
 
 set(EXTERNAL_LIB_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../external/lib")
 
-include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR}/../)
+include_directories(AFTER "${CMAKE_CURRENT_SOURCE_DIR}/../")
 include_directories(AFTER "${CMAKE_CURRENT_SOURCE_DIR}/../external/include")
 link_directories("../external/lib")
 link_directories("../lib")
@@ -19,6 +19,8 @@ link_directories("../lib")
 set(FBXSDK "$ENV{FBXSDK}")
 string(REPLACE "\\" "/" FBXSDK ${FBXSDK})
 include_directories(AFTER "${FBXSDK}/include")
+
+set(TOOLS_OUTDIR "${CMAKE_CURRENT_SOURCE_DIR}/bin")
 
 add_library(LCORE MODULE IMPORTED)
 add_library(LMATH MODULE IMPORTED)

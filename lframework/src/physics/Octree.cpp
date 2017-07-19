@@ -179,7 +179,6 @@ namespace lfw
         calcContains3(level, childIndex, minCode, maxCode);
         s32 index = calcIndex3(level, childIndex);
         LASSERT(0<=index && index<NumNodes);
-        node->setID(static_cast<u16>(colliderBases_.size()));
         node->setNext(ColliderBase::Invalid);
         push(node, index);
     }
@@ -249,7 +248,6 @@ namespace lfw
             }
             for(s32 i=0; i<depth_; ++i){
                 nid1 = nodeTops_[ancestorStack_[i]];
-                nid1 = colliderBases_[nid1]->getNext();
                 while(ColliderBase::Invalid != nid1){
                     collisions.push_back(CollisionPair::construct(colliderBases_[nid0], colliderBases_[nid1]));
                     nid1 = colliderBases_[nid1]->getNext();
@@ -367,7 +365,7 @@ namespace lfw
             if(lmath::isPositive(v[i])){
                 v[i] = (lmath::isZeroPositive(v[i]))? lcore::numeric_limits<f32>::maximum() : 1.0f/v[i];
             }else{
-                v[i] = (lmath::isZeroNegative(v[i]))? -lcore::numeric_limits<f32>::maximum() : 1.0f/v[i];
+                v[i] = (lmath::isZeroNegative(v[i]))? lcore::numeric_limits<f32>::lowest() : 1.0f/v[i];
             }
         }
     }

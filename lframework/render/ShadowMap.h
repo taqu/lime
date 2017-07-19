@@ -7,6 +7,7 @@
 */
 #include <lmath/Vector4.h>
 #include <lmath/Matrix44.h>
+#include <lgraphics/ViewRef.h>
 #include "../lframework.h"
 
 namespace lmath
@@ -33,96 +34,56 @@ namespace lfw
         ShadowMap();
         ~ShadowMap();
 
-        void initialize(s32 cascadeLevels, s32 resolution, f32 znear, f32 zfar, f32 logRatio=0.75f);
+        void initialize(s32 cascadeLevels, s32 resolution, f32 znear, f32 zfar, u32 format, f32 logRatio=0.5f);
         void update(const Camera& camera, const Light& light);
 
-        s32 getCascadeLevels() const
-        {
-            return cascadeLevels_;
-        }
+        inline s32 getCascadeLevels() const;
 
-        s32 getResolution() const
-        {
-            return resolution_;
-        }
+        inline s32 getResolution() const;
+        inline f32 getInvResolution() const;
 
-        f32 getInvResolution() const
-        {
-            return invResolution_;
-        }
+        inline f32 getPCFBlurSize() const;
+        inline void setPCFBlurSize(f32 size);
 
-        f32 getPCFBlurSize() const
-        {
-            return pcfBlurSize_;
-        }
+        inline f32 getDepthBias() const;
+        inline void setDepthBias(f32 depthBias);
 
-        void setPCFBlurSize(f32 size)
-        {
-            LASSERT(0.0f<=size);
-            pcfBlurSize_ = size;
-        }
+        inline f32 getSlopeScaledDepthBias() const;
+        inline void setSlopeScaledDepthBias(f32 slopeScaledDepthBias);
 
-        u8 getFitType() const
-        {
-            return fitType_;
-        }
+        inline u8 getFitType() const;
+        inline void setFitType(u8 type);
 
-        void setFitType(u8 type)
-        {
-            fitType_ = type;
-        }
+        inline u8 getMoveLightTexelSize() const;
+        inline void setMoveLightTexelSize(u8 flag);
 
-        u8 getMoveLightTexelSize() const
-        {
-            return moveLightTexelSize_;
-        }
+        inline s8 getFitNearFar();
+        inline void setFitNearFar(u8 type);
 
-        void setMoveLightTexelSize(u8 flag)
-        {
-            moveLightTexelSize_ = flag;
-        }
+        inline bool isAutoupdateAABB() const;
+        inline void setAutoupdateAABB(bool autoupdate);
 
-        s8 getFitNearFar()
-        {
-            return fitNearFar_;
-        }
+        inline void setSceneAABB(const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax);
+        inline lmath::Vector4& getSceneAABBMin();
+        inline lmath::Vector4& getSceneAABBMax();
 
-        void setFitNearFar(u8 type)
-        {
-            fitNearFar_ = type;
-        }
+        inline const lmath::Matrix44& getLightProjection(s32 cascade) const;
 
-        void setSceneAABB(const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax)
-        {
-            sceneAABBMin_ = aabbMin;
-            sceneAABBMax_ = aabbMax;
-        }
+        inline const lmath::Matrix44& getLightViewProjection(s32 cascade) const;
 
-        const lmath::Matrix44& getLightProjection(s32 cascade) const
-        {
-            LASSERT(0<=cascade && cascade<cascadeLevels_);
-            return lightProjection_[cascade];
-        }
-
-        const lmath::Matrix44& getLightViewProjection(s32 cascade) const
-        {
-            LASSERT(0<=cascade && cascade<cascadeLevels_);
-            return lightViewProjection_[cascade];
-        }
-
-        f32 getCascadePartition(s32 cascade) const
-        {
-            LASSERT(0<=cascade && cascade<cascadeLevels_);
-            //return cascadePartitionsFrustum_[cascade];
-            return cascadePartitions_[cascade+1];
-        }
+        inline f32 getCascadePartition(s32 cascade) const;
 
         void calcCascadePartitions(f32 logRatio);
 
         inline void getLightProjectionAlign16(lmath::Matrix44* dstAligned) const;
         inline void getLightViewProjectionAlign16(lmath::Matrix44* dstAligned) const;
+        inline void getCascadeScalesAlign16(f32* cascades) const;
+        inline const lmath::Vector4& getLightDirection() const;
 
         bool contains(const lmath::Sphere& sphere) const;
+
+        inline lgfx::DepthStencilViewRef& getDSV();
+        inline lgfx::ShaderResourceViewRef& getSRV();
     private:
         lmath::Vector4 sceneAABBMin_;
         lmath::Vector4 sceneAABBMax_;
@@ -137,17 +98,144 @@ namespace lfw
         f32 pcfBlurSize_;
         f32 znear_;
         f32 zfar_;
+        f32 depthBias_;
+        f32 slopeScaledDepthBias_;
         u8 fitType_;
         u8 moveLightTexelSize_;
         u8 fitNearFar_;
-        u8 reserved3_;
+        u8 autoupdateAABB_;
+        lmath::Vector4 lightDirection_;
 
         void createSceneAABBPoints(lmath::Vector4 dst[8]);
-        void getNearFar(f32& nearPlane, f32& farPlane, lmath::Vector4& lightViewOrthoMin, lmath::Vector4& lightViewOrthoMax, lmath::Vector4* viewPoints);
+        //void getNearFar(f32& nearPlane, f32& farPlane, lmath::Vector4& lightViewOrthoMin, lmath::Vector4& lightViewOrthoMax, lmath::Vector4* viewPoints);
 
         f32 cascadePartitions_[NumCascades+1];
-        //f32 cascadePartitionsFrustum_[MaxCascades+1];
+        f32 cascadeScales_[LFW_CONFIG_SHADOW_MAXCASCADES];
+
+        lgfx::DepthStencilViewRef dsvShadowMap_;
+        lgfx::ShaderResourceViewRef srvShadowMap_;
     };
+
+    inline s32 ShadowMap::getCascadeLevels() const
+    {
+        return cascadeLevels_;
+    }
+
+    inline s32 ShadowMap::getResolution() const
+    {
+        return resolution_;
+    }
+
+    inline f32 ShadowMap::getInvResolution() const
+    {
+        return invResolution_;
+    }
+
+    inline f32 ShadowMap::getPCFBlurSize() const
+    {
+        return pcfBlurSize_;
+    }
+
+    inline void ShadowMap::setPCFBlurSize(f32 size)
+    {
+        LASSERT(0.0f<=size);
+        pcfBlurSize_ = size;
+    }
+
+    inline f32 ShadowMap::getDepthBias() const
+    {
+        return depthBias_;
+    }
+
+    inline void ShadowMap::setDepthBias(f32 depthBias)
+    {
+        depthBias_ = depthBias;
+    }
+
+    inline f32 ShadowMap::getSlopeScaledDepthBias() const
+    {
+        return slopeScaledDepthBias_;
+    }
+
+    inline void ShadowMap::setSlopeScaledDepthBias(f32 slopeScaledDepthBias)
+    {
+        slopeScaledDepthBias_ = slopeScaledDepthBias;
+    }
+
+    inline u8 ShadowMap::getFitType() const
+    {
+        return fitType_;
+    }
+
+    inline void ShadowMap::setFitType(u8 type)
+    {
+        fitType_ = type;
+    }
+
+    inline u8 ShadowMap::getMoveLightTexelSize() const
+    {
+        return moveLightTexelSize_;
+    }
+
+    inline void ShadowMap::setMoveLightTexelSize(u8 flag)
+    {
+        moveLightTexelSize_ = flag;
+    }
+
+    inline s8 ShadowMap::getFitNearFar()
+    {
+        return fitNearFar_;
+    }
+
+    inline void ShadowMap::setFitNearFar(u8 type)
+    {
+        fitNearFar_ = type;
+    }
+
+    inline bool ShadowMap::isAutoupdateAABB() const
+    {
+        return 0 != autoupdateAABB_;
+    }
+
+    inline void ShadowMap::setAutoupdateAABB(bool autoupdate)
+    {
+        autoupdateAABB_ = (autoupdate)? 1 : 0;
+    }
+
+    inline void ShadowMap::setSceneAABB(const lmath::Vector4& aabbMin, const lmath::Vector4& aabbMax)
+    {
+        sceneAABBMin_ = aabbMin;
+        sceneAABBMax_ = aabbMax;
+    }
+
+    inline lmath::Vector4& ShadowMap::getSceneAABBMin()
+    {
+        return sceneAABBMin_;
+    }
+
+    inline lmath::Vector4& ShadowMap::getSceneAABBMax()
+    {
+        return sceneAABBMax_;
+    }
+
+    inline const lmath::Matrix44& ShadowMap::getLightProjection(s32 cascade) const
+    {
+        LASSERT(0<=cascade && cascade<cascadeLevels_);
+        return lightProjection_[cascade];
+    }
+
+    inline const lmath::Matrix44& ShadowMap::getLightViewProjection(s32 cascade) const
+    {
+        LASSERT(0<=cascade && cascade<cascadeLevels_);
+        return lightViewProjection_[cascade];
+    }
+
+    inline f32 ShadowMap::getCascadePartition(s32 cascade) const
+    {
+        LASSERT(0<=cascade && cascade<cascadeLevels_);
+        //return cascadePartitionsFrustum_[cascade];
+        return cascadePartitions_[cascade+1];
+    }
 
     inline void ShadowMap::getLightProjectionAlign16(lmath::Matrix44* dstAligned) const
     {
@@ -157,6 +245,26 @@ namespace lfw
     inline void ShadowMap::getLightViewProjectionAlign16(lmath::Matrix44* dstAligned) const
     {
         copyAlignedDstAlignedSrc16(dstAligned, lightViewProjection_, sizeof(lmath::Matrix44)*NumCascades);
+    }
+
+    inline void ShadowMap::getCascadeScalesAlign16(f32* cascadeScales) const
+    {
+        _mm_store_ps(cascadeScales, _mm_loadu_ps(cascadeScales_));
+    }
+
+    inline const lmath::Vector4& ShadowMap::getLightDirection() const
+    {
+        return lightDirection_;
+    }
+
+    inline lgfx::DepthStencilViewRef& ShadowMap::getDSV()
+    {
+        return dsvShadowMap_;
+    }
+
+    inline lgfx::ShaderResourceViewRef& ShadowMap::getSRV()
+    {
+        return srvShadowMap_;
     }
 }
 

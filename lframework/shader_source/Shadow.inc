@@ -1,138 +1,78 @@
-#ifndef INC_COMMON_PS
-#define INC_COMMON_PS
+#ifndef INC_SHADOW_INC_
+#define INC_SHADOW_INC_
+#include "Utility.inc"
 
-#define NUM_CASCADES (${FW_CONFIG_SHADOW_NUMCASCADES})
-
-static const float PI = 3.14159265;
-static const float PI2 = 6.2831853;
-static const float INV_PI = 0.31830988618379067153;
-
-#define SHADOWMAP_TYPE_NOFILTER (0)
-#define SHADOWMAP_TYPE_PCF (1)
-#define SHADOWMAP_TYPE_MSM (2)
-#define SHADOWMAP_TYPE_OPTIMIZEDMSM (3)
-
-#define SHADOWMAP_TYPE SHADOWMAP_TYPE_NOFILTER
-
-#define PCF_FILTER_SIZE (5)
-
-#ifndef DEF_PERFRAMECONSTANT
-#define DEF_PERFRAMECONSTANT
-cbuffer PerFrameConstant : register(b0)
+static const float4 PCFSamples[64] =
 {
-    float velocityScale;
-    float velocityMaxMagnitude;
-    float reserved0;
-    float reserved1;
-};
-#endif
-
-cbuffer PerLightConstant : register(b1)
-{
-    float4 dlDir;
-    float4 dlColor;
-
-    float shadowMapSize;
-    float specularMapMipLevels;
-    float invShadowMapSize;
-    int shadowMapUVToTexel;
-
-    float depthBias_;
-    float slopeScaledDepthBias_;
-    float lightBleedingBias;
-    int clusterGridScale;
-};
-
-#ifndef DEF_PERCAMERACONSTANT
-#define DEF_PERCAMERACONSTANT
-cbuffer PerCameraConstant : register(b2)
-{
-    float4x4 mview;
-    float4x4 minvview;
-    float4x4 mproj;
-    float4x4 minvproj;
-    float4x4 mvp0; //previous vew projection
-    float4x4 mvp1; //current view projection
-    float4x4 minvvp1;
-    float4 cameraPos;
-    int2 screenSize; //(screenWidth, screenHeight)
-    float2 screenInvSize; //(screenInvWidth, screenInvHeight)
-}
-#endif
-
-cbuffer PerShadowMapConstant : register(b3)
-{
-    float4x4 mlvp[NUM_CASCADES];
-};
-
-cbuffer MaterialConstant : register(b4)
-{
-    float4 diffuse;
-    float4 specular;
-    float4 ambient;
-    float4 shadow;
-}
-
-cbuffer LightClusterConstant : register(b5)
-{
-    int4 lightClusterSize;
-    float4 lightClusterScale;
-    float4 lightClusterBias;
-}
-
-Texture2D texAlbedo : register(t0);
-Texture2D texNormal : register(t1);
-TextureCube texSpecular : register(t2);
-
-TextureCube<float3> texIrradiance : register(t5);
-TextureCube<float3> texRadiance : register(t6);
-Texture2DArray texShadow : register(t7);
-Texture2D<float> texShadowAccum : register(t7);
-
-SamplerState samPoint : register(s0);
-SamplerState samLinear : register(s1);
-
-#if SHADOWMAP_TYPE==SHADOWMAP_TYPE_NOFILTER || SHADOWMAP_TYPE==SHADOWMAP_TYPE_PCF
-SamplerComparisonState samShadow : register(s2);
-#else
-SamplerState samShadow : register(s2);
-#endif
-
-struct EnvironmentLight
-{
-    float3 diffuse_;
-    float3 specular_;
+float4(0.195146, -0.107968, 0.389143, 0.223022),
+float4(-0.804854, 0.892032, 0.193845, 1.201462),
+float4(0.695146, 0.392032, 0.290138, 0.798071),
+float4(-0.304854, -0.607968, 0.316567, 0.680119),
+float4(0.445146, 0.642032, 0.294017, 0.781255),
+float4(-0.554854, -0.357968, 0.320799, 0.660306),
+float4(0.945146, -0.857968, 0.176640, 1.276483),
+float4(-0.054854, 0.142032, 0.394345, 0.152257),
+float4(0.070146, 0.017032, 0.397904, 0.072184),
+float4(-0.929854, -0.982968, 0.159715, 1.353091),
+float4(0.570146, -0.482968, 0.301767, 0.747211),
+float4(-0.429854, 0.517032, 0.318228, 0.672381),
+float4(0.320146, -0.732968, 0.289730, 0.799835),
+float4(-0.679854, 0.267032, 0.305535, 0.730416),
+float4(0.820146, 0.767032, 0.212370, 1.122932),
+float4(-0.179854, -0.232968, 0.382033, 0.294316),
+float4(0.132646, 0.954532, 0.250749, 0.963704),
+float4(-0.867354, -0.045468, 0.273590, 0.868545),
+float4(0.632646, -0.545468, 0.281443, 0.835330),
+float4(-0.367354, 0.454532, 0.336313, 0.584421),
+float4(0.382646, -0.295468, 0.354943, 0.483445),
+float4(-0.617354, 0.704532, 0.257256, 0.936745),
+float4(0.882646, 0.204532, 0.264639, 0.906034),
+float4(-0.117354, -0.795468, 0.288746, 0.804078),
+float4(0.007646, -0.920468, 0.261166, 0.920500),
+float4(-0.992354, 0.079532, 0.243051, 0.995536),
+float4(0.507646, 0.579532, 0.296497, 0.770429),
+float4(-0.492354, -0.420468, 0.323505, 0.647461),
+float4(0.257646, 0.329532, 0.365523, 0.418297),
+float4(-0.742354, -0.670468, 0.241896, 1.000309),
+float4(0.757646, -0.170468, 0.295088, 0.776586),
+float4(-0.242354, 0.829532, 0.274620, 0.864210),
+float4(0.226396, 0.485782, 0.345571, 0.535947),
+float4(-0.773604, -0.514218, 0.259142, 0.928915),
+float4(0.726396, -0.014218, 0.306400, 0.726535),
+float4(-0.273604, 0.985782, 0.236395, 1.023047),
+float4(0.476396, -0.764218, 0.265955, 0.900546),
+float4(-0.523604, 0.235782, 0.338302, 0.574242),
+float4(0.976396, 0.735782, 0.188945, 1.222589),
+float4(-0.023604, -0.264218, 0.385150, 0.265270),
+float4(0.101396, -0.389218, 0.367944, 0.402209),
+float4(-0.898604, 0.610782, 0.221084, 1.086528),
+float4(0.601396, 0.110782, 0.330909, 0.611514),
+float4(-0.398604, -0.889218, 0.248147, 0.974471),
+float4(0.351396, 0.860782, 0.258942, 0.929744),
+float4(-0.648604, -0.139218, 0.320148, 0.663377),
+float4(0.851396, -0.639218, 0.226349, 1.064648),
+float4(-0.148604, 0.360782, 0.369701, 0.390188),
+float4(0.163896, -0.576718, 0.333314, 0.599554),
+float4(-0.836104, 0.423282, 0.257160, 0.937143),
+float4(0.663896, 0.923282, 0.208975, 1.137193),
+float4(-0.336104, -0.076718, 0.375925, 0.344749),
+float4(0.413896, 0.173282, 0.360737, 0.448705),
+float4(-0.586104, -0.826718, 0.238728, 1.013401),
+float4(0.913896, -0.326718, 0.249097, 0.970541),
+float4(-0.086104, 0.673282, 0.316859, 0.678765),
+float4(0.038896, 0.548282, 0.343008, 0.549660),
+float4(-0.961104, -0.451718, 0.226996, 1.061965),
+float4(0.538896, -0.951718, 0.219363, 1.093698),
+float4(-0.461104, 0.048282, 0.358290, 0.463625),
+float4(0.288896, -0.201718, 0.374931, 0.352351),
+float4(-0.711104, 0.798282, 0.225283, 1.069076),
+float4(0.788896, 0.298282, 0.279542, 0.843403),
+float4(-0.211104, -0.701718, 0.305006, 0.732785),
 };
 
-struct PointLight
+float3 getSlopeScaledOffset(in float NdotL, in float3 N)
 {
-    float3 position;
-    float attenuation0;
-    float3 color;
-    float attenuation1;
-};
-
-StructuredBuffer<PointLight> lightBuffer : register(t5);
-Texture2D<uint> lightIndices : register(t6);
-Texture3D<uint2> lightClusters : register(t7);
-
-struct DeferredOutput
-{
-    float4 albedo : SV_TARGET0;
-    float4 specular : SV_TARGET1;
-    float4 normal : SV_TARGET2;
-    float2 velocity : SV_TARGET3;
-    float depth : SV_TARGET4;
-};
-
-float RGBToLum(float3 v)
-{
-    return dot(v, float3(0.299, 0.587, 0.114));
-}
-
-void lightSpaceTexcoord(inout float4 uv)
-{
-    uv.xy = uv.xy*float2(0.5,-0.5)+float2(0.5,0.5);
+    return slopeScaledDepthBias * (1.0 - NdotL) * N;
 }
 
 float sampleShadowMap(Texture2DArray texShadow, SamplerComparisonState samShadow, float2 baseUV, float du, float dv, float depth, int cascade)
@@ -143,12 +83,17 @@ float sampleShadowMap(Texture2DArray texShadow, SamplerComparisonState samShadow
 
 float sampleShadowMapOne(Texture2DArray texShadow, SamplerComparisonState samShadow, float4 tex, int cascade)
 {
-    return texShadow.SampleCmpLevelZero(samShadow, float3(tex.xy, cascade), tex.z+0.001).r;
+    return texShadow.SampleCmpLevelZero(samShadow, float3(tex.xy, cascade), tex.z).r;
+}
+
+float sampleShadowMapOne(Texture2DArray texShadow, SamplerComparisonState samShadow, float2 uv, float depth, int cascade)
+{
+    return texShadow.SampleCmpLevelZero(samShadow, float3(uv, cascade), depth).r;
 }
 
 float sampleShadowPCF(Texture2DArray texShadow, SamplerComparisonState samShadow, float4 tex, int cascade)
 {
-    float2 pos = tex.xy*shadowMapUVToTexel;
+    float2 pos = tex.xy*shadowMapSize;
     float2 baseUV = floor(pos+float2(0.5,0.5));
     float2 dpos = pos + float2(0.5,0.5) - baseUV;
     baseUV = (baseUV - float2(0.5,0.5))*invShadowMapSize;
@@ -224,6 +169,25 @@ float sampleShadowPCF(Texture2DArray texShadow, SamplerComparisonState samShadow
 
     return sum * (1.0/2704);
  #endif
+}
+
+float sampleShadowRandomPCF(Texture2DArray texShadow, SamplerComparisonState samShadow, float4 tex, int cascade)
+{
+    float2 pos = tex.xy*shadowMapSize;
+    float2 baseUV = floor(pos+float2(0.5,0.5));
+    float2 dpos = pos + float2(0.5,0.5) - baseUV;
+    float halfPixel = (0.5 * PCF_FILTER_SIZE) * invShadowMapSize;
+    baseUV = baseUV * invShadowMapSize - halfPixel;
+    uint index = 0;//hashUInt(tex.xy);
+
+    float sum = 0;
+    [loop]
+    for(uint i=0; i<PCF_FILTER_SAMPLES; ++i){
+        uint n = (i+index)&63;
+        float2 uv = baseUV + halfPixel * PCFSamples[n].xy;
+        sum += PCFSamples[n].z*sampleShadowMapOne(texShadow, samShadow, uv, tex.z, cascade);
+    }
+    return sum;
 }
 
 float linstep(float low, float high, float value)
@@ -371,12 +335,13 @@ float sampleShadowOptimizedMSM(Texture2DArray texShadow, SamplerState samShadow,
 
 float gatherShadowSample(Texture2DArray texShadow, float4 tex, int cascade)
 {
-    lightSpaceTexcoord(tex);
+    tex.xy = lightSpaceUV(tex.xy);
 #if SHADOWMAP_TYPE==SHADOWMAP_TYPE_NOFILTER
     float shadowInfluence = sampleShadowMapOne(texShadow, samShadow, tex, cascade);
 
 #elif SHADOWMAP_TYPE==SHADOWMAP_TYPE_PCF
     float shadowInfluence = sampleShadowPCF(texShadow, samShadow, tex, cascade);
+    //float shadowInfluence = sampleShadowRandomPCF(texShadow, samShadow, tex, cascade);
 
 #elif SHADOWMAP_TYPE==SHADOWMAP_TYPE_MSM
     float shadowInfluence = sampleShadowMSM(texShadow, samShadow, tex, cascade);
@@ -402,224 +367,33 @@ float calcShadowInfluence(Texture2DArray texShadow, float4 texS[NUM_CASCADES])
             return gatherShadowSample(texShadow, tex, i);
         }
     }
-    return 1;
+    return 0;
 #endif
 }
 
-float calcShadowInfluence(Texture2DArray texShadow, in float4 worldPos, in float4x4 lvp[NUM_CASCADES])
+float calcShadowInfluence(Texture2DArray texShadow, in float4 worldPos, in float3 N, in float3 L, in float4x4 lvp[NUM_CASCADES])
 {
+    float NdotL = saturate(dot(N,L));
+    float3 offset = getSlopeScaledOffset(NdotL, N);
 #if NUM_CASCADES<=1
+    worldPos.xyz += offset * cascadeScales[0];
     float4 tex = mul(worldPos, lvp[0]);
+    tex.z += depthBias;
     return gatherShadowSample(texShadow, tex, 0);
 #else
+    float4 wpos = worldPos;
     for(int i=0; i<NUM_CASCADES; ++i){
-        float4 tex = mul(worldPos, lvp[i]);
+        wpos.xyz = worldPos.xyz + offset * cascadeScales[i];
+        float4 tex = mul(wpos, lvp[i]);
         if(min(tex.x, tex.y)>=-1
             && max(tex.x, tex.y)<=1)
         {
+            tex.z += depthBias;
             return gatherShadowSample(texShadow, tex, i);
         }
     }
-    return 1;
+    return 0;
 #endif
 }
 
-float2 uvToScreen(float2 uv)
-{
-    return uv*float2(2.0,-2.0)+float2(-1.0,1.0); 
-}
-
-float3 screenToView(float3 screen, float4x4 invproj)
-{
-    float4 view = mul(float4(screen, 1), invproj);
-    return view.xyz/view.w;
-}
-
-float3 viewToWorld(float3 view, float4x4 invview)
-{
-    return mul(float4(view,1), invview).xyz;
-}
-
-float3 screenToWorld(float3 screen, float4x4 invvp)
-{
-    float4 world = mul(float4(screen,1), invvp);
-    return world.xyz/world.w;
-}
-
-float2 encodeVelocity(float2 velocity)
-{
-    return velocity;
-}
-
-float2 decodeVelocity(float2 encoded)
-{
-    return encoded;
-}
-
-float3 reconstructNormalFromXY(float2 n)
-{
-    float d = dot(n, n);
-    return (1.5<d)? (float3)0 : float3(n, -sqrt(1.0-d));
-}
-
-void fillArray4(out int array[4], int4 src)
-{
-    array[0] = src.x;
-    array[1] = src.y;
-    array[2] = src.z;
-    array[3] = src.w;
-}
-
-half3 gatherLights(float3 worldPosition, float3 viewPosition, float3 normal)
-{
-    int4 clusterPosition = int4(viewPosition * lightClusterScale.xyz + lightClusterBias.xyz, 0);
-
-    half3 lit = (half3)0;
-
-    uint2 cluster = lightClusters.Load(clusterPosition);
-    uint lightIndex = cluster.x;
-    uint lightCount = cluster.y;
-    uint2 lightIndexCoord;
-    for(uint pl=0; pl<lightCount; ++pl){
-        lightIndexCoord.x = lightIndex & 63;
-        lightIndexCoord.y = lightIndex >> 6;
-        uint index = lightIndices[lightIndexCoord];
-        ++lightIndex;
-
-        const PointLight light = lightBuffer[index];
-
-		// Lighting vectors
-		float3 vec = light.position - worldPosition;
-		float3 dir = normalize(vec);
-
-		float attenuation = saturate(1.0 - dot(vec, vec) * rcp(light.attenuation1 * light.attenuation1));
-        attenuation *= attenuation;
-
-		// Lighting
-		float diffuse = saturate(dot(dir, normal));
-
-		lit += half3(light.color * (attenuation * diffuse));
-    }
-    return lit;
-}
-
-//
-float3 fresnel(in float3 F0, in float3 F, in float x)
-{
-    return F0 + (F-F0)*pow(1.0-x,5.0);
-}
-
-float3 envFresnel(float3 F0, float cosNV, float alpha)
-{
-    float3 F1 = max(1-alpha, F0)- F0;
-    return F0 + F1*pow(1.0-cosNV, 5.0);
-}
-
-float diffuseLambert(in float cosNL)
-{
-    return cosNL;
-}
-
-float diffuseBurley(in float cosNL, in float cosNV, in float cosLH, in float roughness)
-{
-    float F = 0.5 + 2.0 * roughness * cosLH * cosLH;
-    return fresnel(1.0, F, cosNL).x * fresnel(1.0, F, cosNV).x;
-}
-
-//Generalized-Trowbridge-Reitz. alpha = roughness^2
-float normalDistributionGGX(in float cosNH, in float alpha)
-{
-    float alpha2 = alpha*alpha;
-    float div = cosNH*cosNH*(alpha2-1.0) + 1.0;
-    return alpha2/(PI*div*div);
-}
-
-// Optimized Smith GGX. alpha = roughness^2
-// Smith GGX= G(l,v,h)/4(n,l)(n,v)
-float visibilitySmith(in float cosNL, in float cosNE, in float alpha)
-{
-    float k = 0.5*alpha;
-    float k2 = k*k;
-    float k1 = 1-k;
-    float GL = (cosNL*k1 + k);
-    float GV = (cosNE*k1 + k);
-    return 0.25/(GL*GV);
-}
-
-float visibilitySmithHable(in float cosLH, in float alpha)
-{
-    float k = 0.5*alpha;
-    float k2 = k*k;
-    return rcp(cosLH*cosLH*(1.0-k2) + k2);
-}
-
-float2 decodeSphereMap(in float3 N)
-{
-    return float2(atan2(N.x, N.z)/PI2 + 0.5, 0.5-asin(N.y)/PI);
-}
-
-float3 specularBRDF(
-    in float alpha,
-    in float3 color,
-    in float cosNV,
-    in float cosNL,
-    in float cosLH,
-    in float cosNH)
-{
-    float D = normalDistributionGGX(cosNH, alpha);
-    float3 F = fresnel(color, 1, cosLH);
-    float G = visibilitySmithHable(cosLH, alpha);
-    return D*F*G;
-}
-
-float3 irradianceDiffuse(TextureCube<float3> texIrradiance, SamplerState samCube, in float3 N)
-{
-    return texIrradiance.SampleLevel(samCube, N, 0).xyz;
-}
-
-float3 radianceSpecular(
-    TextureCube<float3> texRadiance,
-    SamplerState samCube,
-    in float3 N,
-    in float3 V,
-    in float lod,
-    in float mipLevels)
-{
-    return texRadiance.SampleLevel(samCube, reflect(-V,N), lod*mipLevels).xyz;
-}
-
-float3 lightSurface(
-    in float3 N,
-    in float3 V,
-    in float3 L,
-    in float3 lightColor,
-    in float3 albedo,
-    in float roughness,
-    in float metallic,
-    in float ambientOcclusion,
-    in EnvironmentLight envLight)
-{
-    const float3 diffuseColor = lerp(albedo, float3(0,0,0), metallic) * ambientOcclusion;
-    const float3 specularColor = lerp(0.04, albedo, metallic) * ambientOcclusion;
-
-    float alpha = roughness*roughness;
-
-    const float cosNV = saturate(dot(N,V));
-
-    float3 accum = (float3)0;
-    //for(int i=0; i<1; ++i){
-        float3 H = normalize(L+V);
-        float cosNL = saturate(dot(N,L));
-        float cosNH = saturate(dot(N,H)); 
-        float cosLH = saturate(dot(L,H));
-
-        float diffuse = diffuseBurley(cosNL, cosNV, cosLH, roughness);
-        float3 specular = specularBRDF(alpha, specularColor, cosNV, cosNL, cosLH, cosNH);
-        accum += cosNL * lightColor * (diffuseColor*diffuse + specular);
-    //}
-    accum += diffuseColor * envLight.diffuse_;
-    accum += specularColor * envLight.specular_;
-    return accum;
-}
-
-#endif //INC_COMMON_PS
+#endif //INC_SHADOW_INC_

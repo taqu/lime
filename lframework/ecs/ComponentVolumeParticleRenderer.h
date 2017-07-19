@@ -87,10 +87,11 @@ namespace lfw
         virtual void update();
         virtual void postUpdate();
         virtual void onDestroy();
-        virtual void addQueue(RenderQueue& queue);
+        virtual bool addQueue(RenderQueue& queue);
         virtual void drawDepth(RenderContext& renderContext);
         virtual void drawOpaque(RenderContext& renderContext);
         virtual void drawTransparent(RenderContext& renderContext);
+        virtual void getAABB(lmath::lm128& bmin, lmath::lm128& bmax);
 
         void setTexture(lgfx::Texture2DRef& texture, lgfx::ShaderResourceViewRef& srv);
         inline s32 capacity() const;
@@ -266,14 +267,15 @@ namespace lfw
     }
 
     template<class U>
-    void ComponentVolumeParticleRenderer<U>::addQueue(RenderQueue& queue)
+    bool ComponentVolumeParticleRenderer<U>::addQueue(RenderQueue& queue)
     {
         if(size()<=0){
-            return;
+            return false;
         }
         const ComponentGeometric* geometric = getEntity().getGeometric();
         f32 depth = lmath::manhattanDistance3(queue.getCamera().getEyePosition(), geometric->getPosition());
         queue.add(RenderPath_Transparent, depth, this);
+        return true;
     }
 
     template<class U>
@@ -336,6 +338,12 @@ namespace lfw
         context.clearDSResources(1);
         context.clearPSResources(2);
         vertexBuffer_.end();
+    }
+
+    template<class U>
+    void ComponentVolumeParticleRenderer<U>::getAABB(lmath::lm128& bmin, lmath::lm128& bmax)
+    {
+        ComponentRenderer::getAABB(bmin, bmax);
     }
 
     template<class U>

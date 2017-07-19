@@ -4,20 +4,32 @@
 @date 2016/11/29 create
 */
 #include "ecs/ComponentCamera.h"
+
 #include <lmath/Vector3.h>
 #include <lmath/Vector4.h>
 #include <lmath/Quaternion.h>
 #include <lgraphics/ViewRef.h>
+
+#include "System.h"
 #include "ecs/ECSManager.h"
 #include "ecs/ComponentSceneElementManager.h"
 #include "ecs/Entity.h"
 #include "ecs/ComponentGeometric.h"
 #include "ecs/ComponentRenderer.h"
+
 #include "resource/Resources.h"
 #include "resource/ShaderManager.h"
+
+#include "render/Renderer.h"
 #include "render/RenderContext.h"
 #include "render/RenderQueue.h"
-#include "render/RenderTask.h"
+
+#include "render/graph/RenderGraph.h"
+#include "render/graph/RenderPassGBuffer.h"
+#include "render/graph/RenderPassLighting.h"
+#include "render/graph/RenderPassIntegration.h"
+#include "render/graph/RenderPassTransparent.h"
+#include "render/graph/RenderPassUI.h"
 
 namespace lfw
 {
@@ -25,7 +37,7 @@ namespace lfw
     {
         inline ComponentSceneElementManager* getManager()
         {
-            return ECSManager::getInstance().getComponentManager<ComponentSceneElementManager>();
+            return System::getECSManager().getComponentManager<ComponentSceneElementManager>();
         }
     }
 
@@ -57,6 +69,7 @@ namespace lfw
 
     void ComponentCamera::onCreate()
     {
+        System::getRenderer().resetCamera();
     }
 
     void ComponentCamera::onStart()
@@ -69,8 +82,10 @@ namespace lfw
 
     void ComponentCamera::onDestroy()
     {
+        System::getRenderer().resetCamera();
     }
 
+#if 0
     void ComponentCamera::render(lfw::Camera& camera, RenderTask& renderTask)
     {
         RenderContext& renderContext = *renderTask.renderContext_;
@@ -90,6 +105,12 @@ namespace lfw
             queue[RenderPath_Opaque].entries_[j].component_->drawOpaque(renderContext);
         }
         camera.endDeferred(context);
+
+        //LinearZ
+        camera.constructLinearZ(context);
+
+        //Camera Motion
+        camera.addCameraMotion(context);
 
         //Opaque Lighting
         deferredLighting(camera, renderTask);
@@ -169,200 +190,94 @@ namespace lfw
         }
         context.clearPSResources(8);
     }
+#endif
 
-    void ComponentCamera::initializePerspective(
+    void ComponentCamera::initialize(
         f32 fovyDegree,
         f32 znear,
         f32 zfar,
+        s32 width,
+        s32 height,
         bool jitter)
     {
         ComponentSceneElementManager* componentManager = getManager();
         Camera& camera = componentManager->getCamera(getID());
 
-        f32 width,height;
-        camera.getRTSizeF32(width, height);
-
         camera.perspectiveFov(fovyDegree*DEG_TO_RAD, static_cast<f32>(width)/height, znear, zfar);
 
-        camera.setViewport(0.0f, 0.0f, width, height);
+        camera.setViewport(0, 0, width, height);
         camera.setJitter(jitter);
         if(jitter){
             f32 jw = 0.125f/width;
             f32 jh = 0.125f/height;
             camera.setJitterSize(jw, jh);
         }
+        System::getRenderer().resetCamera();
     }
 
-    void ComponentCamera::initializeDeferred(s32 width, s32 height)
+    void ComponentCamera::resetRenderPasses()
     {
-        width = (width+ComputeShader_NumThreads_Mask)&~ComputeShader_NumThreads_Mask;
-        height = (height+ComputeShader_NumThreads_Mask)&~ComputeShader_NumThreads_Mask;
+        ComponentSceneElementManager* componentManager = getManager();
+        Camera& camera = componentManager->getCamera(getID());
 
-        RenderTarget targets[DeferredRT_Num];
-        DepthStencil depthStencil;
-        lgfx::RTVDesc rtvDesc;
-        lgfx::DSVDesc dsvDesc;
-        lgfx::SRVDesc srvDesc;
+        Camera::RenderPassArray& renderPasses = camera.getRenderPasses();
+        if(0<renderPasses.size()){
+            for(s32 i=0; i<renderPasses.size(); ++i){
+                renderPasses[i]->create(camera);
+            }
+            return;
+        }
 
-        rtvDesc.dimension_ = lgfx::ViewRTVDimension_Texture2D;
-        rtvDesc.tex2D_.mipSlice_ = 0;
+        //GBuffer
+        graph::RenderPassGBuffer* renderPassGBuffer = LNEW graph::RenderPassGBuffer();
+        camera.addRenderPass(renderPassGBuffer);
 
-        dsvDesc.format_ = lgfx::Data_D24_UNorm_S8_UInt;
-        dsvDesc.dimension_ = lgfx::ViewDSVDimension_Texture2D;
-        dsvDesc.tex2D_.mipSlice_ = 0;
+        graph::RenderPassLighting* renderPassLighting = LNEW graph::RenderPassLighting();
+        camera.addRenderPass(renderPassLighting);
 
-        srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
-        srvDesc.tex2D_.mipLevels_ = 1;
-        srvDesc.tex2D_.mostDetailedMip_ = 0;
+        graph::RenderPassTransparent* renderPassTransparent = LNEW graph::RenderPassTransparent();
+        camera.addRenderPass(renderPassTransparent);
 
-        //Albedo
-        //------------------------------------------------
-        rtvDesc.format_ = lgfx::Data_R8G8B8A8_UNorm;
-        srvDesc.format_ = lgfx::Data_R8G8B8A8_UNorm;
-        targets[0].texture_ = lgfx::Texture::create2D(
-            width,
-            height,
-            1, 1,
-            lgfx::Data_R8G8B8A8_UNorm,
-            lgfx::Usage_Default,
-            lgfx::BindFlag_RenderTarget|lgfx::BindFlag_ShaderResource,
-            lgfx::CPUAccessFlag_None,
-            lgfx::ResourceMisc_None,
-            NULL);
-        targets[0].renderTargetView_ = targets[0].texture_.createRTView(rtvDesc);
-        targets[0].shaderResourceView_ = targets[0].texture_.createSRView(srvDesc);
+        graph::RenderPassIntegration* renderPassIntegration = LNEW graph::RenderPassIntegration();
+        camera.addRenderPass(renderPassIntegration);
 
-        //Specular
-        //------------------------------------------------
-        rtvDesc.format_ = lgfx::Data_R8G8B8A8_UNorm;
-        srvDesc.format_ = lgfx::Data_R8G8B8A8_UNorm;
-        targets[1].texture_ = lgfx::Texture::create2D(
-            width,
-            height,
-            1, 1,
-            lgfx::Data_R8G8B8A8_UNorm,
-            lgfx::Usage_Default,
-            lgfx::BindFlag_RenderTarget|lgfx::BindFlag_ShaderResource,
-            lgfx::CPUAccessFlag_None,
-            lgfx::ResourceMisc_None,
-            NULL);
-        targets[1].renderTargetView_ = targets[1].texture_.createRTView(rtvDesc);
-        targets[1].shaderResourceView_ = targets[1].texture_.createSRView(srvDesc);
+        graph::RenderPassUI* renderPassUI = LNEW graph::RenderPassUI();
+        camera.addRenderPass(renderPassUI);
 
-        //Normal
-        //------------------------------------------------
-        rtvDesc.format_ = lgfx::Data_R8G8B8A8_SNorm;
-        srvDesc.format_ = lgfx::Data_R8G8B8A8_SNorm;
-        targets[2].texture_ = lgfx::Texture::create2D(
-            width,
-            height,
-            1, 1,
-            lgfx::Data_R8G8B8A8_SNorm,
-            lgfx::Usage_Default,
-            lgfx::BindFlag_RenderTarget|lgfx::BindFlag_ShaderResource,
-            lgfx::CPUAccessFlag_None,
-            lgfx::ResourceMisc_None,
-            NULL);
-        targets[2].renderTargetView_ = targets[2].texture_.createRTView(rtvDesc);
-        targets[2].shaderResourceView_ = targets[2].texture_.createSRView(srvDesc);
-
-        //Velocity
-        //------------------------------------------------
-        rtvDesc.format_ = lgfx::Data_R16G16_Float;
-        srvDesc.format_ = lgfx::Data_R16G16_Float;
-        targets[3].texture_ = lgfx::Texture::create2D(
-            width,
-            height,
-            1, 1,
-            lgfx::Data_R16G16_Float,
-            lgfx::Usage_Default,
-            lgfx::BindFlag_RenderTarget|lgfx::BindFlag_ShaderResource,
-            lgfx::CPUAccessFlag_None,
-            lgfx::ResourceMisc_None,
-            NULL);
-        targets[3].renderTargetView_ = targets[3].texture_.createRTView(rtvDesc);
-        targets[3].shaderResourceView_ = targets[3].texture_.createSRView(srvDesc);
-
-        //Depth
-        //------------------------------------------------
-        rtvDesc.format_ = lgfx::Data_R32_Float;
-        srvDesc.format_ = lgfx::Data_R32_Float;
-        targets[4].texture_ = lgfx::Texture::create2D(
-            width,
-            height,
-            1, 1,
-            lgfx::Data_R32_Float,
-            lgfx::Usage_Default,
-            lgfx::BindFlag_RenderTarget|lgfx::BindFlag_ShaderResource,
-            lgfx::CPUAccessFlag_None,
-            lgfx::ResourceMisc_None,
-            NULL);
-
-        targets[4].renderTargetView_ = targets[4].texture_.createRTView(rtvDesc);
-        targets[4].shaderResourceView_ = targets[4].texture_.createSRView(srvDesc);
-
-        //Depth Stencil
-        //------------------------------------------------
-        depthStencil.texture_ = lgfx::Texture::create2D(
-            width,
-            height,
-            1, 1,
-            lgfx::Data_R24G8_TypeLess,
-            lgfx::Usage_Default,
-            lgfx::BindFlag_DepthStencil|lgfx::BindFlag_ShaderResource,
-            lgfx::CPUAccessFlag_None,
-            lgfx::ResourceMisc_None,
-            NULL);
-        depthStencil.depthStencilView_ = depthStencil.texture_.createDSView(dsvDesc);
-        srvDesc.format_ = lgfx::Data_R24_UNorm_X8_TypeLess;
-        depthStencil.shaderResourceViewDepth_ = depthStencil.texture_.createSRView(srvDesc);
-        srvDesc.format_ = lgfx::Data_X24_TypeLess_G8_UInt;
-        depthStencil.shaderResourceViewStencil_ = depthStencil.texture_.createSRView(srvDesc);
-
-        lgfx::Viewport viewport;
-        viewport.TopLeftX = viewport.TopLeftY = 0.0f;
-        viewport.Width = static_cast<f32>(width);
-        viewport.Height = static_cast<f32>(height);
-        viewport.MinDepth = 0.0f;
-        viewport.MaxDepth = 1.0f;
-        setRenderTargets(viewport, DeferredRT_Num, targets, &depthStencil);
-        Camera& camera = getManager()->getCamera(getID());
-        camera.setRenderType(RenderType_Deferred);
-        camera.setDeferred();
+        for(s32 i=0; i<renderPasses.size(); ++i){
+            renderPasses[i]->create(camera);
+        }
     }
 
-    const D3D11_VIEWPORT& ComponentCamera::getViewport() const
+    void ComponentCamera::render(RenderContext& renderContext)
+    {
+        ComponentSceneElementManager* componentManager = getManager();
+        Camera& camera = componentManager->getCamera(getID());
+
+        renderContext.setPerCameraConstants(camera);
+
+        lgfx::ContextRef& context = renderContext.getContext();
+
+        context.setViewport(camera.getViewport());
+        context.setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWEnableReverseZ);
+        context.setRasterizerState(lgfx::ContextRef::Rasterizer_FillSolid);
+
+        Camera::RenderPassArray& passes = camera.getRenderPasses();
+        for(s32 i=0; i<passes.size(); ++i){
+            passes[i]->execute(renderContext, camera);
+        }
+    }
+
+    const lgfx::Viewport& ComponentCamera::getViewport() const
     {
         const ComponentSceneElementManager* componentManager = getManager();
         return componentManager->getCamera(getID()).getViewport();
     }
 
-    void ComponentCamera::setViewport(f32 x, f32 y, f32 width, f32 height)
+    void ComponentCamera::setViewport(s32 x, s32 y, s32 width, s32 height)
     {
         ComponentSceneElementManager* componentManager = getManager();
         componentManager->getCamera(getID()).setViewport(x, y, width, height);
-    }
-
-    bool ComponentCamera::isUseCameraRenderTarget() const
-    {
-        const Camera& camera = getManager()->getCamera(getID());
-        return camera.isUseCameraRenderTarget();
-    }
-
-    s32 ComponentCamera::getScreenWidth() const
-    {
-        const Camera& camera = getManager()->getCamera(getID());
-        f32 width = camera.isUseCameraRenderTarget()? camera.getViewport().Width : lgfx::getDevice().getDefaultViewport().Width;
-        return static_cast<s32>(width);
-    }
-
-    s32 ComponentCamera::getScreenHeight() const
-    {
-        const ComponentSceneElementManager* componentManager = getManager();
-        const Camera& camera = componentManager->getCamera(getID());
-
-        f32 height = camera.isUseCameraRenderTarget()? camera.getViewport().Height : lgfx::getDevice().getDefaultViewport().Height;
-        return static_cast<s32>(height);
     }
 
     s32 ComponentCamera::getSortLayer() const
@@ -479,23 +394,4 @@ namespace lfw
         Camera& camera = getManager()->getCamera(getID());
         camera.setJitterSize(width, height);
     }
-
-    s16 ComponentCamera::getNumRenderTargets() const
-    {
-        const Camera& camera = getManager()->getCamera(getID());
-        return camera.getNumRenderTargets();
-    }
-
-    void ComponentCamera::setRenderTargets(const D3D11_VIEWPORT& viewport, s8 numTargets, const RenderTarget* targets, const DepthStencil* depthStencil)
-    {
-        Camera& camera = getManager()->getCamera(getID());
-        camera.setRenderTargets(viewport, numTargets, targets, depthStencil);
-    }
-
-    void ComponentCamera::clearRenderTargets()
-    {
-        Camera& camera = getManager()->getCamera(getID());
-        camera.clearRenderTargets();
-    }
-
 }

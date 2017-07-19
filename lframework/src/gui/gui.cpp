@@ -6,6 +6,7 @@
 #include "gui/gui.h"
 #include "gui/imgui.h"
 #include <Windows.h>
+#include <lgraphics/Window.h>
 #include <lgraphics/Graphics.h>
 #include <lgraphics/GraphicsDeviceRef.h>
 #include <lgraphics/ShaderRef.h>
@@ -16,12 +17,13 @@
 #include <lgraphics/ConstantBufferRef.h>
 #include <lgraphics/TextureRef.h>
 
+#include "System.h"
+#include "Timer.h"
 #include "resource/InputLayoutFactory.h"
 #include "resource/ShaderID.h"
 #include "resource/ShaderManager.h"
 #include "resource/Resources.h"
 
-#include "Application.h"
 #include "input/Keyboard.h"
 #include "input/Mouse.h"
 
@@ -74,9 +76,10 @@ namespace lfw
 
     void GUI::Resource::initialize()
     {
-        inputLayout_ = Resources::getInstance().getInputLayoutFactory().get(lfw::InputLayout_UI);
+        Resources& resources = System::getResources();
+        inputLayout_ = resources.getInputLayoutFactory().get(lfw::InputLayout_UI);
 
-        ShaderManager& shaderManager = Resources::getInstance().getShaderManager();
+        ShaderManager& shaderManager = resources.getShaderManager();
         vs_ = shaderManager.getVS(ShaderVS_UI);
         ps_ = shaderManager.getPS(ShaderPS_UI);
 
@@ -163,7 +166,7 @@ namespace lfw
                 &data);
             lgfx::SRVDesc srvDesc;
             srvDesc.format_ = lgfx::Data_R8G8B8A8_UNorm;
-            srvDesc.dimension_ = lgfx::ViewSRVDimension_Texture2D;
+            srvDesc.dimension_ = lgfx::SRVDimension_Texture2D;
             srvDesc.tex2D_.mipLevels_ = 1;
             srvDesc.tex2D_.mostDetailedMip_ = 0;
             srv_ = texture.createSRView(srvDesc);
@@ -307,8 +310,8 @@ namespace lfw
 
         device.setVertexShader(NULL);
 
-        device.clearPSResources(1);
-        device.clearPSSamplers(1);
+        device.clearPSResources(0, 1);
+        device.clearPSSamplers(0, 1);
         device.setPixelShader(NULL);
     }
 
@@ -347,11 +350,9 @@ namespace lfw
 
     bool GUI::init()
     {
-        Application& application = Application::getInstance();
-
         ImGuiIO& io = ImGui::GetIO();
         s32 width,height;
-        application.getWindow().getViewSize(width, height);
+        System::getWindow().getViewSize(width, height);
         io.DisplaySize.x = static_cast<f32>(width);
         io.DisplaySize.y = static_cast<f32>(height);
 
@@ -387,12 +388,11 @@ namespace lfw
 
     void GUI::begin()
     {
-        Application& application = Application::getInstance();
-        linput::Input& input = application.getInput();
+        linput::Input& input = System::getInput();
 
         ImGuiIO& io = ImGui::GetIO();
 
-        io.DeltaTime = application.getTimer().getDeltaTime();
+        io.DeltaTime = System::getTimer().getDeltaTime();
 
         const linput::Keyboard* keyboard = input.getKeyboard();
         if(NULL != keyboard){

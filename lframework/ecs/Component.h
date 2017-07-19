@@ -38,9 +38,6 @@ namespace lfw
         virtual ~Behavior()
         {}
 
-        const Entity& getEntity() const;
-        Entity& getEntity();
-
         virtual u32 getType() const =0;
         virtual void onCreate() =0;
         virtual void onStart() =0;

@@ -63,10 +63,13 @@ namespace lfw
 
     void ComponentGeometricManager::updateMatrices()
     {
+        lmath::Matrix44 scale;
+        scale.identity();
         for(const u16* id = entityTree_.beginID(); id != entityTree_.endID(); ++id){
             u16 index = *id;
             rotations_[index].getMatrix(matrices_[index]);
-            matrices_[index](0,0) *= scales_[index].x_; matrices_[index](1,1) *= scales_[index].y_; matrices_[index](2,2) *= scales_[index].z_;
+            scale.setScale(scales_[index].x_, scales_[index].y_, scales_[index].z_);
+            matrices_[index] *= scale;
             matrices_[index].translate(positions_[index]);
 
             u16 parent = entityTree_.get(index).parent();

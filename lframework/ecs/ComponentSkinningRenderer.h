@@ -24,10 +24,12 @@ namespace lfw
         virtual void update();
         virtual void postUpdate();
         virtual void onDestroy();
-        virtual void addQueue(RenderQueue& queue);
+        virtual bool addQueue(RenderQueue& queue);
         virtual void drawDepth(RenderContext& renderContext);
+        virtual void drawGBuffer(RenderContext& renderContext);
         virtual void drawOpaque(RenderContext& renderContext);
         virtual void drawTransparent(RenderContext& renderContext);
+        virtual void getAABB(lmath::lm128& bmin, lmath::lm128& bmax);
 
         inline Model::pointer& getMesh();
         inline Skeleton::pointer& getSkeleton();

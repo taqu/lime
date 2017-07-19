@@ -30,9 +30,8 @@ namespace lfw
         static const s32 DefaultSet = 0;
 
         inline static u64 calcID(const Char* path);
-        inline static Resources& getInstance();
-        static bool initialize(s32 numSets, lcore::FileSystem* fileSystem);
-        static void terminate();
+        static Resources* create(s32 numSets, lcore::FileSystem* fileSystem);
+        static void destroy(Resources* resources);
 
         /**
         @brief Žæ“¾. ID‚Í•K‚¸—LŒø‚Å‚ ‚é‚±‚Æ.
@@ -126,8 +125,6 @@ namespace lfw
         friend class ResourceSet;
         friend class LoadRequest;
 
-        static Resources* instance_;
-
         explicit Resources(s32 numSets, lcore::FileSystem* fileSystem);
         ~Resources();
 
@@ -158,11 +155,6 @@ namespace lfw
     inline u64 Resources::calcID(const Char* path)
     {
         return calcHash(path);
-    }
-
-    inline Resources& Resources::getInstance()
-    {
-        return *instance_;
     }
 
     inline InputLayoutFactory& Resources::getInputLayoutFactory()

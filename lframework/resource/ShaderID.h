@@ -20,6 +20,7 @@ namespace lfw
         ShaderVS_DeferredUVSkinning,
         ShaderVS_DeferredNUV,
         ShaderVS_DeferredNUVSkinning,
+        ShaderVS_DeferredLighting,
 
         ShaderVS_Forward,
         ShaderVS_ForwardShadow,
@@ -35,6 +36,7 @@ namespace lfw
         ShaderVS_ForwardNUVSkinningShadow,
 
         ShaderVS_FullQuad,
+        ShaderVS_FullQuadInstanced,
         ShaderVS_Sprite2D,
         ShaderVS_Particle,
         ShaderVS_VolumeParticle,
@@ -46,7 +48,7 @@ namespace lfw
 
     enum ShaderGS
     {
-        ShaderGS_LighDepth =0,
+        ShaderGS_LightDepth =0,
         ShaderGS_Particle,
         ShaderGS_Num,
         ShaderGS_User = ShaderGS_Num,
@@ -59,7 +61,10 @@ namespace lfw
         ShaderPS_DeferredTexC,
         ShaderPS_DeferredTexCN,
         ShaderPS_DeferredShadowAccumulating,
-        ShaderPS_DeferredLighting,
+        ShaderPS_DeferredLightingDirectional,
+        ShaderPS_DeferredLightingPoint,
+        ShaderPS_DeferredLightingSpot,
+        ShaderPS_DeferredIntegration,
 
         ShaderPS_Forward,
         ShaderPS_ForwardShadow,
@@ -84,6 +89,8 @@ namespace lfw
 
     enum ShaderCS
     {
+        ShaderCS_LinearDepth,
+        ShaderCS_CameraMotion,
         ShaderCS_Num,
         ShaderCS_User = ShaderCS_Num,
     };
@@ -124,8 +131,8 @@ namespace lfw
         static const s32 sizeGS_[];
         static const u8* bytesPS_[];
         static const s32 sizePS_[];
-        //static const u8* bytesCS_[];
-        //static const s32 sizeCS_[];
+        static const u8* bytesCS_[];
+        static const s32 sizeCS_[];
         static const u8* bytesDS_[];
         static const s32 sizeDS_[];
         static const u8* bytesHS_[];

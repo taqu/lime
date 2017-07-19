@@ -23,6 +23,11 @@ namespace lfw
     class PrimitiveGeometry
     {
     public:
+        struct VertexP
+        {
+            f32 position_[3];
+        };
+
         struct Vertex
         {
             f32 position_[3];
@@ -31,9 +36,15 @@ namespace lfw
         };
 
         static ResourceModel* createPlane(f32 scale);
+        static void createLightSphere(Geometry& geometry, s32 resolution);
+        static void createLightCapsule(Geometry& geometry, s32 resolution);
+        static void createLightCone(Geometry& geometry, s32 resolution);
+
     private:
-        PrimitiveGeometry(const PrimitiveGeometry&);
-        PrimitiveGeometry& operator=(const PrimitiveGeometry&);
+        PrimitiveGeometry() = delete;
+        ~PrimitiveGeometry() = delete;
+        PrimitiveGeometry(const PrimitiveGeometry&) = delete;
+        PrimitiveGeometry& operator=(const PrimitiveGeometry&) = delete;
 
         static bool create(Model& model, f32 scale);
         static void createGeometry(

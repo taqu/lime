@@ -15,7 +15,6 @@ float4 main(VSOutput input) : SV_TARGET0
 {
     float4 albedo = texAlbedo.Sample(samLinear, input.uv) * diffuse;
 
-    float3 L = dlDir.xyz;
     float3 N = normalize(input.normal);
     float3 T = normalize(input.tangent);
     float3 B = normalize(input.binormal);
@@ -25,16 +24,28 @@ float4 main(VSOutput input) : SV_TARGET0
     N = mul(texNormal.Sample(samLinear, input.uv).xyz, tangentToWorld);
 
     float3 V = normalize(cameraPos.xyz - input.worldPos.xyz);
-    float roughness = specular.w;
-    float metalic = shadow.w;
-    float ambientOcclusion = 1.0;
+
+    Material material;
+    material.albedo = albedo.rgb;
+    material.specular = specular.rgb;
+    material.roughness = specular.w;
+    material.metalic = shadow.w;
+    material.ambientOcclusion = 1;
+
+    DirectionalLight dlight;
+    dlight.color = dlColor;
+    dlight.direction = dlDir;
+    IncidentLight incidentLight;
+    irradianceDirectionalLight(incidentLight, dlight);
+
+    float shadowAttenuation = 1;
 
     EnvironmentLight envLight;
     envLight.diffuse_ = irradianceDiffuse(texIrradiance, samLinear, N);
-    envLight.specular_ = radianceSpecular(texRadiance, samLinear, N, V, roughness, specularMapMipLevels);
+    envLight.specular_ = radianceSpecular(texRadiance, samLinear, N, V, material.roughness, specularMapMipLevels);
 
     float4 color;
-    color.rgb = lightSurface(N, V, L, dlColor.xyz, albedo.xyz, roughness, metalic, ambientOcclusion, envLight);
+    color.rgb = lightSurface(N, V, incidentLight, material, shadowAttenuation, envLight);
     color.a = albedo.w;
     return color;
 }

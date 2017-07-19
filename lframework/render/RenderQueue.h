@@ -55,7 +55,7 @@ namespace lfw
         inline const Camera& getCamera() const;
         void setCamera(const Camera* camera);
         inline const ShadowMap& getShadowMap();
-        inline void setShadowMap(const ShadowMap* shadowMap);
+        inline void setShadowMap(ShadowMap* shadowMap);
         inline const Frustum& getWorldFrustum() const;
 
         inline const Queue& operator[](s32 index) const;
@@ -66,7 +66,7 @@ namespace lfw
         Queue queues_[RenderPath_Num];
 
         const Camera* camera_;
-        const ShadowMap* shadowMap_;
+        ShadowMap* shadowMap_;
 
         Frustum worldFrustum_;
     };
@@ -102,7 +102,7 @@ namespace lfw
         return *shadowMap_;
     }
 
-    inline void RenderQueue::setShadowMap(const ShadowMap* shadowMap)
+    inline void RenderQueue::setShadowMap(ShadowMap* shadowMap)
     {
         shadowMap_ = shadowMap;
     }

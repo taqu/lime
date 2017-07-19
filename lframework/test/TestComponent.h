@@ -14,13 +14,18 @@ namespace lfw
     protected:
         virtual void SetUp()
         {
-            ECSManager::create(ECSManager::defaultInitParam());
+            ecsManager_ = ECSManager::create(ECSManager::defaultInitParam());
+            System::setECSManager(ecsManager_);
         }
 
         virtual void TearDown()
         {
-            ECSManager::destroy();
+            ECSManager::destroy(ecsManager_);
+            ecsManager_ = NULL;
+            System::clear();
         }
+
+        ECSManager* ecsManager_;
     };
 
     TEST_F(TestComponent, CreateComponent)
@@ -28,7 +33,7 @@ namespace lfw
         static const s32 numSamples = 256;
         Entity entities[numSamples];
         Char str[numSamples][NameString::Size];
-        ECSManager& ecsManager = ECSManager::getInstance();
+        ECSManager& ecsManager = *ecsManager_;
 
         for(s32 i=0; i<numSamples; ++i){
             entities[i] = ecsManager.requestCreateLogical("");
@@ -37,7 +42,7 @@ namespace lfw
             ComponentLogical* componentLogical = entities[i].getLogical();
             EXPECT_FALSE(NULL == componentLogical);
             componentLogical->getName().print("name%d", i);
-            sprintf(str[i], "name%d", i);
+            sprintf_s(str[i], "name%d", i);
         }
 
         for(s32 i=0; i<numSamples; ++i){

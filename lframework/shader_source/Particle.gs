@@ -2,7 +2,6 @@
 
 struct VSOutput
 {
-    float3 position : POSITION;
     float4 texcoord : TEXCOORD;
     float4 color : COLOR;
     float2 size : SIZE;
@@ -11,10 +10,10 @@ struct VSOutput
 
 struct GSOutput
 {
-    float4 position : SV_Position;
+    float4 position0 : SV_Position;
     float4 color : COLOR;
-    float4 texcoord : TEXCOORD0;
-    float depth : TEXCOORD1;
+    float2 texcoord : TEXCOORD0;
+    float4 position : TEXCOORD1;
 };
 
 [maxvertexcount(4)]
@@ -39,10 +38,9 @@ void main(point VSOutput input[1], inout TriangleStream<GSOutput> outputStream)
     float4x4 mvp = mul(input[0].mat, mvp1);
     for(int i=0; i<4; ++i){
         float4 position = mul(pos[i], mvp);
+        output.position0 = position;
+        output.texcoord = texcoords[i];
         output.position = position;
-        output.texcoord.xy = texcoords[i];
-        output.texcoord.zw = output.position.xy/output.position.w;
-        output.depth = position.z/position.w;//distance(position.xyz, cameraPos.xyz);
         outputStream.Append(output);
     }
     outputStream.RestartStrip();

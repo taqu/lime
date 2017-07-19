@@ -4,8 +4,11 @@
 @date 2017/01/17 create
 */
 #include <Windows.h>
+#include <lframework/System.h>
 #include <lframework/Application.h>
 #include <lframework/ecs/ECSManager.h>
+#include <lframework/ecs/ComponentGeometric.h>
+#include <lframework/ecs/ComponentLogical.h>
 #include "Viewer.h"
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
@@ -29,11 +32,11 @@ INT WinMain(HINSTANCE /*hInstance*/, HINSTANCE /*hPrevInstance*/, PSTR /*lpCmdLi
         if(!lfw::Application::initApplication(initParam, "Alpha", WndProc)){
             return 0;
         }
-        lfw::Application& application = lfw::Application::getInstance();
+        lfw::Application& application = lfw::System::getApplication();
         {
-            application.getFileSystem ().mountOS (0, "data");
+            lfw::System::getFileSystem().mountOS(0, "data");
 
-            lfw::Entity viewerEntity = application.getECSManager ().requestCreateGeometric("Viewer");
+            lfw::Entity viewerEntity = lfw::System::getECSManager().requestCreateGeometric("Viewer");
             viewerEntity.addComponent<viewer::Viewer>();
         }
 
@@ -65,15 +68,16 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
     case WM_DROPFILES:
     {
-        lcore::Char filename[256];
+        lcore::Char filepath[256];
         HDROP hDrop = (HDROP)wParam;
         UINT  num = DragQueryFile(hDrop, (UINT)-1, NULL, 0);
         for(lcore::u32 i=0; i<num; ++i){
-            DragQueryFile(hDrop, i, filename, sizeof(filename));
-            lcore::s32 length = lcore::strlen_s32(filename);
-            const lcore::Char* ext = lcore::getExtension(length, filename);
-            if(0 == lcore::strncmp(ext, "lm", 3)){
-                lcore::Log("dropped");
+            DragQueryFile(hDrop, i, filepath, sizeof(filepath));
+            lcore::replace(filepath, '/', '\\');
+            lfw::ComponentGeometric* geomViewer = lfw::ComponentGeometric::find("/Viewer");
+            if(NULL != geomViewer){
+                viewer::Viewer* viewer = geomViewer->getEntity().getComponent<viewer::Viewer>();
+                viewer->setModelPath(filepath);
             }
         }
         DragFinish(hDrop);

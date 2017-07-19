@@ -14,9 +14,8 @@ DeferredOutput main(VSOutput input)
     output.albedo.xyz = diffuse.xyz;
     output.albedo.w = shadow.w;
     output.specular = specular;
-    output.normal.xyz = normalize(input.normal);
-    output.normal.w = shadow.x;
+    output.depthNormal.xy = encode16bit(input.position1.x/input.position1.y);
+    output.depthNormal.zw = encodeNormal(normalize(input.normal));
     output.velocity = input.velocity;
-    output.depth = input.position1.x/input.position1.y;
     return output;
 }

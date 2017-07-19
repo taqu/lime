@@ -8,6 +8,7 @@
 #include "TestTreeComponent.h"
 #include "TestComponentBehavior.h"
 #include "TestResources.h"
+#include "TestOctree.h"
 
 int main(int argc, char** argv)
 {

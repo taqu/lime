@@ -11,36 +11,38 @@
 #include <lgraphics/ShaderRef.h>
 #include <lgraphics/ConstantBufferTableSet.h>
 
-#include "render/ShaderConstant.h"
+#include "System.h"
+#include "resource/Resources.h"
 #include "animation/lanim.h"
 #include "render/ShadowMap.h"
 #include "render/Camera.h"
 #include "render/Light.h"
+#include "render/Geometry.h"
+#include "resource/PrimitiveGeometry.h"
 
 namespace lfw
 {
     RenderContext::RenderContext()
         :renderPath_(0)
-        ,camera_(NULL)
-        ,shadowMap_(NULL)
+        ,geomLightSphere_(NULL)
         ,context_(NULL)
         ,constantBufferTableSet_(NULL)
         ,depthShaderGS_(NULL)
-        //,sceneConstantBufferVS_(NULL)
-        //,sceneConstantBufferDS_(NULL)
-        //,sceneConstantBufferPS_(NULL)
-        //,lightClusterConstantBufferPS_(NULL)
+        ,renderQueue_(NULL)
     {
     }
 
     RenderContext::~RenderContext()
     {
+        LDELETE(geomLightSphere_);
     }
 
     void RenderContext::initialize(lgfx::ContextRef* context)
     {
         context_ = context;
 
+        geomLightSphere_ = LNEW Geometry;
+        PrimitiveGeometry::createLightSphere(*geomLightSphere_, 0);
         samplerSet_.create(
             0,
             lgfx::TexFilter_MinMagMipPoint,
@@ -63,8 +65,13 @@ namespace lfw
             lgfx::TexAddress_Clamp,
             lgfx::TexAddress_Clamp,
             lgfx::TexAddress_Clamp,
-            lgfx::Cmp_Less,
+            lgfx::Cmp_Greater,
             0.0f);
+
+        lfw::ShaderManager& shaderManager = lfw::System::getResources().getShaderManager();
+        depthShaderVS_[DepthShader_Normal] = &shaderManager.getVS(lfw::ShaderVS_LightDepth);
+        depthShaderVS_[DepthShader_Skinning] = &shaderManager.getVS(lfw::ShaderVS_LightDepthSkinning);
+        depthShaderGS_ = &shaderManager.getGS(lfw::ShaderGS_LightDepth);
     }
 
     void RenderContext::terminate()
@@ -87,7 +94,9 @@ namespace lfw
             constants->velocityScale_ = 1.0f;
             constants->velocityMaxMagnitude_ = 100.0f;
             constant->unmap(*context_, 0);
-            setConstantBuffer(Shader_VS, 0, constant);
+            context_->setVSConstantBuffers(0, 1, *constant);
+            context_->setPSConstantBuffers(0, 1, *constant);
+            context_->setCSConstantBuffers(0, 1, *constant);
         }
     }
 
@@ -110,17 +119,20 @@ namespace lfw
             camera.getViewProjMatrix().getInvert(constants->invvp1_);
 
             copyAlignedDst16(constants->cameraPos_, camera.getEyePosition());
-            camera.getRTSize(constants->screenWidth_, constants->screenHeight_);
+            const lgfx::Viewport& viewport = camera.getViewport();
+            constants->screenWidth_ = viewport.width_;
+            constants->screenHeight_ = viewport.height_;
             constants->screenInvWidth_ = 1.0f/constants->screenWidth_;
             constants->screenInvHeight_ = 1.0f/constants->screenHeight_;
+            constants->linearZParam_ = camera.getLinearZParameter();
             constant->unmap(*context_, 0);
 
-            setConstantBuffer(Shader_VS, 2, constant);
-            setConstantBuffer(Shader_HS, 2, constant);
-            setConstantBuffer(Shader_DS, 2, constant);
-            setConstantBuffer(Shader_GS, 2, constant);
-            setConstantBuffer(Shader_PS, 2, constant);
-            setConstantBuffer(Shader_CS, 2, constant);
+            context_->setVSConstantBuffers(2, 1, *constant);
+            context_->setHSConstantBuffers(2, 1, *constant);
+            context_->setDSConstantBuffers(2, 1, *constant);
+            context_->setGSConstantBuffers(2, 1, *constant);
+            context_->setPSConstantBuffers(2, 1, *constant);
+            context_->setCSConstantBuffers(2, 1, *constant);
         }
     }
 
@@ -136,10 +148,19 @@ namespace lfw
 
         lgfx::MappedSubresource mapped;
         if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
-            shadowMap_->getLightViewProjectionAlign16(reinterpret_cast<lmath::Matrix44*>(mapped.data_));
+            PerShadowMapConstant* shadowMapConstants = reinterpret_cast<PerShadowMapConstant*>(mapped.data_);
+            shadowMap_.getLightViewProjectionAlign16(shadowMapConstants->lvp_);
+            shadowMap_.getCascadeScalesAlign16(shadowMapConstants->cascadeScales_);
+            _mm_store_ps(&shadowMapConstants->shadowMapLightDir_.x_, _mm_loadu_ps(&shadowMap_.getLightDirection().x_));
+
+            shadowMapConstants->shadowMapSize_ = shadowMap_.getResolution();
+            shadowMapConstants->invShadowMapSize_ = shadowMap_.getInvResolution();
+            shadowMapConstants->shadowMapDepthBias_ = shadowMap_.getDepthBias();
+            shadowMapConstants->shadowMapSlopeScaledDepthBias_ = shadowMap_.getSlopeScaledDepthBias();
+
             constant->unmap(*context_, 0);
-            setConstantBuffer(Shader_VS, 1, constant);
-            setConstantBuffer(Shader_PS, 3, constant);
+            context_->setVSConstantBuffers(3, 1, *constant);
+            context_->setPSConstantBuffers(3, 1, *constant);
         }
     }
 
@@ -149,47 +170,52 @@ namespace lfw
         switch(renderPath_)
         {
         case RenderPath_Shadow:
-            context_->setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWEnable);
+            context_->setRenderTargets(0, NULL, shadowMap_.getDSV());
+            context_->setViewport(0, 0, shadowMap_.getResolution(), shadowMap_.getResolution());
+            context_->clearDepthStencilView(shadowMap_.getDSV(), lgfx::ClearFlag_Depth, 0.0f, 0);
+
+            context_->setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWEnableReverseZ);
+            context_->setRasterizerState(lgfx::ContextRef::Rasterizer_DepthMap);
             context_->setGeometryShader(depthShaderGS_->get());
             context_->setPixelShader(NULL);
             break;
         case RenderPath_Opaque:
             context_->setGeometryShader(NULL);
-            resetDefaultSamplerSet();
+            setDefaultSampler(Shader_PS);
             break;
         default:
-            context_->setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWDisable);
+            context_->setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWDisableReverseZ);
             context_->setGeometryShader(NULL);
-            resetDefaultSamplerSet();
+            setDefaultSampler(Shader_PS);
             break;
         }
     }
 
-    void RenderContext::beginDeferredLighting(const Light& light)
-    {
-        LASSERT(NULL != context_);
-        LASSERT(NULL != constantBufferTableSet_);
+    //void RenderContext::beginDeferredLighting(const Light& light)
+    //{
+    //    LASSERT(NULL != context_);
+    //    LASSERT(NULL != constantBufferTableSet_);
 
-        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerLightConstant));
-        if(NULL == constant){
-            return;
-        }
+    //    lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerLightConstant));
+    //    if(NULL == constant){
+    //        return;
+    //    }
 
-        PerLightConstant perLightConstant;
-        perLightConstant.dlDir_ = -light.getDirection();
-        perLightConstant.dlColor_ = light.getColor();
+    //    PerLightConstant perLightConstant;
+    //    perLightConstant.dlDir_ = -light.getDirection();
+    //    perLightConstant.dlColor_ = light.getColor();
 
-        lgfx::MappedSubresource mapped;
-        if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
-            copyAlignedDstAlignedSrc16(mapped.data_, &perLightConstant, sizeof(PerLightConstant));
-            constant->unmap(*context_, 0);
-            context_->setPSConstantBuffers(1, 1, (*constant));
-        }
-    }
+    //    lgfx::MappedSubresource mapped;
+    //    if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
+    //        copyAlignedDstAlignedSrc16(mapped.data_, &perLightConstant, sizeof(PerLightConstant));
+    //        constant->unmap(*context_, 0);
+    //        context_->setPSConstantBuffers(1, 1, (*constant));
+    //    }
+    //}
 
-    void RenderContext::endDeferredLighting(const Light& /*light*/)
-    {
-    }
+    //void RenderContext::endDeferredLighting(const Light& /*light*/)
+    //{
+    //}
 
     //void RenderContext::setSceneConstantDS(const Scene& scene)
     //{
@@ -306,6 +332,33 @@ namespace lfw
         }
     }
 
+    bool RenderContext::setConstant(Shader shader, s32 index, u32 size, s32 num, s32 maxNum, const void* data)
+    {
+        LASSERT(NULL != context_);
+        LASSERT(NULL != constantBufferTableSet_);
+        LASSERT(NULL != data);
+        LASSERT(0<=num && num<=maxNum);
+
+#ifdef _DEBUG
+        size *= maxNum;
+#else
+        size *= num;
+#endif
+        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(size);
+        if(NULL == constant){
+            return false;
+        }
+
+        lgfx::MappedSubresource mapped;
+        if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
+            copyAlignedDst16(mapped.data_, data, size);
+            constant->unmap(*context_, 0);
+            return setConstantBuffer(shader, index, constant);
+        }else{
+            return false;
+        }
+    }
+
     bool RenderContext::setConstantAligned16(Shader shader, s32 index, u32 size, const void* data)
     {
         LASSERT(NULL != context_);
@@ -327,14 +380,46 @@ namespace lfw
         }
     }
 
-    bool RenderContext::setConstantMatricesAligned16(Shader shader, s32 userIndex, s32 num, const lmath::Matrix34* matrices)
+    bool RenderContext::setConstantAligned16(Shader shader, s32 index, u32 size, s32 num, s32 maxNum, const void* data)
     {
         LASSERT(NULL != context_);
         LASSERT(NULL != constantBufferTableSet_);
+        LASSERT(NULL != data);
+        LASSERT(0<=num && num<=maxNum);
+#ifdef _DEBUG
+        size *= maxNum;
+#else
+        size *= num;
+#endif
+        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(size);
+        if(NULL == constant){
+            return false;
+        }
+
+        lgfx::MappedSubresource mapped;
+        if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
+            copyAlignedDstAlignedSrc16(mapped.data_, data, size);
+            constant->unmap(*context_, 0);
+            return setConstantBuffer(shader, index, constant);
+        }else{
+            return false;
+        }
+    }
+
+    bool RenderContext::setConstantMatricesAligned16(Shader shader, s32 userIndex, s32 num, s32 maxNum, const lmath::Matrix34* matrices)
+    {
+        LASSERT(NULL != context_);
+        LASSERT(NULL != constantBufferTableSet_);
+        LASSERT(0<=num && num<=maxNum);
         LASSERT(NULL != matrices);
 
+//#ifdef _DEBUG
+//        u32 size = LANIM_MAX_SKINNING_MATRICES*sizeof(lmath::Matrix34);
+//#else
+//        u32 size = num*sizeof(lmath::Matrix34);
+//#endif
 #ifdef _DEBUG
-        u32 size = LANIM_MAX_SKINNING_MATRICES*sizeof(lmath::Matrix34);
+        u32 size = maxNum*sizeof(lmath::Matrix34);
 #else
         u32 size = num*sizeof(lmath::Matrix34);
 #endif
@@ -348,7 +433,7 @@ namespace lfw
 #ifdef _DEBUG
             copyAlignedDstAlignedSrc16(mapped.data_, matrices, num*sizeof(lmath::Matrix34));
             lmath::Matrix34* m = reinterpret_cast<lmath::Matrix34*>(mapped.data_);
-            for(s32 i=num; i<LANIM_MAX_SKINNING_MATRICES; ++i){
+            for(s32 i=num; i<maxNum; ++i){
                 m[i].identity();
             }
 #else
@@ -366,8 +451,53 @@ namespace lfw
         depthShaderVS_[type]->attach(*context_);
     }
 
-    void RenderContext::resetDefaultSamplerSet()
+    void RenderContext::setDefaultSampler(Shader shader)
     {
-        context_->setPSSamplers(0, samplerSet_.getNumSamplers(), samplerSet_.getSamplers());
+        switch(shader)
+        {
+        case Shader_VS:
+            context_->setVSSamplers(0, samplerSet_.getNumSamplers(), samplerSet_.getSamplers());
+            break;
+        case Shader_HS:
+            context_->setHSSamplers(0, samplerSet_.getNumSamplers(), samplerSet_.getSamplers());
+            break;
+        case Shader_DS:
+            context_->setDSSamplers(0, samplerSet_.getNumSamplers(), samplerSet_.getSamplers());
+            break;
+        case Shader_GS:
+            context_->setGSSamplers(0, samplerSet_.getNumSamplers(), samplerSet_.getSamplers());
+            break;
+        case Shader_PS:
+            context_->setPSSamplers(0, samplerSet_.getNumSamplers(), samplerSet_.getSamplers());
+            break;
+        case Shader_CS:
+            context_->setCSSamplers(0, samplerSet_.getNumSamplers(), samplerSet_.getSamplers());
+            break;
+        }
+    }
+
+    void RenderContext::clearDefaultSampler(Shader shader)
+    {
+        switch(shader)
+        {
+        case Shader_VS:
+            context_->clearVSSamplers(0, samplerSet_.getNumSamplers());
+            break;
+        case Shader_HS:
+            context_->clearHSSamplers(0, samplerSet_.getNumSamplers());
+            break;
+        case Shader_DS:
+            context_->clearDSSamplers(0, samplerSet_.getNumSamplers());
+            break;
+        case Shader_GS:
+            context_->clearGSSamplers(0, samplerSet_.getNumSamplers());
+            break;
+        case Shader_PS:
+            context_->clearPSSamplers(0, samplerSet_.getNumSamplers());
+            break;
+        case Shader_CS:
+            context_->clearCSSamplers(0, samplerSet_.getNumSamplers());
+            break;
+        }
     }
 }

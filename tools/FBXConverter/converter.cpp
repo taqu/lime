@@ -42,7 +42,7 @@ namespace
 
     void copyName(Char* dst, const Char* src)
     {
-        u32 len = lcore::strlen(src);
+        s32 len = lcore::strlen_s32(src);
         len = lcore::minimum(len, MaxNameLength);
         lcore::strncpy(dst, MaxNameSize, src, len);
         dst[len]=lcore::CharNull;
@@ -90,24 +90,24 @@ namespace
 
         lmath::Vector3 t0[3] =
         {
-            lmath::Vector3(p0.x_, uv0.x_, uv0.y_),
-            lmath::Vector3(p0.y_, uv0.x_, uv0.y_),
-            lmath::Vector3(p0.z_, uv0.x_, uv0.y_),
+            lmath::Vector3::construct(p0.x_, uv0.x_, uv0.y_),
+            lmath::Vector3::construct(p0.y_, uv0.x_, uv0.y_),
+            lmath::Vector3::construct(p0.z_, uv0.x_, uv0.y_),
         };
 
         lmath::Vector3 t1[3] =
         {
-            lmath::Vector3(p1.x_, uv1.x_, uv1.y_),
-            lmath::Vector3(p1.y_, uv1.x_, uv1.y_),
-            lmath::Vector3(p1.z_, uv1.x_, uv1.y_),
+            lmath::Vector3::construct(p1.x_, uv1.x_, uv1.y_),
+            lmath::Vector3::construct(p1.y_, uv1.x_, uv1.y_),
+            lmath::Vector3::construct(p1.z_, uv1.x_, uv1.y_),
         };
 
 
         lmath::Vector3 t2[3] =
         {
-            lmath::Vector3(p2.x_, uv2.x_, uv2.y_),
-            lmath::Vector3(p2.y_, uv2.x_, uv2.y_),
-            lmath::Vector3(p2.z_, uv2.x_, uv2.y_),
+            lmath::Vector3::construct(p2.x_, uv2.x_, uv2.y_),
+            lmath::Vector3::construct(p2.y_, uv2.x_, uv2.y_),
+            lmath::Vector3::construct(p2.z_, uv2.x_, uv2.y_),
         };
 
 
@@ -130,7 +130,7 @@ namespace
     void extractFileName(Char* filename, s32 size, const Char* filepath)
     {
         const Char* name = filepath;
-        s32 len = lcore::strlen(filepath);
+        s32 len = lcore::strlen_s32(filepath);
         for(s32 i=len-1; 0<=i; --i){
             if(filepath[i] == '\\' || filepath[i] == lcore::PathDelimiter){
                 name = filepath + i + 1;
@@ -138,7 +138,7 @@ namespace
             }
         }
 
-        len = lcore::strlen(name);
+        len = lcore::strlen_s32(name);
         len = lcore::minimum(len, size-1);
         for(s32 i=0; i<len; ++i){
             filename[i] = name[i];
@@ -148,8 +148,8 @@ namespace
 
     void convertExtension(Char* filename, s32 size, const Char* ext)
     {
-        s32 len = lcore::strlen(filename);
-        s32 extLen = lcore::strlen(ext);
+        s32 len = lcore::strlen_s32(filename);
+        s32 extLen = lcore::strlen_s32(ext);
 
         s32 s = len;
         for(s32 i=len-1; 0<=i; --i){
@@ -200,7 +200,7 @@ namespace
             return;
         }
 
-        u32 index = poses_.size();
+        u32 index = static_cast<s32>(poses_.size());
         for(u32 i=0; i<poses_.size(); ++i){
             if(lmath::isEqual(poses_[i].time_, time, LANIM_ANIMATION_TIME_EPSILON)){
                 poses_[i].translation_ = translation;
@@ -551,7 +551,7 @@ namespace
                     //joint.rotation_.normalize();
                     for(s32 l=0; l<3; ++l){
                         for(s32 m=0; m<4; ++m){
-                            joint.initialMatrix_.m_[l][m] = boneBindPose[m][l];
+                            joint.initialMatrix_.m_[l][m] = static_cast<f32>(boneBindPose[m][l]);
                         }
                     }
                 }else{
@@ -791,8 +791,8 @@ namespace
             v += DimPosition;
         }
 
-        geometry.numVertices_ = geometry.positions_.size()/DimPosition;
-        geometry.numIndices_ = geometry.indices_.size();
+        geometry.numVertices_ = static_cast<u32>(geometry.positions_.size()/DimPosition);
+        geometry.numIndices_ = static_cast<u32>(geometry.indices_.size());
 
         for(int i=0; i<mesh->GetLayerCount(); ++i){
             FbxLayer* layer = mesh->GetLayer(i);
@@ -1299,6 +1299,7 @@ namespace
 
                             geometry.texcoords_[index + 0] = lcore::toBinary16Float( static_cast<f32>(uv[0]) );
                             geometry.texcoords_[index + 1] = lcore::toBinary16Float( static_cast<f32>(uv[1]) );
+                            //FBXSDK_printf("uv (%f, %f)\n", static_cast<f32>(uv[0]), static_cast<f32>(uv[1]));
                             ++count;
                         }
                     }
@@ -1374,11 +1375,11 @@ namespace
         s16 geometryIndex = pushGeometry(src);
         GeometryCVT& geometry = geometries_[geometryIndex];
 
-        int meshStart = meshes_.size();
-        int numMeshes = 0;
+        s32 meshStart = static_cast<s32>(meshes_.size());
+        s32 numMeshes = 0;
 
-        int numMaterialLayers = 0;
-        int layerCount = mesh->GetLayerCount();
+        s32 numMaterialLayers = 0;
+        s32 layerCount = mesh->GetLayerCount();
         for(int i=0; i<layerCount; ++i){
             FbxLayer* layer = mesh->GetLayer(i);
             s32 materialCount = src->GetMaterialCount();
@@ -1407,9 +1408,9 @@ namespace
 
                 s32 numPolygons = mesh->GetPolygonCount();
 
-                for(s32 i=0; i<numPolygons; ++i){
-                    s32 num = mesh->GetPolygonSize(i);
-                    U16Vector& indices = indexVectors[ indexArray.GetAt(i) ];
+                for(s32 j=0; j<numPolygons; ++j){
+                    s32 num = mesh->GetPolygonSize(j);
+                    U16Vector& indices = indexVectors[ indexArray.GetAt(j) ];
 
                     switch(num)
                     {
@@ -1418,7 +1419,7 @@ namespace
 
                     case 1:
                         {
-                            u16 index = static_cast<u16>( mesh->GetPolygonVertex(i, 0) );
+                            u16 index = static_cast<u16>( mesh->GetPolygonVertex(j, 0) );
                             indices.push_back(index);
                             indices.push_back(index);
                             indices.push_back(index);
@@ -1427,8 +1428,8 @@ namespace
 
                     case 2:
                         {
-                            u16 index0 = static_cast<u16>( mesh->GetPolygonVertex(i, 0) );
-                            u16 index1 = static_cast<u16>( mesh->GetPolygonVertex(i, 1) );
+                            u16 index0 = static_cast<u16>( mesh->GetPolygonVertex(j, 0) );
+                            u16 index1 = static_cast<u16>( mesh->GetPolygonVertex(j, 1) );
                             indices.push_back(index0);
                             indices.push_back(index1);
                             indices.push_back(index1);
@@ -1437,10 +1438,10 @@ namespace
 
                     default:
                         {
-                            u16 index0 = static_cast<u16>( mesh->GetPolygonVertex(i, 0) );
-                            for(s32 j=2; j<num; ++j){
-                                u16 index1 = static_cast<u16>( mesh->GetPolygonVertex(i, j-1) );
-                                u16 index2 = static_cast<u16>( mesh->GetPolygonVertex(i, j) );
+                            u16 index0 = static_cast<u16>( mesh->GetPolygonVertex(j, 0) );
+                            for(s32 k=2; k<num; ++k){
+                                u16 index1 = static_cast<u16>( mesh->GetPolygonVertex(j, k-1) );
+                                u16 index2 = static_cast<u16>( mesh->GetPolygonVertex(j, k) );
                                 indices.push_back(index0);
                                 indices.push_back(index1);
                                 indices.push_back(index2);
@@ -1465,7 +1466,7 @@ namespace
                     }
                 }
 
-                u32 indexOffset = geometry.indices_.size();
+                u32 indexOffset = static_cast<u32>(geometry.indices_.size());
                 for(u32 j=0; j<indexVectors[i].size(); ++j){
                     geometry.indices_.push_back(indexVectors[i][j]);
                 }
@@ -1474,20 +1475,20 @@ namespace
                 meshCVT.geometry_ = geometryIndex;
                 meshCVT.material_ = static_cast<s16>(materialIndex);
                 meshCVT.indexOffset_ = indexOffset;
-                meshCVT.numIndices_ = indexVectors[i].size();
+                meshCVT.numIndices_ = static_cast<u32>(indexVectors[i].size());
                 calcSphere(meshCVT);
                 meshes_.push_back(meshCVT);
                 ++numMeshes;
             }
-            geometry.numIndices_ = geometry.indices_.size();
+            geometry.numIndices_ = static_cast<u32>(geometry.indices_.size());
             LDELETE_ARRAY(indexVectors);
 
         }else{
-            int materialIndex = 0;
+            s16 materialIndex = 0;
             if(0<src->GetMaterialCount()){
                 FbxSurfaceMaterial* material = src->GetMaterial(0);
 
-                for(int i=0; i<scene_->GetMaterialCount(); ++i){
+                for(s16 i=0; i<scene_->GetMaterialCount(); ++i){
                     if(material == scene_->GetMaterial(i)){
                         materialIndex = i;
                         break;
@@ -1499,7 +1500,7 @@ namespace
             meshCVT.geometry_ = geometryIndex;
             meshCVT.material_ = materialIndex;
             meshCVT.indexOffset_ = 0;
-            meshCVT.numIndices_ = geometry.indices_.size();
+            meshCVT.numIndices_ = static_cast<u32>(geometry.indices_.size());
             calcSphere(meshCVT);
             meshes_.push_back(meshCVT);
         }
@@ -1528,11 +1529,11 @@ namespace
 
                 FbxDouble3 diffuse = phong->Diffuse.Get();
 
-                f32 bumpFactor = static_cast<f32>(phong->BumpFactor.Get());
-                f32 specularFactor = static_cast<f32>(phong->SpecularFactor.Get());
+                //f32 bumpFactor = static_cast<f32>(phong->BumpFactor.Get());
+                //f32 specularFactor = static_cast<f32>(phong->SpecularFactor.Get());
                 f32 shininess = static_cast<f32>(phong->Shininess.Get());
                 FbxDouble3 reflection = phong->Reflection.Get();
-                f32 reflectionFactor = static_cast<f32>(phong->ReflectionFactor.Get());
+                //f32 reflectionFactor = static_cast<f32>(phong->ReflectionFactor.Get());
 
                 material.diffuse_.set(
                     static_cast<f32>(phong->Diffuse.Get()[0]),
@@ -1607,7 +1608,7 @@ namespace
                 s32 fileTextureCount = prop.GetSrcObjectCount<FbxFileTexture>();//prop.GetSrcObjectCount(FbxFileTexture::ClassId);
                 if(0<fileTextureCount){
                     FbxFileTexture* color = prop.GetSrcObject<FbxFileTexture>();//(FbxFileTexture*)prop.GetSrcObject(FbxFileTexture::ClassId, 0);
-                    material.textureIDs_[TextureType_Albedo] = findTexture(color);
+                    material.textureIDs_[TextureType_Albedo] = static_cast<s8>(findTexture(color));
                 }
             }
 
@@ -1616,7 +1617,7 @@ namespace
                 s32 fileTextureCount = prop.GetSrcObjectCount<FbxFileTexture>();//prop.GetSrcObjectCount(FbxFileTexture::ClassId);
                 if(0<fileTextureCount){
                     FbxFileTexture* normal = prop.GetSrcObject<FbxFileTexture>();//(FbxFileTexture*)prop.GetSrcObject(FbxFileTexture::ClassId, 0);
-                    material.textureIDs_[TextureType_Normal] = findTexture(normal);
+                    material.textureIDs_[TextureType_Normal] = static_cast<s8>(findTexture(normal));
                 }
             }
             materials_.push_back(material);
@@ -1705,8 +1706,24 @@ namespace
         geometry.vsize_ = vsize;
     }
 
+#if 0
+#define ENABLE_MODEL_LOG
+#define PRINT0(MSG) log_.print(MSG)
+#define PRINT1(MSG, P0) log_.print(MSG, (P0))
+#define PRINT2(MSG, P0, P1) log_.print(MSG, (P0), (P1))
+#define PRINT3(MSG, P0, P1, P2) log_.print(MSG, (P0), (P1), (P2))
+#else
+#define PRINT0(MSG)
+#define PRINT1(MSG, P0)
+#define PRINT2(MSG, P0, P1)
+#define PRINT3(MSG, P0, P1, P2)
+#endif
     bool Converter::out(const Char* path)
     {
+#ifdef ENABLE_MODEL_LOG 
+        log_.open("model_log.txt");
+#endif
+
         LASSERT(NULL != path);
         std::ofstream file(path, std::ios::binary);
         if(!file.is_open()){
@@ -1718,7 +1735,7 @@ namespace
         header.minor_ = 0;
         
         u32 offset = sizeof(LoadHeader);
-        header.elems_[Elem_Geometry].number_ = geometries_.size();
+        header.elems_[Elem_Geometry].number_ = static_cast<u32>(geometries_.size());
         header.elems_[Elem_Geometry].offset_ = offset;
 
         for(u32 i=0; i<geometries_.size(); ++i){
@@ -1728,31 +1745,31 @@ namespace
             offset += sizeof(u16) * geometries_[i].numIndices_;
         }
 
-        header.elems_[Elem_Material].number_ = materials_.size();
+        header.elems_[Elem_Material].number_ = static_cast<u32>(materials_.size());
         header.elems_[Elem_Material].offset_ = offset;
         for(u32 i=0; i<materials_.size(); ++i){
             offset += sizeof(LoadMaterial);
         }
 
-        header.elems_[Elem_Mesh].number_ = meshes_.size();
+        header.elems_[Elem_Mesh].number_ = static_cast<u32>(meshes_.size());
         header.elems_[Elem_Mesh].offset_ = offset;
         for(u32 i=0; i<meshes_.size(); ++i){
             offset += sizeof(LoadMesh);
         }
 
-        header.elems_[Elem_Node].number_ = nodes_.size();
+        header.elems_[Elem_Node].number_ = static_cast<u32>(nodes_.size());
         header.elems_[Elem_Node].offset_ = offset;
         for(u32 i=0; i<nodes_.size(); ++i){
             offset += sizeof(LoadNode);
         }
 
-        header.elems_[Elem_Joint].number_ = joints_.size();
+        header.elems_[Elem_Joint].number_ = static_cast<u32>(joints_.size());
         header.elems_[Elem_Joint].offset_ = offset;
         for(u32 i=0; i<joints_.size(); ++i){
             offset += sizeof(LoadJoint);
         }
 
-        header.elems_[Elem_Texture].number_ = textures_.size();
+        header.elems_[Elem_Texture].number_ = static_cast<u32>(textures_.size());
         header.elems_[Elem_Texture].offset_ = offset;
         for(u32 i=0; i<textures_.size(); ++i){
             offset += sizeof(LoadTexture);
@@ -1764,10 +1781,12 @@ namespace
         u16 tmp[4] = {0,0,0,0};
         for(u32 i=0; i<geometries_.size(); ++i){
             write(file, geometries_[i], sizeof(LoadGeometry));
-
+            PRINT1("geometry [%d]\n",i);
             for(u32 j=0; j<geometries_[i].numVertices_; ++j){
                 f32* position = &(geometries_[i].positions_[DimPosition*j]);
                 writeBuffer(file, position, VSize_Position);
+                PRINT1("[%d] ", j);
+                PRINT3("pos(%f, %f, %f) ", position[0], position[1], position[2]);
 
                 if(0 < geometries_[i].normals_.size()){
                     f32* normal = &(geometries_[i].normals_[DimNormal*j]);
@@ -1775,6 +1794,7 @@ namespace
                     tmp[1] = lcore::toBinary16Float(normal[1]);
                     tmp[2] = lcore::toBinary16Float(normal[2]);
                     writeBuffer(file, tmp, VSize_Normal);
+                    PRINT3("normal(%f, %f, %f) ", normal[0], normal[1], normal[2]);
                 }
 
                 if(0 < geometries_[i].tangents_.size()){
@@ -1801,6 +1821,7 @@ namespace
                 if(0 < geometries_[i].texcoords_.size()){
                     u16* uv = &(geometries_[i].texcoords_[DimUV*j]);
                     writeBuffer(file, uv, VSize_Texcoord);
+                    PRINT2("uv(%f, %f)", lcore::fromBinary16Float(uv[0]), lcore::fromBinary16Float(uv[1]));
                 }
 
                 if(0 < geometries_[i].bones_.size()){
@@ -1816,6 +1837,7 @@ namespace
                     }
                     writeBuffer(file, work, VSize_BoneWeight);
                 }
+                PRINT0("\n");
             }
             u16* indices = &(geometries_[i].indices_[0]);
             writeBuffer(file, indices, geometries_[i].numIndices_ * sizeof(u16));
@@ -1843,6 +1865,9 @@ namespace
 
         file.close();
 
+#ifdef ENABLE_MODEL_LOG 
+        log_.close();
+#endif
         return true;
     }
 
@@ -1866,7 +1891,7 @@ namespace
         writeName(file, name);
 
         write(file, animationClip_.lastTime_);
-        u32 numClips = animationClip_.jointAnims_.size();
+        u32 numClips = static_cast<u32>(animationClip_.jointAnims_.size());
         write(file, numClips);
 
         for(u32 i=0; i<animationClip_.jointAnims_.size(); ++i){
@@ -1932,7 +1957,7 @@ namespace
                 boneRootNode_ = node;
             }
 
-            u32 index = animationClip_.jointAnims_.size();
+            u32 index = static_cast<u32>(animationClip_.jointAnims_.size());
             JointAnimationCVT jointAnimation;
             animationClip_.jointAnims_.push_back(jointAnimation);
             traverseAnimation(animationClip_.jointAnims_[index], animLayer, node);
@@ -2530,7 +2555,7 @@ namespace
         }
     }
 
-    void Converter::printListCurve(FbxAnimCurve* curve, FbxProperty* prop)
+    void Converter::printListCurve(FbxAnimCurve* /*curve*/, FbxProperty* /*prop*/)
     {
     }
 }

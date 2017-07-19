@@ -4,9 +4,9 @@
 @date 2016/06/27 create
 */
 #include "ecs/ComponentGeometric.h"
+#include "System.h"
 #include "ecs/ECSManager.h"
 #include "ecs/ComponentGeometricManager.h"
-#include "Application.h"
 
 namespace lfw
 {
@@ -14,7 +14,7 @@ namespace
 {
     inline ComponentGeometricManager* getManager()
     {
-        return ECSManager::getInstance().getComponentManager<ComponentGeometricManager>();
+        return System::getECSManager().getComponentManager<ComponentGeometricManager>();
     }
 }
 
@@ -196,5 +196,25 @@ namespace
             ComponentGeometric* parent = componentManager->get(ID::construct(node.parent()));
             matrix.mul(parent->getMatrix(), matrix);
         }
+    }
+
+    void ComponentGeometric::lookAt(const lmath::Vector3& eye, const lmath::Vector3& at)
+    {
+        ComponentGeometricManager* componentManager = getManager();
+        lmath::Vector4& position = componentManager->getPosition(getID().index());
+        lmath::Quaternion& rotation = componentManager->getRotation(getID().index());
+
+        position = lmath::Vector4::construct(eye);
+        rotation.lookAt(eye, at);
+    }
+
+    void ComponentGeometric::lookAt(const lmath::Vector4& eye, const lmath::Vector4& at)
+    {
+        ComponentGeometricManager* componentManager = getManager();
+        lmath::Vector4& position = componentManager->getPosition(getID().index());
+        lmath::Quaternion& rotation = componentManager->getRotation(getID().index());
+
+        position = eye;
+        rotation.lookAt(eye, at);
     }
 }

@@ -7,6 +7,7 @@
 */
 #include "../lframework.h"
 #include <lcore/Array.h>
+#include <lcore/BitSet.h>
 #include <lgraphics/FrameSyncQuery.h>
 #include <lgraphics/VertexBufferRef.h>
 #include <lgraphics/IndexBufferRef.h>
@@ -16,8 +17,6 @@
 #include <lgraphics/ShaderRef.h>
 #include "RenderQueue.h"
 #include "RenderContext.h"
-#include "RenderQueue2D.h"
-#include "RenderContext2D.h"
 #include "ShadowMap.h"
 
 namespace lfw
@@ -44,8 +43,10 @@ namespace lfw
         Renderer();
         ~Renderer();
 
-        void initialize(s32 backBufferWidth, s32 backBufferHeight, const RendererInitParam& initParam);
+        void initialize(const RendererInitParam& initParam);
         void terminate();
+
+        void resetCamera();
 
         inline lgfx::FrameSyncQuery& getFrameSync();
         inline lgfx::ConstantBufferTableSet& getConstantBuffer();
@@ -54,19 +55,19 @@ namespace lfw
         inline TransientIndexBuffer& getIndexBuffer();
 
         inline RenderContext& getRenderContext();
-        inline RenderContext2D& getRenderContext2D();
 
         void begin();
         void update();
     private:
-        Renderer(const Renderer&);
-        Renderer& operator=(const Renderer&);
+        Renderer(const Renderer&) = delete;
+        Renderer& operator=(const Renderer&) = delete;
 
         typedef lcore::Array<RenderQueue> RenderQueueArray;
 
         void traverseComponents();
         void draw();
 
+        lcore::BitSet32 flags_;
         lgfx::FrameSyncQuery frameSync_;
         lgfx::ConstantBufferTableSet constantBufferTableSet_;
         TransientVertexBuffer transientVertexBuffer_;
@@ -74,11 +75,6 @@ namespace lfw
 
         RenderContext renderContext_;
         RenderQueueArray renderQueuePerCamera_;
-
-        RenderContext2D renderContext2D_;
-        RenderQueue2D renderQueue2D_;
-
-        ShadowMap shadowMap_;
     };
 
     inline lgfx::FrameSyncQuery& Renderer::getFrameSync()
@@ -104,11 +100,6 @@ namespace lfw
     inline RenderContext& Renderer::getRenderContext()
     {
         return renderContext_;
-    }
-
-    inline RenderContext2D& Renderer::getRenderContext2D()
-    {
-        return renderContext2D_;
     }
 }
 #endif //INC_LFRAMEWORK_RENDERER__

@@ -4,6 +4,7 @@
 @date 2016/06/27 create
 */
 #include "ecs/ComponentLogical.h"
+#include "System.h"
 #include "ecs/ECSManager.h"
 #include "ecs/ComponentLogicalManager.h"
 #include "Application.h"
@@ -14,7 +15,7 @@ namespace
 {
     inline ComponentLogicalManager* getManager()
     {
-        return ECSManager::getInstance().getComponentManager<ComponentLogicalManager>();
+        return System::getECSManager().getComponentManager<ComponentLogicalManager>();
     }
 }
 

@@ -8,6 +8,7 @@
 #include "render/Light.h"
 #include "render/Frustum.h"
 #include <lmath/geometry/PrimitiveTest.h>
+#include <lgraphics/TextureRef.h>
 
 namespace lfw
 {
@@ -18,12 +19,15 @@ namespace lfw
         ,pcfBlurSize_(0.0f)
         ,znear_(0.0f)
         ,zfar_(1.0f)
+        ,depthBias_(1.0e-3f)
+        ,slopeScaledDepthBias_(1.0e-2f)
         ,fitType_(FitType_ToCascades)
         ,moveLightTexelSize_(1)
         ,fitNearFar_(FitNearFar_AABB)
+        ,autoupdateAABB_(1)
     {
-        sceneAABBMin_.zero();
-        sceneAABBMax_.zero();
+        sceneAABBMin_ = lmath::Vector4::zero();
+        sceneAABBMax_ = lmath::Vector4::zero();
 
         u8* p = lcore::align16(bufferMatrices_);
         lightProjection_ = reinterpret_cast<lmath::Matrix44*>(p);
@@ -34,7 +38,7 @@ namespace lfw
     {
     }
 
-    void ShadowMap::initialize(s32 cascadeLevels, s32 resolution, f32 znear, f32 zfar, f32 logRatio)
+    void ShadowMap::initialize(s32 cascadeLevels, s32 resolution, f32 znear, f32 zfar, u32 format, f32 logRatio)
     {
         cascadeLevels_ = cascadeLevels;
         resolution_ = lcore::maximum(1, resolution);
@@ -42,12 +46,68 @@ namespace lfw
         znear_ = znear;
         zfar_ = zfar;
         calcCascadePartitions(logRatio);
+
+        {
+            lgfx::DataFormat dsvFormat = static_cast<lgfx::DataFormat>(format);
+            lgfx::DataFormat texFormat;
+            lgfx::DataFormat srvFormat;
+            switch(dsvFormat)
+            {
+            case lgfx::Data_D32_Float:
+                texFormat = lgfx::Data_R32_TypeLess;
+                srvFormat = lgfx::Data_R32_Float;
+                break;
+            case lgfx::Data_D24_UNorm_S8_UInt:
+                texFormat = lgfx::Data_R24G8_TypeLess;
+                srvFormat = lgfx::Data_R24_UNorm_X8_TypeLess;
+                break;
+            case lgfx::Data_D16_UNorm:
+                texFormat = lgfx::Data_R16_TypeLess;
+                srvFormat = lgfx::Data_R16_UNorm;
+                break;
+            default:
+                texFormat = lgfx::Data_R24G8_TypeLess;
+                srvFormat = lgfx::Data_R24_UNorm_X8_TypeLess;
+                break;
+            }
+            lgfx::Texture2DRef depthTexture = lgfx::Texture::create2D(
+                resolution_,
+                resolution_,
+                1,
+                cascadeLevels,
+                texFormat,
+                lgfx::Usage_Default,
+                lgfx::BindFlag_DepthStencil|lgfx::BindFlag_ShaderResource,
+                lgfx::CPUAccessFlag_None,
+                lgfx::ResourceMisc_None,
+                NULL);
+
+            lgfx::DSVDesc dsvDesc;
+            lgfx::SRVDesc srvDesc;
+
+            dsvDesc.format_ = dsvFormat;
+            dsvDesc.dimension_ = lgfx::DSVDimension_Texture2DArray;
+            dsvDesc.tex2DArray_.mipSlice_ = 0;
+            dsvDesc.tex2DArray_.firstArraySlice_ = 0;
+            dsvDesc.tex2DArray_.arraySize_ = cascadeLevels;
+
+            srvDesc.format_ = srvFormat;
+            srvDesc.dimension_ = lgfx::SRVDimension_Texture2DArray;
+            srvDesc.tex2DArray_.mostDetailedMip_ = 0;
+            srvDesc.tex2DArray_.mipLevels_ = 1;
+            srvDesc.tex2DArray_.firstArraySlice_ = 0;
+            srvDesc.tex2DArray_.arraySize_ = cascadeLevels;
+
+            dsvShadowMap_ = depthTexture.createDSView(dsvDesc);
+            srvShadowMap_ = depthTexture.createSRView(srvDesc);
+        }
     }
 
     void ShadowMap::update(const Camera& camera, const Light& light)
     {
         //const lmath::Matrix44& view = camera.getViewMatrix();
         const lmath::Matrix44& invView = camera.getInvViewMatrix();
+        lightDirection_ = -light.getDirection();
 
         lmath::Matrix44 lightView;
         light.getLightView(lightView);
@@ -193,6 +253,7 @@ namespace lfw
             f32 zfar = lcore::lerp(uniformZ, logZ, logRatio);
 
             cascadePartitions_[i] = zfar;
+            cascadeScales_[i-1] = (zfar-cascadePartitions_[i-1]);
         }
     }
 

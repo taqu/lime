@@ -15,13 +15,18 @@ namespace lfw
     protected:
         virtual void SetUp()
         {
-            ECSManager::create(ECSManager::defaultInitParam());
+            ecsManager_ = ECSManager::create(ECSManager::defaultInitParam());
+            System::setECSManager(ecsManager_);
         }
 
         virtual void TearDown()
         {
-            ECSManager::destroy();
+            ECSManager::destroy(ecsManager_);
+            ecsManager_ = NULL;
+            System::clear();
         }
+
+        ECSManager* ecsManager_;
     };
 
     TEST_F(TestTreeComponent, Create)
@@ -30,7 +35,7 @@ namespace lfw
         static const s32 Size = 64;
         Char name[Size][NameString::Size];
         Entity entities[Size];
-        ECSManager& ecsManager = ECSManager::getInstance();
+        ECSManager& ecsManager = *ecsManager_;
 
         for(s32 i=0; i<Size; ++i){
             entities[i] = ecsManager.requestCreateLogical("");
@@ -39,7 +44,7 @@ namespace lfw
             ComponentLogical* componentLogical = entities[i].getLogical();
             ASSERT_TRUE(NULL != componentLogical);
             componentLogical->getName().print("name%d", i);
-            sprintf(name[i], "name%d", i);
+            sprintf_s(name[i], "name%d", i);
         }
 
         ecsManager.update();
@@ -75,13 +80,13 @@ namespace lfw
             ASSERT_TRUE(NULL != componentLogical);
             componentLogical->setParent(entities[0].getLogical());
             componentLogical->getName().print("child%d", i);
-            sprintf(childName[i], "child%d", i);
+            lcore::snprintf(childName[i], NameString::Size, "child%d", i);
         }
 
         EXPECT_TRUE(NULL == ComponentLogical::find("///"));
         Char path[NameString::Size*3];
         for(s32 i=0; i<ChildSize; ++i){
-            sprintf(path, "/name0/child%d", i);
+            lcore::snprintf(path, NameString::Size*3, "/name0/child%d", i);
             ComponentLogical* componentLogical = ComponentLogical::find(path);
             EXPECT_TRUE(NULL != componentLogical);
             EXPECT_STREQ(childName[i], componentLogical->getName().c_str());

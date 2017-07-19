@@ -8,20 +8,16 @@
 #include "ecs/ComponentLogicalManager.h"
 #include "ecs/ComponentGeometricManager.h"
 #include "ecs/ComponentRendererManager.h"
-#include "ecs/ComponentRenderer2DManager.h"
 #include "ecs/ComponentSceneElementManager.h"
 #include "ecs/ComponentBehaviorManager.h"
 
 #include "ecs/ComponentBehavior.h"
 #include "ecs/ComponentRenderer.h"
-#include "ecs/ComponentRenderer2D.h"
 #include "ecs/ComponentCamera.h"
 #include "ecs/ComponentLight.h"
 
 namespace lfw
 {
-    ECSManager* ECSManager::instance_ = NULL;
-
     ECSManager::ECSManager()
         :numComponentManagers_(0)
         ,componentManagers_(NULL)
@@ -41,35 +37,34 @@ namespace lfw
         LDELETE_ARRAY(componentManagers_);
     }
 
-    bool ECSManager::create(const ECSInitParam& initParam)
+    ECSManager* ECSManager::create(const ECSInitParam& initParam)
     {
-        destroy();
-        instance_ = LNEW ECSManager;
+        ECSManager* ecsManager = LNEW ECSManager;
 
-        instance_->numComponentManagers_ = initParam.maxTypes_;
-        instance_->componentManagers_ = LNEW ComponentManager*[instance_->numComponentManagers_];
-        for(s32 i=0; i<instance_->numComponentManagers_; ++i){
-            instance_->componentManagers_[i] = NULL;
+        ecsManager->numComponentManagers_ = initParam.maxTypes_;
+        ecsManager->componentManagers_ = LNEW ComponentManager*[ecsManager->numComponentManagers_];
+        for(s32 i=0; i<ecsManager->numComponentManagers_; ++i){
+            ecsManager->componentManagers_[i] = NULL;
         }
 
         if(0 != (initParam.flags_ & Flag_CreateRequiredComponentManagers)){
-            instance_->addComponentManager(LNEW ComponentLogicalManager());
-            instance_->addComponentManager(LNEW ComponentGeometricManager());
-            instance_->addComponentManager(LNEW ComponentRendererManager());
-            instance_->addComponentManager(LNEW ComponentRenderer2DManager());
-            instance_->addComponentManager(LNEW ComponentSceneElementManager());
-            instance_->addComponentManager(LNEW ComponentBehaviorManager());
+            ecsManager->addComponentManager(LNEW ComponentLogicalManager());
+            ecsManager->addComponentManager(LNEW ComponentGeometricManager());
+            ecsManager->addComponentManager(LNEW ComponentRendererManager());
+            ecsManager->addComponentManager(LNEW ComponentSceneElementManager());
+            ecsManager->addComponentManager(LNEW ComponentBehaviorManager());
         }
-        instance_->initialize();
-        return true;
+        ecsManager->initialize();
+        return ecsManager;
     }
 
-    void ECSManager::destroy()
+    void ECSManager::destroy(ECSManager* ecsManager)
     {
-        if(NULL != instance_){
-            instance_->terminate();
-            LDELETE(instance_);
+        if(NULL == ecsManager){
+            return;
         }
+        ecsManager->terminate();
+        LDELETE(ecsManager);
     }
 
     Entity ECSManager::requestCreateLogical(const Char* name)
@@ -130,7 +125,7 @@ namespace lfw
 
     bool ECSManager::isValidEntity(Entity entity) const
     {
-        return entityHandles_.isValid(entity.getHandle());
+        return entityHandles_.valid(entity.getHandle());
     }
 
     void ECSManager::destroyEntity(Entity& entity)
@@ -198,13 +193,6 @@ namespace lfw
         }
             break;
 
-        case ECSCategory::ECSCategory_Renderer2D:
-        {
-            ComponentRenderer2DManager* componentRenderer2DManager = getComponentManager<ComponentRenderer2DManager>();
-            id = componentRenderer2DManager->create(entity, type, static_cast<ComponentRenderer2D*>(behavior));
-        }
-            break;
-
         case ECSCategory::ECSCategory_Behavior:
         {
             ComponentBehaviorManager* componentBehaviorManager = getComponentManager<ComponentBehaviorManager>();
@@ -239,7 +227,7 @@ namespace lfw
 
     IDConstAccess ECSManager::getComponents(Entity entity) const
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
 
         const Entity::Components& components = entityComponents_[entity.getHandle().index()];
         return {components.size(), components.get()};
@@ -247,7 +235,7 @@ namespace lfw
 
     const ComponentLogical* ECSManager::getLogical(Entity entity, ID component) const
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         LASSERT(ECSCategory_Logical == component.category());
 
         return static_cast<ComponentLogicalManager*>(componentManagers_[component.category()])->getTreeComponent(component);
@@ -255,7 +243,7 @@ namespace lfw
 
     ComponentLogical* ECSManager::getLogical(Entity entity, ID component)
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         LASSERT(ECSCategory_Logical == component.category());
 
         return static_cast<ComponentLogicalManager*>(componentManagers_[component.category()])->getTreeComponent(component);
@@ -263,7 +251,7 @@ namespace lfw
 
     const ComponentGeometric* ECSManager::getGeometric(Entity entity, ID component) const
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         LASSERT(ECSCategory_Geometric == component.category());
 
         return static_cast<ComponentGeometricManager*>(componentManagers_[component.category()])->getTreeComponent(component);
@@ -271,7 +259,7 @@ namespace lfw
 
     ComponentGeometric* ECSManager::getGeometric(Entity entity, ID component)
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         LASSERT(ECSCategory_Geometric == component.category());
 
         return static_cast<ComponentGeometricManager*>(componentManagers_[component.category()])->getTreeComponent(component);
@@ -279,7 +267,7 @@ namespace lfw
 
     const Behavior* ECSManager::getComponent(Entity entity, ID component) const
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         LASSERT(ECSCategory_Logical != component.category() && ECSCategory_Geometric != component.category());
 
         return componentManagers_[component.category()]->getBehavior(component);
@@ -287,7 +275,7 @@ namespace lfw
 
     Behavior* ECSManager::getComponent(Entity entity, ID component)
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         LASSERT(ECSCategory_Logical != component.category() && ECSCategory_Geometric != component.category());
 
         return componentManagers_[component.category()]->getBehavior(component);
@@ -295,14 +283,21 @@ namespace lfw
 
     Behavior* ECSManager::getComponent(Entity entity, u8 category, u32 type)
     {
-        LASSERT(entityHandles_.isValid(entity.getHandle()));
+        LASSERT(entityHandles_.valid(entity.getHandle()));
         LASSERT(ECSCategory_Logical != category && ECSCategory_Geometric != category);
         LASSERT(0<=category && category<numComponentManagers_);
 
         Entity::Components& components = entityComponents_[entity.getHandle().index()];
         ComponentManager* manager = componentManagers_[category];
         const ID* ids = components.get();
-        for(s32 i=0; i<components.size(); ++i){
+#ifdef _DEBUG
+        LASSERT(0<components.size());
+        LASSERT(ECSCategory_Logical == ids[0].category() || ECSCategory_Geometric == ids[0].category());
+#endif
+        for(s32 i=1; i<components.size(); ++i){
+            if(ids[i].category() != category){
+                continue;
+            }
             Behavior* behavior = manager->getBehavior(ids[i]);
             u32 t;
             switch(category)
@@ -367,7 +362,6 @@ namespace lfw
 
         //
         getComponentManager<ComponentRendererManager>()->preUpdateComponents();
-        getComponentManager<ComponentRenderer2DManager>()->preUpdateComponents();
 
         ComponentLogicalManager* logicalManager = getComponentManager<ComponentLogicalManager>();
         ComponentGeometricManager* geometricManager = getComponentManager<ComponentGeometricManager>();
@@ -396,12 +390,7 @@ namespace lfw
             ID* ids = componentHandleAllocator_.get<ID>(components.bufferSize(), components.offset());
             for(s32 i=0; i<components.size(); ++i){
                 ID componentID = ids[i];
-#ifdef _DEBUG
-                u8 category = componentID.category();
-                componentManagers_[category]->updateComponent(componentID);
-#else
                 componentManagers_[componentID.category()]->updateComponent(componentID);
-#endif
             }
         }
     }
@@ -441,7 +430,6 @@ namespace lfw
 
         getComponentManager<ComponentSceneElementManager>()->postUpdateComponents();
         getComponentManager<ComponentRendererManager>()->postUpdateComponents();
-        getComponentManager<ComponentRenderer2DManager>()->postUpdateComponents();
     }
 
     void ECSManager::terminate()

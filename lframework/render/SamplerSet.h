@@ -6,6 +6,7 @@
 @date 2016/12/17 create
 */
 #include "../lframework.h"
+#include <lgraphics/Graphics.h>
 #include <lgraphics/SamplerStateRef.h>
 
 namespace lgfx

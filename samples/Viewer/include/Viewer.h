@@ -22,17 +22,42 @@ namespace lfw
 
 namespace viewer
 {
+    enum Format
+    {
+        Format_Unknown,
+        Format_LM,
+        Format_OBJ,
+        Format_FBX,
+    };
+
+    //enum ECSCategory
+    //{
+    //    ECSCategory_Max = ECSCategory_User,
+    //};
+
+    enum ECSType
+    {
+        ECSType_Viewer = lfw::ECSType_User,
+    };
+
     class Viewer : public lfw::ComponentMeshRenderer
     {
     public:
+        static lfw::u8 category(){ return lfw::ECSCategory_Renderer;}
+        static lfw::u32 type(){ return ECSType_Viewer;}
+
         Viewer();
         virtual ~Viewer();
 
+        virtual lfw::u32 getType() const;
         virtual void onCreate();
         virtual void update();
 
+        void setModelPath(const lfw::Char* filepath);
+        static Format getFormat(const lfw::Char* filepath);
     private:
         void resetCamera();
+        void loadModel(Format format);
 
         lfw::ComponentLight* light_;
         lfw::ComponentCamera* camera_;
@@ -42,6 +67,8 @@ namespace viewer
         lfw::Skeleton::pointer skeleton_;
         lfw::LoadTexture* textures_;
 
+        bool menuOpen_;
+        Format loadModel_;
         static const lfw::s32 BufferSize = 256;
         lfw::Char filepath_[BufferSize];
 
@@ -51,6 +78,11 @@ namespace viewer
         lfw::f32 zoomMin_;
         lfw::f32 zoomMax_;
         lfw::f32 zoomRate_;
+
+
+        //Load Options
+        lfw::f32 scale_; //only for OBJ
+        bool convertToDDS_;
     };
 }
 #endif //INC_VIEWER_VIEWER_H_

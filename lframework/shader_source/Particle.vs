@@ -11,7 +11,6 @@ struct VSInput
 
 struct VSOutput
 {
-    float3 position : POSITION;
     float4 texcoord : TEXCOORD;
     float4 color : COLOR;
     float2 size : SIZE;
@@ -55,7 +54,6 @@ VSOutput main( VSInput input )
     mat[3][2] = input.position.z;
 
     VSOutput output;
-    output.position = input.position;
     output.texcoord = input.texcoord;
     output.color = input.color;
     output.size = input.size * 0.5;

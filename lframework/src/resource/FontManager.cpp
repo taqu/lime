@@ -7,7 +7,7 @@
 #include <lcore/io/VirtualFileSystem.h>
 #include <lcore/Sort.h>
 
-#include "Application.h"
+#include "System.h"
 #include "resource/Resources.h"
 #include "resource/Font.h"
 #include "resource/ResourceTexture2D.h"
@@ -33,7 +33,7 @@ namespace lfw
     {
         LASSERT(0<=slot && slot<MaxSlots);
 
-        lcore::FileSystem& fileSystem = Application::getInstance().getFileSystem();
+        lcore::FileSystem& fileSystem = System::getFileSystem();
         lcore::FileProxy* file = fileSystem.openFile(path);
         if(NULL == file){
             return false;
@@ -56,17 +56,19 @@ namespace lfw
         TextureParameter texParam;
         texParam.initialize();
         texParam.sRGB_ = 0;
+
+        Resources& resources = System::getResources();
         if(BufferSize<pathlen){
             Char* filename = (Char*)LMALLOC(pathlen+8);
             s32 len = lcore::extractFileNameWithoutExt(filename, pathlen, path);
             lcore::strcat(filename, len+8, "_0.dds");
-            texFont = Resources::getInstance().load(setID, filename, lfw::ResourceType::ResourceType_Texture2D, texParam);
+            texFont = resources.load(setID, filename, lfw::ResourceType::ResourceType_Texture2D, texParam);
             LFREE(filename);
         }else{
             Char filename[BufferSize+8];
             s32 len = lcore::extractFileNameWithoutExt(filename, pathlen, path);
             lcore::strcat(filename, len+8, "_0.dds");
-            texFont = Resources::getInstance().load(setID, filename, lfw::ResourceType::ResourceType_Texture2D, texParam);
+            texFont = resources.load(setID, filename, lfw::ResourceType::ResourceType_Texture2D, texParam);
         }
         if(NULL == texFont){
             fileSystem.closeFile(file);
@@ -115,25 +117,25 @@ namespace lfw
         }
 
         Font* font = LNEW Font;
-        Font::FontChar* chars = (Font::FontChar*)LMALLOC(sizeof(Font::FontChar)*count);
+        Font::Glyph* glyphes = (Font::Glyph*)LMALLOC(sizeof(Font::Glyph)*count);
         count = 0;
         for(s32 i=0; i<numChars; ++i){
             if(0xFFU<fmtChar[i].id_){
                 continue;
             }
-            chars[count].id_ = static_cast<u16>(fmtChar[i].id_);
-            chars[count].xadvance_ = fmtChar[i].xadvance_;
-            chars[count].xoffset_ = fmtChar[i].xoffset_;
-            chars[count].yoffset_ = fmtChar[i].yoffset_;
-            chars[count].width_ = fmtChar[i].width_;
-            chars[count].height_ = fmtChar[i].height_;
-            chars[count].uv_[0] = lcore::toBinary16Float(invWidth*fmtChar[i].x_);
-            chars[count].uv_[1] = lcore::toBinary16Float(invHeight*fmtChar[i].y_);
-            chars[count].uv_[2] = lcore::toBinary16Float(invWidth*(fmtChar[i].x_+fmtChar[i].width_));
-            chars[count].uv_[3] = lcore::toBinary16Float(invHeight*(fmtChar[i].y_+fmtChar[i].height_));
+            glyphes[count].id_ = static_cast<u16>(fmtChar[i].id_);
+            glyphes[count].xadvance_ = fmtChar[i].xadvance_;
+            glyphes[count].xoffset_ = fmtChar[i].xoffset_;
+            glyphes[count].yoffset_ = fmtChar[i].yoffset_;
+            glyphes[count].width_ = fmtChar[i].width_;
+            glyphes[count].height_ = fmtChar[i].height_;
+            glyphes[count].uv_[0] = lcore::toBinary16Float(invWidth*fmtChar[i].x_);
+            glyphes[count].uv_[1] = lcore::toBinary16Float(invHeight*fmtChar[i].y_);
+            glyphes[count].uv_[2] = lcore::toBinary16Float(invWidth*(fmtChar[i].x_+fmtChar[i].width_));
+            glyphes[count].uv_[3] = lcore::toBinary16Float(invHeight*(fmtChar[i].y_+fmtChar[i].height_));
             ++count;
         }
-        lcore::introsort(count, chars, Font::less);
+        lcore::introsort(count, glyphes, Font::less);
 
         font->fontSize_ = fmtInfo.fontSize_;
         font->lineHeight_ = fmtCommon.lineHeight_;
@@ -141,8 +143,8 @@ namespace lfw
         font->height_ = fmtCommon.scaleH_;
         font->invWidth_ = invWidth;
         font->invHeight_ = invHeight;
-        font->numChars_ = count;
-        font->chars_ = chars;
+        font->numGlyphes_ = count;
+        font->glyphes_ = glyphes;
 
         lfw::ResourceTexture2D* ptex = texFont->cast<lfw::ResourceTexture2D>();
         font->texture_ = ptex->get();

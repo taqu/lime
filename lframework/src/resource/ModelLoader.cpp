@@ -14,6 +14,8 @@
 #include <lgraphics/io/IOPNG.h>
 #include <lgraphics/io/IOBMP.h>
 
+#include "System.h"
+
 #include "resource/load_geometry.h"
 #include "resource/load_joint.h"
 #include "resource/load_material.h"
@@ -430,9 +432,10 @@ namespace lfw
         texParam.compFunc_ = loadTexture.compFunc_;
         texParam.borderColor_ = loadTexture.borderColor_;
 
+        Resources& resources = System::getResources();
         ResourceTexture2D::pointer resTex;
         if(fileSystem_){
-            resTex = Resources::getInstance().load(setID, path_, ResourceType_Texture2D, texParam).get_reinterpret_cast<ResourceTexture2D>();
+            resTex = resources.load(setID, path_, ResourceType_Texture2D, texParam).get_reinterpret_cast<ResourceTexture2D>();
         }else{
             lcore::ifstream file(path_, lcore::ios::binary);
             if(!file.is_open()){
@@ -459,7 +462,8 @@ namespace lfw
     // 頂点レイアウト作成
     void ModelLoader::createInputLayout(u32 vflag, lgfx::InputLayoutRef& inputLayout)
     {
-        InputLayoutFactory& inputLayoutFactory = Resources::getInstance().getInputLayoutFactory();
+        Resources& resources = System::getResources();
+        InputLayoutFactory& inputLayoutFactory = resources.getInputLayoutFactory();
 
         lfw::InputLayoutType layoutType = lfw::InputLayout_P;
         switch(vflag)

@@ -7,6 +7,7 @@ project(${ProjectName})
 set(CMAKE_CONFIGURATION_TYPES "Debug" "Release")
 
 include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR})
+include_directories(AFTER "${CMAKE_CURRENT_SOURCE_DIR}/../external/include/opus/")
 
 set(ROOT_INCLUDE "./")
 set(ROOT_SOURCE "./src")
@@ -51,9 +52,13 @@ set_target_properties(${ProjectName} PROPERTIES OUTPUT_NAME_DEBUG "${ProjectName
 if(MSVC)
     set_target_properties(${ProjectName} PROPERTIES
         STATIC_LIBRARY_FLAGS "/LIBPATH:\"${EXTERNAL_LIB_DIR}\""
-        STATIC_LIBRARY_FLAGS_DEBUG   "\"celtd.lib\" \"silk_commond.lib\" \"silk_floatd.lib\" \"opusd.lib\" \"opusfiled.lib\" \"libogg_staticd.lib\""
-        STATIC_LIBRARY_FLAGS_RELEASE "/LTCG  \"celt.lib\" \"silk_common.lib\" \"silk_float.lib\" \"opus.lib\" \"opusfile.lib\" \"libogg_static.lib\"")
+        STATIC_LIBRARY_FLAGS_DEBUG    "\"opusd.lib\" \"opusfiled.lib\" \"libogg_staticd.lib\""
+        STATIC_LIBRARY_FLAGS_RELEASE "/LTCG  \"opus.lib\" \"opusfile.lib\" \"libogg_static.lib\"")
 
+    if(1900 LESS MSVC_VERSION)
+        get_vs_property_group(VSPROPERTIES "EnableCppCoreCheck" "true")
+        write_vs_user(${ProjectName} ${VSPROPERTIES})
+    endif()
 elseif(UNIX)
 elseif(APPLE)
 endif()

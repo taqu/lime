@@ -18,16 +18,28 @@ namespace lfw
         Light();
         ~Light();
 
-        inline s16 getType() const;
-        inline void setType(s16 type);
-
-        inline s16 getSortLayer() const;
-        inline void setSortLayer(s16 layer);
         inline s32 getLayerMask() const;
         inline void setLayerMask(s32 mask);
+        inline s16 getSortLayer() const;
+        inline void setSortLayer(s16 layer);
+        inline s8 getType() const;
+        inline void setType(s8 type);
+        inline bool isCastShadow() const;
+        inline void setCastShadow(bool castShadow);
+
         inline f32 getRadius() const;
         inline void setRadius(f32 radius);
-        inline f32 getFalloffAngle() const;
+        /**
+        */
+        inline f32 getHalfAngleCosine() const;
+        /**
+        */
+        inline void setAngle(f32 radian);
+        /**
+        */
+        inline f32 getFalloffHalfAngleCosine() const;
+        /**
+        */
         inline void setFalloffAngle(f32 radian);
 
         void getLightView(lmath::Matrix44& view) const;
@@ -43,28 +55,31 @@ namespace lfw
         inline const lmath::Vector4& getColor() const;
         inline lmath::Vector4& getColor();
         inline void setColor(const lmath::Vector4& color);
-    private:
-        s16 type_;
-        s16 sortLayer_;
-        s32 layerMask_;
-        f32 radius_;
-        f32 falloffAngle_;
 
-        lmath::Vector4 direction_;
-        lmath::Vector4 position_;
+        void setDirectional(const lmath::Vector3& direction);
+        void setPoint(const lmath::Vector3& position, f32 radius);
+        void setSpot(const lmath::Vector3& position, const lmath::Vector3& direction, f32 angle, f32 falloffAngle);
+    private:
+        s32 layerMask_;
+        s16 sortLayer_;
+        s8 type_;
+        s8 castShadow_;
+
+        lmath::Vector4 position_; //position, radius
+        lmath::Vector4 direction_; //direction, falloffAngle
 
         /// 色と第４に輝度
         lmath::Vector4 lightColor_;
     };
 
-    inline s16 Light::getType() const
+    inline s32 Light::getLayerMask() const
     {
-        return type_;
+        return layerMask_;
     }
 
-    inline void Light::setType(s16 type)
+    inline void Light::setLayerMask(s32 mask)
     {
-        type_ = type;
+        layerMask_ = mask;
     }
 
     inline s16 Light::getSortLayer() const
@@ -77,34 +92,54 @@ namespace lfw
         sortLayer_ = layer;
     }
 
-    inline s32 Light::getLayerMask() const
+    inline s8 Light::getType() const
     {
-        return layerMask_;
+        return type_;
     }
 
-    inline void Light::setLayerMask(s32 mask)
+    inline void Light::setType(s8 type)
     {
-        layerMask_ = mask;
+        type_ = type;
+    }
+
+    inline bool Light::isCastShadow() const
+    {
+        return 0 != castShadow_;
+    }
+
+    inline void Light::setCastShadow(bool castShadow)
+    {
+        castShadow_ = (castShadow)? 1 : 0;
     }
 
     inline f32 Light::getRadius() const
     {
-        return radius_;
+        return position_.w_;
     }
 
     inline void Light::setRadius(f32 radius)
     {
-        radius_ = radius;
+        position_.w_ = radius;
     }
 
-    inline f32 Light::getFalloffAngle() const
+    inline f32 Light::getHalfAngleCosine() const
     {
-        return falloffAngle_;
+        return position_.w_;
+    }
+
+    inline void Light::setAngle(f32 radian)
+    {
+        position_.w_ = lmath::cosf(0.5f*radian);
+    }
+
+    inline f32 Light::getFalloffHalfAngleCosine() const
+    {
+        return direction_.w_;
     }
 
     inline void Light::setFalloffAngle(f32 radian)
     {
-        falloffAngle_ = radian;
+        direction_.w_ = lmath::cosf(0.5f*radian);
     }
 
     //inline const lmath::Matrix44& Light::getLightView() const

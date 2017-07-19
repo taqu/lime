@@ -8,6 +8,7 @@
 #include <Commdlg.h>
 #include <lframework/gui/gui.h>
 
+#include <lframework/System.h>
 #include <lframework/render/Camera.h>
 #include <lframework/render/Light.h>
 #include <lframework/resource/load_texture.h>
@@ -18,6 +19,9 @@
 #include <lframework/ecs/ComponentGeometric.h>
 #include <lframework/ecs/ComponentLight.h>
 #include <lframework/ecs/ComponentCamera.h>
+
+#include "converter.h"
+#include "ObjConverter.h"
 
 namespace viewer
 {
@@ -84,12 +88,17 @@ namespace
         :model_(NULL)
         ,skeleton_(NULL)
         ,textures_(NULL)
+        ,menuOpen_(true)
+        ,loadModel_(Format_Unknown)
         ,rotationX_(0.0f)
         ,rotationY_(0.0f)
         ,zoom_(0.0f)
         ,zoomMin_(0.0f)
         ,zoomMax_(0.0f)
         ,zoomRate_(0.0f)
+
+        ,scale_(1.0f)
+        ,convertToDDS_(true)
     {
         filepath_[0] = lcore::CharNull;
     }
@@ -99,26 +108,29 @@ namespace
         LDELETE_ARRAY(textures_);
     }
 
+    lfw::u32 Viewer::getType() const
+    {
+        return ECSType_Viewer;
+    }
+
     void Viewer::onCreate()
     {
-        lfw::Application& application = lfw::Application::getInstance();
-        lfw::Entity mainLight = application.getECSManager().requestCreateGeometric("MainLight");
+        lfw::Application& application = lfw::System::getApplication();
+        lfw::Entity mainLight = lfw::System::getECSManager().requestCreateGeometric("MainLight");
         light_ = mainLight.addComponent<lfw::ComponentLight>();
 
         mainLight.getGeometric()->getRotation().lookAt(lmath::Vector4::construct(normalize(lmath::Vector4::construct(0.2f, -1.0f, 0.0f, 0.0f))));
 
-        lfw::Entity mainCamera = application.getECSManager().requestCreateGeometric("MainCamera");
+        lfw::Entity mainCamera = lfw::System::getECSManager().requestCreateGeometric("MainCamera");
         camera_ = mainCamera.addComponent<lfw::ComponentCamera>();
-        camera_->initializePerspective(60.0f, 0.01f, 100.0f, true);
-        camera_->initializeDeferred(1024, 768);
+        camera_->initialize(60.0f, 0.01f, 100.0f,1024, 768, false);
         mainCamera.getGeometric()->setPosition(lmath::Vector4::construct(0.5f, 2.5f, -2.0f, 0.0f));
     }
 
     void Viewer::update()
     {
         if(NULL != model_){
-            lfw::Application& application = lfw::Application::getInstance();
-            linput::Input& input = application.getInput();
+            linput::Input& input = lfw::System::getInput();
             //const linput::Keyboard* keyboard = input.getKeyboard();
             const linput::Mouse* mouse = input.getMouse();
 
@@ -152,17 +164,22 @@ namespace
             }
         }
 
-        bool open = true;
-        if(!ImGui::Begin("ImGui", &open, 0)){
+        if(!ImGui::Begin("ImGui", &menuOpen_, 0)){
             ImGui::End();
             return;
         }
+
+        if(ImGui::CollapsingHeader("Load Options", ImGuiTreeNodeFlags_DefaultOpen)){
+            ImGui::Checkbox("Convert to DDS", &convertToDDS_);
+            ImGui::DragFloat("Scale (OBJ only)", &scale_);
+        }//ImGui::CollapsingHeader("Options"
+
         if(ImGui::Button("Open")){
             OPENFILENAME ofn;
 
             ZeroMemory(&ofn, sizeof(ofn));
             ofn.lStructSize = sizeof(ofn);
-            ofn.hwndOwner = lfw::Application::getInstance().getWindow().getHandle().hWnd_;
+            ofn.hwndOwner = lfw::System::getWindow().getHandle().hWnd_;
             ofn.lpstrFile = filepath_;
             ofn.nMaxFile = sizeof(filepath_);
             ofn.lpstrFilter = "Model\0*.lm\0All\0*.*\0";
@@ -174,34 +191,14 @@ namespace
 
             if(TRUE == GetOpenFileName(&ofn)){
                 lcore::replace(filepath_, '/', '\\');
-                lcore::s32 length = lcore::strlen_s32(filepath_);
-                const lcore::Char* ext = lcore::getExtension(length, filepath_);
-                if(0 == lcore::strncmp(ext, "lm", 3)){
-                    modelLoader_.setConvertRefractiveIndex(false);
-                    modelLoader_.setReserveGeometryData(true);
-                    lfw::Model* model = NULL;
-                    lfw::Skeleton* skeleton = NULL;
-                    modelLoader_.loadModel(model, skeleton, 0, filepath_);
-                    if(NULL != model){
-                        model_ = model;
-                        skeleton_ = skeleton;
-                        LDELETE_ARRAY(textures_);
-                        textures_ = modelLoader_.loadTextures(filepath_);
-                        this->setMesh(model_);
-
-                        const lmath::Sphere& sphere = model_->getSphere();
-                        lmath::Vector4 pos = lmath::Vector4::construct(0.0f, 0.0f, sphere.radius()*3.0f, 0.0f);
-                        camera_->lookAt(pos, lmath::Vector4::construct(sphere.position()));
-                        zoom_ = 3.0f*sphere.radius();
-                        zoomMin_ = sphere.radius()*1.5f;
-                        zoomMax_ = sphere.radius()*6.0f;
-                        zoomRate_ = 0.125f * sphere.radius();
-                        resetCamera();
-                    }
-                }
+                loadModel_ = getFormat(filepath_);
             }
         }//if(ImGui::Button("Open"))
         ImGui::SameLine();
+
+        if(Format_Unknown != loadModel_){
+            loadModel(loadModel_);
+        }
 
         if(ImGui::Button("Save")){
             if(NULL != model_){
@@ -209,7 +206,7 @@ namespace
 
                 ZeroMemory(&ofn, sizeof(ofn));
                 ofn.lStructSize = sizeof(ofn);
-                ofn.hwndOwner = lfw::Application::getInstance().getWindow().getHandle().hWnd_;
+                ofn.hwndOwner = lfw::System::getWindow().getHandle().hWnd_;
                 ofn.lpstrFile = filepath_;
                 ofn.lpstrFile[0] = '\0';
                 ofn.nMaxFile = sizeof(filepath_);
@@ -301,9 +298,76 @@ namespace
         ImGui::End();
     }
 
+    void Viewer::setModelPath(const lfw::Char* filepath)
+    {
+        LASSERT(NULL != filepath);
+        lcore::s32 len = lcore::strlen_s32(filepath);
+        lcore::memcpy(filepath_, filepath, len);
+        filepath_[len] = '\0';
+        loadModel_ = getFormat(filepath_);
+    }
+
+    Format Viewer::getFormat(const lfw::Char* filepath)
+    {
+        lcore::s32 length = lcore::strlen_s32(filepath);
+        const lcore::Char* ext = lcore::getExtension(length, filepath);
+        if(0 == lcore::strncmp(ext, "lm", 2)){
+            return Format_LM;
+        }
+        if(0 == lcore::strncmp(ext, "obj", 3)){
+            return Format_OBJ;
+        }
+        if(0 == lcore::strncmp(ext, "fbx", 3)){
+            return Format_FBX;
+        }
+        return Format_Unknown;
+    }
+
     void Viewer::resetCamera()
     {
         rotationX_ = 0.0f;
         rotationY_ = 0.0f;
+    }
+
+    void Viewer::loadModel(Format format)
+    {
+        loadModel_ = Format_Unknown;
+        lfw::Model* model = NULL;
+        lfw::Skeleton* skeleton = NULL;
+        switch(format)
+        {
+        case Format_LM:
+        {
+            modelLoader_.setConvertRefractiveIndex(false);
+            modelLoader_.setReserveGeometryData(true);
+            modelLoader_.loadModel(model, skeleton, 0, filepath_);
+            if(NULL != model){
+                LDELETE_ARRAY(textures_);
+                textures_ = modelLoader_.loadTextures(filepath_);
+            }
+        }
+            break;
+
+        case Format_OBJ:
+        {
+            lfw::LoaderObj loaderObj;
+        }
+            break;
+        }
+
+        if(NULL != model){
+            model_ = model;
+            this->setMesh(model_);
+
+            const lmath::Sphere& sphere = model_->getSphere();
+            lmath::Vector4 pos = lmath::Vector4::construct(0.0f, 0.0f, sphere.radius()*3.0f, 0.0f);
+            camera_->lookAt(pos, lmath::Vector4::construct(sphere.position()));
+            zoom_ = 3.0f*sphere.radius();
+            zoomMin_ = sphere.radius()*1.5f;
+            zoomMax_ = sphere.radius()*6.0f;
+            zoomRate_ = 0.125f * sphere.radius();
+            resetCamera();
+        }
+
     }
 }

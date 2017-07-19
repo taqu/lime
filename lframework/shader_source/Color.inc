@@ -32,7 +32,7 @@ float3 RGBToHCV(in float3 RGB)
 float3 HSVToRGB(in float3 HSV)
 {
     float3 RGB = HueToRGB(HSV.x);
-    return ((RGB-1)) * HSV.y + 1) * HSV.z;
+    return ((RGB-1) * HSV.y + 1) * HSV.z;
 }
 
 float3 RGBToHSV(in float3 RGB)
@@ -60,6 +60,11 @@ float3 XYZToRGB(in float3 RGB)
 }
 
 float RGBToGray(in float3 RGB)
+{
+    return dot(RGB, float3(0.299, 0.587, 0.114));
+}
+
+float RGBToLum(in float3 RGB)
 {
     return dot(RGB, float3(0.299, 0.587, 0.114));
 }
