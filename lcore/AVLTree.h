@@ -198,7 +198,7 @@ namespace lcore
         AVLTree<T,Allocator,Comparator>::find(const value_type& value)
     {
         node_type* node = root_.right_;
-        while(nullptr_ != node){
+        while(NULL != node){
             s32 cmp = comparator_(node->getValue(), value);
             if(cmp == 0){
                 return &node->getValue();
@@ -217,7 +217,7 @@ namespace lcore
         AVLTree<T,Allocator,Comparator>::find(const value_type& value) const
     {
         const node_type* node = root_.right_;
-        while(nullptr_ != node){
+        while(NULL != node){
             s32 cmp = comparator_(node->getValue(), value);
             if(cmp == 0){
                 return &node->getValue();

@@ -696,7 +696,7 @@ namespace lcore
     template<class T, class Comp>
     void Timsort<T, Comp>::merge_collapse()
     {
-        struct s_slice* p = pending_;
+        s_slice* p = pending_;
         while(1<numPendings_){
             s32 n = numPendings_ - 2;
             if(0<n && p[n-1].length_<=p[n].length_ + p[n+1].length_){
@@ -744,6 +744,7 @@ namespace lcore
         sortslice::copy_incr(dest, ssb);
         --nb;
 
+        s32 min_gallop = min_gallop_;
         if(0 == nb){
             goto Succeed;
         }
@@ -751,7 +752,6 @@ namespace lcore
             goto CopyB;
         }
 
-        s32 min_gallop = min_gallop_;
         s32 k;
         for(;;){
             s32 acount = 0;
@@ -867,6 +867,8 @@ CopyB:
         //marge_atのgallop_leftで, ssb.keys_[nb-1]< ssb.keys_[na-1] <= ssb.keys_[nb]
         sortslice::copy_decr(dest, ssa);
         --na;
+
+        s32 min_gallop = min_gallop_;
         if(0 == na){
             goto Succeed;
         }
@@ -874,7 +876,6 @@ CopyB:
             goto CopyA;
         }
 
-        s32 min_gallop = min_gallop_;
         s32 k;
         for(;;){
             s32 acount = 0;

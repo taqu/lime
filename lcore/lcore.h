@@ -439,6 +439,11 @@ namespace lcore
             return (std::numeric_limits<T>::max)();
         }
 
+        static T lowest() LNOTHROW
+        {
+            return std::numeric_limits<T>::lowest();
+        }
+
         static T inifinity() LNOTHROW
         {
             return std::numeric_limits<T>::infinity();
