@@ -31,7 +31,6 @@
 #include <dlfcn.h>
 #endif
 
-//#include "dlmalloc.h"
 #define JEMALLOC_EXPORT
 #include "jemalloc/jemalloc.h"
 #include "SyncObject.h"
@@ -44,8 +43,6 @@ namespace
 {
 
 #ifdef LCORE_DEBUG_MEMORY_INFO
-    static const lcore::s32 DebugInfoMemorySize = 1024*1024;
-    //lcore::MemorySpace debugInfoMemorySpace_;
 
     class DebugMemory
     {
@@ -347,6 +344,40 @@ namespace
     }
 #endif
 }
+
+    f32 clamp01(f32 v)
+    {
+        UnionS32F32 u;
+        u.f32_ = v;
+
+        s32 s = u.s32_ >> 31;
+        s = ~s;
+        u.s32_ &= s;
+
+        u.f32_ -= 1.0f;
+        s = u.s32_ >> 31;
+        u.s32_ &= s;
+        u.f32_ += 1.0f;
+        return u.f32_;
+    }
+
+    f32 clamp11(f32 v)
+    {
+        UnionS32F32 u;
+        u.f32_ = v;
+
+
+        s32 s = u.s32_ >> 31;
+        s32 sign = s<<31;
+        u.s32_ &= ~sign;
+
+        u.f32_ -= 1.0f;
+        s = u.s32_ >> 31;
+        u.s32_ &= s;
+        u.f32_ += 1.0f;
+        u.s32_ |= sign;
+        return u.f32_;
+    }
 
     f32 clampRotate0(f32 val, f32 total)
     {
@@ -752,63 +783,6 @@ namespace
         va_end(ap);
 #endif
     }
-
-//    MemorySpace::MemorySpace()
-//        :mspace_(NULL)
-//    {
-//    }
-//
-//    MemorySpace::~MemorySpace()
-//    {
-//        destroy();
-//    }
-//
-//    bool MemorySpace::create(u32 capacity, Locked locked)
-//    {
-//#ifdef ANDROID
-//        return false;
-//#else
-//        destroy();
-//        mspace_ = create_mspace(capacity, locked);
-//        return (NULL != mspace_);
-//#endif
-//    }
-//
-//    void MemorySpace::destroy()
-//    {
-//#ifdef ANDROID
-//#else
-//        if(NULL != mspace_){
-//            size_t size = destroy_mspace(mspace_);
-//            lcore::Log("mspace size freed %d", size);
-//            mspace_ = NULL;
-//        }
-//#endif
-//    }
-//
-//    bool MemorySpace::valid() const
-//    {
-//        return (NULL != mspace_);
-//    }
-//
-//    void* MemorySpace::allocate(u32 size)
-//    {
-//#ifdef ANDROID
-//        return NULL;
-//#else
-//        LASSERT(NULL != mspace_);
-//        return mspace_malloc(mspace_, size);
-//#endif
-//    }
-//
-//    void MemorySpace::deallocate(void* mem)
-//    {
-//#ifdef ANDROID
-//#else
-//        LASSERT(NULL !=  mspace_);
-//        mspace_free(mspace_, mem);
-//#endif
-//    }
 
     //---------------------------------------------------------
     //---

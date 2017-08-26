@@ -77,12 +77,12 @@ namespace lcore
 
         inline node_type* create(const T& value)
         {
-            return LNEW node_type(nullptr_, nullptr_, RBColor_Red, value);
+            return TNEW node_type(nullptr_, nullptr_, RBColor_Red, value);
         }
 
         inline void destroy(node_type*& node)
         {
-            LDELETE(node);
+            TDELETE(node);
             node = nullptr_;
         }
     };
@@ -161,10 +161,10 @@ namespace lcore
         bool balanceInsertRight(node_type*& node);
         void setRed(node_type* node);
 
-        bool removeInternal(node_type*& node, const value_type& value);
+        node_type* removeInternal(bool& result, node_type* node, const value_type& value);
 
-        bool balanceRemoveLeft(node_type*& node);
-        bool balanceRemoveRight(node_type*& node);
+        node_type* balanceRemoveLeft(bool& result, node_type* node, bool flag);
+        node_type* balanceRemoveRight(bool& result, node_type* node, bool flag);
         const value_type& findMin(node_type* node) const;
 
         void clearInternal(node_type*& node);
@@ -302,7 +302,8 @@ namespace lcore
     template<class T, class Allocator, class Comparator, class Traversal>
     void RedBlackTree<T,Allocator,Comparator, Traversal>::remove(const value_type& value)
     {
-        removeInternal(root_, value);
+        bool result;
+        root_ = removeInternal(result, root_, value);
         if(root_){
             root_->setBlack();
         }
@@ -388,8 +389,8 @@ namespace lcore
     template<class T, class Allocator, class Comparator, class Traversal>
     bool RedBlackTree<T,Allocator,Comparator, Traversal>::balanceInsertLeft(node_type*& node)
     {
-        LASSERT(nullptr_ != node);
-        LASSERT(node->isBlack());
+        TASSERT(nullptr_ != node);
+        TASSERT(node->isBlack());
         if(node->left_->right_->isRed()){
             node->left_ = rotateLeft(node->left_);
         }
@@ -408,8 +409,8 @@ namespace lcore
     template<class T, class Allocator, class Comparator, class Traversal>
     bool RedBlackTree<T,Allocator,Comparator, Traversal>::balanceInsertRight(node_type*& node)
     {
-        LASSERT(nullptr_ != node);
-        LASSERT(node->isBlack());
+        TASSERT(nullptr_ != node);
+        TASSERT(node->isBlack());
         if(node->right_->left_->isRed()){
             node->right_ = rotateRight(node->right_);
         }
@@ -435,69 +436,70 @@ namespace lcore
 
     //---------------------------------------------------------------
     template<class T, class Allocator, class Comparator, class Traversal>
-    bool RedBlackTree<T,Allocator,Comparator, Traversal>::removeInternal(node_type*& node, const value_type& value)
+    typename RedBlackTree<T,Allocator,Comparator, Traversal>::node_type*
+        RedBlackTree<T,Allocator,Comparator, Traversal>::removeInternal(bool& result, node_type* node, const value_type& value)
     {
+        result = true;
         if(nullptr_ == node){
-            return true;
+            return nullptr_;
         }
 
         s32 cmp = comparator_(node->getValue(), value);
         if(0<cmp){
-            if(removeInternal(node->left_, value)){
-                return true;
-            }
-            return balanceRemoveLeft(node);
+            node->left_ = removeInternal(result, node->left_, value);
+            return balanceRemoveLeft(result, node, result);
 
         }else if(cmp<0){
-            if(removeInternal(node->right_, value)){
-                return true;
-            }
-            return balanceRemoveRight(node);
+            node->right_ = removeInternal(result, node->right_, value);
+            return balanceRemoveRight(result, node, result);
         }
 
         node_type* current = node;
-        //value == node->value_
         if(nullptr_ == current->left_ && nullptr_ == current->right_){
-            bool ret = current->isRed();
-            node = nullptr_;
+            result = current->isRed();
             allocator_.destroy(current);
-            return ret;
+            return nullptr_;
 
         }else if(nullptr_ == current->right_){
             current->left_->setBlack();
             node = node->left_;
             allocator_.destroy(current);
-            return true;
+            return node;
 
         }else if(nullptr_ == current->left_){
             current->right_->setBlack();
             node = node->right_;
             allocator_.destroy(current);
-            return true;
+            return node;
 
         }
 
         node->value_ = findMin(node->right_);
-        if(removeInternal(node->right_, node->getValue())){
-            return true;
-        }
-        return balanceInsertRight(node);
+        node->right_ = removeInternal(result, node->right_, node->getValue());
+        return balanceRemoveRight(result, node, result);
     }
 
     //---------------------------------------------------------------
     template<class T, class Allocator, class Comparator, class Traversal>
-    bool RedBlackTree<T,Allocator,Comparator, Traversal>::balanceRemoveLeft(node_type*& node)
+    typename RedBlackTree<T,Allocator,Comparator, Traversal>::node_type*
+        RedBlackTree<T,Allocator,Comparator, Traversal>::balanceRemoveLeft(bool& result, node_type* node, bool flag)
     {
+        if(flag){
+            result = flag;
+            return node;
+        }
         if(node->right_->left_->isBlack() && node->right_->right_->isBlack()){
             if(node->right_->isBlack()){
                 node->right_->setRed();
                 if(node->isBlack()){
-                    return false;
+                    result = false;
+                    return node;
                 }
                 node->setBlack();
             }else{
                 node = rotateLeft(node);
-                balanceRemoveLeft(node->left_);
+                bool tmp;
+                node->left_ = balanceRemoveLeft(tmp, node->left_, false);
             }
         }else{
             if(node->right_->left_->isRed()){
@@ -507,23 +509,32 @@ namespace lcore
             node->left_->setBlack();
             node->right_->setBlack();
         }
-        return true;
+        result = true;
+        return node;
     }
 
     //---------------------------------------------------------------
     template<class T, class Allocator, class Comparator, class Traversal>
-    bool RedBlackTree<T,Allocator,Comparator, Traversal>::balanceRemoveRight(node_type*& node)
+    typename RedBlackTree<T,Allocator,Comparator, Traversal>::node_type*
+        RedBlackTree<T,Allocator,Comparator, Traversal>::balanceRemoveRight(bool& result, node_type* node, bool flag)
     {
+        if(flag){
+            result = flag;
+            return node;
+        }
+
         if(node->left_->left_->isBlack() && node->left_->right_->isBlack()){
             if(node->left_->isBlack()){
                 node->left_->setRed();
                 if(node->isBlack()){
-                    return false;
+                    result = false;
+                    return node;
                 }
                 node->setBlack();
             }else{
                 node = rotateRight(node);
-                balanceRemoveRight(node->right_);
+                bool tmp;
+                node->right_ = balanceRemoveRight(tmp, node->right_, false);
             }
         }else{
             if(node->left_->right_->isRed()){
@@ -533,7 +544,8 @@ namespace lcore
             node->left_->setBlack();
             node->right_->setBlack();
         }
-        return true;
+        result = true;
+        return node;
     }
 
     //---------------------------------------------------------------
@@ -553,10 +565,10 @@ namespace lcore
     typename RedBlackTree<T,Allocator,Comparator, Traversal>::node_type*
         RedBlackTree<T,Allocator,Comparator, Traversal>::rotateRight(node_type* node)
     {
-        LASSERT(nullptr_ != node);
+        TASSERT(nullptr_ != node);
 
         node_type* left = node->left_;
-        LASSERT(nullptr_ != left); //‰E‰ñ“]‚·‚éê‡•K‚¸‘¶Ý
+        TASSERT(nullptr_ != left); //‰E‰ñ“]‚·‚éê‡•K‚¸‘¶Ý
 
         node->left_ = left->right_;
         
@@ -573,10 +585,10 @@ namespace lcore
     typename RedBlackTree<T,Allocator,Comparator, Traversal>::node_type*
         RedBlackTree<T,Allocator,Comparator, Traversal>::rotateLeft(node_type* node)
     {
-        LASSERT(nullptr_ != node);
+        TASSERT(nullptr_ != node);
 
         node_type* right = node->right_;
-        LASSERT(nullptr_ != right); //¶‰ñ“]‚·‚éê‡•K‚¸‘¶Ý
+        TASSERT(nullptr_ != right); //¶‰ñ“]‚·‚éê‡•K‚¸‘¶Ý
 
         node->right_ = right->left_;
 
@@ -639,7 +651,7 @@ namespace lcore
         for(s32 i=0; i<level; ++i){
             std::cout << ' ';
         }
-        std::cout << (node->isRed()? "R:" : "B:") << node->value_ << std::endl;
+        std::cout << node->value_ << std::endl;
         printInternal(node->right_, level+1);
     }
 

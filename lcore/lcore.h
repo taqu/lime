@@ -19,6 +19,8 @@
 #if defined(ANDROID) || defined(__GNUC__)
 #include <stdint.h>
 #include <time.h>
+#include <cmath>
+#include <utility>
 #endif //ANDROID __GNUC__
 
 #if defined(ANDROID)
@@ -82,7 +84,7 @@ void operator delete[](void* ptr, const char* file, int line);
 #elif __cplusplus < 201103L
 #define LNOTHROW throw()
 #else
-#define LNOTHROW nothrow
+#define LNOTHROW noexcept
 #endif
 
 // メモリ確保・開放
@@ -161,7 +163,7 @@ static const uintptr_t LALIGN16_MASK = (0xFU);
 #if defined(_DEBUG)
 
 #if defined(ANDROID)
-#define LASSERT(expression) {if((expression)==false){__android_log_assert("assert", "lime", "%s (%d)", __FILE__, __LINE__);}}while(0)
+#define LASSERT(expression) {if(false == (expression)){__android_log_assert("assert", "lime", "%s (%d)", __FILE__, __LINE__);}}while(0)
 
 #elif defined(__GNUC__)
 #define LASSERT(expression) assert(expression)
@@ -465,7 +467,7 @@ namespace lcore
 
     union UnionU32F32
     {
-        s32 u32_;
+        u32 u32_;
         f32 f32_;
     };
 
@@ -477,7 +479,7 @@ namespace lcore
 
     union UnionU64F64
     {
-        s64 u64_;
+        u64 u64_;
         f64 f64_;
     };
 
@@ -546,22 +548,7 @@ namespace lcore
         else return val;
     }
 
-    inline f32 clamp01(f32 v)
-    {
-        UnionU32F32 u;
-        u.f32_ = v;
-        
-
-        u32 s = u.u32_ >> 31;
-        s = ~s;
-        u.u32_ &= s;
-
-        u.f32_ -= 1.0f;
-        s = u.u32_ >> 31;
-        u.u32_ &= s;
-        u.f32_ += 1.0f;
-        return u.f32_;
-    }
+    f32 clamp01(f32 v);
 
     f32 clampRotate0(f32 val, f32 total);
     s32 clampRotate0(s32 val, s32 total);

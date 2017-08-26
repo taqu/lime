@@ -9,7 +9,6 @@
 
 namespace lcore
 {
-
     enum AVLSub
     {
         AVLSub_Left=0,

@@ -83,6 +83,15 @@ namespace lcore
         bool operator==(const Char* str) const;
         bool operator!=(const Char* str) const;
 
+        friend inline bool operator==(const Char* str, const this_type& rhs)
+        {
+            return rhs == str;
+        }
+        friend inline bool operator!=(const Char* str, const this_type& rhs)
+        {
+            return rhs != str;
+        }
+
         this_type& operator=(const this_type& rhs);
 
         s32 append(s32 length, const Char* str);
