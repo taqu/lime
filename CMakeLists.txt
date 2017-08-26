@@ -56,6 +56,5 @@ add_subdirectory(lmath)
 add_subdirectory(lgraphics)
 add_subdirectory(lsound)
 add_subdirectory(lframework)
-add_subdirectory(lrender)
 
 #target_link_libraries(${ProjectName} debug "${FBX_SDK}lib/vs2013/x64/debug/libfbxsdk-mt.lib" optimized "${FBX_SDK}lib/vs2013/x64/release/libfbxsdk-mt.lib")
