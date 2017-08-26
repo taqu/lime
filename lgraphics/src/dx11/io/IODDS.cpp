@@ -277,7 +277,7 @@ namespace io
             return Data_Unknown;
         }
 
-        void getSize(DataFormat format, u32 width, u32 height, u32& size, u32& pitch, u32& numRows)
+        void getSize(DataFormat format, u32 width, u32 height, u32& size, u32& pitch)
         {
             bool compress = false;
             u32 minSize = 0;
@@ -317,6 +317,7 @@ namespace io
                 minSize = 16;
                 break;
             };
+            u32 numRows;
             if(compress){
                 pitch = minSize * lcore::maximum<u32>(1, width>>2);
                 numRows = lcore::maximum<u32>(1, height>>2);
@@ -327,6 +328,61 @@ namespace io
             size = numRows * pitch;
         }
 
+        void getSize(DataFormat format, u32 width, u32 height, u32 depth, u32& size, u32& pitch, u32& slicePitch)
+        {
+            bool compress = false;
+            u32 minSize = 0;
+            switch(format)
+            {
+            case Data_BC1_TypeLess:
+            case Data_BC1_UNorm:
+            case Data_BC1_UNorm_SRGB:
+
+            case Data_BC4_TypeLess:
+            case Data_BC4_UNorm:
+            case Data_BC4_SNorm:
+                compress = true;
+                minSize = 8;
+                break;
+
+            case Data_BC2_TypeLess:
+            case Data_BC2_UNorm:
+            case Data_BC2_UNorm_SRGB:
+
+            case Data_BC3_TypeLess:
+            case Data_BC3_UNorm:
+            case Data_BC3_UNorm_SRGB:
+
+            case Data_BC5_TypeLess:
+            case Data_BC5_UNorm:
+            case Data_BC5_SNorm:
+
+            case Data_BC6H_TypeLess:
+            case Data_BC6H_UF16:
+            case Data_BC6H_SF16:
+
+            case Data_BC7_TypeLess:
+            case Data_BC7_UNorm:
+            case Data_BC7_UNorm_SRGB:
+                compress = true;
+                minSize = 16;
+                break;
+            };
+            u32 numRows;
+            u32 numSlices;
+            if(compress){
+                pitch = minSize * lcore::maximum<u32>(1, width>>2);
+                numRows = lcore::maximum<u32>(1, height>>2);
+                slicePitch = pitch * numRows;
+                numSlices = lcore::maximum<u32>(1, depth>>2);
+            }else{
+                pitch = (width * getBitsPerPixel(format) + 7) >> 3;
+                numRows = height;
+                slicePitch = pitch * numRows;
+                numSlices = depth;
+            }
+            size = slicePitch * depth;
+        }
     }
 
     bool IODDS::checkSignature(lcore::istream& is)
@@ -421,7 +477,6 @@ namespace io
 
         u32 bytes = 0;
         u32 pitch = 0;
-        u32 numRows = 0;
         u32 w, h;
         const u8* mem = data + stream.tellg();
         u32 index = 0;
@@ -429,7 +484,7 @@ namespace io
             w = header.width_;
             h = header.height_;
             for(u32 j=0; j<mipmapLevel; ++j, ++index){
-                getSize(format, w, h, bytes, pitch, numRows);
+                getSize(format, w, h, bytes, pitch);
                 initData[index].mem_ = mem;
                 initData[index].pitch_ = pitch;
                 initData[index].slicePitch_ = 0;
@@ -463,6 +518,124 @@ namespace io
             height,
             mipmapLevel,
             arraySize,
+            format,
+            usage,
+            bindFlag,
+            access,
+            misc,
+            initData);
+
+        return true;
+    }
+
+    bool IODDS::read(
+        Texture3DRef& texture,
+        s32 size,
+        const u8* data,
+        Usage usage,
+        BindFlag bindFlag,
+        CPUAccessFlag access,
+        ResourceMisc misc,
+        bool sRGB,
+        u32& width, u32& height, u32& depth, DataFormat& format)
+    {
+        static const u32 MaxNumSubResourceData = 256;
+        SubResourceData initData[MaxNumSubResourceData];
+
+        lcore::ibstream stream(size, data);
+
+        u32 magic = 0;
+        lcore::io::read(stream, magic);
+        if(magic != DDS_MAGIC){
+            return false;
+        }
+
+        DDS_HEADER header;
+        lcore::io::read(stream, header);
+
+        if(stream.eof()){
+            return false;
+        }
+
+        if(header.size_ != DDS_HEADER_SIZE){
+            return false;
+        }
+
+        format = Data_Unknown;
+        u32 arraySize = 0;
+        DDS_HEADER_DXT10 header10;
+        if((header.ddpf_.flags_ & DDPF_FOURCC) != 0
+            && header.ddpf_.fourCC_ == DDS_DX10)
+        {
+            lcore::io::read(stream, header10);
+            format = static_cast<DataFormat>(header10.format_);
+            arraySize = header10.arraySize_;
+            if(1<arraySize){
+                return false;
+            }
+
+        }else{
+            format = selectFormat(header.ddpf_, sRGB);
+
+            if((header.caps2_ & DDSCAPS2_CUBEMAP) != 0){
+                return false;
+            }
+            arraySize = 1;
+        }
+
+        if(format == Data_Unknown){
+            return false;
+        }
+
+        u32 mipmapLevel = (header.mipmap_ > 0)? header.mipmap_ : 1;
+
+        u32 numSubResources = arraySize * mipmapLevel;
+        if(MaxNumSubResourceData<numSubResources){
+            return false;
+        }
+
+        u32 bytes = 0;
+        u32 pitch = 0;
+        u32 slicePitch = 0;
+        u32 w, h, d;
+        const u8* mem = data + stream.tellg();
+        u32 index = 0;
+        {
+            w = header.width_;
+            h = header.height_;
+            d = header.depth_;
+            for(u32 j=0; j<mipmapLevel; ++j, ++index){
+                getSize(format, w, h, d, bytes, pitch, slicePitch);
+                initData[index].mem_ = mem;
+                initData[index].pitch_ = pitch;
+                initData[index].slicePitch_ = slicePitch;
+                mem += bytes;
+
+                w = lcore::maximum<u32>(1, w>>1);
+                h = lcore::maximum<u32>(1, h>>1);
+                d = lcore::maximum<u32>(1, d>>1);
+            }
+        }
+
+        //u32 fileSize = (u32)mem - (u32)data;
+
+        SRVDesc viewDesc;
+        viewDesc.format_ = format;
+
+        {
+            viewDesc.dimension_ = SRVDimension_Texture3D;
+            viewDesc.tex3D_.mostDetailedMip_ = 0;
+            viewDesc.tex3D_.mipLevels_ = mipmapLevel;
+        }
+
+        width = header.width_;
+        height = header.height_;
+        depth = header.depth_;
+        texture = Texture::create3D(
+            width,
+            height,
+            depth,
+            mipmapLevel,
             format,
             usage,
             bindFlag,

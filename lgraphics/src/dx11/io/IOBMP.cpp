@@ -183,26 +183,54 @@ namespace io
         lcore::io::read(is, magic);
 
         BMP_HEADER header;
-        lcore::io::read(is, header);
+        if(lcore::io::read(is, header)<=0){
+            return false;
+        }
 
         if(magic != BMP_MAGIC){
             return false;
         }
 
+        BMP_INFOHEADERV5 infoHeader = {0};
+        if(lcore::io::read(is, &infoHeader, sizeof(u32))<=0){
+            return false;
+        }
+        switch(infoHeader.infoSize_)
+        {
+        case 40:
+            if(lcore::io::read(is, &infoHeader.width_, 40-sizeof(u32))<=0){
+                return false;
+            }
+            break;
+        case 108:
+            if(lcore::io::read(is, &infoHeader.width_, 108-sizeof(u32))<=0){
+                return false;
+            }
+            break;
+        case 124:
+            if(lcore::io::read(is, &infoHeader.width_, 124-sizeof(u32))<=0){
+                return false;
+            }
+            break;
+        default:
+            return false;
+        }
+
+
         //無圧縮だけ受け入れる
-        if(header.compression_ != Compression_RGB){
+        if(infoHeader.compression_ != Compression_RGB){
             return false;
         }
 
         //24bitか32bitのみ受け入れる
-        if(header.bitCount_ != 24
-            && header.bitCount_ != 32)
+        if(infoHeader.bitCount_ != 24
+            && infoHeader.bitCount_ != 32)
         {
             return false;
         }
 
-        width = static_cast<u32>(header.width_);
-        height = static_cast<u32>(header.height_);
+        width = static_cast<u32>(infoHeader.width_);
+        height = static_cast<u32>(infoHeader.height_);
 
 
         format = (sRGB)? Data_R8G8B8A8_UNorm_SRGB : Data_R8G8B8A8_UNorm;
@@ -211,13 +239,15 @@ namespace io
             return true;
         }
 
-        bool leftTop = (header.height_<0);
+        bool leftTop = (infoHeader.height_<0);
         if(transpose){
             leftTop = !leftTop;
         }
 
+        is.seekg(startPos+header.offset_, lcore::ios::beg); //ファイルポインタをデータ位置に進める
+
         //DX版
-        switch(header.bitCount_)
+        switch(infoHeader.bitCount_)
         {
         case 32:
             {
@@ -287,47 +317,51 @@ namespace io
     bool IOBMP::write(lcore::ostream& os, const u8* buffer, u32 width, u32 height, WriteFormat format)
     {
         BMP_HEADER header = {0};
+        BMP_INFOHEADER infoHeader = {0};
         u32 fileSize = sizeof(BMP_MAGIC);
         fileSize += sizeof(BMP_HEADER);
+        fileSize += sizeof(BMP_INFOHEADER);
 
         header.reserve1_ = 0;
         header.reserve2_ = 0;
-        header.size_ = fileSize;
+        header.size_ = sizeof(BMP_MAGIC)+sizeof(BMP_INFOHEADER);
         header.offset_ = fileSize;
-        header.infoSize_ = INFO_SIZE;
-        header.width_ = width;
-        header.height_ = height;
-        header.planes_ = 1;
-        header.cirImportant_ = Compression_RGB;
-        header.sizeImage_ = 0;
-        header.xPixPerMeter_ = 0;
-        header.yPixPerMeter_ = 0;
-        header.clrUsed_ = 0;
-        header.cirImportant_ = 0;
+
+        infoHeader.infoSize_ = 40;
+        infoHeader.width_ = width;
+        infoHeader.height_ = height;
+        infoHeader.planes_ = 1;
+        infoHeader.compression_ = Compression_RGB;
+        infoHeader.sizeImage_ = 0;
+        infoHeader.xPixPerMeter_ = 0;
+        infoHeader.yPixPerMeter_ = 0;
+        infoHeader.colorUsed_ = 0;
+        infoHeader.colorImportant_ = 0;
 
         switch(format)
         {
         case WriteFormat_RGB:
             {
-                header.bitCount_ = 24;
+                infoHeader.bitCount_ = 24;
                 u32 dstPitch = (3*width + 0x03U) & (~0x03U);
-                header.sizeImage_ = dstPitch * height;
+                infoHeader.sizeImage_ = dstPitch * height;
             }
             break;
 
         case WriteFormat_RGBA:
-            header.bitCount_ = 32;
-            header.sizeImage_ = 4 * width * height;
+            infoHeader.bitCount_ = 32;
+            infoHeader.sizeImage_ = 4 * width * height;
             break;
 
         default:
             return false;
             break;
         };
-        header.size_ += header.sizeImage_;
+        header.size_ += infoHeader.sizeImage_;
 
         lcore::io::write(os, BMP_MAGIC);
         lcore::io::write(os, header);
+        lcore::io::write(os, infoHeader);
 
         switch(format)
         {

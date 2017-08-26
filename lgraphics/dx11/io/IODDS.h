@@ -12,6 +12,7 @@
 namespace lgfx
 {
     class Texture2DRef;
+    class Texture3DRef;
 
 namespace io
 {
@@ -65,6 +66,17 @@ namespace io
             ResourceMisc misc,
             bool sRGB,
             u32& width, u32& height, DataFormat& format);
+
+        static bool read(
+            Texture3DRef& texture,
+            s32 size,
+            const u8* data,
+            Usage usage,
+            BindFlag bindFlag,
+            CPUAccessFlag access,
+            ResourceMisc misc,
+            bool sRGB,
+            u32& width, u32& height, u32& depth, DataFormat& format);
     };
 }
 }

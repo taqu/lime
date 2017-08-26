@@ -782,11 +782,12 @@ namespace lgfx
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DEnableWDisableGEReverseZ]);
 
             // Disable comparing depth
-            desc.DepthEnable = FALSE;
-            desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_Greater);
+            desc.DepthEnable = TRUE;
+            desc.DepthFunc = static_cast<D3D11_COMPARISON_FUNC>(Cmp_Always);
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ALL;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DDisableWEnable]);
 
+            desc.DepthEnable = FALSE;
             desc.DepthWriteMask = D3D11_DEPTH_WRITE_MASK_ZERO;
             device_->CreateDepthStencilState(&desc, &depthStencilStates_[DepthStencil_DDisableWDisable]);
 
