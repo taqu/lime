@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <lcore/lcore.h>
 #include "TestMath.h"
+#include "TestVector3.h"
 #include "TestVector4.h"
 #include "TestMatrix44.h"
 #include "TestQuaternion.h"

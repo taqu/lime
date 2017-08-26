@@ -355,7 +355,7 @@ namespace
         ,numFaces_(0)
         ,faces_(NULL)
     {
-        position_.zero();
+        position_ = lmath::Vector3::zero();
     }
 
     QBVH::~QBVH()

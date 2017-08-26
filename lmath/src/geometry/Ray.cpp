@@ -19,8 +19,8 @@ namespace lmath
 
     void Ray::reset()
     {
-        origin_.zero();
-        direction_.zero();
+        origin_ = lmath::Vector3::zero();
+        direction_ = lmath::Vector3::zero();
         invDirection_ = Vector3::construct(LMATH_INFINITY);
         t_ = 0.0f;
     }

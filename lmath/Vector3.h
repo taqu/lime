@@ -60,77 +60,6 @@ namespace lmath
 
         inline bool isNan() const;
 
-
-        friend Vector3 operator+(const Vector3& v0, const Vector3& v1);
-        friend Vector3 operator-(const Vector3& v0, const Vector3& v1);
-        friend Vector3 operator*(f32 f, const Vector3& v);
-        friend Vector3 operator*(const Vector3& v, f32 f);
-        friend Vector3 operator*(const Vector3& v0, const Vector3& v1);
-        friend Vector3 operator/(const Vector3& v, f32 f);
-        friend Vector3 operator/(const Vector3& v0, const Vector3& v1);
-        friend Vector3 normalize(const Vector3& v);
-        friend Vector3 normalize(const Vector3& v, f32 lengthSqr);
-        friend Vector3 normalizeChecked(const Vector3& v);
-        friend Vector3 absolute(const Vector3& v);
-
-        friend f32 dot(const Vector3& v0, const Vector3& v1);
-        friend f32 distanceSqr(const Vector3& v0, const Vector3& v1);
-        friend f32 distance(const Vector3& v0, const Vector3& v1);
-
-        friend Vector3 cross(const Vector3& v0, const Vector3& v1);
-
-        /**
-        @brief 線形補間。v = (1-t)*v0 + t*v1
-        @param v0 ... 
-        @param v1 ... 
-        */
-        friend Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t);
-
-        /**
-        @brief 線形補間。v = t1*v0 + t0*v1
-        @param v0 ... 
-        @param v1 ... 
-        */
-        friend Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t0, f32 t1);
-
-        friend Vector3 mul(f32 f, const Vector3& v);
-        friend Vector3 mul(const Vector3& v, f32 f);
-
-        friend Vector3 mul(const Matrix34& m, const Vector3& v);
-        friend Vector3 mul(const Vector3& v, const Matrix34& m);
-
-        friend Vector3 mul33(const Matrix34& m, const Vector3& v);
-        friend Vector3 mul33(const Vector3& v, const Matrix34& m);
-
-        friend Vector3 mul33(const Matrix44& m, const Vector3& v);
-        friend Vector3 mul33(const Vector3& v, const Matrix44& m);
-
-        friend Vector3 rotate(const Vector3& v, const Quaternion& rotation);
-        friend Vector3 rotate(const Quaternion& rotation, const Vector3& v);
-
-        friend Vector3 add(const Vector3& v0, const Vector3& v1);
-        friend Vector3 sub(const Vector3& v0, const Vector3& v1);
-        friend Vector3 mul(const Vector3& v0, const Vector3& v1);
-        friend Vector3 div(const Vector3& v0, const Vector3& v1);
-
-        friend Vector3 minimum(const Vector3& v0, const Vector3& v1);
-        friend Vector3 maximum(const Vector3& v0, const Vector3& v1);
-
-        friend f32 minimum(const Vector3& v);
-        friend f32 maximum(const Vector3& v);
-
-        /**
-        @brief v0*v1 + v2
-        */
-        friend Vector3 muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2);
-
-        /**
-        @brief a*v1 + v2
-        */
-        friend Vector3 muladd(f32 a, const Vector3& v0, const Vector3& v1);
-
-
-        //SSEセット・ストア命令
         inline static lm128 load(const Vector3& v)
         {
             return load3(&v.x_);
@@ -151,13 +80,84 @@ namespace lmath
             store3(&v.x_, r);
         }
 
-        inline static Vector3 store(const lm128& r)
+        inline static Vector3&& store(const lm128& r)
         {
             Vector3 v;
             store3(&v.x_, r);
-            return v;
+            return lcore::move(v);
         }
 
+        //--- Friend functions
+        //--------------------------------------------------
+        friend Vector3 operator+(const Vector3& v0, const Vector3& v1);
+        friend Vector3 operator-(const Vector3& v0, const Vector3& v1);
+        friend Vector3 operator*(f32 f, const Vector3& v);
+        friend Vector3 operator*(const Vector3& v, f32 f);
+        friend Vector3 operator*(const Vector3& v0, const Vector3& v1);
+        friend Vector3&& operator/(const Vector3& v, f32 f);
+        friend Vector3&& operator/(const Vector3& v0, const Vector3& v1);
+        friend Vector3&& normalize(const Vector3& v);
+        friend Vector3&& normalize(const Vector3& v, f32 lengthSqr);
+        friend Vector3&& normalizeChecked(const Vector3& v);
+        friend Vector3 absolute(const Vector3& v);
+
+        friend f32 dot(const Vector3& v0, const Vector3& v1);
+        friend f32 distanceSqr(const Vector3& v0, const Vector3& v1);
+        friend f32 distance(const Vector3& v0, const Vector3& v1);
+
+        friend Vector3 cross(const Vector3& v0, const Vector3& v1);
+
+        /**
+        @brief 線形補間。v = (1-t)*v0 + t*v1
+        @param v0 ... 
+        @param v1 ... 
+        */
+        friend Vector3&& lerp(const Vector3& v0, const Vector3& v1, f32 t);
+
+        /**
+        @brief 線形補間。v = t1*v0 + t0*v1
+        @param v0 ... 
+        @param v1 ... 
+        */
+        friend Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t0, f32 t1);
+
+        friend Vector3 mul(f32 f, const Vector3& v);
+        friend Vector3&& mul(const Vector3& v, f32 f);
+
+        friend Vector3&& mul(const Matrix34& m, const Vector3& v);
+        friend Vector3&& mul(const Vector3& v, const Matrix34& m);
+
+        friend Vector3&& mul33(const Matrix34& m, const Vector3& v);
+        friend Vector3&& mul33(const Vector3& v, const Matrix34& m);
+
+        friend Vector3&& mul33(const Matrix44& m, const Vector3& v);
+        friend Vector3&& mul33(const Vector3& v, const Matrix44& m);
+
+        friend Vector3 rotate(const Vector3& v, const Quaternion& rotation);
+        friend Vector3 rotate(const Quaternion& rotation, const Vector3& v);
+
+        friend Vector3 add(const Vector3& v0, const Vector3& v1);
+        friend Vector3 sub(const Vector3& v0, const Vector3& v1);
+        friend Vector3 mul(const Vector3& v0, const Vector3& v1);
+        friend Vector3&& div(const Vector3& v0, const Vector3& v1);
+
+        friend Vector3 minimum(const Vector3& v0, const Vector3& v1);
+        friend Vector3 maximum(const Vector3& v0, const Vector3& v1);
+
+        friend f32 minimum(const Vector3& v);
+        friend f32 maximum(const Vector3& v);
+
+        /**
+        @brief v0*v1 + v2
+        */
+        friend Vector3&& muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2);
+
+        /**
+        @brief a*v1 + v2
+        */
+        friend Vector3&& muladd(f32 a, const Vector3& v0, const Vector3& v1);
+
+        //--------------------------------------------------
         f32 x_;
         f32 y_;
         f32 z_;
@@ -165,7 +165,7 @@ namespace lmath
 
     //--------------------------------------------
     //---
-    //--- 実装
+    //--- Vector3
     //---
     //--------------------------------------------
     inline Vector3 Vector3::construct(f32 xyz)
@@ -287,12 +287,12 @@ namespace lmath
     Vector3 operator*(f32 f, const Vector3& v);
     Vector3 operator*(const Vector3& v, f32 f);
     Vector3 operator*(const Vector3& v0, const Vector3& v1);
-    Vector3 operator/(const Vector3& v, f32 f);
-    Vector3 operator/(const Vector3& v0, const Vector3& v1);
+    Vector3&& operator/(const Vector3& v, f32 f);
+    Vector3&& operator/(const Vector3& v0, const Vector3& v1);
 
-    Vector3 normalize(const Vector3& v);
-    Vector3 normalize(const Vector3& v, f32 lengthSqr);
-    Vector3 normalizeChecked(const Vector3& v);
+    Vector3&& normalize(const Vector3& v);
+    Vector3&& normalize(const Vector3& v, f32 lengthSqr);
+    Vector3&& normalizeChecked(const Vector3& v);
 
     Vector3 absolute(const Vector3& v);
 
@@ -314,7 +314,7 @@ namespace lmath
     @param v0 ...
     @param v1 ...
     */
-    Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t);
+    Vector3&& lerp(const Vector3& v0, const Vector3& v1, f32 t);
 
     /**
     @brief 線形補間。v = t1*v0 + t0*v1
@@ -328,19 +328,19 @@ namespace lmath
         return f*v;
     }
 
-    inline Vector3 mul(const Vector3& v, f32 f)
+    inline Vector3&& mul(const Vector3& v, f32 f)
     {
         return v*f;
     }
 
-    Vector3 mul(const Matrix34& m, const Vector3& v);
-    Vector3 mul(const Vector3& v, const Matrix34& m);
+    Vector3&& mul(const Matrix34& m, const Vector3& v);
+    Vector3&& mul(const Vector3& v, const Matrix34& m);
 
-    Vector3 mul33(const Matrix34& m, const Vector3& v);
-    Vector3 mul33(const Vector3& v, const Matrix34& m);
+    Vector3&& mul33(const Matrix34& m, const Vector3& v);
+    Vector3&& mul33(const Vector3& v, const Matrix34& m);
 
-    Vector3 mul33(const Matrix44& m, const Vector3& v);
-    Vector3 mul33(const Vector3& v, const Matrix44& m);
+    Vector3&& mul33(const Matrix44& m, const Vector3& v);
+    Vector3&& mul33(const Vector3& v, const Matrix44& m);
 
     Vector3 rotate(const Vector3& v, const Quaternion& rotation);
     Vector3 rotate(const Quaternion& rotation, const Vector3& v);
@@ -357,7 +357,7 @@ namespace lmath
     }
 
     Vector3 mul(const Vector3& v0, const Vector3& v1);
-    Vector3 div(const Vector3& v0, const Vector3& v1);
+    Vector3&& div(const Vector3& v0, const Vector3& v1);
 
 
     inline Vector3 minimum(const Vector3& v0, const Vector3& v1)
@@ -385,10 +385,10 @@ namespace lmath
     }
 
     // v0*v1 + v2
-    Vector3 muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2);
+    Vector3&& muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2);
 
     // a*v1 + v2
-    Vector3 muladd(f32 a, const Vector3& v0, const Vector3& v1);
+    Vector3&& muladd(f32 a, const Vector3& v0, const Vector3& v1);
 }
 
 #endif //INC_LMATH_VECTOR3_H__

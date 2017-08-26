@@ -222,7 +222,7 @@ namespace lmath
 
     void Sphere::combine(const Sphere& s0, const Sphere& s1)
     {
-        Vector4 dv = Vector4::construct(sub((const Vector4&)s0, (const Vector4&)s1));
+        Vector4 dv = sub((const Vector4&)s0, (const Vector4&)s1);
 
         f32 distance = lmath::sqrt(dv.x_*dv.x_ + dv.y_*dv.y_ + dv.z_*dv.z_);
 
@@ -237,7 +237,7 @@ namespace lmath
             d = (s0.r_<s1.r_)? s1.r_ : s0.r_;
             d = r - d;
 
-            (Vector4&)*this = Vector4::construct(lerp(s0, s1, d/distance));
+            (Vector4&)*this = lerp(s0, s1, d/distance);
             r_ = r;
         }
     }

@@ -54,15 +54,11 @@ namespace lmath
         // 0割り、0/0が起きた場合は、条件分岐で交差していないと判定される(IEEE754準拠
         lmath::Vector3 n = plane.normal();
 
-        f32 t0 = plane.d() - dot(n, ray.origin_);
-        t0 /= dot(n, ray.direction_);
+        t = plane.d() - dot(n, ray.origin_);
+        t /= dot(n, ray.direction_);
 
         // INFとの比較は正常に行われる。NaNと数値の判定は常に偽(IEEE754準拠
-        if(t0>=0.0 && t0<=ray.t_){
-            t = t0;
-            return true;
-        }
-        return false;
+        return (0.0f<=t && t<=ray.t_);
     }
 
 

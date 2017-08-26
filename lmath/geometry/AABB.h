@@ -33,8 +33,8 @@ namespace lmath
 
         void zero()
         {
-            bmin_.zero();
-            bmax_.zero();
+            bmin_ = lmath::Vector3::zero();
+            bmax_ = lmath::Vector3::zero();
         }
 
         void setInvalid()
@@ -103,8 +103,8 @@ namespace lmath
 
         void zero()
         {
-            bmin_.zero();
-            bmax_.zero();
+            bmin_ = lmath::Vector2::zero();
+            bmax_ = lmath::Vector2::zero();
         }
 
         void setInvalid()

@@ -87,7 +87,7 @@ namespace lmath
 
             for(s32 j=0; j<4; ++j){
                 for(s32 k=0; k<4; ++k){
-                    EXPECT_NEAR(invview0(j, k), invview1(j, k), 1.0e-6f);
+                    EXPECT_NEAR(invview0(j, k), invview1(j, k), 1.0e-5f);
                 }
             }
 
@@ -96,18 +96,18 @@ namespace lmath
             for(s32 j=0; j<4; ++j){
                 for(s32 k=0; k<4; ++k){
                     if(j==k){
-                        EXPECT_NEAR(identity(j,k), 1.0f, 1.0e-6f);
+                        EXPECT_NEAR(identity(j,k), 1.0f, 1.0e-5f);
                     }else{
-                        EXPECT_NEAR(identity(j,k), 0.0f, 1.0e-6f);
+                        EXPECT_NEAR(identity(j,k), 0.0f, 1.0e-5f);
                     }
                 }
             }
 
             lmath::Vector4 viewposition = Vector4::construct(mul(view, position));
             lmath::Vector4 worldposition = Vector4::construct(mul(invview0, viewposition));
-            EXPECT_FLOAT_EQ(position.x_, worldposition.x_);
-            EXPECT_FLOAT_EQ(position.y_, worldposition.y_);
-            EXPECT_FLOAT_EQ(position.z_, worldposition.z_);
+            EXPECT_NEAR(position.x_, worldposition.x_, 1.0e-5f);
+            EXPECT_NEAR(position.y_, worldposition.y_, 1.0e-5f);
+            EXPECT_NEAR(position.z_, worldposition.z_, 1.0e-5f);
         }
     }
 
@@ -196,9 +196,9 @@ namespace lmath
             lookAt(view, invview, Vector4::construct(0.1f, 0.1f, -1.0f, 0.0f), at, lmath::Vector4::Up);
             lmath::Vector4 viewposition = Vector4::construct(mul(view, position));
             lmath::Vector4 worldposition = Vector4::construct(mul(invview, viewposition));
-            EXPECT_FLOAT_EQ(position.x_, worldposition.x_);
-            EXPECT_FLOAT_EQ(position.y_, worldposition.y_);
-            EXPECT_FLOAT_EQ(position.z_, worldposition.z_);
+            EXPECT_NEAR(position.x_, worldposition.x_, 1.0e-5f);
+            EXPECT_NEAR(position.y_, worldposition.y_, 1.0e-5f);
+            EXPECT_NEAR(position.z_, worldposition.z_, 1.0e-5f);
         }
 
         for(s32 i=1; i<90; ++i){
@@ -212,7 +212,7 @@ namespace lmath
             lookAt(view, invview, lmath::Vector4::construct(0.1f, 0.1f, -1.0f, 0.0f), at, lmath::Vector4::Up);
             viewproj.mul(proj, view);
             invviewproj.mul(invview, invproj);
-            lmath::Vector4 screenposition = Vector4::construct(mul(viewproj, position));
+            lmath::Vector4 screenposition = mul(viewproj, position);
             screenposition /= screenposition.w_;
             if(screenposition.x_<-1.0f || 1.0f<screenposition.x_){
                 continue;
@@ -220,14 +220,12 @@ namespace lmath
             if(screenposition.y_<-1.0f || 1.0f<screenposition.y_){
                 continue;
             }
-            lm128 viewpos = mul(invproj, screenposition);
-            viewpos = mul(invview, Vector4::construct(viewpos));
-            lmath::Vector4 viewposition = Vector4::construct(viewpos);
-            viewpos = viewpos / viewposition.w_;
-            viewposition = Vector4::construct(viewpos);
-            EXPECT_FLOAT_EQ(position.x_, viewposition.x_);
-            EXPECT_FLOAT_EQ(position.y_, viewposition.y_);
-            EXPECT_FLOAT_EQ(position.z_, viewposition.z_);
+            Vector4 viewpos = mul(invproj, screenposition);
+            Vector4 worldpos = mul(invview, viewpos);
+            worldpos /= worldpos.w_;
+            EXPECT_NEAR(position.x_, worldpos.x_, 1.0e-5f);
+            EXPECT_NEAR(position.y_, worldpos.y_, 1.0e-5f);
+            EXPECT_NEAR(position.z_, worldpos.z_, 1.0e-5f);
         }
     }
 }

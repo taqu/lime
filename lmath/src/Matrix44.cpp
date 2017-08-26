@@ -1223,7 +1223,7 @@ namespace lmath
 
     void Matrix44::lookAt(const Vector4& at)
     {
-        Vector4 xaxis, yaxis, zaxis = Vector4::construct(normalize(at));
+        Vector4 xaxis, yaxis, zaxis = normalize(at);
 
         f32 d = dot(zaxis, Vector4::Up);
         if(lmath::isEqual(d, -1.0f, 0.000001f)){
@@ -1303,7 +1303,7 @@ namespace lmath
         f32 l = axis.lengthSqr();
         if(lmath::isZeroPositive(l)){
             axis.set(view(2,0), view(2,1), view(2,2), 0.0f);
-            axis = Vector4::construct(normalize(axis));
+            axis = normalize(axis);
         }else{
             axis /= lmath::sqrt(l);
         }
@@ -1312,7 +1312,7 @@ namespace lmath
 
     void Matrix44::axisAlign(const Vector4& axis, const Matrix44& view, const Vector4& position)
     {
-        Vector4 zaxis = Vector4::construct(normalize(axis));
+        Vector4 zaxis = normalize(axis);
 
         Vector4 yaxis = {view(1,0), view(1,1), view(1,2), 0.0f};
         f32 d = dot(yaxis, zaxis);
@@ -1593,7 +1593,7 @@ namespace lmath
     {
         LASSERT(lmath::isZero(at.w_));
 
-        Vector4 xaxis, yaxis, zaxis = Vector4::construct(normalize(at));
+        Vector4 xaxis, yaxis, zaxis = normalize(at);
 
         f32 d = zaxis.y_;
         if(lmath::isEqual(d, -1.0f, 0.000001f)){

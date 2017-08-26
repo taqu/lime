@@ -25,12 +25,12 @@ namespace lmath
         return {v.x_*l, v.y_*l};
     }
 
-    Vector2 lerp(const Vector2& v0, const Vector2& v1, f32 t)
+    Vector2&& lerp(const Vector2& v0, const Vector2& v1, f32 t)
     {
         Vector2 d = {v1.x_-v0.x_, v1.y_-v0.y_};
         d *= t;
         d += v0;
-        return d;
+        return lcore::move(d);
     }
 
     Vector2 muladd(f32 f, const Vector2& v0, const Vector2& v1)

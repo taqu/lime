@@ -64,6 +64,8 @@ namespace lmath
 
         inline bool isNan() const;
 
+        //--- Friend functions
+        //--------------------------------------------------
         friend Vector2 normalize(const Vector2& v);
         friend Vector2 normalizeChecked(const Vector2& v);
         friend Vector2 operator+(const Vector2& v0, const Vector2& v1);
@@ -74,7 +76,7 @@ namespace lmath
         friend f32 dot(const Vector2& v0, const Vector2& v1);
         friend f32 distanceSqr(const Vector2& v0, const Vector2& v1);
         friend f32 distance(const Vector2& v0, const Vector2& v1);
-        friend Vector2 lerp(const Vector2& v0, const Vector2& v1, f32 t);
+        friend Vector2&& lerp(const Vector2& v0, const Vector2& v1, f32 t);
 
         friend Vector2 add(const Vector2& v0, const Vector2& v1);
         friend Vector2 sub(const Vector2& v0, const Vector2& v1);
@@ -88,12 +90,13 @@ namespace lmath
         friend f32 minimum(const Vector2& v);
         friend f32 maximum(const Vector2& v);
 
+        //--------------------------------------------------
         f32 x_, y_;
     };
 
     //--------------------------------------------
     //---
-    //--- 実装
+    //--- Vector2
     //---
     //--------------------------------------------
     inline f32 Vector2::operator[](s32 index) const
@@ -180,6 +183,8 @@ namespace lmath
         return (lcore::isNan(x_) || lcore::isNan(y_));
     }
 
+    //--- Friend functions
+    //--------------------------------------------------
     Vector2 normalize(const Vector2& v);
 
     Vector2 normalizeChecked(const Vector2& v);
@@ -227,7 +232,7 @@ namespace lmath
         return lmath::sqrt(distanceSqr(v0, v1));
     }
 
-    Vector2 lerp(const Vector2& v0, const Vector2& v1, f32 t);
+    Vector2&& lerp(const Vector2& v0, const Vector2& v1, f32 t);
 
 
     inline Vector2 add(const Vector2& v0, const Vector2& v1)

@@ -104,7 +104,9 @@ namespace lmath
         return ( x_ * x_ + y_ * y_ + z_ * z_ + w_ * w_);
     }
 
-    return_type_vec4 normalize(const Vector4& v)
+    //--- Friend functions
+    //--------------------------------------------------
+    Vector4&& normalize(const Vector4& v)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v);
@@ -122,7 +124,7 @@ namespace lmath
 #else
         r1 = _mm_div_ps(r1, r0);
 #endif
-        return r1;
+        return Vector4::construct(r1);
 #else
         f32 l = lengthSqr();
         LASSERT( !lmath::isZero(l) );
@@ -131,7 +133,7 @@ namespace lmath
 #endif
     }
 
-    return_type_vec4 normalize(const Vector4& v, f32 lengthSqr)
+    Vector4&& normalize(const Vector4& v, f32 lengthSqr)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = _mm_set1_ps(lengthSqr);
@@ -144,7 +146,7 @@ namespace lmath
 #else
         r1 = _mm_div_ps(r1, r0);
 #endif
-        return r1;
+        return Vector4::construct(r1);
 #else
         f32 l = lengthSqr;
         LASSERT( !(lmath::isEqual(l, 0.0f)) );
@@ -154,12 +156,12 @@ namespace lmath
 #endif
     }
 
-    return_type_vec4 normalizeChecked(const Vector4& v)
+    Vector4&& normalizeChecked(const Vector4& v)
     {
 #if defined(LMATH_USE_SSE)
         f32 l = v.lengthSqr();
         if(lmath::isZeroPositive(l)){
-            return _mm_setzero_ps();
+            return Vector4::construct(_mm_setzero_ps());
         }else{
             return normalize(v, l);
         }
@@ -173,9 +175,9 @@ namespace lmath
 #endif
     }
 
-    return_type_vec4 absolute(const Vector4& v)
+    Vector4&& absolute(const Vector4& v)
     {
-        return _mm_andnot_ps(_mm_set1_ps(-0.0f), Vector4::load(v));
+        return Vector4::construct(_mm_andnot_ps(_mm_set1_ps(-0.0f), Vector4::load(v)));
     }
 
     f32 dot(const Vector4& v0, const Vector4& v1)
@@ -351,28 +353,7 @@ namespace lmath
 #endif
     }
 
-    Vector4 mulPoint(const Matrix44& m, const Vector4& v)
-    {
-        Vector4 tv=v;
-        tv.w_ = 1.0f;
-        lm128 t0 = mul(m, tv);
-        t0 = _mm_div_ps(t0, _mm_shuffle_ps(t0, t0, _MM_SHUFFLE(3,3,3,3)));
-        Vector4::store(tv, t0);
-        tv.w_ = v.w_;
-        return tv;
-    }
-
-    Vector4 mulVector(const Matrix44& m, const Vector4& v)
-    {
-        Vector4 tv=v;
-        tv.w_ = 0.0f;
-        lm128 t0 = mul(m, tv);
-        Vector4::store(tv, t0);
-        tv.w_ = v.w_;
-        return tv;
-    }
-
-    return_type_vec4 mul(const Matrix34& m, const Vector4& v)
+    Vector4&& mul(const Matrix34& m, const Vector4& v)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tm0 = _mm_loadu_ps(&m.m_[0][0]);
@@ -397,7 +378,7 @@ namespace lmath
         tm0 = _mm_add_ps(tm0, tm2);
         tm0 = _mm_add_ps(tm0, tm3);
 
-        return tm0;
+        return Vector4::construct(tm0);
 #else
         f32 x, y, z;
         x = v.x_ * m.m_[0][0] + v.y_ * m.m_[0][1] + v.z_ * m.m_[0][2] + v.w_ * m.m_[0][3];
@@ -407,7 +388,7 @@ namespace lmath
 #endif
     }
 
-    return_type_vec4 mul(const Vector4& v, const Matrix34& m)
+    Vector4&& mul(const Vector4& v, const Matrix34& m)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tv0 = _mm_set1_ps(v.x_);
@@ -436,7 +417,7 @@ namespace lmath
         tm0 = _mm_add_ps(tm0, tm2);
         tm0 = _mm_add_ps(tm0, tm3);
 
-        return tm0;
+        return Vector4::construct(tm0);
 
 #else
         f32 x, y, z, w;
@@ -451,7 +432,7 @@ namespace lmath
 
 
 
-    return_type_vec4 mul(const Matrix44& m, const Vector4& v)
+    Vector4&& mul(const Matrix44& m, const Vector4& v)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tm0 = _mm_loadu_ps(&m.m_[0][0]);
@@ -477,7 +458,7 @@ namespace lmath
         tm0 = _mm_add_ps(tm0, tm2);
         tm0 = _mm_add_ps(tm0, tm3);
 
-        return tm0;
+        return Vector4::construct(tm0);
 
 #elif defined(LMATH_USE_SSE)
         lm128 tm0 = _mm_loadu_ps(&m.m_[0][0]);
@@ -508,7 +489,7 @@ namespace lmath
 #endif
     }
 
-    return_type_vec4 mul(const Vector4& v, const Matrix44& m)
+    Vector4&& mul(const Vector4& v, const Matrix44& m)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tv0 = _mm_set1_ps(v.x_);
@@ -530,7 +511,7 @@ namespace lmath
         tm0 = _mm_add_ps(tm0, tm2);
         tm0 = _mm_add_ps(tm0, tm3);
 
-        return tm0;
+        return Vector4::construct(tm0);
 
 #else
         f32 x, y, z, w;
@@ -542,6 +523,26 @@ namespace lmath
 #endif
     }
 
+    Vector4&& mulPoint(const Matrix44& m, const Vector4& v)
+    {
+        Vector4 tv=v;
+        tv.w_ = 1.0f;
+        lm128 t0 = mul(m, tv);
+        t0 = _mm_div_ps(t0, _mm_shuffle_ps(t0, t0, _MM_SHUFFLE(3,3,3,3)));
+        Vector4::store(tv, t0);
+        tv.w_ = v.w_;
+        return lcore::move(tv);
+    }
+
+    Vector4&& mulVector(const Matrix44& m, const Vector4& v)
+    {
+        Vector4 tv=v;
+        tv.w_ = 0.0f;
+        lm128 t0 = mul(m, tv);
+        Vector4::store(tv, t0);
+        tv.w_ = v.w_;
+        return lcore::move(tv);
+    }
 
     Vector4 rotate(const Vector4& v, const Quaternion& rotation)
     {
@@ -559,23 +560,67 @@ namespace lmath
         return {rot.x_, rot.y_, rot.z_, v.w_};
     }
 
-    return_type_vec4 floor(const Vector4& v)
+    /**
+    @brief v0*v1 + v2
+    */
+    Vector4&& muladd(const Vector4& v0, const Vector4& v1, const Vector4& v2)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = Vector4::load(v0);
+        lm128 r1 = Vector4::load(v1);
+        lm128 r2 = Vector4::load(v2);
+        r0 = _mm_mul_ps(r0, r1);
+        r0 = _mm_add_ps(r0, r2);
+        return Vector4::construct(r0);
+
+#else
+        f32 x = v0.x_ * v1.x_ + v2.x_;
+        f32 y = v0.y_ * v1.y_ + v2.y_;
+        f32 z = v0.z_ * v1.z_ + v2.z_;
+        f32 w = v0.w_ * v1.w_ + v2.w_;
+        return {x,y,z,w};
+#endif
+    }
+
+    /**
+    @brief a*v0 + v1
+    */
+    Vector4&& muladd(f32 a, const Vector4& v0, const Vector4& v1)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0 = _mm_set1_ps(a);
+        lm128 r1 = Vector4::load(v0);
+        lm128 r2 = Vector4::load(v1);
+        r0 = _mm_mul_ps(r0, r1);
+        r0 = _mm_add_ps(r0, r2);
+        return Vector4::construct(r0);
+
+#else
+        f32 x = a * v0.x_ + v1.x_;
+        f32 y = a * v0.y_ + v1.y_;
+        f32 z = a * v0.z_ + v1.z_;
+        f32 w = a * v0.w_ + v1.w_;
+        return {x,y,z,w};
+#endif
+    }
+
+    Vector4&& floor(const Vector4& v)
     {
         lm128 tv0 = Vector4::load(v);
         lm128 tv1 = _mm_cvtepi32_ps(_mm_cvttps_epi32(tv0));
 
-        return _mm_sub_ps(tv1, _mm_and_ps(_mm_cmplt_ps(tv0, tv1), _mm_set1_ps(1.0f)));
+        return Vector4::construct( _mm_sub_ps(tv1, _mm_and_ps(_mm_cmplt_ps(tv0, tv1), _mm_set1_ps(1.0f))) );
     }
 
-    return_type_vec4 ceil(const Vector4& v)
+    Vector4&& ceil(const Vector4& v)
     {
         lm128 tv0 = Vector4::load(v);
         lm128 tv1 = _mm_cvtepi32_ps(_mm_cvttps_epi32(tv0));
 
-        return _mm_add_ps(tv1, _mm_and_ps(_mm_cmplt_ps(tv0, tv1), _mm_set1_ps(1.0f)));
+        return Vector4::construct( _mm_add_ps(tv1, _mm_and_ps(_mm_cmplt_ps(tv0, tv1), _mm_set1_ps(1.0f))) );
     }
 
-    return_type_vec4 lerp(const Vector4& v0, const Vector4& v1, f32 t)
+    Vector4&& lerp(const Vector4& v0, const Vector4& v1, f32 t)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tv0 = Vector4::load(v0);
@@ -585,7 +630,7 @@ namespace lmath
         tv1 = _mm_sub_ps(tv1, tv0);
         tv1 = _mm_mul_ps(tv1, t0);
         tv1 = _mm_add_ps(tv1, tv0);
-        return tv1;
+        return Vector4::construct(tv1);
 
 #else
         Vector4 tmp v1-v0;
@@ -594,7 +639,7 @@ namespace lmath
 #endif
     }
 
-    return_type_vec4 slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t)
+    Vector4&& slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t)
     {
         f32 cosine = dot(v0, v1);
         if(LMATH_F32_ANGLE_LIMIT1<=lcore::absolute(cosine)){
@@ -604,7 +649,7 @@ namespace lmath
         }
     }
 
-    return_type_vec4 slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t, f32 cosine)
+    Vector4&& slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t, f32 cosine)
     {
         LASSERT(cosine<LMATH_F32_ANGLE_LIMIT1);
 
@@ -622,6 +667,6 @@ namespace lmath
         tv0 = _mm_mul_ps(t0, tv0);
         tv1 = _mm_mul_ps(t1, tv1);
 
-        return _mm_add_ps(tv0, tv1);
+        return Vector4::construct(_mm_add_ps(tv0, tv1));
     }
 }

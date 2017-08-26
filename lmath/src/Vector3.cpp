@@ -67,6 +67,8 @@ namespace lmath
         return *this;
     }
 
+    //--- Friend functions
+    //--------------------------------------------------
     Vector3 operator+(const Vector3& v0, const Vector3& v1)
     {
         return {v0.x_+v1.x_, v0.y_+v1.y_, v0.z_+v1.z_};
@@ -92,7 +94,7 @@ namespace lmath
         return {v0.x_*v1.x_, v0.y_*v1.y_, v0.z_*v1.z_};
     }
 
-    Vector3 operator/(const Vector3& v, f32 f)
+    Vector3&& operator/(const Vector3& v, f32 f)
     {
         LASSERT(!lmath::isZero(f));
 
@@ -107,16 +109,19 @@ namespace lmath
 #endif
     }
 
-    Vector3 operator/(const Vector3& v0, const Vector3& v1)
+    Vector3&& operator/(const Vector3& v0, const Vector3& v1)
     {
         LASSERT(!lmath::isZero(v1.x_));
         LASSERT(!lmath::isZero(v1.y_));
         LASSERT(!lmath::isZero(v1.z_));
 
-        return {v0.x_/v1.x_, v0.y_/v1.y_, v0.z_/v1.z_};
+        lm128 xv0 = Vector3::load(v0);
+        lm128 xv1 = Vector3::load(v1);
+        lm128 xv2 = _mm_div_ps(xv0, xv1);
+        return Vector3::store(xv2);
     }
 
-    Vector3 normalize(const Vector3& v)
+    Vector3&& normalize(const Vector3& v)
     {
         f32 l = v.lengthSqr();
         LASSERT( !lmath::isZero(l) );
@@ -134,7 +139,7 @@ namespace lmath
 #endif
     }
 
-    Vector3 normalize(const Vector3& v, f32 lengthSqr)
+    Vector3&& normalize(const Vector3& v, f32 lengthSqr)
     {
 #if defined(LMATH_USE_SSE)
         lm128 xv0 = Vector3::load(v);
@@ -148,11 +153,11 @@ namespace lmath
 #endif
     }
 
-    Vector3 normalizeChecked(const Vector3& v)
+    Vector3&& normalizeChecked(const Vector3& v)
     {
         f32 l = v.lengthSqr();
         if(lmath::isZeroPositive(l)){
-            return Vector3::construct(0.0f);
+            return lcore::move(Vector3::zero());
         }else{
             return normalize(v, l);
         }
@@ -200,13 +205,13 @@ namespace lmath
 #endif
     }
 
-    Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t)
+    Vector3&& lerp(const Vector3& v0, const Vector3& v1, f32 t)
     {
         Vector3 tmp = {v1.x_-v0.x_, v1.y_-v0.y_, v1.z_-v0.z_};
         tmp.x_ = tmp.x_*t + v0.x_;
         tmp.y_ = tmp.y_*t + v0.y_;
         tmp.z_ = tmp.z_*t + v0.z_;
-        return tmp;
+        return lcore::move(tmp);
     }
 
     Vector3 lerp(const Vector3& v0, const Vector3& v1, f32 t0, f32 t1)
@@ -217,7 +222,7 @@ namespace lmath
     }
 
 
-    Vector3 mul(const Matrix34& m, const Vector3& v)
+    Vector3&& mul(const Matrix34& m, const Vector3& v)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
@@ -247,7 +252,7 @@ namespace lmath
 #endif
     }
 
-    Vector3 mul(const Vector3& v, const Matrix34& m)
+    Vector3&& mul(const Vector3& v, const Matrix34& m)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
@@ -277,7 +282,7 @@ namespace lmath
 #endif
     }
 
-    Vector3 mul33(const Matrix34& m, const Vector3& v)
+    Vector3&& mul33(const Matrix34& m, const Vector3& v)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
@@ -306,7 +311,7 @@ namespace lmath
 #endif
     }
 
-    Vector3 mul33(const Vector3& v, const Matrix34& m)
+    Vector3&& mul33(const Vector3& v, const Matrix34& m)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
@@ -335,7 +340,7 @@ namespace lmath
 #endif
     }
 
-    Vector3 mul33(const Matrix44& m, const Vector3& v)
+    Vector3&& mul33(const Matrix44& m, const Vector3& v)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
@@ -364,7 +369,7 @@ namespace lmath
 #endif
     }
 
-    Vector3 mul33(const Vector3& v, const Matrix44& m)
+    Vector3&& mul33(const Vector3& v, const Matrix44& m)
     {
 #if defined(LMATH_USE_SSE)
         lm128 tv0 = Vector3::load(v.x_);
@@ -418,26 +423,35 @@ namespace lmath
         return {v0.x_ * v1.x_, v0.y_ * v1.y_, v0.z_ * v1.z_};
     }
 
-    Vector3 div(const Vector3& v0, const Vector3& v1)
+    Vector3&& div(const Vector3& v0, const Vector3& v1)
     {
-        return {v0.x_ / v1.x_, v0.y_ / v1.y_, v0.z_ / v1.z_};
+        LASSERT(!lmath::isZero(v1.x_));
+        LASSERT(!lmath::isZero(v1.y_));
+        LASSERT(!lmath::isZero(v1.z_));
+
+        lm128 xv0 = Vector3::load(v0);
+        lm128 xv1 = Vector3::load(v1);
+        lm128 xv2 = _mm_div_ps(xv0, xv1);
+        return Vector3::store(xv2);
     }
 
     // v0*v1 + v2
-    Vector3 muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2)
+    Vector3&& muladd(const Vector3& v0, const Vector3& v1, const Vector3& v2)
     {
-        f32 x = v0.x_ * v1.x_ + v2.x_;
-        f32 y = v0.y_ * v1.y_ + v2.y_;
-        f32 z = v0.z_ * v1.z_ + v2.z_;
-        return {x,y,z};
+        lm128 xv0 = Vector3::load(v0);
+        lm128 xv1 = Vector3::load(v1);
+        lm128 xv2 = Vector3::load(v2);
+        lm128 xv3 = _mm_add_ps(_mm_mul_ps(xv0, xv1), xv2);
+        return Vector3::store(xv3);
     }
 
     // a*v1 + v2
-    Vector3 muladd(f32 a, const Vector3& v0, const Vector3& v1)
+    Vector3&& muladd(f32 a, const Vector3& v0, const Vector3& v1)
     {
-        f32 x = a * v0.x_ + v1.x_;
-        f32 y = a * v0.y_ + v1.y_;
-        f32 z = a * v0.z_ + v1.z_;
-        return {x,y,z};
+        lm128 xv0 = Vector3::load(a);
+        lm128 xv1 = Vector3::load(v0);
+        lm128 xv2 = Vector3::load(v1);
+        lm128 xv3 = _mm_add_ps(_mm_mul_ps(xv0, xv1), xv2);
+        return Vector3::store(xv3);
     }
 }

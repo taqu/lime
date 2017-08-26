@@ -456,7 +456,7 @@ namespace lmath
         if(maxVelocity<velocityMaginitude){
             velocity *= maxVelocity/velocityMaginitude;
         }
-        current = Vector4::construct(muladd(timeStep, velocity, current));
+        current = muladd(timeStep, velocity, current);
     }
 
     void criticallyDampedSpring(const Vector4& target, Vector4& current, Vector4& velocity, f32 dampingRatio, f32 timeStep, f32 maxVelocity)
@@ -471,7 +471,7 @@ namespace lmath
         if(maxVelocity<velocityMaginitude){
             velocity *= maxVelocity/velocityMaginitude;
         }
-        current = Vector4::construct(muladd(timeStep, velocity, current));
+        current = muladd(timeStep, velocity, current);
     }
 
     void criticallyDampedSpring2(const Vector4& target, Vector4& current, Vector4& velocity, f32 sqrtDampingRatio, f32 timeStep, f32 maxVelocity)
@@ -897,7 +897,7 @@ namespace lmath
         f32 d = distance(current, target);
         f32 t = lcore::clamp01(d/maxDistance);
         t = lmath::smooth(t);
-        dst = Vector4::construct(lerp(current, target, t));
+        dst = lerp(current, target, t);
     }
 
     void smoothRotate(Vector4& dst, const Vector4& current, const Vector4& target, f32 maxRotate)
@@ -910,9 +910,9 @@ namespace lmath
         t = lmath::smooth(t);
 
         if(LMATH_F32_ANGLE_LIMIT1<=lcore::absolute(cosine)){
-            dst = Vector4::construct(lerp(current, target, t));
+            dst = lerp(current, target, t);
         }else{
-            dst = Vector4::construct(slerp(current, target, t, cosine));
+            dst = slerp(current, target, t, cosine);
         }
     }
 
@@ -1055,12 +1055,12 @@ namespace
         vt.y_ = t*t;
         vt.x_ = vt.y_ * t;
 
-        Vector4 tmp = Vector4::construct(mul(vt, curveCoeff));
+        Vector4 tmp = mul(vt, curveCoeff);
 
         lmath::Matrix44 param;
         param.set(p0, p1, p2, p3);
         
-        dst = Vector4::construct(mul(tmp, param));
+        dst = mul(tmp, param);
     }
 
     inline void calcCubic(f32& dst, f32 t, const Matrix44& curveCoeff, f32 p0, f32 p1, f32 p2, f32 p3)
@@ -1071,7 +1071,7 @@ namespace
         vt.y_ = t*t;
         vt.x_ = vt.y_ * t;
 
-        Vector4 tmp = Vector4::construct(mul(vt, curveCoeff));
+        Vector4 tmp = mul(vt, curveCoeff);
 
         dst = p0 * tmp.x_ + p1 * tmp.y_ + p2 * tmp.z_ + p3 * tmp.w_;
     }
@@ -1122,8 +1122,7 @@ namespace
            0.0f, -3.0f/2.0f,  4.0f/2.0f, -1.0f/2.0f,
            0.0f,  2.0f/2.0f,  0.0f,       0.0f);
 
-        Vector4 vzero;
-        vzero.zero();
+        Vector4 vzero = Vector4::zero();
         calcCubic(dst, t, curveCoeff, vzero, p1, p2, p3);
     }
 
@@ -1135,8 +1134,7 @@ namespace
            -1.0f/2.0f,  0.0f,       1.0f/2.0f, 0.0f,
             0.0f,       2.0f/2.0f,  0.0f,      0.0f);
 
-        Vector4 vzero;
-        vzero.zero();
+        Vector4 vzero = Vector4::zero();
         calcCubic(dst, t, curveCoeff, p0, p1, p2, vzero);
     }
 

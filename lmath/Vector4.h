@@ -39,7 +39,7 @@ namespace lmath
         inline static Vector4 one();
         inline static Vector4 identity();
         inline static Vector4 construct(const Vector4& v);
-        inline static Vector4 construct(const lm128& v);
+        inline static Vector4&& construct(const lm128& v);
         static Vector4 construct(const Vector3& v);
         static Vector4 construct(const Vector3& v, f32 w);
 
@@ -52,7 +52,7 @@ namespace lmath
 
         inline f32 operator[](s32 index) const;
         inline f32& operator[](s32 index);
-        inline Vector4 operator-() const;
+        inline Vector4&& operator-() const;
 
         inline Vector4& operator+=(const Vector4& v);
         inline Vector4& operator-=(const Vector4& v);
@@ -78,21 +78,40 @@ namespace lmath
         inline bool isNan() const;
         inline bool isZero() const;
 
-        inline Vector4 getParallelComponent(const Vector4& basis) const
+        inline Vector4&& getParallelComponent(const Vector4& basis) const
         {
             f32 cs = dot(*this, basis);
             return construct(basis*cs);
         }
 
-        inline Vector4 getPerpendicularComponent(const Vector4& basis) const
+        inline Vector4&& getPerpendicularComponent(const Vector4& basis) const
         {
             return construct(*this - getParallelComponent(basis));
         }
 
-        friend return_type_vec4 normalize(const Vector4& v);
-        friend return_type_vec4 normalize(const Vector4& v, f32 lengthSqr);
-        friend return_type_vec4 normalizeChecked(const Vector4& v);
-        friend return_type_vec4 absolute(const Vector4& v);
+        inline static lm128&& load(const Vector4& v)
+        {
+            return lcore::move(_mm_loadu_ps(&v.x_));
+        }
+
+        inline static void store(Vector4& v, lm128& r)
+        {
+            _mm_storeu_ps(&v.x_, r);
+        }
+
+        inline static Vector4&& store(lm128& r)
+        {
+            Vector4 v;
+            _mm_storeu_ps(&v.x_, r);
+            return lcore::move(v);
+        }
+
+        //--- Friend functions
+        //--------------------------------------------------
+        friend Vector4&& normalize(const Vector4& v);
+        friend Vector4&& normalize(const Vector4& v, f32 lengthSqr);
+        friend Vector4&& normalizeChecked(const Vector4& v);
+        friend Vector4&& absolute(const Vector4& v);
 
         friend f32 dot(const Vector4& v0, const Vector4& v1);
         friend return_type_vec4 cross3(const Vector4& v0, const Vector4& v1);
@@ -110,38 +129,38 @@ namespace lmath
         friend f32 manhattanDistance3(const Vector4& v0, const Vector3& v1);
         friend f32 manhattanDistance3(const Vector4& v0, const Vector4& v1);
 
-        friend return_type_vec4 mul(const Matrix34& m, const Vector4& v);
-        friend return_type_vec4 mul(const Vector4& v, const Matrix34& m);
+        friend Vector4&& mul(const Matrix34& m, const Vector4& v);
+        friend Vector4&& mul(const Vector4& v, const Matrix34& m);
 
-        friend return_type_vec4 mul(const Matrix44& m, const Vector4& v);
-        friend return_type_vec4 mul(const Vector4& v, const Matrix44& m);
+        friend Vector4&& mul(const Matrix44& m, const Vector4& v);
+        friend Vector4&& mul(const Vector4& v, const Matrix44& m);
 
-        friend Vector4 mulPoint(const Matrix44& m, const Vector4& v);
-        friend Vector4 mulVector(const Matrix44& m, const Vector4& v);
+        friend Vector4&& mulPoint(const Matrix44& m, const Vector4& v);
+        friend Vector4&& mulVector(const Matrix44& m, const Vector4& v);
 
         friend Vector4 rotate(const Vector4& v, const Quaternion& rotation);
         friend Vector4 rotate(const Quaternion& rotation, const Vector4& v);
 
-        friend return_type_vec4 operator+(const Vector4& v0, const Vector4& v1);
-        friend return_type_vec4 operator-(const Vector4& v0, const Vector4& v1);
-        friend return_type_vec4 operator*(f32 f, const Vector4& v);
-        friend return_type_vec4 operator*(const Vector4& v, f32 f);
-        friend return_type_vec4 operator*(const Vector4& v0, const Vector4& v1);
-        friend return_type_vec4 operator/(const Vector4& v, f32 f);
-        friend return_type_vec4 operator/(const Vector4& v0, const Vector4& v1);
-        friend return_type_vec4 add(const Vector4& v0, const Vector4& v1);
-        friend return_type_vec4 sub(const Vector4& v0, const Vector4& v1);
-        friend return_type_vec4 mul(const Vector4& v0, const Vector4& v1);
-        friend return_type_vec4 mul(f32 f, const Vector4& v);
-        friend return_type_vec4 mul(const Vector4& v0, f32 f);
-        friend return_type_vec4 div(const Vector4& v0, const Vector4& v1);
-        friend return_type_vec4 div(const Vector4& v0, f32 f);
+        friend Vector4&& operator+(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& operator-(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& operator*(f32 f, const Vector4& v);
+        friend Vector4&& operator*(const Vector4& v, f32 f);
+        friend Vector4&& operator*(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& operator/(const Vector4& v, f32 f);
+        friend Vector4&& operator/(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& add(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& sub(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& mul(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& mul(f32 f, const Vector4& v);
+        friend Vector4&& mul(const Vector4& v0, f32 f);
+        friend Vector4&& div(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& div(const Vector4& v0, f32 f);
 
-        friend return_type_vec4 add(const Vector4& v, f32 f);
-        friend return_type_vec4 sub(const Vector4& v, f32 f);
+        friend Vector4&& add(const Vector4& v, f32 f);
+        friend Vector4&& sub(const Vector4& v, f32 f);
 
-        friend return_type_vec4 minimum(const Vector4& v0, const Vector4& v1);
-        friend return_type_vec4 maximum(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& minimum(const Vector4& v0, const Vector4& v1);
+        friend Vector4&& maximum(const Vector4& v0, const Vector4& v1);
 
         friend f32 minimum(const Vector4& v);
         friend f32 maximum(const Vector4& v);
@@ -149,51 +168,35 @@ namespace lmath
         /**
         @brief v0*v1 + v2
         */
-        friend return_type_vec4 muladd(const Vector4& v0, const Vector4& v1, const Vector4& v2);
+        friend Vector4&& muladd(const Vector4& v0, const Vector4& v1, const Vector4& v2);
 
         /**
         @brief a*v0 + v1
         */
-        friend return_type_vec4 muladd(f32 a, const Vector4& v0, const Vector4& v1);
+        friend Vector4&& muladd(f32 a, const Vector4& v0, const Vector4& v1);
 
-        friend return_type_vec4 floor(const Vector4& v);
-        friend return_type_vec4 ceil(const Vector4& v);
-        friend return_type_vec4 invert(const Vector4& v);
+        friend Vector4&& floor(const Vector4& v);
+        friend Vector4&& ceil(const Vector4& v);
+        friend Vector4&& invert(const Vector4& v);
 
-        friend return_type_vec4 sqrt(const Vector4& v);
-
-        /**
-        @brief v0 * (1-t) + v1 * t
-        */
-        friend return_type_vec4 lerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
+        friend Vector4&& sqrt(const Vector4& v);
 
         /**
         @brief v0 * (1-t) + v1 * t
         */
-        friend return_type_vec4 slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
+        friend Vector4&& lerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
+
         /**
         @brief v0 * (1-t) + v1 * t
         */
-        friend return_type_vec4 slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t, f32 cosine);
+        friend Vector4&& slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
+        /**
+        @brief v0 * (1-t) + v1 * t
+        */
+        friend Vector4&& slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t, f32 cosine);
 
 
-        inline static lm128 load(const Vector4& v)
-        {
-            return _mm_loadu_ps(&v.x_);
-        }
-
-        inline static void store(Vector4& v, lm128& r)
-        {
-            _mm_storeu_ps(&v.x_, r);
-        }
-
-        inline static Vector4 store(lm128& r)
-        {
-            Vector4 v;
-            _mm_storeu_ps(&v.x_, r);
-            return v;
-        }
-
+        //--------------------------------------------------
         f32 x_, y_, z_, w_;
     };
 
@@ -206,7 +209,7 @@ namespace lmath
     {
         Vector4 v;
         _mm_storeu_ps(&v.x_, _mm_set1_ps(xyzw));
-        return v;
+        return lcore::move(v);
     }
 
     inline Vector4 Vector4::construct(f32 x, f32 y, f32 z)
@@ -223,35 +226,35 @@ namespace lmath
     {
         Vector4 v;
         _mm_storeu_ps(&v.x_, _mm_setzero_ps());
-        return v;
+        return lcore::move(v);
     }
 
     inline Vector4 Vector4::one()
     {
         Vector4 v;
         _mm_storeu_ps(&v.x_, _mm_load_ps(One));
-        return v;
+        return lcore::move(v);
     }
 
     inline Vector4 Vector4::identity()
     {
         Vector4 v;
         _mm_storeu_ps(&v.x_, _mm_load_ps(Identity));
-        return v;
+        return lcore::move(v);
     }
 
     inline Vector4 Vector4::construct(const Vector4& v)
     {
         Vector4 r;
         _mm_storeu_ps(&r.x_, _mm_loadu_ps(&v.x_));
-        return r;
+        return lcore::move(r);
     }
 
-    inline Vector4 Vector4::construct(const lm128& v)
+    inline Vector4&& Vector4::construct(const lm128& v)
     {
         Vector4 r;
         _mm_storeu_ps(&r.x_, v);
-        return r;
+        return lcore::move(r);
     }
 
     inline Vector4::operator lm128() const
@@ -290,7 +293,7 @@ namespace lmath
         return (&x_)[index];
     }
 
-    inline Vector4 Vector4::operator-() const
+    inline Vector4&& Vector4::operator-() const
     {
 #if defined(LMATH_USE_SSE)
         f32 f;
@@ -301,7 +304,7 @@ namespace lmath
 
         Vector4 ret;
         store(ret, r0);
-        return ret;
+        return lcore::move(ret);
 #else
         return Vector4(-x_, -y_, -z_, -w_);
 #endif
@@ -445,11 +448,13 @@ namespace lmath
         return (lmath::isZero(x_) && lmath::isZero(y_) && lmath::isZero(z_) && lmath::isZero(w_));
     }
 
-    return_type_vec4 normalize(const Vector4& v);
-    return_type_vec4 normalize(const Vector4& v, f32 lengthSqr);
-    return_type_vec4 normalizeChecked(const Vector4& v);
 
-    return_type_vec4 absolute(const Vector4& v);
+    //--- Friend functions
+    //--------------------------------------------------
+    Vector4&& normalize(const Vector4& v);
+    Vector4&& normalize(const Vector4& v, f32 lengthSqr);
+    Vector4&& normalizeChecked(const Vector4& v);
+    Vector4&& absolute(const Vector4& v);
 
     f32 dot(const Vector4& v0, const Vector4& v1);
     return_type_vec4 cross3(const Vector4& v0, const Vector4& v1);
@@ -476,24 +481,24 @@ namespace lmath
     }
     f32 manhattanDistance3(const Vector4& v0, const Vector4& v1);
 
-    Vector4 mulPoint(const Matrix44& m, const Vector4& v);
-    Vector4 mulVector(const Matrix44& m, const Vector4& v);
+    Vector4&& mul(const Matrix34& m, const Vector4& v);
+    Vector4&& mul(const Vector4& v, const Matrix34& m);
 
-    return_type_vec4 mul(const Matrix34& m, const Vector4& v);
-    return_type_vec4 mul(const Vector4& v, const Matrix34& m);
+    Vector4&& mul(const Matrix44& m, const Vector4& v);
+    Vector4&& mul(const Vector4& v, const Matrix44& m);    
 
-    return_type_vec4 mul(const Matrix44& m, const Vector4& v);
-    return_type_vec4 mul(const Vector4& v, const Matrix44& m);    
+    Vector4&& mulPoint(const Matrix44& m, const Vector4& v);
+    Vector4&& mulVector(const Matrix44& m, const Vector4& v);
 
     Vector4 rotate(const Vector4& v, const Quaternion& rotation);
     Vector4 rotate(const Quaternion& rotation, const Vector4& v);
 
-    inline return_type_vec4 operator+(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& operator+(const Vector4& v0, const Vector4& v1)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
-        return _mm_add_ps(r0, r1);
+        return Vector4::construct(_mm_add_ps(r0, r1));
 
 #else
         f32 x = v0.x_ + v1.x_;
@@ -504,12 +509,12 @@ namespace lmath
 #endif
     }
 
-    inline return_type_vec4 operator-(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& operator-(const Vector4& v0, const Vector4& v1)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
-        return _mm_sub_ps(r0, r1);
+        return Vector4::construct(_mm_sub_ps(r0, r1));
 
 #else
         f32 x = v0.x_ - v1.x_;
@@ -520,12 +525,12 @@ namespace lmath
 #endif
     }
 
-    inline return_type_vec4 operator*(f32 f, const Vector4& v)
+    inline Vector4&& operator*(f32 f, const Vector4& v)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = _mm_set1_ps(f);
         lm128 r1 = Vector4::load(v);
-        return _mm_mul_ps(r0, r1);
+        return Vector4::construct(_mm_mul_ps(r0, r1));
 #else
         f32 x = f * v.x_;
         f32 y = f * v.y_;
@@ -535,61 +540,61 @@ namespace lmath
 #endif
     }
 
-    inline return_type_vec4 operator*(const Vector4& v, f32 f)
+    inline Vector4&& operator*(const Vector4& v, f32 f)
     {
         return f*v;
     }
 
-    inline return_type_vec4 operator*(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& operator*(const Vector4& v0, const Vector4& v1)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
-        return _mm_mul_ps(r0, r1);
+        return Vector4::construct(_mm_mul_ps(r0, r1));
 #else
         return {v0.x_*v1.x_, v0.y_*v1.y_, v0.z_*v1.z_, v0.w_*v1.w_};
 #endif
     }
 
-    inline return_type_vec4 operator/(const Vector4& v, f32 f)
+    inline Vector4&& operator/(const Vector4& v, f32 f)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v);
         lm128 r1 = _mm_set1_ps(f);
-        return _mm_div_ps(r0, r1);
+        return Vector4::construct(_mm_div_ps(r0, r1));
 #else
         f = 1.0f/f;
         return v*f;
 #endif
     }
 
-    inline return_type_vec4 operator/(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& operator/(const Vector4& v0, const Vector4& v1)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
-        return _mm_div_ps(r0, r1);
+        return Vector4::construct(_mm_div_ps(r0, r1));
 #else
         return {v0.x_/v1.x_, v0.y_/v1.y_, v0.z_/v1.z_, v0.w_/v1.w_};
 #endif
     }
 
-    inline return_type_vec4 add(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& add(const Vector4& v0, const Vector4& v1)
     {
         return v0+v1;
     }
 
-    inline return_type_vec4 sub(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& sub(const Vector4& v0, const Vector4& v1)
     {
         return v0-v1;
     }
 
-    inline return_type_vec4 mul(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& mul(const Vector4& v0, const Vector4& v1)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
-        return _mm_mul_ps(r0, r1);
+        return Vector4::construct(_mm_mul_ps(r0, r1));
 #else
         f32 x = v0.x_ * v1.x_;
         f32 y = v0.y_ * v1.y_;
@@ -599,22 +604,22 @@ namespace lmath
 #endif
     }
 
-    inline return_type_vec4 mul(f32 f, const Vector4& v)
+    inline Vector4&& mul(f32 f, const Vector4& v)
     {
         return f*v;
     }
 
-    inline return_type_vec4 mul(const Vector4& v, f32 f)
+    inline Vector4&& mul(const Vector4& v, f32 f)
     {
         return v*f;
     }
 
-    inline return_type_vec4 div(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& div(const Vector4& v0, const Vector4& v1)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
-        return _mm_div_ps(r0, r1);
+        return Vector4::construct(_mm_div_ps(r0, r1));
 #else
         f32 x = v0.x_ / v1.x_;
         f32 y = v0.y_ / v1.y_;
@@ -624,40 +629,40 @@ namespace lmath
 #endif
     }
 
-    inline return_type_vec4 div(const Vector4& v0, f32 f)
+    inline Vector4&& div(const Vector4& v0, f32 f)
     {
         return v0/f;
     }
 
 
-    inline return_type_vec4 add(const Vector4& v, f32 f)
+    inline Vector4&& add(const Vector4& v, f32 f)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v);
         lm128 r1 = _mm_set1_ps(f);
-        return _mm_add_ps(r0, r1);
+        return Vector4::construct(_mm_add_ps(r0, r1));
 #else
         return {v.x_+f, v.y_+f, v.z_+f, v.w_+f};
 #endif
     }
 
-    inline return_type_vec4 sub(const Vector4& v, f32 f)
+    inline Vector4&& sub(const Vector4& v, f32 f)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v);
         lm128 r1 = _mm_set1_ps(f);
-        return _mm_sub_ps(r0, r1);
+        return Vector4::construct(_mm_sub_ps(r0, r1));
 #else
         return {v.x_-f, v.y_-f, v.z_-f, v.w_0f};
 #endif
     }
 
-    inline return_type_vec4 minimum(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& minimum(const Vector4& v0, const Vector4& v1)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
-        return _mm_min_ps(r0, r1);
+        return Vector4::construct(_mm_min_ps(r0, r1));
 
 #else
         f32 x = lcore::minimum(v0.x_, v1.x_);
@@ -668,12 +673,12 @@ namespace lmath
 #endif
     }
 
-    inline return_type_vec4 maximum(const Vector4& v0, const Vector4& v1)
+    inline Vector4&& maximum(const Vector4& v0, const Vector4& v1)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v0);
         lm128 r1 = Vector4::load(v1);
-        return _mm_max_ps(r0, r1);
+        return Vector4::construct(_mm_max_ps(r0, r1));
 
 #else
         f32 x = lcore::maximum(v0.x_, v1.x_);
@@ -697,56 +702,22 @@ namespace lmath
     /**
     @brief v0*v1 + v2
     */
-    inline return_type_vec4 muladd(const Vector4& v0, const Vector4& v1, const Vector4& v2)
-    {
-#if defined(LMATH_USE_SSE)
-        lm128 r0 = Vector4::load(v0);
-        lm128 r1 = Vector4::load(v1);
-        lm128 r2 = Vector4::load(v2);
-        r0 = _mm_mul_ps(r0, r1);
-        r0 = _mm_add_ps(r0, r2);
-        return r0;
-
-#else
-        f32 x = v0.x_ * v1.x_ + v2.x_;
-        f32 y = v0.y_ * v1.y_ + v2.y_;
-        f32 z = v0.z_ * v1.z_ + v2.z_;
-        f32 w = v0.w_ * v1.w_ + v2.w_;
-        return {x,y,z,w};
-#endif
-    }
+    Vector4&& muladd(const Vector4& v0, const Vector4& v1, const Vector4& v2);
 
     /**
     @brief a*v0 + v1
     */
-    inline return_type_vec4 muladd(f32 a, const Vector4& v0, const Vector4& v1)
-    {
-#if defined(LMATH_USE_SSE)
-        lm128 r0 = _mm_set1_ps(a);
-        lm128 r1 = Vector4::load(v0);
-        lm128 r2 = Vector4::load(v1);
-        r0 = _mm_mul_ps(r0, r1);
-        r0 = _mm_add_ps(r0, r2);
-        return r0;
+    Vector4&& muladd(f32 a, const Vector4& v0, const Vector4& v1);
 
-#else
-        f32 x = a * v0.x_ + v1.x_;
-        f32 y = a * v0.y_ + v1.y_;
-        f32 z = a * v0.z_ + v1.z_;
-        f32 w = a * v0.w_ + v1.w_;
-        return {x,y,z,w};
-#endif
-    }
+    Vector4&& floor(const Vector4& v);
+    Vector4&& ceil(const Vector4& v);
 
-    return_type_vec4 floor(const Vector4& v);
-    return_type_vec4 ceil(const Vector4& v);
-
-    inline return_type_vec4 invert(const Vector4& v)
+    inline Vector4&& invert(const Vector4& v)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = _mm_set1_ps(1.0f);
         lm128 r1 = Vector4::load(v);
-        return _mm_div_ps(r0, r1);
+        return Vector4::construct(_mm_div_ps(r0, r1));
 #else
         f32 x = 1.0f/x_;
         f32 y = 1.0f/y_;
@@ -756,11 +727,11 @@ namespace lmath
 #endif
     }
 
-    inline return_type_vec4 sqrt(const Vector4& v)
+    inline Vector4&& sqrt(const Vector4& v)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0 = Vector4::load(v);
-        return _mm_sqrt_ps(r0);
+        return Vector4::construct(_mm_sqrt_ps(r0));
 #else
         f32 x = lmath::sqrt(x_);
         f32 y = lmath::sqrt(y_);
@@ -773,17 +744,18 @@ namespace lmath
     /**
     @brief v0 * (1-t) + v1 * t
     */
-    return_type_vec4 lerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
+    Vector4&& lerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
 
     /**
     @brief v0 * (1-t) + v1 * t
     */
-    return_type_vec4 slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
+    Vector4&& slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t);
 
     /**
     @brief v0 * (1-t) + v1 * t
     */
-    return_type_vec4 slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t, f32 cosine);
+    Vector4&& slerp(const lmath::Vector4& v0, const lmath::Vector4& v1, f32 t, f32 cosine);
+
 }
 
 #endif //INC_LMATH_VECTOR4_H__
