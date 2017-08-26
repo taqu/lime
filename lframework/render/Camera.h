@@ -139,8 +139,11 @@ namespace graph
 
        void clearRenderPasses();
        void addRenderPass(graph::RenderPass* renderPass);
+       void addRenderPass(s32 index, graph::RenderPass* renderPass);
        void removeRenderPass(graph::RenderPass* renderPass);
        s32 findRenderPass(graph::RenderPass* renderPass) const;
+       s32 findRenderPass(s32 passId) const;
+       graph::RenderPass* getRenderPass(s32 index);
 
        Camera& operator=(Camera&& rhs);
     private:

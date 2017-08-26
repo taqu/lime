@@ -278,6 +278,11 @@ namespace
 #include "../../shader/VolumeParticlePS.txt"
     };
 
+    const u8 shaderPS_VolumeSphere[] =
+    {
+#include "../../shader/VolumeSpherePS.txt"
+    };
+
     const u8 shaderPS_UI[] =
     {
 #include "../../shader/UIPS.txt"
@@ -462,6 +467,7 @@ namespace
         shaderPS_FontOutline,
         shaderPS_Particle,
         shaderPS_VolumeParticle,
+        shaderPS_VolumeSphere,
 
         shaderPS_UI,
     };
@@ -493,6 +499,7 @@ namespace
         sizeof(shaderPS_FontOutline),
         sizeof(shaderPS_Particle),
         sizeof(shaderPS_VolumeParticle),
+        sizeof(shaderPS_VolumeSphere),
 
         sizeof(shaderPS_UI),
     };

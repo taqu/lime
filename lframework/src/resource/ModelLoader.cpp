@@ -425,8 +425,7 @@ namespace lfw
     {
         s32 len = lcore::strlen_s32(loadTexture.name_);
         lcore::strncpy(path_+directoryPathLength_, MaxNameSize, loadTexture.name_, len);
-        TextureParameter texParam;
-        texParam.sRGB_ = 1;
+        TextureParameter texParam = TextureParameter::SRGBSampler;
         texParam.filterType_ = loadTexture.filterType_;
         texParam.addressUVW_ = loadTexture.addressUVW_;
         texParam.compFunc_ = loadTexture.compFunc_;

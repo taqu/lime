@@ -58,6 +58,19 @@ namespace lfw
             f32 zfar,
             s32 width,
             s32 height,
+            bool jitter)
+        {
+            initialize(fovyDegree, znear, zfar, 0, 0, width, height, jitter);
+        }
+
+        void initialize(
+            f32 fovyDegree,
+            f32 znear,
+            f32 zfar,
+            s32 x,
+            s32 y,
+            s32 width,
+            s32 height,
             bool jitter);
 
         virtual void resetRenderPasses();
@@ -105,6 +118,13 @@ namespace lfw
         bool isJitter() const;
 
         void setJitterSize(f32 width, f32 height);
+
+        void clearRenderPasses();
+        void addRenderPass(s32 index, graph::RenderPass* renderPass);
+        void removeRenderPass(graph::RenderPass* renderPass);
+        s32 findRenderPass(graph::RenderPass* renderPass) const;
+        s32 findRenderPass(s32 paddId) const;
+        graph::RenderPass* getRenderPass(s32 index);
     protected:
         ComponentCamera(const ComponentCamera&) = delete;
         ComponentCamera& operator=(const ComponentCamera&) = delete;

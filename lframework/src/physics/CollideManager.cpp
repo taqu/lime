@@ -37,7 +37,7 @@ namespace lfw
         info.type_ = CollisionInfoType_NormalDepth;
         info.info_ = lmath::Vector4::construct(s1->bsphere_ - s0->bsphere_);
         info.info_.w_ = 0.0f;
-        info.info_ = lmath::Vector4::construct(normalizeChecked(info.info_));
+        info.info_ = lmath::normalizeChecked(info.info_);
         info.info_.w_ = depth;
 
         return true;
@@ -149,7 +149,7 @@ namespace lfw
         if(lmath::testAABBAABB(bmin0, bmax0, bmin1, bmax1)){
 
             info.type_ = CollisionInfoType_ClosestPoint;
-            info.info_.zero();
+            info.info_ = lmath::Vector4::zero();
             return true;
         } else{
             return false;

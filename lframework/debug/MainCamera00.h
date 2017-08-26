@@ -9,6 +9,8 @@
 
 namespace debug
 {
+    class RenderPassProcedural;
+
     class MainCamera00 : public lfw::ComponentCamera
     {
     public:
@@ -19,6 +21,11 @@ namespace debug
         virtual void onStart();
         virtual void update();
         virtual void onDestroy();
+
+        virtual void resetRenderPasses();
+
+    private:
+        RenderPassProcedural* renderPass_;
     };
 }
 #endif //INC_SAMPLES_CAMERA00_H__

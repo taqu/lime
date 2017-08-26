@@ -19,7 +19,8 @@ namespace lfw
         ,scale_(1.0f)
         ,abgr_(0xFFFFFFFFU)
     {
-        uvRect_[0] = uvRect_[1] = uvRect_[2] = uvRect_[3] = 0;
+        uvRect_[0] = uvRect_[1] = lcore::toBinary16Float(0.0f);
+        uvRect_[2] = uvRect_[3] = lcore::toBinary16Float(1.0f);
     }
 
     ComponentUIImage::~ComponentUIImage()
@@ -29,7 +30,7 @@ namespace lfw
     void ComponentUIImage::updateMesh(ComponentCanvas& canvas)
     {
         if(image_.valid()){
-            lmath::Vector4 rect = lmath::Vector4::construct(lmath::mul(rect_, scale_));
+            lmath::Vector4 rect = lmath::mul(rect_, scale_);
             canvas.addRect(rect, abgr_, uvRect_, image_);
         }
     }

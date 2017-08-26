@@ -62,9 +62,9 @@ namespace lfw
         samplerSet_.create(
             2,
             lgfx::TexFilter_CompMinMagMipLinear,
-            lgfx::TexAddress_Clamp,
-            lgfx::TexAddress_Clamp,
-            lgfx::TexAddress_Clamp,
+            lgfx::TexAddress_Border,
+            lgfx::TexAddress_Border,
+            lgfx::TexAddress_Border,
             lgfx::Cmp_Greater,
             0.0f);
 
@@ -136,6 +136,24 @@ namespace lfw
         }
     }
 
+    void RenderContext::setPerLightConstants(Light& light)
+    {
+        lgfx::ConstantBufferRef* constant = constantBufferTableSet_->allocate(sizeof(PerLightConstant));
+        if(NULL == constant){
+            return;
+        }
+
+        lgfx::MappedSubresource mapped;
+        if(constant->map(*context_, 0, lgfx::MapType_WriteDiscard, mapped)){
+            PerLightConstant* constants = reinterpret_cast<PerLightConstant*>(mapped.data_);
+            _mm_store_ps(&constants->dlDir_.x_, _mm_loadu_ps(&light.getDirection().x_));
+            _mm_store_ps(&constants->dlColor_.x_, _mm_loadu_ps(&light.getColor().x_)); 
+            constant->unmap(*context_, 0);
+
+            context_->setPSConstantBuffers(1, 1, *constant);
+        }
+    }
+
     void RenderContext::setPerShadowMapConstants()
     {
         LASSERT(NULL != context_);
@@ -164,7 +182,7 @@ namespace lfw
         }
     }
 
-    void RenderContext::setRenderPath(s32 path)
+    void RenderContext::beginRenderPath(s32 path)
     {
         renderPath_ = path;
         switch(renderPath_)
@@ -180,13 +198,29 @@ namespace lfw
             context_->setPixelShader(NULL);
             break;
         case RenderPath_Opaque:
-            context_->setGeometryShader(NULL);
             setDefaultSampler(Shader_PS);
             break;
         default:
             context_->setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWDisableReverseZ);
-            context_->setGeometryShader(NULL);
             setDefaultSampler(Shader_PS);
+            break;
+        }
+    }
+
+    void RenderContext::endRenderPath(s32 path)
+    {
+        switch(renderPath_)
+        {
+        case RenderPath_Shadow:
+            context_->restoreDefaultRenderTargets();
+            context_->restoreDefaultViewport();
+            context_->setRasterizerState(lgfx::ContextRef::Rasterizer_FillSolid);
+            context_->setVertexShader(NULL);
+            context_->setGeometryShader(NULL);
+            break;
+        case RenderPath_Opaque:
+            break;
+        default:
             break;
         }
     }

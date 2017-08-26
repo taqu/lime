@@ -58,7 +58,6 @@ namespace lfw
 
         ComponentGeometric* geometric = getEntity().getGeometric();
         LASSERT(NULL != geometric);
-        geometric = geometric->getParent();
         do{
             canvas = geometric->getEntity().getComponent<ComponentCanvas>();
             if(NULL != canvas){

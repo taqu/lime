@@ -70,9 +70,9 @@ namespace lfw
         :depth_(0)
         ,negativeBits_(0)
     {
-        bmin_.zero();
-        bmax_.zero();
-        invUnit_.one();
+        bmin_ = lmath::Vector4::zero();
+        bmax_ = lmath::Vector4::zero();
+        invUnit_ = lmath::Vector4::one();
         numSplits_ = 1;
         for(s32 i=0; i<MaxLevels; ++i){
             numSplits_ <<= 1;
@@ -131,7 +131,7 @@ namespace lfw
 
     u32 Octree::calcMortonCode3(const lmath::Vector4& position)
     {
-        lmath::Vector4 d = lmath::Vector4::construct(position - bmin_);
+        lmath::Vector4 d = (position - bmin_);
         d *= invUnit_;
 
         u32 v[3];
@@ -150,7 +150,7 @@ namespace lfw
         lmath::Vector4 bmin, bmax;
         node->getBoundingBox(bmin, bmax);
 
-        bmin = lmath::Vector4::construct(maximum(bmin, bmin_));
+        bmin = lmath::maximum(bmin, bmin_);
         u32 minCode = calcMortonCode3(bmin);
         u32 maxCode = calcMortonCode3(bmax);
 
@@ -170,7 +170,7 @@ namespace lfw
         lmath::Vector4 bmin, bmax;
         node->getBoundingBox(bmin, bmax);
 
-        bmin = lmath::Vector4::construct(maximum(bmin, bmin_));
+        bmin = lmath::maximum(bmin, bmin_);
         u32 minCode = calcMortonCode3(bmin);
         u32 maxCode = calcMortonCode3(bmax);
 
@@ -194,7 +194,7 @@ namespace lfw
         hitInfo.collider_ = NULL;
         hitInfo.t_ = lcore::numeric_limits<f32>::maximum();
 
-        lmath::Vector4 size = lmath::Vector4::construct(bmax_ + bmin_);
+        lmath::Vector4 size = bmax_ + bmin_;
 
         negativeBits_ = 0;
         lmath::Vector4 origin;
@@ -214,8 +214,8 @@ namespace lfw
 
         invert(direction);
 
-        lmath::Vector4 t0 = lmath::Vector4::construct(bmin_ - origin);
-        lmath::Vector4 t1 = lmath::Vector4::construct(bmax_ - origin);
+        lmath::Vector4 t0 = bmin_ - origin;
+        lmath::Vector4 t1 = bmax_ - origin;
         t0 *= direction;
         t1 *= direction;
 

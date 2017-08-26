@@ -323,6 +323,18 @@ namespace
         calcPrevNodeMatrices();
     }
 
+    void ComponentMeshRenderer::resetMaterials()
+    {
+        if(NULL != model_){
+            resetShaderSet();
+            resetFlags();
+        } else{
+            resetFlag(Flag_ShadowCast);
+            resetFlag(Flag_Opaque);
+            resetFlag(Flag_Transparent);
+        }
+    }
+
     void ComponentMeshRenderer::calcNodeMatrices()
     {
         const ComponentGeometric* geometric = getEntity().getGeometric();

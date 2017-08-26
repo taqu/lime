@@ -57,6 +57,7 @@ namespace lfw
     {
         ResourceType_Bytes,
         ResourceType_Texture2D,
+        ResourceType_Texture3D,
         ResourceType_Model,
         ResourceType_Animation,
     };
@@ -171,7 +172,6 @@ namespace lfw
     void copyAlignedDst16(lmath::Matrix44& dst, const lmath::Matrix44& src);
 
     u64 calcHash(const Char* path);
-
 
     //------------------------------------------------------------
     //---

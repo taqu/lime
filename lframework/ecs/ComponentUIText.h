@@ -28,6 +28,7 @@ namespace lfw
         ComponentUIText();
         virtual ~ComponentUIText();
 
+        virtual void onCreate();
         virtual void onStart();
         virtual void updateMesh(ComponentCanvas& canvas);
 
@@ -42,14 +43,16 @@ namespace lfw
         inline void setScale(f32 scale);
         inline void setColor(u32 abgr);
 
+        inline void setHorizontalAlign(Align align);
+        inline void setVerticalAlign(Align align);
+
         inline const lcore::String& text() const;
         inline lcore::String& text();
         inline void clearText();
         void updateText();
 
         static void calcTextBoxSize(f32& width, f32& height, const Char* text, f32 screenWidth, f32 screenHeight, Font* font);
-        //static f32 calcLineHeight(s32 fontSlot, f32 screenHeight);
-
+        static f32 getLineHeight(s32 fontSlot);
     protected:
         ComponentUIText(const ComponentUIText&) = delete;
         ComponentUIText& operator=(const ComponentUIText&) = delete;
@@ -96,11 +99,13 @@ namespace lfw
     inline void ComponentUIText::setRect(f32 left, f32 top, f32 width, f32 height)
     {
         rect_.set(left, top, width, height);
+        setDirty();
     }
 
     inline void ComponentUIText::setRect(const lmath::Vector4& rect)
     {
         rect_ = rect;
+        setDirty();
     }
 
     inline f32 ComponentUIText::getScale() const
@@ -111,11 +116,25 @@ namespace lfw
     inline void ComponentUIText::setScale(f32 scale)
     {
         scale_ = scale;
+        setDirty();
     }
 
     inline void ComponentUIText::setColor(u32 abgr)
     {
         abgr_ = abgr;
+        setDirty();
+    }
+
+    inline void ComponentUIText::setHorizontalAlign(Align align)
+    {
+        horizontalAlign_ = align;
+        setDirty();
+    }
+
+    inline void ComponentUIText::setVerticalAlign(Align align)
+    {
+        verticalAlign_ = align;
+        setDirty();
     }
 }
 #endif //INC_LFRAMEWORK_COMPONENTFONTRENDERER_H__

@@ -49,7 +49,7 @@ namespace lfw
         }
         LDELETE(components_[id.index()]);
 
-        s32 index = id.index();
+        u16 index = id.index();
         components_[index] = component;
         data_[index].entity_ = entity;
         data_[index].typeFlags_ = 0;
@@ -92,11 +92,11 @@ namespace lfw
         LASSERT(id.valid());
         LASSERT(NULL != components_[id.index()]);
 
-        ComponentBehavior* behavior = components_[id.index()];
-        Data& data = data_[id.index()];
-        if(!data.checkFlag(CommonFlag_Start)){
+        u16 index = id.index();
+        ComponentBehavior* behavior = components_[index];
+        if(!data_[index].checkFlag(CommonFlag_Start)){
             behavior->onStart();
-            data.setFlag(CommonFlag_Start);
+            data_[index].setFlag(CommonFlag_Start);
         }
         behavior->update();
     }

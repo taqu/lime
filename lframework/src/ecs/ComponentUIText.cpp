@@ -30,11 +30,21 @@ namespace lfw
     {
     }
 
+    void ComponentUIText::onCreate()
+    {
+        ComponentCanvasElement::onCreate();
+        if(NULL != canvas_){
+            setRect(canvas_->getLeft(), canvas_->getTop(), canvas_->getWidth(), canvas_->getHeight());
+        }
+    }
+
     void ComponentUIText::onStart()
     {
         ComponentCanvasElement::onStart();
-        if(0<=text_.length()){
-            updateText();
+        if(NULL != canvas_){
+            if(0<=text_.length()){
+                updateText();
+            }
         }
     }
 
@@ -70,10 +80,10 @@ namespace lfw
             return;
         }
 
-        f32 fontToScreenX = scale_;//font_->getInvWidth() * canvas_->getWidth() * scale_;
-        f32 fontToScreenY = scale_;//font_->getInvHeight() * canvas_->getHeight() * scale_;
+        f32 scaleX = scale_;
+        f32 scaleY = scale_;
 
-        f32 lineHeight = fontToScreenY * font_->getLineHeight();
+        f32 lineHeight = scaleY * font_->getLineHeight();
 
         f32 textBoxWidth;
         f32 textBoxHeight;
@@ -102,7 +112,7 @@ namespace lfw
                 }
                 lineWidth += glyph->xadvance_;
             }
-            textBoxWidth = lcore::maximum(textBoxWidth, lineWidth) * fontToScreenX;
+            textBoxWidth = lcore::maximum(textBoxWidth, lineWidth) * scaleX;
         }
 
         f32 top;
@@ -113,43 +123,42 @@ namespace lfw
             top = rect_.y_;
             break;
         case Align_Center:
-            top = (rect_.y_ + rect_.w_*0.5f)*fontToScreenY - textBoxHeight*0.5f;
+            top = (rect_.y_ + rect_.w_*0.5f) - textBoxHeight*0.5f;
             break;
         default:
-            top = (rect_.y_ + rect_.w_)*fontToScreenY - textBoxHeight;
+            top = (rect_.y_ + rect_.w_) - textBoxHeight;
             break;
         };
 
-        switch(verticalAlign_)
+        switch(horizontalAlign_)
         {
         case Align_LeftTop:
             lineLeft = rect_.x_;
             break;
         case Align_Center:
-            lineLeft = (rect_.x_ + rect_.z_*0.5f)*fontToScreenX - textBoxWidth*0.5f;
+            lineLeft = (rect_.x_ + rect_.z_*0.5f) - textBoxWidth*0.5f;
             break;
         default:
-            lineLeft = (rect_.x_ + rect_.z_)*fontToScreenX - textBoxWidth;
+            lineLeft = (rect_.x_ + rect_.z_) - textBoxWidth;
             break;
         };
 
-        f32 lineWidth = calcLineWidth(text_.c_str()) * fontToScreenX;
-        f32 left = lineLeft + (textBoxWidth-lineWidth)*0.5f;
+        f32 lineWidth = textBoxWidth;
+        f32 left = lineLeft;
         sprites_.reserve(text_.length());
         s32 count = 0;
         for(s32 i=0; i<text_.length(); ++i){
             if(text_[i] == lcore::CharLF){
-                lineWidth = calcLineWidth(&text_[i+1]) * fontToScreenX;
-                left = lineLeft + (textBoxWidth-lineWidth)*0.5f;
+                left = lineLeft;
                 top += lineHeight;
                 continue;
             }
             if(text_[i] == ' '){
-                left += fontToScreenX * font_->getFontSize()*0.5f;
+                left += scaleX * font_->getFontSize()*0.5f;
                 continue;
             }
             if(text_[i] == '@'){
-                left += fontToScreenX * font_->getFontSize();
+                left += scaleX * font_->getFontSize();
                 continue;
             }
             const Font::Glyph* glyph = font_->find(text_[i]);
@@ -157,17 +166,17 @@ namespace lfw
                 continue;
             }
             Sprite2D& sprite = sprites_[count];
-            sprite.rect_.x_ = left + fontToScreenX * glyph->xoffset_;
-            sprite.rect_.y_ = top + fontToScreenY * glyph->yoffset_;
-            sprite.rect_.z_ = sprite.rect_.x_ + fontToScreenX * glyph->width_;
-            sprite.rect_.w_ = sprite.rect_.y_ + fontToScreenY * glyph->height_;
+            sprite.rect_.x_ = left + scaleX * glyph->xoffset_;
+            sprite.rect_.y_ = top + scaleY * glyph->yoffset_;
+            sprite.rect_.z_ = sprite.rect_.x_ + scaleX * glyph->width_;
+            sprite.rect_.w_ = sprite.rect_.y_ + scaleY * glyph->height_;
 
             sprite.uv_[0] = glyph->uv_[0];
             sprite.uv_[1] = glyph->uv_[1];
             sprite.uv_[2] = glyph->uv_[2];
             sprite.uv_[3] = glyph->uv_[3];
 
-            left += fontToScreenX * glyph->xadvance_;
+            left += scaleX * glyph->xadvance_;
             ++count;
         }
         sprites_.resize(count);
@@ -178,8 +187,8 @@ namespace lfw
     {
         LASSERT(NULL != text);
         LASSERT(NULL != font);
-        f32 fontToScreenX = font->getInvWidth() * screenWidth;
-        f32 fontToScreenY = font->getInvHeight() * screenHeight;
+        f32 fontToScreenX = 1.0f;
+        f32 fontToScreenY = 1.0f;
         f32 lineHeight = fontToScreenY * font->getLineHeight();
         f32 lineWidth = 0.0f;
         width = 0.0f;
@@ -210,6 +219,17 @@ namespace lfw
         width = lcore::maximum(width, lineWidth) * fontToScreenX;
     }
 
+    f32 ComponentUIText::getLineHeight(s32 fontSlot)
+    {
+        Resources& resources = System::getResources();
+
+        Font* font = resources.getFontManager().get(fontSlot);
+        if(NULL != font){
+            return font->getLineHeight();
+        }
+        return 0.0f;
+    }
+
     f32 ComponentUIText::calcLineWidth(const Char* text) const
     {
         f32 width = 0.0f;
@@ -232,15 +252,4 @@ namespace lfw
         }
         return width;
     }
-
-    //f32 ComponentUIText::calcLineHeight(s32 fontSlot, f32 screenHeight)
-    //{
-    //    Resources& resources = System::getResources();
-    //    Font* font = resources.getFontManager().get(fontSlot);
-    //    if(NULL == font){
-    //        return 0.0f;
-    //    }
-    //    f32 fontToScreenY = font->getInvHeight() * screenHeight;
-    //    return fontToScreenY * font->getLineHeight();
-    //}
 }

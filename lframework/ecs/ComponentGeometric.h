@@ -44,6 +44,8 @@ namespace lfw
         u16 getNumChildren() const;
         ConstIterator beginChild() const;
         Iterator beginChild();
+        ComponentGeometric* findChild(const NameString& name);
+        ComponentGeometric* findChild(const Char* name);
 
         ComponentGeometric* getParent();
         void setParent(ComponentGeometric* parent);
@@ -72,6 +74,7 @@ namespace lfw
 
         void lookAt(const lmath::Vector3& eye, const lmath::Vector3& at);
         void lookAt(const lmath::Vector4& eye, const lmath::Vector4& at);
+
     };
 }
 #endif //INC_LFRAMEWORK_COMPONENTGEOMETRIC_H__

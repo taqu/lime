@@ -9,6 +9,8 @@
 #include "HandleBasedAllocator.h"
 #include "ecs/ComponentLogical.h"
 #include "ecs/ComponentGeometric.h"
+#include "ecs/ComponentLogicalManager.h"
+#include "ecs/ComponentGeometricManager.h"
 
 namespace lfw
 {
@@ -17,30 +19,29 @@ namespace lfw
     //--- Entity::Components
     //---
     //----------------------------------------------------------
-    Entity::Components::Components()
-        :capacity_(0)
-        ,size_(0)
-        ,offset_(-1)
+    void Entity::Components::clear()
     {
-    }
-
-    Entity::Components::~Components()
-    {
-        ECSManager& ecsManager = System::getECSManager();
-        HandleBasedAllocator& allocator = ecsManager.getComponentHandleAllocator();
-        allocator.deallocate(bufferSize(), offset_);
-
         capacity_ = 0;
         size_ = 0;
         offset_ = -1;
     }
 
-    ID Entity::Components::get(s16 index) const
+    void Entity::Components::destroy()
     {
-        LASSERT(0<=index && index<size_);
-        const HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
-        return allocator.get<ID>(bufferSize(), offset_)[index];
+        if(0<=offset_){
+            ECSManager& ecsManager = System::getECSManager();
+            HandleBasedAllocator& allocator = ecsManager.getComponentHandleAllocator();
+            allocator.deallocate(bufferSize(), offset_);
+            clear();
+        }
     }
+
+    //ID Entity::Components::get(s16 index) const
+    //{
+    //    LASSERT(0<=index && index<size_);
+    //    const HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
+    //    return allocator.get<ID>(bufferSize(), offset_)[index];
+    //}
 
     const ID* Entity::Components::get() const
     {
@@ -71,13 +72,6 @@ namespace lfw
         }
         components[size_] = id;
         ++size_;
-#ifdef _DEBUG
-        for(s32 i=0; i<size_; ++i){
-            u8 category = components[i].category();
-            LASSERT(0<category && category<255);
-            LASSERT(components[i].valid());
-        }
-#endif
     }
 
     void Entity::Components::remove(ID id)
@@ -89,26 +83,21 @@ namespace lfw
         forceRemove(id);
     }
 
-    void Entity::Components::removeAt(s16 index)
-    {
-        LASSERT(0<=index && index<size_);
+    //void Entity::Components::removeAt(s16 index)
+    //{
+    //    LASSERT(0<=index && index<size_);
 
-        HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
-        ID* components = allocator.getMaybeNull<ID>(bufferSize(), offset_);
-        if(components[index].category() == ECSCategory_Logical || components[index].category() == ECSCategory_Geometric){
-            LASSERT(false);
-            return;
-        }
-        for(s16 j=index+1; j<size_; ++j){
-            components[j-1] = components[j];
-        }
-        --size_;
-#ifdef _DEBUG
-        for(s32 i=0; i<size_; ++i){
-            LASSERT(components[i].valid());
-        }
-#endif
-    }
+    //    HandleBasedAllocator& allocator = System::getECSManager().getComponentHandleAllocator();
+    //    ID* components = allocator.getMaybeNull<ID>(bufferSize(), offset_);
+    //    if(components[index].category() == ECSCategory_Logical || components[index].category() == ECSCategory_Geometric){
+    //        LASSERT(false);
+    //        return;
+    //    }
+    //    for(s16 j=index+1; j<size_; ++j){
+    //        components[j-1] = components[j];
+    //    }
+    //    --size_;
+    //}
 
     void Entity::Components::forceRemove(ID id)
     {
@@ -123,11 +112,6 @@ namespace lfw
                 break;
             }
         }
-#ifdef _DEBUG
-        for(s32 i=0; i<size_; ++i){
-            LASSERT(components[i].valid());
-        }
-#endif
     }
 
     ID* Entity::Components::resize()
@@ -147,11 +131,6 @@ namespace lfw
 
         allocator.deallocate(prevBufferSize, offset_);
 
-#ifdef _DEBUG
-        for(s32 i=capacity_; i<capacity; ++i){
-            newComponents[i].clear();
-        }
-#endif
         capacity_ = capacity;
         offset_ = handle.offset();
 
@@ -175,6 +154,7 @@ namespace lfw
         LASSERT(0 == (flag & EntityFlag_Render));
         ECSManager& manager = System::getECSManager();
         manager.setFlag(*this, flag);
+        setTreeDirty();
     }
 
     void Entity::resetFlag(u8 flag)
@@ -183,6 +163,7 @@ namespace lfw
         LASSERT(0 == (flag & EntityFlag_Render));
         ECSManager& manager = System::getECSManager();
         manager.resetFlag(*this, flag);
+        setTreeDirty();
     }
 
     void Entity::addComponent(u8 category, u32 type, Behavior* behavior)
@@ -279,6 +260,20 @@ namespace lfw
         Behavior* component = manager.getComponent(*this, id);
         if(NULL != component){
             manager.removeComponent(*this, id);
+        }
+    }
+
+    void Entity::setTreeDirty()
+    {
+        ECSManager& manager = System::getECSManager();
+        IDConstAccess access = manager.getComponents(*this);
+        if(ECSCategory_Geometric == access[0].category()){
+            ComponentGeometricManager* geometricManager = manager.getComponentManager<ComponentGeometricManager>();
+            geometricManager->setDirty();
+
+        }else{
+            ComponentLogicalManager* logicalManager = manager.getComponentManager<ComponentLogicalManager>();
+            logicalManager->setDirty();
         }
     }
 }

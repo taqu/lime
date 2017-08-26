@@ -81,6 +81,28 @@ namespace
         return componentManager->beginChildren(getID());
     }
 
+    ComponentGeometric* ComponentGeometric::findChild(const NameString& name)
+    {
+        ComponentGeometric::Iterator itr = beginChild();
+        for(;!itr.end(); ++itr){
+            if(name == itr.current()->getName()){
+                return itr.current();
+            }
+        }
+        return NULL;
+    }
+
+    ComponentGeometric* ComponentGeometric::findChild(const Char* name)
+    {
+        ComponentGeometric::Iterator itr = beginChild();
+        for(;!itr.end(); ++itr){
+            if(itr.current()->getName() == name){
+                return itr.current();
+            }
+        }
+        return NULL;
+    }
+
     ComponentGeometric* ComponentGeometric::getParent()
     {
         ComponentGeometricManager* componentManager = getManager();

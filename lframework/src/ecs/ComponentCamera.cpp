@@ -196,6 +196,8 @@ namespace lfw
         f32 fovyDegree,
         f32 znear,
         f32 zfar,
+        s32 x,
+        s32 y,
         s32 width,
         s32 height,
         bool jitter)
@@ -205,7 +207,7 @@ namespace lfw
 
         camera.perspectiveFov(fovyDegree*DEG_TO_RAD, static_cast<f32>(width)/height, znear, zfar);
 
-        camera.setViewport(0, 0, width, height);
+        camera.setViewport(x, y, width, height);
         camera.setJitter(jitter);
         if(jitter){
             f32 jw = 0.125f/width;
@@ -393,5 +395,42 @@ namespace lfw
     {
         Camera& camera = getManager()->getCamera(getID());
         camera.setJitterSize(width, height);
+    }
+
+    void ComponentCamera::clearRenderPasses()
+    {
+        Camera& camera = getManager()->getCamera(getID());
+        camera.clearRenderPasses();
+    }
+
+    void ComponentCamera::addRenderPass(s32 index, graph::RenderPass* renderPass)
+    {
+        Camera& camera = getManager()->getCamera(getID());
+        camera.addRenderPass(index, renderPass);
+    }
+
+    void ComponentCamera::removeRenderPass(graph::RenderPass* renderPass)
+    {
+        Camera& camera = getManager()->getCamera(getID());
+        camera.removeRenderPass(renderPass);
+    }
+
+    s32 ComponentCamera::findRenderPass(graph::RenderPass* renderPass) const
+    {
+        const Camera& camera = getManager()->getCamera(getID());
+        return camera.findRenderPass(renderPass);
+    }
+
+    s32 ComponentCamera::findRenderPass(s32 paddId) const
+    {
+        const Camera& camera = getManager()->getCamera(getID());
+        return camera.findRenderPass(paddId);
+    }
+
+    graph::RenderPass* ComponentCamera::getRenderPass(s32 index)
+    {
+        Camera& camera = getManager()->getCamera(getID());
+        return camera.getRenderPass(index);
+
     }
 }

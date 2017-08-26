@@ -21,8 +21,11 @@ namespace debug
         virtual void postUpdate();
         virtual void onDestroy();
 
+        virtual void createResources();
+        virtual void setupResources(lfw::RenderContext& renderContext);
     private:
         lfw::f32 time_;
+        lgfx::ShaderResourceViewRef srvNoise_;
     };
 }
 #endif //INC_SAMPLES_VOLUMEPARTICLE00_H__

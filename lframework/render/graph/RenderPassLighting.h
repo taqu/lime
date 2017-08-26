@@ -24,6 +24,11 @@ namespace lfw
         class RenderPassLighting : public RenderPass
         {
         public:
+            static const u32 ID_FullVelocity;
+            static const u32 ID_LinearDepth;
+
+            static const u32 ID_UAVFullVelocity;
+
             static const u32 ID_RTVAccumLighting;
             static const u32 ID_SRVAccumLighting;
 
@@ -40,6 +45,11 @@ namespace lfw
 
             s32 width_;
             s32 height_;
+            s32 xthreads_;
+            s32 ythreads_;
+            s32 halfXThreads_;
+            s32 halfYThreads_;
+
             struct GBufferConstant
             {
                 s32 width_;
@@ -91,7 +101,6 @@ namespace lfw
             lgfx::ViewRef viewVelocity_;
             lgfx::ViewRef viewDepthStencil_;
             lgfx::ViewRef viewStencil_;
-            lgfx::ViewRef viewFullVelocity_;
 
             lgfx::RenderTargetViewRef rtvAccumLighting_;
             lgfx::ShaderResourceViewRef srvAccumLighting_;
@@ -99,6 +108,16 @@ namespace lfw
             lgfx::ResourceRef resourceDepthStencil_;
             lgfx::Texture2DRef texDepthStencil_;
             lgfx::DepthStencilViewRef dsvDepthStencil_;
+
+
+            lgfx::UnorderedAccessViewRef uavFullVelocity_;
+            lgfx::ShaderResourceViewRef srvFullVelocity_;
+
+            lgfx::UnorderedAccessViewRef uavLinearDepth_;
+            lgfx::ShaderResourceViewRef srvLinearDepth_;
+
+            lgfx::ComputeShaderRef csCameraMotion_;
+            lgfx::ComputeShaderRef csLinearDepth_;
         };
     }
 }

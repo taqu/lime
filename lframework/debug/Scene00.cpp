@@ -22,16 +22,18 @@
 #include <lframework/ecs/ComponentUIImage.h>
 #include <lframework/resource/Resources.h>
 #include <lframework/resource/ResourceTexture2D.h>
-
+#include <lframework/render/graph/RenderGraph.h>
 #include <lframework/gui/imgui.h>
 
 #include "MainCamera00.h"
 #include "Behavior00.h"
 #include "Particle00.h"
 #include "VolumeParticle00.h"
+#include "VolumeParticle01.h"
 #include "Plane00.h"
 #include "BGMID.h"
 #include "SEID.h"
+#include "ShaderID.h"
 
 namespace debug
 {
@@ -51,6 +53,11 @@ namespace debug
 
     void Scene00::onCreate()
     {
+        lfw::ShaderManager& shaderManager = lfw::System::getResources().getShaderManager();
+        shaderManager.loadVS(ShaderVS_ProceduralSpace, ShaderCompiledBytes::getSizeVS(ShaderVS_ProceduralSpace), ShaderCompiledBytes::getBytesVS(ShaderVS_ProceduralSpace));
+        shaderManager.loadPS(ShaderPS_ProceduralSpace, ShaderCompiledBytes::getSizePS(ShaderPS_ProceduralSpace), ShaderCompiledBytes::getBytesPS(ShaderPS_ProceduralSpace));
+        shaderManager.loadPS(ShaderPS_ProceduralTerrain00, ShaderCompiledBytes::getSizePS(ShaderPS_ProceduralTerrain00), ShaderCompiledBytes::getBytesPS(ShaderPS_ProceduralTerrain00));
+
         lsound::Context& context = lsound::Context::getInstance();
         context.loadResourcePack(0, "sound/BGM.pak", true);
         context.loadResourcePack(1, "sound/SE.pak", false);
@@ -62,17 +69,16 @@ namespace debug
         lfw::ECSManager& ecsManager = lfw::System::getECSManager();
         mainLight00Entity_ = ecsManager.requestCreateGeometric("MainLight00");
         lfw::ComponentLight* componentLight = mainLight00Entity_.addComponent<lfw::ComponentLight>();
-        mainLight00Entity_.getGeometric()->getRotation().lookAt(lmath::Vector4::construct(normalize(lmath::Vector4::construct(0.5f, -1.0f, 0.0f, 0.0f))));
+        mainLight00Entity_.getGeometric()->getRotation().lookAt(lmath::normalize(lmath::Vector4::construct(0.5f, -1.0f, 0.0f, 0.0f)));
         lfw::Light& light = componentLight->getLight();
         light.setCastShadow(true);
 
         mainCamera00Entity_ = ecsManager.requestCreateGeometric("MainCamera00");
         debug::MainCamera00* mainCamera00 = mainCamera00Entity_.addComponent<debug::MainCamera00>();
-        mainCamera00->initialize(60.0f, 0.01f, 100.0f, 800, 600, true);
+        mainCamera00->initialize(60.0f, 0.01f, 100.0f, 800, 600, false);
         mainCamera00Entity_.getGeometric()->lookAt(lmath::Vector4::construct(0.0f, 2.0f, -4.0f, 0.0f), lmath::Vector4::construct(0.0f, 0.0f, 0.0f, 0.0f));
 
         lfw::ComponentGeometric* scene00Geometric = this->getEntity().getGeometric();
-
 #if 1
         //behaviorEntities_[0] = application.getECSManager().requestCreateGeometric("Behavior00");
         //behaviorEntities_[0].addComponent<debug::Behavior00>();
@@ -111,23 +117,25 @@ namespace debug
         particle00_.addComponent<Particle00>();
 
         {
-            lfw::s32 setID=0;
-            lfw::ResourceTexture2D* texGradient = lfw::System::getResources().load(setID, "gradient.dds", lfw::ResourceType::ResourceType_Texture2D)->cast<lfw::ResourceTexture2D>();
             volumeParticle00_ = ecsManager.requestCreateGeometric("VolumeParticle00");
-            VolumeParticle00* volumeParticle = volumeParticle00_.addComponent<VolumeParticle00>();
-            volumeParticle->setTexture(texGradient->get(), texGradient->getShaderResourceView());
+            VolumeParticle00* volumeParticle00 = volumeParticle00_.addComponent<VolumeParticle00>();
+
+            volumeParticle01_ = ecsManager.requestCreateGeometric("VolumeParticle01");
+            VolumeParticle01* volumeParticle01 = volumeParticle01_.addComponent<VolumeParticle01>();
+            volumeParticle01_.getGeometric()->setPosition(lmath::Vector4::construct(1.0f, 0.0f, 0.0f, 0.0f));
         }
 
 
         //
         lfw::Entity canvasEntity = ecsManager.requestCreateGeometric("Canvas");
         lfw::ComponentCanvas* canvas = canvasEntity.addComponent<lfw::ComponentCanvas>();
+        canvas->setScreen(200, 200, 400, 400);
 
         lfw::Entity entityText00 = ecsManager.requestCreateGeometric("Text00");
         entityText00.getGeometric()->setParent(canvasEntity.getGeometric());
         lfw::ComponentUIText* UIText00 = entityText00.addComponent<lfw::ComponentUIText>();
         UIText00->setFont(0);
-        UIText00->setRect(0.0f, 0.0f, 800.0f, 600.0f);
+        UIText00->setRect(200.0f, 0.0f, 100.0f, 400.0f);
         UIText00->text().printf("test00\ntest00\ntest00");
         UIText00->updateText();
 
@@ -142,10 +150,12 @@ namespace debug
             UIImage00->setUVRect(0.0f, 0.0f, 1.0f, 1.0f);
             entityImage00.getGeometric()->setFirstSibling();
         }
+        count_ = 0;
     }
 
     void Scene00::onStart()
     {
+        volumeParticle00_.resetFlag(lfw::EntityFlag_UpdateSelf);
     }
 
     void Scene00::update()
@@ -190,6 +200,18 @@ namespace debug
 
         ImGui::SetNextWindowPos(ImVec2(650, 20), ImGuiSetCond_FirstUseEver);     // Normally user code doesn't need/want to call it because positions are saved in .ini file anyway. Here we just want to make the demo initial state a bit more friendly!
         ImGui::ShowTestWindow(&showTestWindow_);
+
+        //if(count_<1024){
+        //    ++count_;
+
+        //    for(int i=0; i<64; ++i){
+        //        lfw::ECSManager& ecsManager = lfw::System::getECSManager();
+        //        lfw::Entity entity = ecsManager.requestCreateGeometric("");
+        //        entity.addComponent<Behavior00>();
+        //        entity.getGeometric()->setParent(this->getEntity().getGeometric());
+        //    }
+        //    count_ += 64;
+        //}
     }
 
     void Scene00::onDestroy()

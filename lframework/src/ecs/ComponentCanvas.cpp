@@ -45,6 +45,8 @@ namespace
         ,height_(0)
         ,prevNumVertices_(0)
         ,prevNumIndices_(0)
+        ,horizontalScale_(1.0f)
+        ,verticalScale_(1.0f)
     {
         setLayer(Layer_Default2D);
         commands_.reserve(64);
@@ -85,6 +87,7 @@ namespace
         defaultPixelShader_ = shaderManager.getPS(ShaderPS_Sprite2D);
 
         defaultSRV_ = resources.getEmptyTextureWhite()->cast<ResourceTexture2D>()->getShaderResourceView();
+        requestUpdate();
     }
 
     void ComponentCanvas::onStart()
@@ -189,9 +192,11 @@ namespace
         top_ = top;
         width_ = width;
         height_ = height;
+        f32 invWidth = 1.0f/width_;
+        f32 invHeight = 1.0f/height_;
         Screen screen;
-        screen.invHalfWidth_ = 2.0f/width;
-        screen.invHalfHeight_ = -2.0f/height;
+        screen.invHalfWidth_ = 2.0f*invWidth;
+        screen.invHalfHeight_ = -2.0f*invHeight;
         screen.left_ = static_cast<f32>(left);
         screen.top_ = static_cast<f32>(top);
 
@@ -205,6 +210,12 @@ namespace
             sizeof(Screen));
     }
 
+    void ComponentCanvas::setScale(f32 horizontal, f32 vertical)
+    {
+        horizontalScale_ = horizontal;
+        verticalScale_ = vertical;
+    }
+
     void ComponentCanvas::add(ComponentCanvasElement* element)
     {
         for(s32 i=0; i<canvasElements_.size(); ++i){
@@ -213,6 +224,7 @@ namespace
             }
         }
         canvasElements_.push_back(element);
+        requestUpdate();
     }
 
     void ComponentCanvas::remove(ComponentCanvasElement* element)
@@ -220,6 +232,7 @@ namespace
         for(s32 i=0; i<canvasElements_.size(); ++i){
             if(canvasElements_[i] == element){
                 canvasElements_.removeAt(i);
+                requestUpdate();
                 return;
             }
         }
@@ -251,31 +264,36 @@ namespace
             pixelShader_ = ps;
         }
 
+        lmath::lm128 scale = _mm_set_ps(horizontalScale_, verticalScale_, horizontalScale_, verticalScale_);
+        lmath::lm128 r = _mm_mul_ps(_mm_loadu_ps(&rect.x_), scale);
+        lmath::Vector4 trect;
+        _mm_storeu_ps(&trect.x_, r);
+
         srv_ = srv;
         pixelShader_ = ps;
         u16 numVertices = vertices_.size();
         vertices_.expand(4);
         Vertex* vertices = vertices_.begin() + numVertices;
-        vertices[0].position_[0] = rect.x_;
-        vertices[0].position_[1] = rect.y_;
+        vertices[0].position_[0] = trect.x_;
+        vertices[0].position_[1] = trect.y_;
         vertices[0].abgr_ = abgr;
         vertices[0].texcoord_[0] = uv[0];
         vertices[0].texcoord_[1] = uv[1];
 
-        vertices[1].position_[0] = rect.z_;
-        vertices[1].position_[1] = rect.y_;
+        vertices[1].position_[0] = trect.z_;
+        vertices[1].position_[1] = trect.y_;
         vertices[1].abgr_ = abgr;
         vertices[1].texcoord_[0] = uv[2];
         vertices[1].texcoord_[1] = uv[1];
 
-        vertices[2].position_[0] = rect.x_;
-        vertices[2].position_[1] = rect.w_;
+        vertices[2].position_[0] = trect.x_;
+        vertices[2].position_[1] = trect.w_;
         vertices[2].abgr_ = abgr;
         vertices[2].texcoord_[0] = uv[0];
         vertices[2].texcoord_[1] = uv[3];
 
-        vertices[3].position_[0] = rect.z_;
-        vertices[3].position_[1] = rect.w_;
+        vertices[3].position_[0] = trect.z_;
+        vertices[3].position_[1] = trect.w_;
         vertices[3].abgr_ = abgr;
         vertices[3].texcoord_[0] = uv[2];
         vertices[3].texcoord_[1] = uv[3];
@@ -320,6 +338,8 @@ namespace
         u16 index = numVertices;
         for(s32 i=0; i<n; ++i){
             _mm_store_ps(dst, _mm_loadu_ps(src));
+            dst[0] *= horizontalScale_;
+            dst[1] *= verticalScale_;
             indices[i] = index;
             dst += 4;
             src += 4;

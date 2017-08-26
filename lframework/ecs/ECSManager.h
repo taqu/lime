@@ -5,7 +5,6 @@
 @author t-sakai
 @date 2016/05/09 create
 */
-#include <lcore/Buffer.h>
 #include "ECSInitParam.h"
 #include "../HandleBasedAllocator.h"
 #include "Entity.h"
@@ -91,16 +90,17 @@ namespace lfw
         ECSManager(const ECSManager&);
         ECSManager& operator=(const ECSManager&);
 
+        void expandComponents(s32 newSize);
+
         HandleBasedAllocator componentHandleAllocator_;
 
         HandleTable entityHandles_;
 
-        typedef lcore::Buffer<Entity::Components> EntityComponentsBuffer;
-        EntityComponentsBuffer entityComponents_;
-
         s32 numComponentManagers_;
         ComponentManager** componentManagers_;
 
+        s32 sizeComponents_;
+        Entity::Components* entityComponents_;
         u8* entityFlags_;
         u32* entityLayers_;
 
@@ -109,6 +109,7 @@ namespace lfw
 
         typedef lcore::ArrayPOD<ComponentOperation> OperationArray;
         OperationArray componentOperations_;
+        //OperationArray entityComponentOperations_;
     };
 
     inline ECSInitParam ECSManager::defaultInitParam()

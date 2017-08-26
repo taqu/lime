@@ -211,29 +211,30 @@ namespace lfw
     //---
     //----------------------------------------------
     ECSEntityTree::ECSEntityTree()
-        :entities_(NULL)
+        :size_(0)
+        ,entities_(NULL)
     {
     }
 
     ECSEntityTree::~ECSEntityTree()
     {
+        size_ = 0;
         LDELETE_ARRAY(entities_);
     }
 
     void ECSEntityTree::resize(s32 size, s32 newSize)
     {
+        size_ = newSize;
         expand(entities_, size, newSize);
         tree_.resize(size, newSize);
-        processIDOrder_.clear();
-        processEntityOrder_.clear();
-        processIDOrder_.reserve(newSize);
-        processEntityOrder_.reserve(newSize);
     }
 
     void ECSEntityTree::traverse()
     {
         processIDOrder_.clear();
         processEntityOrder_.clear();
+        processIDOrder_.reserve(size_);
+        processEntityOrder_.reserve(size_);
 
         ECSNode* node = &tree_.getRoot();
         u16 child = node->child();

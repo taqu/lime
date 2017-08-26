@@ -115,7 +115,7 @@ namespace lfw
         lmath::Vector4 sceneAABBPointsInLightView[8];
         createSceneAABBPoints(sceneAABBPointsInLightView);
         for(s32 i=0; i<8; ++i){
-            sceneAABBPointsInLightView[i] = lmath::Vector4::construct(mul(lightView, sceneAABBPointsInLightView[i]));
+            sceneAABBPointsInLightView[i] = lmath::mul(lightView, sceneAABBPointsInLightView[i]);
         }
 
         f32 frustumIntervalBegin, frustumIntervalEnd;
@@ -145,7 +145,7 @@ namespace lfw
             lmath::lm128 worldPoint;
             for(s32 i=0; i<8; ++i){
                 //ワールド座標へ変換
-                frustumPoints[i] = lmath::Vector4::construct(mul(invView, frustumPoints[i]));
+                frustumPoints[i] = lmath::mul(invView, frustumPoints[i]);
                 //ライトの座標へ変換
                 worldPoint = mul(lightView, frustumPoints[i]);
                 lightViewOrthoMin = lmath::Vector4::construct(minimum(lightViewOrthoMin, worldPoint));
@@ -170,7 +170,7 @@ namespace lfw
             case FitType_ToScene:
             default:
                 {
-                    lmath::Vector4 diagonal = lmath::Vector4::construct(sub(frustumPoints[0], frustumPoints[6]));
+                    lmath::Vector4 diagonal = lmath::sub(frustumPoints[0], frustumPoints[6]);
                     f32 cascadeBound = diagonal.length();
                     lmath::lm128 tmpBoarderOffset;
                     tmpBoarderOffset = sub(lightViewOrthoMax, lightViewOrthoMin);
@@ -276,7 +276,7 @@ namespace lfw
 
         lmath::return_type_vec4 sceneExtent = sub(sceneAABBMax_, sceneAABBMin_);
         for(s32 i=0; i<8; ++i){
-            dst[i] = lmath::Vector4::construct((lmath::lm128)muladd(map[i], sceneExtent, sceneCenter));
+            dst[i] = lmath::Vector4::construct(muladd(map[i], sceneExtent, sceneCenter));
         }
     }
 

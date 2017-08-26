@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2017/06/21 create
 */
-#include "lframework.h"
+#include "../../lframework.h"
 #include <lcore/Array.h>
 #include <lcore/HashMap.h>
 #include <lgraphics/TextureRef.h>
@@ -28,6 +28,15 @@ namespace graph
         Default_Clear = 0,
         Default_White,
         Default_Black,
+    };
+
+    enum RenderPassID
+    {
+        RenderPassID_GBuffer =0,
+        RenderPassID_Lighting,
+        RenderPassID_Transparent,
+        RenderPassID_Integration,
+        RenderPassID_UI,
     };
 
     //------------------------------------------------------

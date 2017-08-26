@@ -21,6 +21,8 @@ namespace lfw
     ECSManager::ECSManager()
         :numComponentManagers_(0)
         ,componentManagers_(NULL)
+        ,sizeComponents_(0)
+        ,entityComponents_(NULL)
         ,entityFlags_(NULL)
         ,entityLayers_(NULL)
     {
@@ -31,6 +33,7 @@ namespace lfw
     {
         LDELETE_ARRAY(entityLayers_);
         LDELETE_ARRAY(entityFlags_);
+        LDELETE_ARRAY(entityComponents_);
         for(s32 i=0; i<numComponentManagers_; ++i){
             LDELETE(componentManagers_[i]);
         }
@@ -73,16 +76,15 @@ namespace lfw
         LASSERT(ECSCategory_Logical == componentManagers_[ECSCategory_Logical]->category());
 
         Handle handle = entityHandles_.create();
-        if(entityComponents_.size()<entityHandles_.capacity()){
-            expand(entityFlags_, entityComponents_.size(), entityHandles_.capacity());
-            expand(entityLayers_, entityComponents_.size(), entityHandles_.capacity());
-            entityComponents_.resize(entityHandles_.capacity());
+        if(sizeComponents_<entityHandles_.capacity()){
+            expand(entityFlags_, sizeComponents_, entityHandles_.capacity());
+            expand(entityLayers_, sizeComponents_, entityHandles_.capacity());
+            expandComponents(entityHandles_.capacity());
         }
-        entityComponents_.construct(handle.index());
         entityFlags_[handle.index()] = EntityFlag_Default;
         entityLayers_[handle.index()] = Layer_Default;
 
-        Entity entity = Entity(handle);
+        Entity entity = Entity::construct(handle);
 
         ComponentLogicalManager* componentLogicalManager = getComponentManager<ComponentLogicalManager>();
         ID id = componentLogicalManager->create(entity);
@@ -101,16 +103,15 @@ namespace lfw
         LASSERT(ECSCategory_Geometric == componentManagers_[ECSCategory_Geometric]->category());
 
         Handle handle = entityHandles_.create();
-        if(entityComponents_.size()<entityHandles_.capacity()){
-            expand(entityFlags_, entityComponents_.size(), entityHandles_.capacity());
-            expand(entityLayers_, entityComponents_.size(), entityHandles_.capacity());
-            entityComponents_.resize(entityHandles_.capacity());
+        if(sizeComponents_<entityHandles_.capacity()){
+            expand(entityFlags_, sizeComponents_, entityHandles_.capacity());
+            expand(entityLayers_, sizeComponents_, entityHandles_.capacity());
+            expandComponents(entityHandles_.capacity());
         }
-        entityComponents_.construct(handle.index());
         entityFlags_[handle.index()] = EntityFlag_Default;
         entityLayers_[handle.index()] = Layer_Default;
 
-        Entity entity = Entity(handle);
+        Entity entity = Entity::construct(handle);
 
         ComponentGeometricManager* componentGeometricManager = getComponentManager<ComponentGeometricManager>();
         ID id = componentGeometricManager->create(entity);
@@ -141,7 +142,7 @@ namespace lfw
             componentManagers_[category]->destroy(ids[i]);
         }
 
-        entityComponents_.destruct(handle.index());
+        entityComponents_[handle.index()].destroy();
         entityFlags_[handle.index()] = 0;
         entityLayers_[handle.index()] = Layer_Default;
         entity.setHandle(Handle::construct(Handle::Invalid));
@@ -338,10 +339,6 @@ namespace lfw
     void ECSManager::removeComponent(Entity entity, ID component)
     {
         LASSERT(NULL != componentManagers_[component.category()]);
-        //componentManagers_[component.category()]->destroy(component);
-        //Entity::Components& components = entityComponents_[entity.getHandle().index()];
-        //components.remove(component);
-
         ComponentOperation componentOp = {ComponentOperation::Type_Destroy, entity.getHandle(), component};
         componentOperations_.push_back(componentOp);
     }
@@ -371,11 +368,16 @@ namespace lfw
         //Logical更新
         entityEnd = logicalManager->end();
         for(const Entity* entity = logicalManager->begin(); entity != entityEnd; ++entity){
+            if(!entity->checkFlag(EntityFlag_Update)){
+                continue;
+            }
+
             const Entity::Components& components = entityComponents_[entity->getHandle().index()];
             LASSERT(componentHandleAllocator_.get<ID>(components.bufferSize(), components.offset())[0].category() == ECSCategory_Logical);
 
             ID* ids = componentHandleAllocator_.get<ID>(components.bufferSize(), components.offset());
-            for(s32 i=1; i<components.size(); ++i){
+            s32 size = components.size();
+            for(s32 i=1; i<size; ++i){
                 ID componentID = ids[i];
                 componentManagers_[componentID.category()]->updateComponent(componentID);
             }
@@ -384,11 +386,16 @@ namespace lfw
         //Geometric更新
         entityEnd = geometricManager->end();
         for(const Entity* entity = geometricManager->begin(); entity != entityEnd; ++entity){
+            if(!entity->checkFlag(EntityFlag_Update)){
+                continue;
+            }
+
             const Entity::Components& components = entityComponents_[entity->getHandle().index()];
             LASSERT(componentHandleAllocator_.get<ID>(components.bufferSize(), components.offset())[0].category() == ECSCategory_Geometric);
 
             ID* ids = componentHandleAllocator_.get<ID>(components.bufferSize(), components.offset());
-            for(s32 i=0; i<components.size(); ++i){
+            s32 size = components.size();
+            for(s32 i=1; i<size; ++i){
                 ID componentID = ids[i];
                 componentManagers_[componentID.category()]->updateComponent(componentID);
             }
@@ -449,8 +456,21 @@ namespace lfw
                 componentManagers_[i]->terminate();
             }
         }
+        for(s32 i=0; i<sizeComponents_; ++i){
+            entityComponents_[i].destroy();
+        }
+
         for(s32 i=0; i<numComponentManagers_; ++i){
             LDELETE(componentManagers_[i]);
         }
+    }
+
+    void ECSManager::expandComponents(s32 newSize)
+    {
+        expand(entityComponents_, sizeComponents_, newSize);
+        for(s32 i=sizeComponents_; i<newSize; ++i){
+            entityComponents_[i].clear();
+        }
+        sizeComponents_ = newSize;
     }
 }

@@ -22,7 +22,7 @@ INT WinMain(HINSTANCE hInstance, HINSTANCE /*hPrevInstance*/, PSTR /*lpCmdLine*/
         initParam.inputParam_.initDevices_[1] = true;
         initParam.inputParam_.initDevices_[2] = true;
         initParam.soundParam_.masterGain_ = 0.1f;
-        initParam.rendererParam_.numSyncFrames_ = 2;
+        initParam.rendererParam_.numSyncFrames_ = 3;
         initParam.rendererParam_.shadowMapZFar_ = 50.0f;
 
         initParam.gfxParam_.backBufferWidth_ = request.width_;

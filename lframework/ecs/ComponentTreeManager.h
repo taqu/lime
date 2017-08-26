@@ -5,9 +5,10 @@
 @author t-sakai
 @date 2016/09/15 create
 */
+#include "../System.h"
 #include "ComponentManager.h"
-#include "System.h"
 #include "ECSTree.h"
+#include <lcore/ObjectAllocator.h>
 #include <lcore/Array.h>
 #include <lcore/BitSet.h>
 
@@ -22,7 +23,7 @@ namespace lfw
 
         typedef lcore::Array<Entity> EntityArray;
 
-        typedef bool (*TraverseCallBack)(s32 depth, const ComponentType& component, void* userData);
+        typedef void (*TraverseCallBack)(s32 depth, const ComponentType* component, void* userData);
 
         static const u32 Flag_Dirty = 0x01U<<0;
 
@@ -50,6 +51,7 @@ namespace lfw
         void setParent(ID id, ComponentType* parent);
         inline void setFirstSibling(ID id);
         inline void setLastSibling(ID id);
+        inline void setDirty();
 
         void add(ID id, Operation::Type type);
         /**
@@ -82,7 +84,8 @@ namespace lfw
 
         lcore::BitSet32 flags_;
         IDTable ids_;
-        ComponentType* components_;
+        lcore::ObjectAllocator<ComponentType> allocator_;
+        ComponentType** components_;
         NameString* names_;
         lcore::ArrayPOD<Operation> operations_;
         lcore::ArrayPOD<Operation> workOperations_;
@@ -96,7 +99,10 @@ namespace lfw
         ,names_(NULL)
     {
         LASSERT(0<=capacity);
-        components_ = LNEW ComponentType[capacity];
+        allocator_.initialize();
+        components_ = LNEW ComponentType*[capacity];
+        lcore::memset(components_, 0, sizeof(ComponentType*)*capacity);
+
         names_ = LNEW NameString[capacity];
         entityTree_.resize(0, capacity);
     }
@@ -106,6 +112,7 @@ namespace lfw
     {
         LDELETE_ARRAY(names_);
         LDELETE_ARRAY(components_);
+        allocator_.terminate();
     }
 
     template<class ComponentType>
@@ -120,7 +127,9 @@ namespace lfw
             entityTree_.resize(capacity, newCapacity);
         }
         u16 index = id.index();
-        components_[index].setID(id);
+        void* ptr = allocator_.allocate();
+        components_[index] = LPLACEMENT_NEW(ptr) ComponentType;
+        components_[index]->setID(id);
         getName(id).clear();
         entityTree_.create(index, entity);
         return id;
@@ -130,9 +139,12 @@ namespace lfw
     void ComponentTreeManager<ComponentType>::destroy(ID id)
     {
         LASSERT(id.valid());
+        LASSERT(NULL != components_[id.index()]);
         u16 index = id.index();
         getName(id).clear();
-        components_[index].setID(ID::InvalidID());
+        components_[index]->~ComponentType();
+        allocator_.deallocate(components_[index]);
+        components_[index] = NULL;
         names_[index].clear();
 
         entityTree_.destroy(index);
@@ -142,7 +154,7 @@ namespace lfw
     template<class ComponentType>
     ComponentType* ComponentTreeManager<ComponentType>::get(ID id)
     {
-        return (id.valid() && 0<=id.index() && id.index()<ids_.capacity())? &components_[id.index()] : NULL;
+        return (id.valid() && 0<=id.index() && id.index()<ids_.capacity())? components_[id.index()] : NULL;
     }
 
     template<class ComponentType>
@@ -150,7 +162,7 @@ namespace lfw
     {
         LASSERT(0<=id.index() && id.index()<ids_.capacity() || ECSNode::Root==id.index());
         LASSERT(id.valid());
-        return (ECSNode::Root != id.index())? &components_[id.index()] : NULL;
+        return (ECSNode::Root != id.index())? components_[id.index()] : NULL;
     }
 
     template<class ComponentType>
@@ -255,6 +267,12 @@ namespace lfw
         LASSERT(id.index() != ECSNode::Root && (0<=id.index() && id.index()<ids_.capacity()));
         LASSERT(id.valid());
         entityTree_.setLastSibling(getNode(id));
+    }
+
+    template<class ComponentType>
+    inline void ComponentTreeManager<ComponentType>::setDirty()
+    {
+        flags_.set(Flag_Dirty);
     }
 
     template<class ComponentType>
@@ -392,7 +410,7 @@ namespace lfw
     {
         const ECSNode& node = getNode(id);
         const ECSNode* child = (node.numChildren()<=0)? NULL : &entityTree_.get(node.child());
-        return const_iterator(node.numChildren(), components_, &entityTree_, child);
+        return const_iterator(node.numChildren(), reinterpret_cast<ComponentType** const>( components_), &entityTree_, child);
     }
 
     template<class ComponentType>
@@ -454,7 +472,7 @@ namespace lfw
             //次のノード名をパスから取り出す
             path = lcore::parseFirstNameFromPath(length, name, NameBufferSize, path);
         }
-        return (current == &entityTree_.getRoot())? NULL : components_ + current->index();
+        return (current == &entityTree_.getRoot())? NULL : components_[current->index()];
     }
 
     template<class ComponentType>

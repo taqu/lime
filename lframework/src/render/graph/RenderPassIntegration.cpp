@@ -21,6 +21,7 @@ namespace graph
 {
 
     RenderPassIntegration::RenderPassIntegration()
+        :RenderPass(RenderPassID_Integration)
     {
     }
 
@@ -54,7 +55,7 @@ namespace graph
 
         graph::RenderGraph& renderGraph = System::getRenderGraph();
         viewStencil_ = renderGraph.getShared(RenderPassGBuffer::ID_Stencil);
-        viewFullVelocity_ = renderGraph.getShared(RenderPassGBuffer::ID_FullVelocity);
+        viewFullVelocity_ = renderGraph.getShared(RenderPassLighting::ID_FullVelocity);
         viewAccumLighting_ = renderGraph.getShared(RenderPassLighting::ID_SRVAccumLighting);
     }
 
@@ -70,6 +71,7 @@ namespace graph
     void RenderPassIntegration::execute(RenderContext& renderContext, Camera& camera)
     {
         lgfx::ContextRef& context = renderContext.getContext();
+        context.setViewport(camera.getViewport());
         constantGBuffer_.attachPS(context, 5);
         context.setVertexShader(vsFullQuad_);
         context.setPixelShader(psDeferredIntegration_);
@@ -88,6 +90,7 @@ namespace graph
         context.setPixelShader(NULL);
         context.setVertexShader(NULL);
         context.clearPSConstantBuffers(5, 1);
+        context.restoreDefaultViewport();
     }
 }
 }

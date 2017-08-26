@@ -12,8 +12,8 @@ namespace lfw
     ReflectiveShadowMap::ReflectiveShadowMap()
         :resolution_(1)
     {
-        sceneAABBMin_.zero();
-        sceneAABBMax_.zero();
+        sceneAABBMin_ = lmath::Vector4::zero();
+        sceneAABBMax_ = lmath::Vector4::zero();
     }
 
     ReflectiveShadowMap::~ReflectiveShadowMap()
@@ -38,10 +38,10 @@ namespace lfw
         lightViewOrthoMax.set(-FLT_MAX, -FLT_MAX, -FLT_MAX, 1.0f);
 
         for(s32 i=0; i<8; ++i){
-            sceneAABBPointsInLightView[i] = lmath::Vector4::construct(mul(lightView, sceneAABBPointsInLightView[i]));
+            sceneAABBPointsInLightView[i] = lmath::mul(lightView, sceneAABBPointsInLightView[i]);
 
-            lightViewOrthoMin = lmath::Vector4::construct(minimum(lightViewOrthoMin, sceneAABBPointsInLightView[i]));
-            lightViewOrthoMax = lmath::Vector4::construct(maximum(lightViewOrthoMax, sceneAABBPointsInLightView[i]));
+            lightViewOrthoMin = lmath::minimum(lightViewOrthoMin, sceneAABBPointsInLightView[i]);
+            lightViewOrthoMax = lmath::maximum(lightViewOrthoMax, sceneAABBPointsInLightView[i]);
         }
 
 

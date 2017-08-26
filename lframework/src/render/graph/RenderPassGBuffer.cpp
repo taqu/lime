@@ -23,27 +23,23 @@ namespace graph
     const u32 RenderPassGBuffer::ID_Velocity = graph::RenderGraph::hashID("GB_Velocity");
     const u32 RenderPassGBuffer::ID_DSVDepthStencil = graph::RenderGraph::hashID("GB_DSVDepthStencil");
     const u32 RenderPassGBuffer::ID_Stencil = graph::RenderGraph::hashID("GB_Stencil");
-    const u32 RenderPassGBuffer::ID_FullVelocity = graph::RenderGraph::hashID("GB_FullVelocity");
-    const u32 RenderPassGBuffer::ID_LinearDepth = graph::RenderGraph::hashID("GB_LinearDepth");
 
     const u32 RenderPassGBuffer::ID_UAVAlbedo = graph::RenderGraph::hashID("GB_UAVAlbedo");
     const u32 RenderPassGBuffer::ID_UAVSpecular = graph::RenderGraph::hashID("GB_UAVSpecular");
     const u32 RenderPassGBuffer::ID_UAVDepthNormal = graph::RenderGraph::hashID("GB_UAVDepthNormal");
     const u32 RenderPassGBuffer::ID_UAVVelocity = graph::RenderGraph::hashID("GB_UAVVelocity");
-    const u32 RenderPassGBuffer::ID_UAVFullVelocity = graph::RenderGraph::hashID("GB_UAVFullVelocity");
 
     RenderPassGBuffer::RenderPassGBuffer()
-        :width_(0)
+        :RenderPass(RenderPassID_GBuffer)
+        ,subPass_(NULL)
+        ,width_(0)
         ,height_(0)
-        ,xthreads_(0)
-        ,ythreads_(0)
-        ,halfXThreads_(0)
-        ,halfYThreads_(0)
     {
     }
 
     RenderPassGBuffer::~RenderPassGBuffer()
     {
+        LDELETE(subPass_);
         depthStencilState_.destroy();
     }
 
@@ -53,23 +49,12 @@ namespace graph
         
         width_ = padSizeForComputeShader(viewport.width_);
         height_ = padSizeForComputeShader(viewport.height_);
-        s32 xthreads = width_>>ComputeShader_NumThreads_Shift;
-        s32 ythreads = height_>>ComputeShader_NumThreads_Shift;
-        if(xthreads != xthreads_ || ythreads != ythreads_){
-            destroy();
-            xthreads_ = xthreads;
-            ythreads_ = ythreads;
-        }
-        s32 halfWidth = padSizeForComputeShader(viewport.width_>>1);
-        s32 halfHeight = padSizeForComputeShader(viewport.height_>>1);
-        halfXThreads_ = halfWidth>>ComputeShader_NumThreads_Shift;
-        halfYThreads_ = halfHeight>>ComputeShader_NumThreads_Shift;
 
         if(!depthStencilState_.valid()){
             lgfx::StencilOPDesc front;
             front.failOp_ = lgfx::StencilOp_Keep;
             front.depthFailOp_ = lgfx::StencilOp_Keep;
-            front.passOp_ = lgfx::StencilOp_Replace;
+            front.passOp_ = lgfx::StencilOp_Keep;//lgfx::StencilOp_Replace;
             front.cmpFunc_ = lgfx::Cmp_Always;
             lgfx::StencilOPDesc back;
             back.failOp_ = lgfx::StencilOp_Keep;
@@ -81,7 +66,7 @@ namespace graph
                 true,
                 lgfx::DepthWrite_All,
                 lgfx::Cmp_Greater,
-                true,
+                false,//true,
                 0xFFU,
                 0xFFU,
                 front,
@@ -247,64 +232,6 @@ namespace graph
             srvStencil_ = texDepthStencil.createSRView(srvDesc);
         }
 
-        if(!uavFullVelocity_.valid()){
-            lgfx::Texture2DRef texFullVelocity = lgfx::Texture::create2D(
-                halfWidth,
-                halfHeight,
-                1,
-                1,
-                lgfx::Data_R16G16_Float,
-                lgfx::Usage_Default,
-                lgfx::BindFlag_UnorderedAccess|lgfx::BindFlag_ShaderResource,
-                lgfx::CPUAccessFlag_None,
-                lgfx::ResourceMisc_None,
-                NULL);
-
-            lgfx::UAVDesc uavDesc;
-            uavDesc.dimension_ = lgfx::UAVDimension_Texture2D;
-            uavDesc.format_ = lgfx::Data_R16G16_Float;
-            uavDesc.tex2D_.mipSlice_ = 0;
-            uavFullVelocity_ = texFullVelocity.createUAView(uavDesc);
-
-            lgfx::SRVDesc srvDesc;
-            srvDesc.dimension_ = lgfx::SRVDimension_Texture2D;
-            srvDesc.format_ = lgfx::Data_R16G16_Float;
-            srvDesc.tex2D_.mostDetailedMip_ = 0;
-            srvDesc.tex2D_.mipLevels_ = 1;
-            srvFullVelocity_ = texFullVelocity.createSRView(srvDesc);
-        }
-
-        if(!uavLinearDepth_.valid()){
-            lgfx::Texture2DRef texLinearDepth = lgfx::Texture::create2D(
-                halfWidth,
-                halfHeight,
-                1,
-                1,
-                lgfx::Data_R16_UNorm,
-                lgfx::Usage_Default,
-                lgfx::BindFlag_ShaderResource|lgfx::BindFlag_UnorderedAccess,
-                lgfx::CPUAccessFlag_None,
-                lgfx::ResourceMisc_None,
-                NULL);
-
-            lgfx::UAVDesc uavDesc;
-            uavDesc.dimension_ = lgfx::UAVDimension_Texture2D;
-            uavDesc.format_ = lgfx::Data_R16_UNorm;
-            uavDesc.tex2D_.mipSlice_ = 0;
-            uavLinearDepth_ = texLinearDepth.createUAView(uavDesc);
-
-            lgfx::SRVDesc srvDesc;
-            srvDesc.dimension_ = lgfx::SRVDimension_Texture2D;
-            srvDesc.format_ = lgfx::Data_R16_UNorm;
-            srvDesc.tex2D_.mostDetailedMip_ = 0;
-            srvDesc.tex2D_.mipLevels_ = 1;
-            srvLinearDepth_ = texLinearDepth.createSRView(srvDesc);
-        }
-
-        ShaderManager& shaderManager = System::getResources().getShaderManager();
-        csCameraMotion_ = shaderManager.getCS(ShaderCS_CameraMotion);
-        csLinearDepth_ = shaderManager.getCS(ShaderCS_LinearDepth);
-
         graph::RenderGraph& renderGraph = System::getRenderGraph();
         renderGraph.setShared(ID_Albedo, lgfx::ViewRef(srvAlbedo_));
         renderGraph.setShared(ID_Specular, lgfx::ViewRef(srvSpecular_));
@@ -312,25 +239,15 @@ namespace graph
         renderGraph.setShared(ID_Velocity, lgfx::ViewRef(srvVelocity_));
         renderGraph.setShared(ID_DSVDepthStencil, lgfx::ViewRef(dsvDepthStencil_));
         renderGraph.setShared(ID_Stencil, lgfx::ViewRef(srvStencil_));
-        renderGraph.setShared(ID_FullVelocity, lgfx::ViewRef(srvFullVelocity_));
-        renderGraph.setShared(ID_LinearDepth, lgfx::ViewRef(srvLinearDepth_));
-
 
         renderGraph.setShared(ID_UAVAlbedo, lgfx::ViewRef(uavAlbedo_));
         renderGraph.setShared(ID_UAVSpecular, lgfx::ViewRef(uavSpecular_));
         renderGraph.setShared(ID_UAVDepthNormal, lgfx::ViewRef(uavDepthNormal_));
         renderGraph.setShared(ID_UAVVelocity, lgfx::ViewRef(uavVelocity_));
-        renderGraph.setShared(ID_UAVFullVelocity, lgfx::ViewRef(uavFullVelocity_));
     }
 
     void RenderPassGBuffer::destroy()
     {
-        srvLinearDepth_.destroy();
-        uavLinearDepth_.destroy();
-
-        srvFullVelocity_.destroy();
-        uavFullVelocity_.destroy();
-
         srvStencil_.destroy();
         dsvDepthStencil_.destroy();
 
@@ -347,6 +264,7 @@ namespace graph
         rtvAlbedo_.destroy();
 
         depthStencilState_.destroy();
+        LDELETE(subPass_);
     }
 
     void RenderPassGBuffer::execute(RenderContext& renderContext, Camera& camera)
@@ -355,6 +273,7 @@ namespace graph
         lfw::LightArray& lights = renderContext.getLights();
 
         //Shadow
+        renderContext.beginRenderPath(RenderPath_Shadow);
         for(s32 i=0; i<lights.size(); ++i){
             switch(lights[i].getType()){
             case LightType_Direction:
@@ -364,14 +283,12 @@ namespace graph
                     ShadowMap& shadowMap = renderContext.getShadowMap();
                     shadowMap.update(camera, lights[i]);
 
-                    renderContext.setRenderPath(RenderPath_Shadow);
                     renderContext.setPerShadowMapConstants();
 
                     RenderQueue& renderQueue = renderContext.getRenderQueue();
                     for(s32 j=0; j<renderQueue[RenderPath_Shadow].size_; ++j){
                         renderQueue[RenderPath_Shadow].entries_[j].component_->drawDepth(renderContext);
                     }
-                    context.setVertexShader(NULL);
                 }
                 break;
             case LightType_Point:
@@ -380,6 +297,7 @@ namespace graph
                 break;
             }
         }
+        renderContext.endRenderPath(RenderPath_Shadow);
 
         //
         switch(camera.getClearType())
@@ -401,7 +319,11 @@ namespace graph
         context.clearRenderTargetView(rtvDepthNormal_, Zero);
         context.clearRenderTargetView(rtvVelocity_, Zero);
 
-        renderContext.setRenderPath(RenderPath_Opaque);
+        if(NULL != subPass_){
+            subPass_->execute(renderContext, camera);
+        }
+
+        renderContext.beginRenderPath(RenderPath_Opaque);
 
         lgfx::RenderTargetViewRef::pointer_type rtvs[] =
         {
@@ -414,7 +336,7 @@ namespace graph
         context.setViewport(0, 0, width_, height_);
 
         context.setBlendState(lgfx::ContextRef::BlendState_NoAlpha);
-        context.setDepthStencilState(depthStencilState_, 1);
+        context.setDepthStencilState(depthStencilState_, 0);
 
         RenderQueue& renderQueue = renderContext.getRenderQueue();
         for(s32 i=0; i<renderQueue[RenderPath_Opaque].size_; ++i){
@@ -424,29 +346,41 @@ namespace graph
         context.setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWEnable);
         context.clearRenderTargets(4);
 
-        lgfx::ShaderResourceView srvs(context, srvDepthNormal_, srvVelocity_);
-        srvs.setCS(0);
-
-        renderContext.setDefaultSampler(lfw::RenderContext::Shader_CS);
-
-        //Camera Motion
-        context.clearUnorderedAccessView(uavFullVelocity_, lgfx::ContextRef::Zero);
-        context.setCSUnorderedAccessViews(0, 1, uavFullVelocity_, NULL);
-        context.setComputeShader(csCameraMotion_);
-        context.dispatch(halfXThreads_, halfYThreads_, 1);
-
-        //Linear Depth
-        context.clearUnorderedAccessView(uavLinearDepth_, lgfx::ContextRef::Zero);
-        context.setCSUnorderedAccessViews(0, 1, uavLinearDepth_, NULL);
-        context.setComputeShader(csLinearDepth_);
-        context.dispatch(halfXThreads_, halfYThreads_, 1);
-
-        context.setComputeShader(NULL);
-        context.clearCSUnorderedAccessView(0, 1);
-        context.clearCSSamplers(0, 2);
-        context.clearCSResources(0, 2);
         context.restoreDefaultRenderTargets();
         context.restoreDefaultViewport();
+    }
+
+    void RenderPassGBuffer::addSubPass(RenderSubPassGBuffer* subPass)
+    {
+        LDELETE(subPass_);
+        subPass_ = subPass;
+        if(NULL == subPass_){
+            return;
+        }
+        subPass_->width_ = width_;
+        subPass_->height_ = height_;
+
+        subPass_->depthStencilState_ = depthStencilState_;
+
+        subPass_->rtvAlbedo_ = rtvAlbedo_;
+        subPass_->uavAlbedo_ = uavAlbedo_;
+        subPass_->srvAlbedo_ = srvAlbedo_;
+
+        subPass_->rtvSpecular_ = rtvSpecular_;
+        subPass_->uavSpecular_ = uavSpecular_;
+        subPass_->srvSpecular_ = srvSpecular_;
+
+        subPass_->rtvDepthNormal_ = rtvDepthNormal_;
+        subPass_->uavDepthNormal_ = uavDepthNormal_;
+        subPass_->srvDepthNormal_ = srvDepthNormal_;
+
+        subPass_->rtvVelocity_ = rtvVelocity_;
+        subPass_->uavVelocity_ = uavVelocity_;
+        subPass_->srvVelocity_ = srvVelocity_;
+
+        subPass_->dsvDepthStencil_ = dsvDepthStencil_;
+        subPass_->srvStencil_ = srvStencil_;
+        subPass_->initialize();
     }
 }
 }

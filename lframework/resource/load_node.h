@@ -32,7 +32,7 @@ namespace lfw
             ,meshStartIndex_(0)
             ,numMeshes_(0)
         {
-            scale_.zero();
+            scale_ = lmath::Vector3::zero();
             translation_ = rotation_ = scale_;
         }
 

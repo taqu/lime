@@ -69,6 +69,7 @@ namespace lfw
         virtual void drawTransparent(RenderContext& renderContext);
 
         void setScreen(s32 left, s32 top, s32 width, s32 height);
+        void setScale(f32 horizontal, f32 vertical);
 
         inline s32 getLeft() const;
         inline s32 getTop() const;
@@ -148,6 +149,8 @@ namespace lfw
         u16 prevNumVertices_;
         u16 prevNumIndices_;
         s32 bufferIndex_;
+        f32 horizontalScale_;
+        f32 verticalScale_;
 
         VertexArray vertices_;
         IndexArray indices_;

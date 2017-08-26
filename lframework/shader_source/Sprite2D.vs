@@ -21,7 +21,7 @@ struct VSOutput
 VSOutput main(VSInput input)
 {
     float4 position = float4(input.position, 0, 1);
-    position.xy = (position.xy+topLeft)*invScreenSize2 + float2(-1,1);
+    position.xy = (position.xy)*invScreenSize2 + float2(-1,1);
 
     VSOutput output;
     output.position = position;

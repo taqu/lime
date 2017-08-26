@@ -14,6 +14,11 @@ namespace graph
     {
     }
 
+    RenderPass::RenderPass(s32 id)
+        :id_(id)
+    {
+    }
+
     RenderPass::~RenderPass()
     {
     }

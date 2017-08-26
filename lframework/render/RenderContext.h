@@ -8,9 +8,9 @@
 #include "../lframework.h"
 #include <lcore/Array.h>
 #include "SamplerSet.h"
-#include "render/ShaderConstant.h"
-#include "render/ShadowMap.h"
-#include "ecs/ComponentSceneElementManager.h"
+#include "../render/ShaderConstant.h"
+#include "../render/ShadowMap.h"
+#include "../ecs/ComponentSceneElementManager.h"
 
 namespace lmath
 {
@@ -71,10 +71,12 @@ namespace lfw
 
         void setPerFrameConstants();
         void setPerCameraConstants(Camera& camera);
+        void setPerLightConstants(Light& light);
         void setPerShadowMapConstants();
 
         inline s32 getRenderPath() const;
-        void setRenderPath(s32 path);
+        void beginRenderPath(s32 path);
+        void endRenderPath(s32 path);
 
         inline RenderQueue& getRenderQueue();
         inline void setRenderQueue(RenderQueue* renderQueue);

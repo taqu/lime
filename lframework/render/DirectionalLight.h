@@ -76,8 +76,7 @@ namespace lscene
             //at.sub(position_, direction_);
             //lightView_.lookAt(position_, at, up);
 
-            lmath::Vector4 eye;
-            eye.zero();
+            lmath::Vector4 eye = lmath::Vector4::zero();
             lightView_.lookAt(eye, -direction_, up);
         }
 

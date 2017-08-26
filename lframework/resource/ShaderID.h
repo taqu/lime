@@ -81,6 +81,7 @@ namespace lfw
         ShaderPS_FontOutline,
         ShaderPS_Particle,
         ShaderPS_VolumeParticle,
+        ShaderPS_VolumeSphere,
 
         ShaderPS_UI,
         ShaderPS_Num,

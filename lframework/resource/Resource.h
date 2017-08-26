@@ -12,9 +12,25 @@ namespace lfw
 {
     struct TextureParameter
     {
-        void initialize();
+        static const u8 Flag_sRGB = 0x01<<0;
+        static const u8 Flag_Sampler = 0x01<<1;
 
-        u8 sRGB_;
+        inline bool isSRGB() const
+        {
+            return 0 != (flags_&Flag_sRGB);
+        }
+
+        inline bool isSampler() const
+        {
+            return 0 != (flags_&Flag_Sampler);
+        }
+
+        static const TextureParameter SRGB_;
+        static const TextureParameter NoSRGB_;
+        static const TextureParameter SRGBSampler;
+        static const TextureParameter NoSRGBSampler;
+
+        u8 flags_;
         u8 filterType_;
         u8 addressUVW_;
         u8 compFunc_;

@@ -17,7 +17,7 @@ VSOutput main(VSInput input)
 {
     VSOutput output;
     output.tex = float2((input.id<<1)&0x02U, input.id&0x02U);
-    output.position = float4(output.tex * float2(2,-2) + float2(-1, 1), 0.5, 1);
+    output.position = float4(output.tex * float2(2,-2) + float2(-1, 1), 1.0e-6, 1);
     output.id = input.instanceId;
     return output;
 }

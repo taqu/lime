@@ -399,7 +399,6 @@ namespace lfw
         ptr = newPtr;
     }
 
-
     template<class T>
     inline s32 indexOf(s32 size, const T* begin, const T* ptr)
     {

@@ -62,7 +62,7 @@ pushd %SHADERDIR%
 %COMPILER% -ds -p5 -compress -text VolumeParticle.ds %OUTDIR%VolumeParticleDS.txt
 %COMPILER% -vs -p5 -compress -text VolumeParticle.vs %OUTDIR%VolumeParticleVS.txt
 %COMPILER% -ps -p5 -compress -text VolumeParticle.ps %OUTDIR%VolumeParticlePS.txt
-
+%COMPILER% -ps -p5 -compress -text VolumeSphere.ps %OUTDIR%VolumeSpherePS.txt
 
 %COMPILER% -ps -p5 -compress -text Font.ps %OUTDIR%FontPS.txt
 %COMPILER% -ps -p5 -compress -text FontOutline.ps %OUTDIR%FontOutlinePS.txt

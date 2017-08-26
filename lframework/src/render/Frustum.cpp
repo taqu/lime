@@ -423,8 +423,7 @@ namespace lfw
     // AABBが視錐台内にあるか
     bool Frustum::contains(const lmath::Vector3& bmin, const lmath::Vector3& bmax) const
     {
-        lmath::Vector4 p;
-        p.one();
+        lmath::Vector4 p = lmath::Vector4::one();
         for(s32 i=0; i<6; ++i){
             p.x_ = (0<=planes_[i].nx_)? bmin.x_ : bmax.x_;
             p.y_ = (0<=planes_[i].ny_)? bmin.y_ : bmax.y_;
@@ -440,8 +439,7 @@ namespace lfw
     // AABBが視錐台内にあるか
     bool Frustum::contains(const lmath::Vector4& bmin, const lmath::Vector4& bmax) const
     {
-        lmath::Vector4 p;
-        p.one();
+        lmath::Vector4 p = lmath::Vector4::one();
 
         for(s32 i=0; i<6; ++i){
             p.x_ = (0<=planes_[i].nx_)? bmin.x_ : bmax.x_;
@@ -527,7 +525,7 @@ namespace lfw
         lmath::calcAABBPoints(points, aabbMin, aabbMax);
 
         for(s32 i=0; i<8; ++i){
-            points[i] = lmath::Vector4::construct(mul(camera.getViewMatrix(), points[i]));
+            points[i] = lmath::mul(camera.getViewMatrix(), points[i]);
         }
 
         //視錐台の各側面について

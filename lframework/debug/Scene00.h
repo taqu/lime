@@ -33,12 +33,14 @@ namespace debug
         lfw::Entity sprite00_;
         lfw::Entity particle00_;
         lfw::Entity volumeParticle00_;
+        lfw::Entity volumeParticle01_;
         lsound::UserPlayer* bgmPlayer_;
 
         lfw::f32 roty_;
         lfw::f32 rotx_;
 
         bool showTestWindow_;
+        lfw::s32 count_;
     };
 }
 #endif //INC_SAMPLES_SCENE00_H__

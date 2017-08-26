@@ -242,7 +242,7 @@ namespace lfw
         }
 #else
         for(s32 i=0; i<skeleton_->getNumJoints(); ++i){
-            transforms_[i].translation_.zero();
+            transforms_[i].translation_ = lmath::Vector4::zero();
             transforms_[i].rotation_.setIdentity();
         }
 #endif

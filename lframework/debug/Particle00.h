@@ -18,7 +18,7 @@ namespace debug
     class Particle00 : public lfw::ComponentParticleRenderer<Particle00Vertex>
     {
     public:
-        static const lcore::s32 capacity = 64;
+        static const lcore::s32 capacity = 1;//64;
 
         Particle00();
         virtual ~Particle00();

@@ -7,31 +7,35 @@
 #include <lcore/io/VirtualFileSystem.h>
 #include "resource/ResourceBytes.h"
 #include "resource/ResourceTexture2D.h"
+#include "resource/ResourceTexture3D.h"
 #include "resource/ResourceModel.h"
 #include "resource/ResourceAnimationClip.h"
 
 namespace lfw
 {
-    void TextureParameter::initialize()
-    {
-        sRGB_ = 1;
-        filterType_ = lgfx::TexFilter_MinMagMipLinear;
-        addressUVW_ = lgfx::TexAddress_Clamp;
-        compFunc_ = lgfx::Cmp_Always;
-        borderColor_ = 0.0f;
-    }
+    const TextureParameter TextureParameter::SRGB_ = {TextureParameter::Flag_sRGB, 0,0,0,0.0f};
+    const TextureParameter TextureParameter::NoSRGB_ = {0, 0,0,0,0.0f};
+    const TextureParameter TextureParameter::SRGBSampler = {
+        TextureParameter::Flag_sRGB|TextureParameter::Flag_Sampler,
+        lgfx::TexFilter_MinMagMipLinear,
+        lgfx::TexAddress_Clamp,
+        lgfx::Cmp_Always,
+        0.0f
+    };
+    const TextureParameter TextureParameter::NoSRGBSampler ={
+        TextureParameter::Flag_Sampler,
+        lgfx::TexFilter_MinMagMipLinear,
+        lgfx::TexAddress_Clamp,
+        lgfx::Cmp_Always,
+        0.0f
+    };
 
     Resources* Resources::create(s32 numSets, lcore::FileSystem* fileSystem)
     {
         numSets = lcore::maximum(1, numSets);
         Resources* resources = LNEW Resources(numSets, fileSystem);
 
-        TextureParameter texParam;
-        texParam.sRGB_ = 0;
-        texParam.filterType_ = lgfx::TexFilter_MinMagMipPoint;
-        texParam.addressUVW_ = lgfx::TexAddress_Clamp;
-        texParam.compFunc_ = lgfx::Cmp_Always;
-        texParam.borderColor_ = 0.0f;
+        TextureParameter texParam = TextureParameter::NoSRGB_;
         resources->emptyTextureWhite_ = Resource::pointer(ResourceTexture2D::create(0xFFFFFFFFU, texParam));
         resources->emptyTextureBlack_ = Resource::pointer(ResourceTexture2D::create(0xFF000000U, texParam));
         resources->emptyTextureClear_ = Resource::pointer(ResourceTexture2D::create(0x00000000U, texParam));
@@ -331,12 +335,23 @@ namespace lfw
                 expand(size);
                 file->read(0, size, buffer_);
                 fileSystem_->closeFile(file);
-                TextureParameter texParam;
-                texParam.initialize();
-                resource = ResourceTexture2D::load(path, size, buffer_, texParam);
+                resource = ResourceTexture2D::load(path, size, buffer_, TextureParameter::SRGB_);
             }
         }
         break;
+        case ResourceType_Texture3D:
+        {
+            lcore::FileProxy* file = fileSystem_->openFile(path);
+            if(NULL != file){
+                s64 size = file->getUncompressedSize();
+                expand(size);
+                file->read(0, size, buffer_);
+                fileSystem_->closeFile(file);
+                resource = ResourceTexture3D::load(path, size, buffer_, TextureParameter::SRGB_);
+            }
+        }
+        break;
+
         case ResourceType_Model:
         {
             resource = ResourceModel::load(setID, path, modelLoader_);
@@ -372,7 +387,19 @@ namespace lfw
                 resource = ResourceTexture2D::load(path, size, buffer_, param);
             }
         }
-            break;
+        break;
+        case ResourceType_Texture3D:
+        {
+            lcore::FileProxy* file = fileSystem_->openFile(path);
+            if(NULL != file){
+                s64 size = file->getUncompressedSize();
+                expand(size);
+                file->read(0, size, buffer_);
+                fileSystem_->closeFile(file);
+                resource = ResourceTexture3D::load(path, size, buffer_, param);
+            }
+        }
+        break;
         default:
             LASSERT(false);
             return NULL;

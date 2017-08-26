@@ -22,7 +22,9 @@ namespace lfw
         inline const lmath::Vector4& getRect() const;
         inline void setRect(f32 left, f32 top, f32 right, f32 bottom);
         inline void setRect(const lmath::Vector4& rect);
+
         const lmath::Vector4& getUVRect() const;
+        inline u16* getTexcoord();
         void setUVRect(f32 left, f32 top, f32 right, f32 bottom);
 
         inline f32 getScale() const;
@@ -55,6 +57,11 @@ namespace lfw
     inline void ComponentUIImage::setRect(const lmath::Vector4& rect)
     {
         rect_ = rect;
+    }
+
+    inline u16* ComponentUIImage::getTexcoord()
+    {
+        return uvRect_;
     }
 
     inline f32 ComponentUIImage::getScale() const

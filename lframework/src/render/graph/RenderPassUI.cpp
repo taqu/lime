@@ -18,6 +18,7 @@ namespace graph
 {
 
     RenderPassUI::RenderPassUI()
+        :RenderPass(RenderPassID_UI)
     {
     }
 

@@ -192,7 +192,8 @@ namespace lfw
     private:
         ECSEntityTree(const ECSEntityTree&);
         ECSEntityTree& operator=(const ECSEntityTree&);
-
+        
+        s32 size_;
         Entity* entities_;
         ECSTree tree_;
         lcore::Array<u16> processIDOrder_;
@@ -279,7 +280,7 @@ namespace lfw
     class ECSNodeIterator
     {
     public:
-        ECSNodeIterator(u16 numChildren, T* components, ECSEntityTree* tree, ECSNode* node)
+        ECSNodeIterator(u16 numChildren, T** components, ECSEntityTree* tree, ECSNode* node)
             :components_(components)
             ,tree_(tree)
             ,node_(node)
@@ -301,13 +302,13 @@ namespace lfw
 
         T* current()
         {
-            return components_ + node_->index();
+            return components_[node_->index()];
         }
 
     private:
         template<class T> friend class ECSNodeConstIterator;
 
-        T* components_;
+        T** components_;
         ECSEntityTree* tree_;
         ECSNode* node_;
         u16 index_;
@@ -326,7 +327,7 @@ namespace lfw
     class ECSNodeConstIterator
     {
     public:
-        ECSNodeConstIterator(u16 numChildren, const T* components, const ECSEntityTree* tree, const ECSNode* node)
+        ECSNodeConstIterator(u16 numChildren, T**const components, const ECSEntityTree* tree, const ECSNode* node)
             :components_(components)
             ,tree_(tree)
             ,node_(node)
@@ -356,7 +357,7 @@ namespace lfw
 
         const T* current()
         {
-            return components_ + node_->index();
+            return components_[node_->index()];
         }
 
         ECSNodeConstIterator<T>& operator=(const ECSNodeIterator<T>& iterator)
@@ -370,7 +371,7 @@ namespace lfw
         }
 
     private:
-        const T* components_;
+        T**const components_;
         const ECSEntityTree* tree_;
         const ECSNode* node_;
         u16 index_;

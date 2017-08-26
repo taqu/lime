@@ -17,7 +17,15 @@ namespace lfw
 
             ComponentBehavior00()
             {}
-
+            virtual void onStart()
+            {
+                geometric_ = getEntity().getGeometric();
+            }
+            virtual void update()
+            {
+                geometric_->getPosition();
+            }
+            lfw::ComponentGeometric* geometric_;
         };
 
     protected:
@@ -40,9 +48,10 @@ namespace lfw
     TEST_F(TestComponentBehavior, CreateComponent)
     {
         static const s32 Size = 256;
+        static const s32 HalfSize = Size/2;
         Entity entities[Size];
         ECSManager& ecsManager = *ecsManager_;
-        for(s32 i=0; i<Size; ++i){
+        for(s32 i=0; i<HalfSize; ++i){
             entities[i] = ecsManager.requestCreateGeometric("");
             ASSERT_FALSE(entities[i].isNull());
 
@@ -53,6 +62,21 @@ namespace lfw
         }
 
         ecsManager.update();
+        ecsManager.postUpdate();
+
+        for(s32 i=HalfSize; i<Size; ++i){
+            entities[i] = ecsManager.requestCreateGeometric("");
+            ASSERT_FALSE(entities[i].isNull());
+
+            ComponentGeometric* componentGeometric = entities[i].getGeometric();
+            ASSERT_TRUE(NULL != componentGeometric);
+
+            entities[i].addComponent<ComponentBehavior00>();
+        }
+
         ecsManager.update();
+        ecsManager.postUpdate();
+        ecsManager.update();
+        ecsManager.postUpdate();
     }
 }

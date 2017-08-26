@@ -1,0 +1,148 @@
+
+#if 0
+cbuffer ProcedualConstant : register(b6)
+{
+    float2 resolution;
+    float playbackTime;
+    float reserved;
+}
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+Texture3D<float4> texColorNoise : register(t0);
+SamplerState samLinearMirror: register(s0);
+
+#define SPEED 0.001
+
+float noise(in float3 x)
+{
+    return texColorNoise.SampleLevel(samLinearMirror, x, 0).r;
+}
+
+float fbm(float3 x)
+{
+    float f;
+    float3 q = x; f  = 0.50000*noise(q);
+	q = q*2.02; f += 0.25000*noise(q);
+	q = q*2.03; f += 0.12500*noise(q);
+	q = q*2.01; f += 0.06250*noise(q);
+	q = q*2.02; f += 0.03125*noise(q);
+    return f/(0.9375);
+}
+
+float4 main(VSOutput input) : SV_TARGET0
+{
+    float2 uv = input.tex - float2(0.5, 0.5);
+    uv.y *= resolution.y/resolution.x;
+    float3 direction = normalize(input.direction);
+    float time = playbackTime*SPEED;
+    float4 color = 0.0.xxxx;
+    color.rgb = direction;
+    color.a = 1;
+    return color;
+}
+#endif
+
+#include "Common.ps"
+
+cbuffer ProcedualConstant : register(b6)
+{
+    float2 resolution;
+    float2 invResolution;
+}
+
+struct VSOutput
+{
+    float4 position : SV_POSITION;
+    float2 tex : TEXCOORD0;
+};
+
+struct ProceduralOutput
+{
+    float4 albedo : SV_TARGET0;
+    float4 specular : SV_TARGET1;
+    float4 depthNormal : SV_TARGET2;
+    float depth : SV_DEPTH;
+};
+
+Texture3D<float4> texColorNoise : register(t0);
+
+SamplerState samLinearMirror : register(s0);
+
+#define NUMSTEPS (10)
+#define STEP (0.5)
+
+void intersectPlane(out float distance, float3 ro, float3 rd, float height)
+{	
+    float d = -(ro.y - height)/(rd.y+1.0e-6);
+    distance = min(1.0e6,d);
+}
+
+bool testRayPlane(out float t, float rt, float3 ro, float3 rd, float4 plane)
+{
+    t = -dot(plane.xyz, ro);
+    t /= dot(plane.xyz, rd);
+    return (0.0<=t && t<=rt);
+}
+
+float sampleHeight(float2 pos)
+{
+    return 0;
+}
+
+ProceduralOutput main(VSOutput input)
+{
+
+    float4 position = float4(input.tex * float2(2,-2) + float2(-1, 1), 1.0e-6, 1);
+    float3 dir = mul(mul(position, minvproj).xyz, (float3x3)minvview);
+    //output.direction = normalize(dir.xyz);//normalize(mul(dir.xyz, (float3x3)minvview));
+
+    float3 ro = cameraPos.xyz;
+    float3 rd = normalize(dir);
+
+#if 1
+    float3 intersection = ro;
+
+    float h = sampleHeight(intersection.xz);
+    int i;
+    for(i=0; i<NUMSTEPS; ++i){
+        if(intersection.y<h){
+            float t = h-intersection.y;
+            intersection = mad(t, rd, ro);
+            h = sampleHeight(intersection.xz);
+        }else{
+            break;
+        }
+    }
+    for(; i<NUMSTEPS; ++i){
+        float t = intersection.y - h;
+        intersection = mad(t, rd, ro);
+        h = sampleHeight(intersection.xz);
+    }
+
+    if(intersection.y<h){
+        discard;
+    }
+#else
+    float t;
+    if(!testRayPlane(t, 1.0e5, ro, rd, float4(0,1,0,0))){
+        discard;
+    }
+    float3 intersection = ro + t*rd;
+#endif
+    ProceduralOutput output;
+    output.albedo = float4(abs(rd),1);
+    output.specular = float4(input.tex,1,1);
+
+    float4 position1 = mul(float4(intersection, 1), mvp1);
+    float3 normal = float3(0,1,0);
+    float depth = position1.z/position1.w;
+    output.depth = depth;
+    output.depthNormal.xy = encode16bit(depth);
+    output.depthNormal.zw = encodeNormal(normalize(normal));
+    return output;
+}

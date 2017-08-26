@@ -5,7 +5,7 @@
 @author t-sakai
 @date 2017/04/16 create
 */
-#include "lframework.h"
+#include "../../lframework.h"
 
 namespace lfw
 {
@@ -28,24 +28,25 @@ namespace graph
         virtual void destroy() =0;
         virtual void execute(RenderContext& renderContext, Camera& camera) =0;
 
-        inline u32 getID() const;
-        inline void setID(u32 id);
+        inline s32 getID() const;
+        inline void setID(s32 id);
 
     protected:
         RenderPass();
+        explicit RenderPass(s32 id);
 
         RenderPass(const RenderPass&) = delete;
         RenderPass& operator=(const RenderPass&) = delete;
 
-        u32 id_;
+        s32 id_;
     };
 
-    inline u32 RenderPass::getID() const
+    inline s32 RenderPass::getID() const
     {
         return id_;
     }
 
-    inline void RenderPass::setID(u32 id)
+    inline void RenderPass::setID(s32 id)
     {
         id_ = id;
     }

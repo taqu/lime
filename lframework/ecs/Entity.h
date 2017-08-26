@@ -20,38 +20,43 @@ namespace lfw
         class Components
         {
         public:
-            Components();
-            ~Components();
 
+        private:
+            friend class ECSManager;
+
+            //Components();
+            //~Components();
+
+            void clear();
+            void destroy();
             inline s16 size() const;
             inline s32 bufferSize() const;
             inline s32 offset() const;
-            ID get(s16 index) const;
+
+            //ID get(s16 index) const;
             const ID* get() const;
             void add(ID id);
             void remove(ID id);
-            void removeAt(s16 index);
-        private:
-            friend class ECSManager;
+            //void removeAt(s16 index);
 
             void forceAdd(ID id);
             void forceRemove(ID id);
             ID* resize();
 
-            s16 capacity_;
+            friend bool operator==(const Components& lhs, const Components& rhs);
+            friend bool operator!=(const Components& lhs, const Components& rhs);
+ 
+            u16 capacity_;
             s16 size_;
             s32 offset_;
         };
 
-        Entity()
-        {}
-
-        explicit Entity(Handle handle)
-            :handle_(handle)
-        {}
-
-        ~Entity()
-        {}
+        inline static Entity construct(Handle handle)
+        {
+            Entity entity;
+            entity.handle_ = handle;
+            return entity;
+        }
 
         inline void clear();
         inline bool isNull() const;
@@ -99,6 +104,8 @@ namespace lfw
         inline bool operator==(const Entity& entity) const;
         inline bool operator!=(const Entity& entity) const;
     private:
+        void setTreeDirty();
+
         Handle handle_;
     };
 
@@ -192,6 +199,16 @@ namespace lfw
     inline s32 Entity::Components::offset() const
     {
         return offset_;
+    }
+
+    inline bool operator==(const Entity::Components& lhs, const Entity::Components& rhs)
+    {
+        return lhs.offset_ == rhs.offset_;
+    }
+
+    inline bool operator!=(const Entity::Components& lhs, const Entity::Components& rhs)
+    {
+        return lhs.offset_ != rhs.offset_;
     }
 }
 #endif //INC_LFRAMEWORK_ENTITY_H__

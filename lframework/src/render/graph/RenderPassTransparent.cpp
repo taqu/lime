@@ -19,7 +19,8 @@ namespace lfw
 namespace graph
 {
     RenderPassTransparent::RenderPassTransparent()
-        :width_(0)
+        :RenderPass(RenderPassID_Transparent)
+        ,width_(0)
         ,height_(0)
     {
     }
@@ -33,7 +34,7 @@ namespace graph
         graph::RenderGraph& renderGraph = System::getRenderGraph();
         rtvAccumLighting_ = renderGraph.getShared(RenderPassLighting::ID_RTVAccumLighting);
         dsvDepthStencil_ = renderGraph.getShared(RenderPassGBuffer::ID_DSVDepthStencil);
-        srvLinearDepth_ = renderGraph.getShared(RenderPassGBuffer::ID_LinearDepth);
+        srvLinearDepth_ = renderGraph.getShared(RenderPassLighting::ID_LinearDepth);
 
         {
             lgfx::ResourceRef resourceDepthStencil = lgfx::ResourceRef::getResource(dsvDepthStencil_);
@@ -54,7 +55,7 @@ namespace graph
         lgfx::ContextRef& context = renderContext.getContext();
         lfw::LightArray& lights = renderContext.getLights();
 
-        renderContext.setRenderPath(RenderPath_Opaque);
+        renderContext.beginRenderPath(RenderPath_Opaque);
 
         lgfx::RenderTargetViewRef::pointer_type rtvs[] =
         {
@@ -65,6 +66,13 @@ namespace graph
 
         lgfx::ShaderResourceView srvs(context, NULL, NULL, renderContext.getShadowMap().getSRV(), srvLinearDepth_);
         srvs.setPS(3);
+
+        for(s32 i=0; i<lights.size(); ++i){
+            if(lights[i].getType() == lfw::LightType_Direction){
+                renderContext.setPerLightConstants(lights[i]);
+                break;
+            }
+        }
 
         context.setDepthStencilState(lgfx::ContextRef::DepthStencil_DEnableWEnableGEReverseZ);
 

@@ -31,7 +31,7 @@ namespace lfw
             up = lmath::Vector4::Forward;
         }
 
-        lmath::Vector4 at = lmath::Vector4::construct(add(position_, direction_));
+        lmath::Vector4 at = lmath::add(position_, direction_);
         view.lookAt(position_, at, up);
     }
 
@@ -44,7 +44,7 @@ namespace lfw
             up = lmath::Vector4::Forward;
         }
 
-        lmath::Vector4 at = lmath::Vector4::construct(add(position_, direction_));
+        lmath::Vector4 at = lmath::add(position_, direction_);
         lookAt(view, invview, position_, at, up);
     }
 

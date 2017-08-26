@@ -66,9 +66,9 @@ namespace lfw
 
     Quadtree::Quadtree()
     {
-        bmin_.zero();
-        bmax_.zero();
-        invUnit_.one();
+        bmin_ = lmath::Vector2::zero();
+        bmax_ = lmath::Vector2::zero();
+        invUnit_ = lmath::Vector2::one();
         numSplits_ = 1;
         for(s32 i=0; i<MaxLevels; ++i){
             numSplits_ <<= 1;

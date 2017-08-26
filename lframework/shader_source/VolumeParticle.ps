@@ -2,122 +2,111 @@
 #include "Volume.inc"
 #include "SignedDistance.inc"
 
-Texture2D<float4> texGradient : register(t1);
-SamplerState samLinearClamp: register(s1);
+Texture3D<float4> texColorNoise : register(t0);
+SamplerState samLinearMirror: register(s0);
 
-float4 mapTimeToColor(float time)
+float noise(in float3 x)
 {
-    float4 color = texGradient.SampleLevel(samLinearClamp, float2(time,1), 0);
-    return color;
-}
-
-float4 mapDisplacementToColor(float time, float displacement)
-{
-    float u = (displacement*2-1)*uvExtent_ + time;
-    float4 color = texGradient.SampleLevel(samLinearClamp, float2(u,0), 0);
-    return color;
-}
-
 #if 0
-float2 cartesianToSpherical(float3 cartesian)
-{
-  float2 spherical;
-
-  spherical.x = atan2(cartesian.y, cartesian.x) * INV_PI;
-  spherical.y = cartesian.z;
-
-  return spherical * 0.5f + 0.5f;
-}
-
-float2 normal2SphericalUV(float3 n)
-{
-    return float2(atan2(n.y, n.x), acos(n.z)) * INV_PI;
-}
+    float3 f = frac(x);
+    float3 p = floor(x);
+    f = f*f*(3.0 - 2.0*f);
+    float2 uv = (p.xy + float2(37.0, 17.0) * p.z) + f.xy;
+    float2 rg = texColorNoise.SampleLevel(samLinearMirror, uv/256.0, 0).rg;
+    return lerp(rg.x, rg.y, f.z);
+#else
+    return texColorNoise.SampleLevel(samLinearMirror, x, 0).r;
 #endif
-
-float square(float2 uv)
-{
-    uv = abs(uv);
-    float t = uv.x + uv.y;
-    return smoothstep(0.9, 1.0, t)*(1-smoothstep(1.0, 1.1, t));
 }
 
-#if 0
-#define ROOT3 (1.73205080757)
-#define HEXAGON_THRESHOLD (ROOT3*2)
-#define HEXAGON_LOWER (ROOT3*2-0.7)
-#define HEXAGON_UPPER (ROOT3*2+0.7)
-
-float hexagon(float2 uv)
+float fbm(float3 x)
 {
-    float x0 = 2*abs(uv.y);
-    float t0 = uv.x*ROOT3;
-    float x1 = abs(t0 - uv.y);
-    float x2 = abs(t0 + uv.y);
-    float t = x0 + x1 + x2;
-    return smoothstep(HEXAGON_LOWER, HEXAGON_THRESHOLD, t)*(1-smoothstep(HEXAGON_THRESHOLD, HEXAGON_UPPER, t));
+    float f;
+    float3 q = x; f  = 0.50000*noise(q);
+	q = q*2.02; f += 0.25000*noise(q);
+	q = q*2.03; f += 0.12500*noise(q);
+	q = q*2.01; f += 0.06250*noise(q);
+	q = q*2.02; f += 0.03125*noise(q);
+    return f/(0.9375);
 }
 
-float4 funcSphere(float3 pos, float3 spherePos, float time, float3 direction, float3 coordu, float3 coordv, in const VolumeConstant volumeConstant)
+
+float3 heatToColor(float heat)
 {
-    float3 diff = pos-spherePos;
-    float radius = length(diff);
-    float3 normal = normalize(diff);
-    float cs = smoothstep(0.5, 1, dot(direction, normal));
+    const float4 c0 = float4(2, 2, 2, 2);	// white
+	const float4 c1 = float4(2, 2, 0, 1);	// yellow
+    const float4 c2 = float4(2, 1, 0, 1);	// orange
+	const float4 c3 = float4(0.3, 0.05, 0.0, 1);	// red
+    const float4 c4 = float4(0.01, 0.01, 0.01, 4);	// gray
 
-    float2 uv = 2*frac(mad(time, volumeConstant.noiseAnimation_.xy, float2(dot(normal, coordu), dot(normal,coordv))) * 3) - 1;
-    float disc = hexagon(uv);
-    float lower = volumeConstant.radius_*0.85;
-    float upper = volumeConstant.radius_*0.9;
-    float grad = step(lower, radius) * (1-step(upper, radius));
-    float4 color;
-    color.rgb = lerp(float3(0, 0, 1), float3(0.3,0.3,1), disc);
+    float t0 = step(0.80, heat);
+    float t1 = step(0.60, heat);
+    float t2 = step(0.40, heat);
+    float t3 = step(0.00, heat);
 
-    grad *= cs;
-    disc *= grad;
-    color.a = lerp(grad, disc, 0.5);
+    float3 color;
+    color  = lerp(c1.rgb, c0.rgb, smoothstep(0.80, 1.00, heat)) * t0;
+    color += lerp(c2.rgb, c1.rgb, smoothstep(0.60, 0.80, heat)) * t1*(1-t0);
+    color += lerp(c3.rgb, c2.rgb, smoothstep(0.40, 0.60, heat)) * t2*(1-t1);
+    color += lerp(c4.rgb, c3.rgb, smoothstep(0.00, 0.40, heat)) * t3*(1-t2);
     return color;
 }
-#endif
 
-float4 funcExplosion(
-    float3 pos,
-    float3 spherePos,
-    float time,
-    float radius,
-    float invRadius,
-    float displacementScale,
-    in const NoiseConstant noise)
+float calcHeat(float density, float radius, float time)
 {
-    float n = fractalNoise(pos, noise.noiseScale_, time, noise);
-    float4 color = mapDisplacementToColor(time, saturate(n*uvDisplacement_));
-    return color;
+    const float WIDTH = 0.75;
+    const float HALF = WIDTH*0.5;
+    float minh = max(0, time-HALF);
+    float maxh = min(1, time+HALF);
+    float heat = smoothstep(0, 1, density)*WIDTH + minh;
+    float r = max(0, -radius);
+    return saturate(heat*r);
 }
+
+#define STEP (0.01)
+#define MAXSTEPS (15)
 
 float4 main(DSOutput input) : SV_TARGET0
 {
     float time = input.timescale.x;
-    float radius = input.timescale.y * input.radius.x;
+    float scale = input.timescale.y;
+    float radius = input.radius.x*scale;
+    float invRadius = 1.0/radius;
+    float freqScale = input.radius.y;
+    float3 dir = input.rayDirection;
+    float nearD = input.rayHitNearFar.x;
+    float farD = input.rayHitNearFar.y;
+    float3 position = input.worldPos;
 
-    float3 start = mad(input.rayDirection, input.rayHitNearFar.x, cameraPos.xyz);
-    float3 end = mad(input.rayDirection, input.rayHitNearFar.y, cameraPos.xyz);
+    float3 start = mad(dir, nearD, cameraPos.xyz);
+    float3 end = mad(dir, farD, cameraPos.xyz);
 
-    float step = stepSize_;
-    float3 stepV = input.rayDirection * step;
-    int numSteps = min(maxSteps_, (int)floor((input.rayHitNearFar.y - input.rayHitNearFar.x)/step));
-
-    float4 output = (float4)0;
+    uint numSteps = min(MAXSTEPS, (farD-nearD)/STEP);
+    float invStep = 1.0/numSteps;
+    float step = MAXSTEPS*invStep*1.33;
+    float3 stepAmount = dir * invStep;
     float3 pos = start;
-    int steps = 0;
 
-    //float4 timeColor = mapTimeToColor(time);
-    float invRadius = 1/(max(radius, 0.00001));
-    float displacementScale = input.timescale.y * displacement_;
-    for(int i=0; i<numSteps && output.a<1; ++i){
-        float4 c=funcExplosion(pos, input.worldPos, time, radius, invRadius, displacementScale, noise_);
-        output = blend(c, output);
-        pos += stepV;
+    float3 offsetScale = float3(-0.00531, -0.00547, -0.00523)*time;
+    float displacementScale = 0.3;//0.2;
+    float revTime = 1.0-time;
+    float4 color = 0.0.xxxx;
+    for(uint count=0; count<numSteps && color.a<0.99; ++count){
+        float3 relativePos = pos-position;
+        float3 n = normalize(relativePos);
+        float displacementOut = fbm(pos*freqScale + pos*offsetScale);
+        float signedDistanceToPrimitive = sdSphere(relativePos, radius)*invRadius;
+        float distance = signedDistanceToPrimitive + displacementOut;
+
+        //float edgeFade = (1.0-smoothstep(0.01, 0.2, displacementOut)) * (1.0-smoothstep(-0.25, -0.02, signedDistanceToPrimitive));
+        float edgeFade = min(1, (1.0-smoothstep(0.01-0.25, displacementScale-0.01, distance))*step);
+        float heat = calcHeat(displacementOut, signedDistanceToPrimitive, revTime);
+        float4 c = float4(heatToColor(heat), edgeFade);
+        color = blend(color, c);
+        pos += stepAmount;
     }
-    //output.a *= mapTimeToColor(time).a;
-    return output;
+    float timeFade = smoothstep(0.0, 0.25, revTime);
+    color *=timeFade;
+    color = max(color,0);
+    return color;
 }

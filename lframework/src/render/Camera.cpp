@@ -35,8 +35,8 @@ namespace lfw
         invProjMatrix_.identity();
         viewProjMatrix_.identity();
         prevVewProjMatrix_.identity();
-        eyePosition_.zero();
-        clearColor_.zero();
+        eyePosition_ = lmath::Vector4::zero();
+        clearColor_ = lmath::Vector4::zero();
 
         lcore::memset(samples_, 0, sizeof(Sample2D)*NumJitterSamples);
 
@@ -314,6 +314,23 @@ namespace lfw
         renderPass->create(*this);
     }
 
+    void Camera::addRenderPass(s32 index, graph::RenderPass* renderPass)
+    {
+        LASSERT(NULL != renderPass);
+        if(renderPasses_.size()<=index){
+            renderPasses_.push_back(renderPass);
+        }else{
+            if(index<0){
+                index = 0;
+            }
+            renderPasses_.push_back(renderPass);
+            for(s32 i=renderPasses_.size()-1; index<i; --i){
+                lcore::swap(renderPasses_[i], renderPasses_[i-1]);
+            }
+        }
+        renderPass->create(*this);
+    }
+
     void Camera::removeRenderPass(graph::RenderPass* renderPass)
     {
         LASSERT(NULL != renderPass);
@@ -335,6 +352,22 @@ namespace lfw
             }
         }
         return -1;
+    }
+
+    s32 Camera::findRenderPass(s32 passId) const
+    {
+        for(s32 i=0; i<renderPasses_.size(); ++i){
+            if(passId == renderPasses_[i]->getID()){
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    graph::RenderPass* Camera::getRenderPass(s32 index)
+    {
+        LASSERT(0<=index && index<renderPasses_.size());
+        return renderPasses_[index];
     }
 
     Camera& Camera::operator=(Camera&& rhs)

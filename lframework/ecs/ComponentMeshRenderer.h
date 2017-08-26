@@ -31,6 +31,7 @@ namespace lfw
 
         inline Model::pointer& getMesh();
         void setMesh(Model::pointer& model);
+        void resetMaterials();
 
         void pushMatrix();
     protected:

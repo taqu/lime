@@ -20,11 +20,16 @@ namespace lfw
 {
 namespace graph
 {
+    const u32 RenderPassLighting::ID_FullVelocity = graph::RenderGraph::hashID("GB_FullVelocity");
+    const u32 RenderPassLighting::ID_LinearDepth = graph::RenderGraph::hashID("GB_LinearDepth");
+    const u32 RenderPassLighting::ID_UAVFullVelocity = graph::RenderGraph::hashID("GB_UAVFullVelocity");
+
     const u32 RenderPassLighting::ID_RTVAccumLighting = graph::RenderGraph::hashID("RTVAccumLighting");
     const u32 RenderPassLighting::ID_SRVAccumLighting = graph::RenderGraph::hashID("SRVAccumLighting");
 
     RenderPassLighting::RenderPassLighting()
-        :width_(0)
+        :RenderPass(RenderPassID_Lighting)
+        ,width_(0)
         ,height_(0)
     {
         lightMatrices_ = (lmath::Matrix34*)LALIGNED_MALLOC(sizeof(lmath::Matrix34)*LFW_CONFIG_MAX_POINT_LIGHTS, 16);
@@ -87,11 +92,22 @@ namespace graph
 
         //ディレクショナル描画用
         if(!depthStencilState_.valid()){
+            //lgfx::StencilOPDesc front;
+            //front.failOp_ = lgfx::StencilOp_Keep;
+            //front.depthFailOp_ = lgfx::StencilOp_Keep;
+            //front.passOp_ = lgfx::StencilOp_Keep;
+            //front.cmpFunc_ = lgfx::Cmp_LessEqual;
+            //lgfx::StencilOPDesc back;
+            //back.failOp_ = lgfx::StencilOp_Keep;
+            //back.depthFailOp_ = lgfx::StencilOp_Keep;
+            //back.passOp_ = lgfx::StencilOp_Keep;
+            //back.cmpFunc_ = lgfx::Cmp_Always;
+
             lgfx::StencilOPDesc front;
             front.failOp_ = lgfx::StencilOp_Keep;
             front.depthFailOp_ = lgfx::StencilOp_Keep;
             front.passOp_ = lgfx::StencilOp_Keep;
-            front.cmpFunc_ = lgfx::Cmp_LessEqual;
+            front.cmpFunc_ = lgfx::Cmp_Always;
             lgfx::StencilOPDesc back;
             back.failOp_ = lgfx::StencilOp_Keep;
             back.depthFailOp_ = lgfx::StencilOp_Keep;
@@ -101,13 +117,17 @@ namespace graph
             depthStencilState_ = lgfx::DepthStencilState::create(
                 false,
                 lgfx::DepthWrite_Zero,
-                lgfx::Cmp_Always,
-                true,
+                lgfx::Cmp_Greater,
+                false,//true,
                 0xFFU,
                 0xFFU,
                 front,
                 back);
         }
+
+        ShaderManager& shaderManager = System::getResources().getShaderManager();
+        csCameraMotion_ = shaderManager.getCS(ShaderCS_CameraMotion);
+        csLinearDepth_ = shaderManager.getCS(ShaderCS_LinearDepth);
 
         graph::RenderGraph& renderGraph = System::getRenderGraph();
         viewAlbedo_ = renderGraph.getShared(RenderPassGBuffer::ID_Albedo);
@@ -116,7 +136,6 @@ namespace graph
         viewVelocity_ = renderGraph.getShared(RenderPassGBuffer::ID_Velocity);
         viewDepthStencil_ = renderGraph.getShared(RenderPassGBuffer::ID_DSVDepthStencil);
         viewStencil_ = renderGraph.getShared(RenderPassGBuffer::ID_Stencil);
-        viewFullVelocity_ = renderGraph.getShared(RenderPassGBuffer::ID_FullVelocity);
 
         {
             resourceDepthStencil_ = lgfx::ResourceRef::getResource(viewDepthStencil_);
@@ -148,6 +167,70 @@ namespace graph
             }
         }
 
+
+        s32 xthreads = width_>>ComputeShader_NumThreads_Shift;
+        s32 ythreads = height_>>ComputeShader_NumThreads_Shift;
+        s32 halfWidth = padSizeForComputeShader(width_>>1);
+        s32 halfHeight = padSizeForComputeShader(height_>>1);
+        halfXThreads_ = halfWidth>>ComputeShader_NumThreads_Shift;
+        halfYThreads_ = halfHeight>>ComputeShader_NumThreads_Shift;
+
+
+        if(!uavFullVelocity_.valid()){
+            lgfx::Texture2DRef texFullVelocity = lgfx::Texture::create2D(
+                halfWidth,
+                halfHeight,
+                1,
+                1,
+                lgfx::Data_R16G16_Float,
+                lgfx::Usage_Default,
+                lgfx::BindFlag_UnorderedAccess|lgfx::BindFlag_ShaderResource,
+                lgfx::CPUAccessFlag_None,
+                lgfx::ResourceMisc_None,
+                NULL);
+
+            lgfx::UAVDesc uavDesc;
+            uavDesc.dimension_ = lgfx::UAVDimension_Texture2D;
+            uavDesc.format_ = lgfx::Data_R16G16_Float;
+            uavDesc.tex2D_.mipSlice_ = 0;
+            uavFullVelocity_ = texFullVelocity.createUAView(uavDesc);
+
+            lgfx::SRVDesc srvDesc;
+            srvDesc.dimension_ = lgfx::SRVDimension_Texture2D;
+            srvDesc.format_ = lgfx::Data_R16G16_Float;
+            srvDesc.tex2D_.mostDetailedMip_ = 0;
+            srvDesc.tex2D_.mipLevels_ = 1;
+            srvFullVelocity_ = texFullVelocity.createSRView(srvDesc);
+        }
+
+        if(!uavLinearDepth_.valid()){
+            lgfx::Texture2DRef texLinearDepth = lgfx::Texture::create2D(
+                halfWidth,
+                halfHeight,
+                1,
+                1,
+                lgfx::Data_R16_UNorm,
+                lgfx::Usage_Default,
+                lgfx::BindFlag_ShaderResource|lgfx::BindFlag_UnorderedAccess,
+                lgfx::CPUAccessFlag_None,
+                lgfx::ResourceMisc_None,
+                NULL);
+
+            lgfx::UAVDesc uavDesc;
+            uavDesc.dimension_ = lgfx::UAVDimension_Texture2D;
+            uavDesc.format_ = lgfx::Data_R16_UNorm;
+            uavDesc.tex2D_.mipSlice_ = 0;
+            uavLinearDepth_ = texLinearDepth.createUAView(uavDesc);
+
+            lgfx::SRVDesc srvDesc;
+            srvDesc.dimension_ = lgfx::SRVDimension_Texture2D;
+            srvDesc.format_ = lgfx::Data_R16_UNorm;
+            srvDesc.tex2D_.mostDetailedMip_ = 0;
+            srvDesc.tex2D_.mipLevels_ = 1;
+            srvLinearDepth_ = texLinearDepth.createSRView(srvDesc);
+        }
+
+
         GBufferConstant constant;
         constant.width_ = width_;
         constant.height_ = height_;
@@ -162,7 +245,6 @@ namespace graph
             &constant,
             sizeof(GBufferConstant));
 
-        ShaderManager& shaderManager = System::getResources().getShaderManager();
         vsFullQuadInstanced_ = shaderManager.getVS(ShaderVS_FullQuadInstanced);
         vsDeferredLighting_ = shaderManager.getVS(ShaderVS_DeferredLighting);
 
@@ -197,19 +279,29 @@ namespace graph
             srvAccumLighting_ = texAccumLighting.createSRView(srvDesc);
         }
 
+        renderGraph.setShared(ID_FullVelocity, lgfx::ViewRef(srvFullVelocity_));
+        renderGraph.setShared(ID_LinearDepth, lgfx::ViewRef(srvLinearDepth_));
+
+        renderGraph.setShared(ID_UAVFullVelocity, lgfx::ViewRef(uavFullVelocity_));
+
         renderGraph.setShared(ID_RTVAccumLighting, lgfx::ViewRef(rtvAccumLighting_));
         renderGraph.setShared(ID_SRVAccumLighting, lgfx::ViewRef(srvAccumLighting_));
     }
 
     void RenderPassLighting::destroy()
     {
+        srvLinearDepth_.destroy();
+        uavLinearDepth_.destroy();
+
+        srvFullVelocity_.destroy();
+        uavFullVelocity_.destroy();
+
         dsvDepthStencil_.destroy();
         texDepthStencil_.destroy();
         resourceDepthStencil_.destroy();
         srvAccumLighting_.destroy();
         rtvAccumLighting_.destroy();
 
-        viewFullVelocity_.destroy();
         viewStencil_.destroy();
         viewDepthStencil_.destroy();
         viewVelocity_.destroy();
@@ -227,8 +319,32 @@ namespace graph
     void RenderPassLighting::execute(RenderContext& renderContext, Camera& camera)
     {
         lgfx::ContextRef& context = renderContext.getContext();
-        lfw::LightArray& lights = renderContext.getLights();
 
+        renderContext.setDefaultSampler(lfw::RenderContext::Shader_CS);
+
+        //Camera Motion
+        {
+            lgfx::ShaderResourceView srvs(context, viewDepthNormal_, viewVelocity_);
+            srvs.setCS(0);
+        }
+
+        context.clearUnorderedAccessView(uavFullVelocity_, lgfx::ContextRef::Zero);
+        context.setCSUnorderedAccessViews(0, 1, uavFullVelocity_, NULL);
+        context.setComputeShader(csCameraMotion_);
+        context.dispatch(halfXThreads_, halfYThreads_, 1);
+
+        //Linear Depth
+        context.clearUnorderedAccessView(uavLinearDepth_, lgfx::ContextRef::Zero);
+        context.setCSUnorderedAccessViews(0, 1, uavLinearDepth_, NULL);
+        context.setComputeShader(csLinearDepth_);
+        context.dispatch(halfXThreads_, halfYThreads_, 1);
+
+        context.setComputeShader(NULL);
+        context.clearCSUnorderedAccessView(0, 1);
+        context.clearCSSamplers(0, 2);
+        context.clearCSResources(0, 2);
+
+        lfw::LightArray& lights = renderContext.getLights();
         s32 numDirectionals = 0;
         s32 numPoints = 0;
         s32 numSpots = 0;
@@ -289,7 +405,7 @@ namespace graph
         //表面描画
         context.setRenderTargets(1, rtvAccumLighting_, dsvDepthStencil_);
         context.setRasterizerState(lgfx::ContextRef::Rasterizer_FillSolid);
-        context.setDepthStencilState(depthStencilStateFront_, 2);
+        context.setDepthStencilState(depthStencilStateFront_, 1);
         context.setPixelShader(psDeferredLightingPoint_);
 
         lgfx::ShaderResourceView srvs(context, viewAlbedo_, viewDepthNormal_, viewSpecular_, NULL, NULL, renderContext.getShadowMap().getSRV());
@@ -311,7 +427,7 @@ namespace graph
         context.setPixelShader(psDeferredLightingDirectional_);
         renderContext.setDefaultSampler(lfw::RenderContext::Shader_PS);
 
-        context.setDepthStencilState(depthStencilState_, 1);
+        context.setDepthStencilState(depthStencilState_, 0);
         context.clearIndexBuffers();
         context.clearVertexBuffers(0, 1);
         renderContext.setConstant(RenderContext::Shader_PS, 6, sizeof(DirectionalLight), numDirectionals, LFW_CONFIG_MAX_DIRECTIONAL_LIGHTS, directionalLights_);

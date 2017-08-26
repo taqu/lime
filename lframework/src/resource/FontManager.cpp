@@ -53,9 +53,7 @@ namespace lfw
         static const s32 BufferSize = 32;
         s32 setID = 0;
         s32 pathlen = lcore::strlen_s32(path);
-        TextureParameter texParam;
-        texParam.initialize();
-        texParam.sRGB_ = 0;
+        TextureParameter texParam = TextureParameter::NoSRGB_;
 
         Resources& resources = System::getResources();
         if(BufferSize<pathlen){
