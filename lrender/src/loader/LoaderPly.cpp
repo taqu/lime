@@ -154,7 +154,7 @@ namespace
             points[i].x_ = atof(elements[posindices[0]]);
             points[i].y_ = atof(elements[posindices[1]]);
             points[i].z_ = atof(elements[posindices[2]]);
-            normals[i].zero();
+            normals[i] = Vector3::zero();
         }
 
         BufferTriangle triangles;

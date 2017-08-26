@@ -16,7 +16,7 @@ namespace lrender
         const f32* sqrDistances,
         const Photon** photons)
     {
-        irradiance.zero();
+        irradiance = Vector3::zero();
         if(num<minNum){
             return;
         }

@@ -833,10 +833,9 @@ namespace lrender
         }
 
         if(0 < rest){
-            //vx[0].zero(); vx[1].zero(); vx[2].zero();
-            //vy[0].zero(); vy[1].zero(); vy[2].zero();
-            //vz[0].zero(); vz[1].zero(); vz[2].zero();
-
+            //vx[0] = lmath::Vector4::zero(); vx[1] = lmath::Vector4::zero(); vx[2] = lmath::Vector4::ero();
+            //vy[0] = lmath::Vector4::zero(); vy[1] = lmath::Vector4::zero(); vy[2] = lmath::Vector4::zero();
+            //vz[0] = lmath::Vector4::zero(); vz[1] = lmath::Vector4::zero(); vz[2] = lmath::Vector4::zero();
             s32 prim = start + (num4 << 2);
             for(s32 j = 0; j < rest; ++j){
                 const ShapePrimitive& p = primitives_[prim + j];
@@ -882,9 +881,9 @@ namespace lrender
     //    }
 
     //    if(0 < rest){
-    //        vx[0].zero(); vx[1].zero(); vx[2].zero();
-    //        vy[0].zero(); vy[1].zero(); vy[2].zero();
-    //        vz[0].zero(); vz[1].zero(); vz[2].zero();
+    //        vx[0] = lmath::Vector4::zero(); vx[1] = lmath::Vector4::zero(); vx[2] = lmath::Vector4::zero();
+    //        vy[0] = lmath::Vector4::zero(); vy[1] = lmath::Vector4::zero(); vy[2] = lmath::Vector4::zero();
+    //        vz[0] = lmath::Vector4::zero(); vz[1] = lmath::Vector4::zero(); vz[2] = lmath::Vector4::zero();
 
     //        s32 prim = start + (num4 << 2);
     //        for(s32 j = 0; j < rest; ++j){

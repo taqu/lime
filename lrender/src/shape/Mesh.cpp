@@ -121,9 +121,9 @@ namespace lrender
                 colors[1] = colors_[i1];
                 colors[2] = colors_[i2];
             } else{
-                colors[0].one();
-                colors[1].one();
-                colors[2].one();
+                colors[0] = Vector4::one();
+                colors[1] = Vector4::one();
+                colors[2] = Vector4::one();
             }
 
             for(s32 j=0; j<3; ++j){
@@ -193,9 +193,9 @@ namespace lrender
             sample.uvs_[1] = texcoords_[i1];
             sample.uvs_[2] = texcoords_[i2];
         }else{
-            sample.uvs_[0].zero();
-            sample.uvs_[1].zero();
-            sample.uvs_[2].zero();
+            sample.uvs_[0] = Vector2::zero();
+            sample.uvs_[1] = Vector2::zero();
+            sample.uvs_[2] = Vector2::zero();
         }
     }
 
@@ -288,8 +288,8 @@ namespace lrender
 
         }else{
             intersection.shadingNormal_ = intersection.geometricNormal_;
-            dn02.zero();
-            dn12.zero();
+            dn02 = Vector3::zero();
+            dn12 = Vector3::zero();
         }
 
         Vector2 duv02 = uvs[0] - uvs[2];
@@ -300,8 +300,8 @@ namespace lrender
         f32 determinant = duv02[0]*duv12[1] - duv02[1]*duv12[0];
         if(lmath::isZero(determinant)){
             lrender::orthonormalBasis(intersection.dpdu_, intersection.dpdv_, intersection.shadingNormal_);
-            intersection.dndu_.zero();
-            intersection.dndv_.zero();
+            intersection.dndu_ = Vector3::zero();
+            intersection.dndv_ = Vector3::zero();
 
         }else{
             f32 invDet = 1.0f/determinant;

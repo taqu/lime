@@ -34,8 +34,8 @@ namespace lrender
 
         void zero()
         {
-            bmin_.zero();
-            bmax_.zero();
+            bmin_ = Vector3::zero();
+            bmax_ = Vector3::zero();
         }
 
         void setInvalid()
@@ -116,8 +116,8 @@ namespace lrender
 
         void zero()
         {
-            bmin_.zero();
-            bmax_.zero();
+            bmin_ = Vector2::zero();
+            bmax_ = Vector2::zero();
         }
 
         void setInvalid()

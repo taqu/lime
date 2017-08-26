@@ -74,7 +74,7 @@ namespace lrender
         :isLeaf_(true)
         ,area_(0.0f)
     {
-        point_.zero();
+        point_ = lmath::Vector3::zero();
         E_ = Color3::black();
         for(s32 i=0; i<MaxNumNodePoints; ++i){
             points_[i] = NULL;
@@ -123,7 +123,7 @@ namespace lrender
     void PointOctreeNode<T, U>::initialize()
     {
         //area_ = 0.0f;
-        //point_.zero();
+        //point_ = lmath::Vector3::zero();
         //E_ = Color3::black();
         float totalWeight = 0.0f;
         s32 count = 0;

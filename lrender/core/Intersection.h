@@ -106,8 +106,8 @@ namespace lrender
     inline void Intersection::clearDifferentials()
     {
         setHasDifferentials(false);
-        dpdx_.zero();
-        dpdy_.zero();
+        dpdx_ = lmath::Vector3::zero();
+        dpdy_ = lmath::Vector3::zero();
         dudx_ = dudy_ = 0.0f;
         dvdx_ = dvdy_ = 0.0f;
     }

@@ -250,7 +250,7 @@ namespace
 
     void LoaderObj::LoaderMtl::load(Vector3& v)
     {
-        v.zero();
+        v = Vector3::zero();
         s32 numElements =  0;
         for(s32 i=1; i<elements_.size(); ++i){
             v[numElements] = static_cast<f32>( atof(elements_[i]) );
