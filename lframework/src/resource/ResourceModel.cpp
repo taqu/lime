@@ -4,8 +4,8 @@
 @date 2016/11/22 create
 */
 #include "resource/ResourceModel.h"
-#include <lcore/io/FileSystem.h>
-#include <lcore/io/VirtualFileSystem.h>
+#include <lcore/FileSystem.h>
+#include <lcore/VirtualFileSystem.h>
 #include "resource/ModelLoader.h"
 
 namespace lfw

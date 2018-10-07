@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTTREEMANAGER_H__
-#define INC_LFRAMEWORK_COMPONENTTREEMANAGER_H__
+#ifndef INC_LFRAMEWORK_COMPONENTTREEMANAGER_H_
+#define INC_LFRAMEWORK_COMPONENTTREEMANAGER_H_
 /**
 @file ComponentTreeManager.h
 @author t-sakai
@@ -10,7 +10,7 @@
 #include "ECSTree.h"
 #include <lcore/ObjectAllocator.h>
 #include <lcore/Array.h>
-#include <lcore/BitSet.h>
+#include <lcore/File.h>
 
 namespace lfw
 {
@@ -87,8 +87,8 @@ namespace lfw
         lcore::ObjectAllocator<ComponentType> allocator_;
         ComponentType** components_;
         NameString* names_;
-        lcore::ArrayPOD<Operation> operations_;
-        lcore::ArrayPOD<Operation> workOperations_;
+        lcore::Array<Operation> operations_;
+        lcore::Array<Operation> workOperations_;
         ECSEntityTree entityTree_;
     };
 
@@ -446,8 +446,7 @@ namespace lfw
         s32 length;
 
         //ノード名をパスから取り出す
-        path = lcore::parseFirstNameFromPath(length, name, NameBufferSize, path);
-
+        path = lcore::Path::parseFirstNameFromPath(length, name, NameBufferSize, path);
         const ECSNode* current = &entityTree_.getRoot();
         for(;;){
             //一致するノード名の子を検索
@@ -470,7 +469,7 @@ namespace lfw
                 break;
             }
             //次のノード名をパスから取り出す
-            path = lcore::parseFirstNameFromPath(length, name, NameBufferSize, path);
+            path = lcore::Path::parseFirstNameFromPath(length, name, NameBufferSize, path);
         }
         return (current == &entityTree_.getRoot())? NULL : components_[current->index()];
     }
@@ -532,4 +531,4 @@ namespace lfw
         }
     }
 }
-#endif //INC_LFRAMEWORK_COMPONENTTREEMANAGER_H__
+#endif //INC_LFRAMEWORK_COMPONENTTREEMANAGER_H_

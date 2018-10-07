@@ -1,5 +1,5 @@
-#ifndef INC_SAMPLES_CAMERA00_H__
-#define INC_SAMPLES_CAMERA00_H__
+#ifndef INC_SAMPLES_CAMERA00_H_
+#define INC_SAMPLES_CAMERA00_H_
 /**
 @file MainCamera00.h
 @author t-sakai
@@ -28,4 +28,4 @@ namespace debug
         RenderPassProcedural* renderPass_;
     };
 }
-#endif //INC_SAMPLES_CAMERA00_H__
+#endif //INC_SAMPLES_CAMERA00_H_

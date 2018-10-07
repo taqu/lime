@@ -16,7 +16,7 @@ namespace lcore
     //--- Event
     //---
     //-------------------------------------------------------
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
     Event::Event(bool manualReset, bool initState)
     {
         event_ = CreateEvent(0, (manualReset)?TRUE:FALSE, (initState)?TRUE:FALSE, NULL);

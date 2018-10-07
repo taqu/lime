@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTSCENEELEMENTMANAGER_H__
-#define INC_LFRAMEWORK_COMPONENTSCENEELEMENTMANAGER_H__
+#ifndef INC_LFRAMEWORK_COMPONENTSCENEELEMENTMANAGER_H_
+#define INC_LFRAMEWORK_COMPONENTSCENEELEMENTMANAGER_H_
 /**
 @file ComponentSceneElementManager.h
 @author t-sakai
@@ -27,7 +27,7 @@ namespace lfw
     class ComponentSceneElementManager : public ComponentManager
     {
     public:
-        typedef lcore::ArrayPOD<s32> IndexArray;
+        typedef lcore::Array<s32> IndexArray;
 
         static const u8 Category = ECSCategory_SceneElement;
 
@@ -203,4 +203,4 @@ namespace lfw
         ComponentSceneElementManager::Data* data_;
     };
 }
-#endif //INC_LFRAMEWORK_COMPONENTSCENEELEMENTMANAGER_H__
+#endif //INC_LFRAMEWORK_COMPONENTSCENEELEMENTMANAGER_H_

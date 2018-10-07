@@ -77,6 +77,24 @@ namespace lcore
         lcore::memcpy(buffer, rhs.c_str(), sizeof(Char)*length);
     }
 
+    String::String(String&& rhs)
+    {
+        length_ = rhs.length();
+
+        if(length_<ExpandSize){
+            capacity_ = ExpandSize;
+            buffer_.small_[length_] = CharNull;
+            memcpy(buffer_.small_, rhs.c_str(), sizeof(Char)*length_);
+        }else{
+            capacity_ = rhs.capacity_;
+            buffer_.elements_ = rhs.buffer_.elements_;
+            rhs.buffer_.elements_ = NULL;
+        }
+        rhs.capacity_ = 0;
+        rhs.length_ = 0;
+        rhs.buffer_.small_[0] = CharNull;
+    }
+
     String::~String()
     {
         if(ExpandSize<capacity_){
@@ -259,6 +277,31 @@ namespace lcore
     String& String::operator=(const String& rhs)
     {
         assign(rhs.length(), rhs.c_str());
+        return *this;
+    }
+
+    String& String::operator=(String&& rhs)
+    {
+        if(this == &rhs){
+            return *this;
+        }
+        if(ExpandSize<capacity_){
+            LDELETE_ARRAY(buffer_.elements_);
+        }
+
+        length_ = rhs.length();
+        if(length_<ExpandSize){
+            capacity_ = ExpandSize;
+            buffer_.small_[length_] = CharNull;
+            memcpy(buffer_.small_, rhs.c_str(), sizeof(Char)*length_);
+        }else{
+            capacity_ = rhs.capacity_;
+            buffer_.elements_ = rhs.buffer_.elements_;
+            rhs.buffer_.elements_ = NULL;
+        }
+        rhs.capacity_ = 0;
+        rhs.length_ = 0;
+        rhs.buffer_.small_[0] = CharNull;
         return *this;
     }
 

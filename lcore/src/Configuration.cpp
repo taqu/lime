@@ -4,7 +4,7 @@
 @date 2016/09/21 create
 */
 #include "Configuration.h"
-#include "liostream.h"
+#include "File.h"
 
 namespace lcore
 {
@@ -23,7 +23,7 @@ namespace lcore
     bool Configuration::load(const Char* path)
     {
         LASSERT(NULL != path);
-        lcore::ifstream file(path, lcore::ios::binary);
+        File file(path, ios::in);
         if(!file.is_open()){
             return false;
         }
@@ -78,12 +78,12 @@ namespace lcore
     bool Configuration::save(const Char* path)
     {
         LASSERT(NULL != path);
-        lcore::ofstream file(path, lcore::ios::binary);
+        File file(path, ios::out);
         if(!file.is_open()){
             return false;
         }
         UChar bom[3] = {0xEF, 0xBB, 0xBF};
-        file.write(bom, 3);
+        file.write(3, bom);
 
         for(hashmap_type::size_type pos = keyToHandle_.begin(); pos != keyToHandle_.end(); pos = keyToHandle_.next(pos)){
             s32 index = keyToHandle_.getValue(pos).index();
@@ -301,36 +301,36 @@ namespace lcore
         }
     }
 
-    void Configuration::skipBOM(lcore::ifstream& is)
+    void Configuration::skipBOM(File& file)
     {
-        if(is.getSize()<3){
+        if(file.size()<3){
             return;
         }
         s32 c;
-        c = is.get();
+        c = file.get();
         if(c != 0xEF){
-            is.seekg(0, lcore::ios::beg);
+            file.seek(0, ios::beg);
             return;
         }
-        c = is.get();
+        c = file.get();
         if(c != 0xBB){
-            is.seekg(0, lcore::ios::beg);
+            file.seek(0, ios::beg);
             return;
         }
-        c = is.get();
+        c = file.get();
         if(c != 0xBF){
-            is.seekg(0, lcore::ios::beg);
+            file.seek(0, ios::beg);
             return;
         }
     }
 
-    void Configuration::getLine(s32& length, s32& capacity, Char*& line, lcore::ifstream& is)
+    void Configuration::getLine(s32& length, s32& capacity, Char*& line, File& file)
     {
-        s32 start = is.tellg();
+        off_t start = file.tell();
 
         length = 0;
-        while(!is.eof()){
-            s32 c = is.get();
+        while(!file.eof()){
+            s32 c = file.get();
             if(0x0D == c || 0x0A == c){
                 break;
             }
@@ -343,10 +343,10 @@ namespace lcore
         }
 
         if(0<length){
-            is.seekg(start, lcore::ios::beg);
+            file.seek(start, lcore::ios::beg);
             length = 0;
-            while(!is.eof()){
-                s32 c = is.get();
+            while(!file.eof()){
+                s32 c = file.get();
                 if(0x0D == c || 0x0A == c){
                     break;
                 }
@@ -355,12 +355,12 @@ namespace lcore
             }
         }
         line[length] = CharNull;
-        while(!is.eof()){
-            s32 c = is.peek();
+        while(!file.eof()){
+            s32 c = file.peek();
             if(0x0D != c && 0x0A != c){
                 break;
             }
-            is.get();
+            file.get();
         }
     }
 

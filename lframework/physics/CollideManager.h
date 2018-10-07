@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COLLIDEMANAGER_H__
-#define INC_LFRAMEWORK_COLLIDEMANAGER_H__
+#ifndef INC_LFRAMEWORK_COLLIDEMANAGER_H_
+#define INC_LFRAMEWORK_COLLIDEMANAGER_H_
 /**
 @file CollideManager.h
 @author t-sakai
@@ -58,4 +58,4 @@ namespace lfw
         return octree_.test(hitInfo, ray, group);
     }
 }
-#endif //INC_LFRAMEWORK_COLLIDEMANAGER_H__
+#endif //INC_LFRAMEWORK_COLLIDEMANAGER_H_

@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFW_LINPUT_MOUSE_H__
-#define INC_LFW_LINPUT_MOUSE_H__
+﻿#ifndef INC_LFW_LINPUT_MOUSE_H_
+#define INC_LFW_LINPUT_MOUSE_H_
 /**
 @file Mouse.h
 @author t-sakai
@@ -11,4 +11,4 @@
 #include "DirectInput/Mouse.h"
 #endif
 
-#endif //INC_LFW_LINPUT_MOUSE_H__
+#endif //INC_LFW_LINPUT_MOUSE_H_

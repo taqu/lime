@@ -1,5 +1,5 @@
-#ifndef INC_LFW_SAMPLERSET_H__
-#define INC_LFW_SAMPLERSET_H__
+#ifndef INC_LFW_SAMPLERSET_H_
+#define INC_LFW_SAMPLERSET_H_
 /**
 @file SamplerSet.h
 @author t-sakai
@@ -109,4 +109,4 @@ namespace lfw
         }
     }
 }
-#endif //INC_LFW_SAMPLERSET_H__
+#endif //INC_LFW_SAMPLERSET_H_

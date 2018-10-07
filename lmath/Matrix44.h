@@ -26,38 +26,19 @@ namespace lmath
     public:
         static const Matrix44 identity_;
 
-        Matrix44()
-        {}
+        static Matrix44 construct(const Matrix34& mat);
 
-        Matrix44(const Matrix44& mat);
-
-        explicit Matrix44(const Matrix34& mat);
-
-        Matrix44(f32 m00, f32 m01, f32 m02, f32 m03,
+        static Matrix44 construct(
+            f32 m00, f32 m01, f32 m02, f32 m03,
             f32 m10, f32 m11, f32 m12, f32 m13,
             f32 m20, f32 m21, f32 m22, f32 m23,
-            f32 m30, f32 m31, f32 m32, f32 m33)
-        {
-            m_[0][0] = m00; m_[0][1] = m01; m_[0][2] = m02; m_[0][3] = m03;
-            m_[1][0] = m10; m_[1][1] = m11; m_[1][2] = m12; m_[1][3] = m13;
-            m_[2][0] = m20; m_[2][1] = m21; m_[2][2] = m22; m_[2][3] = m23;
-            m_[3][0] = m30; m_[3][1] = m31; m_[3][2] = m32; m_[3][3] = m33;
-        }
-
-        ~Matrix44()
-        {}
+            f32 m30, f32 m31, f32 m32, f32 m33);
 
         /// 値セット
         void set(f32 m00, f32 m01, f32 m02, f32 m03,
             f32 m10, f32 m11, f32 m12, f32 m13,
             f32 m20, f32 m21, f32 m22, f32 m23,
-            f32 m30, f32 m31, f32 m32, f32 m33)
-        {
-            m_[0][0] = m00; m_[0][1] = m01; m_[0][2] = m02; m_[0][3] = m03;
-            m_[1][0] = m10; m_[1][1] = m11; m_[1][2] = m12; m_[1][3] = m13;
-            m_[2][0] = m20; m_[2][1] = m21; m_[2][2] = m22; m_[2][3] = m23;
-            m_[3][0] = m30; m_[3][1] = m31; m_[3][2] = m32; m_[3][3] = m33;
-        }
+            f32 m30, f32 m31, f32 m32, f32 m33);
 
 
         /// 値セット
@@ -75,8 +56,9 @@ namespace lmath
 
         Matrix44& operator+=(const Matrix44& rhs);
         Matrix44& operator-=(const Matrix44& rhs);
-        Matrix44& operator=(const Matrix44& rhs);
-        Matrix44& operator=(const Matrix34& rhs);
+
+        static void copy(Matrix44& dst, const Matrix44& src);
+        static void copy(Matrix44& dst, const Matrix34& src);
 
         Matrix44& operator*=(const Matrix34& rhs)
         {
@@ -248,6 +230,13 @@ namespace lmath
         inline static void store(Matrix44& m, const lm128& r0, const lm128& r1, const lm128& r2, const lm128& r3);
 #endif
     };
+
+    //--------------------------------------------
+    //---
+    //--- Matrix44
+    //---
+    //--------------------------------------------
+    static_assert(std::is_trivially_copyable<Matrix44>::value, "Matrix44 must be trivially copyable");
 
     inline f32 Matrix44::operator()(s32 r, s32 c) const
     {

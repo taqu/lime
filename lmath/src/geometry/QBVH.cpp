@@ -5,7 +5,7 @@
 */
 #include "geometry/QBVH.h"
 
-#include <lcore/liostream.h>
+#include <lcore/File.h>
 
 #include <lcore/Sort.h>
 
@@ -154,7 +154,7 @@ namespace
     {
         LASSERT(NULL != filepath);
 
-        lcore::ofstream out(filepath, lcore::ios::binary);
+        lcore::File out(filepath, lcore::ios::out);
 
         if(!out.is_open()){
             return;
@@ -163,47 +163,47 @@ namespace
         //各個数と境界ボックス
         u32 numNodes = nodes_.size();
 
-        lcore::io::write(out, numNodes);
-        lcore::io::write(out, numVertices_);
-        lcore::io::write(out, numFaces_);
+        out.write(numNodes);
+        out.write(numVertices_);
+        out.write(numFaces_);
 
-        lcore::io::write(out, bmin_.x_);
-        lcore::io::write(out, bmin_.y_);
-        lcore::io::write(out, bmin_.z_);
+        out.write(bmin_.x_);
+        out.write(bmin_.y_);
+        out.write(bmin_.z_);
 
-        lcore::io::write(out, bmax_.x_);
-        lcore::io::write(out, bmax_.y_);
-        lcore::io::write(out, bmax_.z_);
+        out.write(bmax_.x_);
+        out.write(bmax_.y_);
+        out.write(bmax_.z_);
 
         //データ保存
         LALIGN16 f32 tmp[4];
         for(s32 i=0; i<nodes_.size(); ++i){
             //SSEレジスタ保存
-            //_mm_store_ps(tmp, nodes_[i].bbox_[0][0]); lcore::io::write(out, tmp, sizeof(f32)*4);
-            //_mm_store_ps(tmp, nodes_[i].bbox_[0][1]); lcore::io::write(out, tmp, sizeof(f32)*4);
-            //_mm_store_ps(tmp, nodes_[i].bbox_[0][2]); lcore::io::write(out, tmp, sizeof(f32)*4);
+            //_mm_store_ps(tmp, nodes_[i].bbox_[0][0]); out.write(tmp, sizeof(f32)*4);
+            //_mm_store_ps(tmp, nodes_[i].bbox_[0][1]); out.write(tmp, sizeof(f32)*4);
+            //_mm_store_ps(tmp, nodes_[i].bbox_[0][2]); out.write(tmp, sizeof(f32)*4);
 
-            //_mm_store_ps(tmp, nodes_[i].bbox_[1][0]); lcore::io::write(out, tmp, sizeof(f32)*4);
-            //_mm_store_ps(tmp, nodes_[i].bbox_[1][1]); lcore::io::write(out, tmp, sizeof(f32)*4);
-            //_mm_store_ps(tmp, nodes_[i].bbox_[1][2]); lcore::io::write(out, tmp, sizeof(f32)*4);
+            //_mm_store_ps(tmp, nodes_[i].bbox_[1][0]); out.write(tmp, sizeof(f32)*4);
+            //_mm_store_ps(tmp, nodes_[i].bbox_[1][1]); out.write(tmp, sizeof(f32)*4);
+            //_mm_store_ps(tmp, nodes_[i].bbox_[1][2]); out.write(tmp, sizeof(f32)*4);
 
-            lcore::memcpy(tmp, nodes_[i].bbox_[0][0], sizeof(f32)*4); lcore::io::write(out, tmp, sizeof(f32)*4);
-            lcore::memcpy(tmp, nodes_[i].bbox_[0][1], sizeof(f32)*4); lcore::io::write(out, tmp, sizeof(f32)*4);
-            lcore::memcpy(tmp, nodes_[i].bbox_[0][2], sizeof(f32)*4); lcore::io::write(out, tmp, sizeof(f32)*4);
+            lcore::memcpy(tmp, nodes_[i].bbox_[0][0], sizeof(f32)*4); out.write(sizeof(f32)*4, tmp);
+            lcore::memcpy(tmp, nodes_[i].bbox_[0][1], sizeof(f32)*4); out.write(sizeof(f32)*4, tmp);
+            lcore::memcpy(tmp, nodes_[i].bbox_[0][2], sizeof(f32)*4); out.write(sizeof(f32)*4, tmp);
 
-            lcore::memcpy(tmp, nodes_[i].bbox_[1][0], sizeof(f32)*4); lcore::io::write(out, tmp, sizeof(f32)*4);
-            lcore::memcpy(tmp, nodes_[i].bbox_[1][1], sizeof(f32)*4); lcore::io::write(out, tmp, sizeof(f32)*4);
-            lcore::memcpy(tmp, nodes_[i].bbox_[1][2], sizeof(f32)*4); lcore::io::write(out, tmp, sizeof(f32)*4);
+            lcore::memcpy(tmp, nodes_[i].bbox_[1][0], sizeof(f32)*4); out.write(sizeof(f32)*4, tmp);
+            lcore::memcpy(tmp, nodes_[i].bbox_[1][1], sizeof(f32)*4); out.write(sizeof(f32)*4, tmp);
+            lcore::memcpy(tmp, nodes_[i].bbox_[1][2], sizeof(f32)*4); out.write(sizeof(f32)*4, tmp);
 
-            lcore::io::write(out, nodes_[i].children_, sizeof(u32)*4);
-            lcore::io::write(out, nodes_[i].axis0_);
-            lcore::io::write(out, nodes_[i].axis1_);
-            lcore::io::write(out, nodes_[i].axis2_);
-            lcore::io::write(out, nodes_[i].reserved_);
+            out.write(sizeof(u32)*4, nodes_[i].children_);
+            out.write(nodes_[i].axis0_);
+            out.write(nodes_[i].axis1_);
+            out.write(nodes_[i].axis2_);
+            out.write(nodes_[i].reserved_);
         }
 
-        lcore::io::write(out, vertices_, sizeof(Vertex)*numVertices_);
-        lcore::io::write(out, faces_, sizeof(Face)*numFaces_);
+        out.write(sizeof(Vertex)*numVertices_, vertices_);
+        out.write(sizeof(Face)*numFaces_, faces_);
 
         out.close();
     }
@@ -370,9 +370,9 @@ namespace
         ray.origin_ -= position_;
     }
 
-    bool QBVH::load(lcore::istream& in, s32 offset)
+    bool QBVH::load(lcore::File& in, s32 offset)
     {
-        in.seekg(offset, lcore::ios::beg);
+        in.seek(offset, lcore::ios::beg);
 
         LFREE(faces_);
         LFREE(vertices_);
@@ -380,17 +380,17 @@ namespace
         nodes_ = NULL;
 
         //各個数と境界ボックス
-        lcore::io::read(in, numNodes_);
-        lcore::io::read(in, numVertices_);
-        lcore::io::read(in, numFaces_);
+        in.read(numNodes_);
+        in.read(numVertices_);
+        in.read(numFaces_);
 
-        lcore::io::read(in, bmin_.x_);
-        lcore::io::read(in, bmin_.y_);
-        lcore::io::read(in, bmin_.z_);
+        in.read(bmin_.x_);
+        in.read(bmin_.y_);
+        in.read(bmin_.z_);
 
-        lcore::io::read(in, bmax_.x_);
-        lcore::io::read(in, bmax_.y_);
-        lcore::io::read(in, bmax_.z_);
+        in.read(bmax_.x_);
+        in.read(bmax_.y_);
+        in.read(bmax_.z_);
 
         //データロード
 
@@ -399,19 +399,19 @@ namespace
         for(u32 i=0; i<numNodes_; ++i){
 
             //SSEレジスタロード
-            lcore::io::read(in, bbox[0][0], sizeof(f32)*4);
-            lcore::io::read(in, bbox[0][1], sizeof(f32)*4);
-            lcore::io::read(in, bbox[0][2], sizeof(f32)*4);
+            in.read(sizeof(f32)*4, bbox[0][0]);
+            in.read(sizeof(f32)*4, bbox[0][1]);
+            in.read(sizeof(f32)*4, bbox[0][2]);
 
-            lcore::io::read(in, bbox[1][0], sizeof(f32)*4);
-            lcore::io::read(in, bbox[1][1], sizeof(f32)*4);
-            lcore::io::read(in, bbox[1][2], sizeof(f32)*4);
+            in.read(sizeof(f32)*4, bbox[1][0]);
+            in.read(sizeof(f32)*4, bbox[1][1]);
+            in.read(sizeof(f32)*4, bbox[1][2]);
 
-            lcore::io::read(in, nodes_[i].children_, sizeof(u32)*4);
-            lcore::io::read(in, nodes_[i].axis0_);
-            lcore::io::read(in, nodes_[i].axis1_);
-            lcore::io::read(in, nodes_[i].axis2_);
-            lcore::io::read(in, nodes_[i].reserved_);
+            in.read(sizeof(u32)*4, nodes_[i].children_);
+            in.read(nodes_[i].axis0_);
+            in.read(nodes_[i].axis1_);
+            in.read(nodes_[i].axis2_);
+            in.read(nodes_[i].reserved_);
 
             for(u32 j=0;j<2; ++j){
                 for(u32 k=0; k<3; ++k){
@@ -421,10 +421,10 @@ namespace
         }
 
         vertices_ = (Vertex*)LMALLOC(sizeof(Vertex)*numVertices_);
-        lcore::io::read(in, vertices_, sizeof(Vertex)*numVertices_);
+        in.read(sizeof(Vertex)*numVertices_, vertices_);
 
         faces_ = (Face*)LMALLOC(sizeof(Face)*numFaces_);
-        lcore::io::read(in, faces_, sizeof(Face)*numFaces_);
+        in.read(sizeof(Face)*numFaces_, faces_);
         return true;
     }
 

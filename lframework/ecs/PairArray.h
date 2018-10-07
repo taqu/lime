@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_PAIRARRAY_H__
-#define INC_LFRAMEWORK_PAIRARRAY_H__
+#ifndef INC_LFRAMEWORK_PAIRARRAY_H_
+#define INC_LFRAMEWORK_PAIRARRAY_H_
 /**
 @file PairArray.h
 @author t-sakai
@@ -227,4 +227,4 @@ namespace lfw
         lcore::swap(array1_, rhs.array1_);
     }
 }
-#endif //INC_LFRAMEWORK_PAIRARRAY_H__
+#endif //INC_LFRAMEWORK_PAIRARRAY_H_

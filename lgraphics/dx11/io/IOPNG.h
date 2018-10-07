@@ -1,13 +1,12 @@
-﻿#ifndef INC_LGRAPHICS_DX11_IOPNG_H__
-#define INC_LGRAPHICS_DX11_IOPNG_H__
+﻿#ifndef INC_LGRAPHICS_DX11_IOPNG_H_
+#define INC_LGRAPHICS_DX11_IOPNG_H_
 /**
 @file IOPNG.h
 @author t-sakai
 @date 2013/07/24 create
+@date 2018/10/06 modify to using cppimg
 */
-#include "../../lgraphics.h"
-#include <lcore/liostream.h>
-#include "../../Enumerations.h"
+#include "../../io/IOImage.h"
 
 namespace lgfx
 {
@@ -24,29 +23,27 @@ namespace io
             Swap_BGR,
         };
 
-        static bool checkSignature(lcore::istream& is);
-
         /**
         @brief bufferにロード。bufferがNULLの場合、width、height、format、rowBytesを設定して返る
         */
         static bool read(
-            lcore::istream& is,
+            ISStream& is,
             u8* buffer,
-            bool sRGB,
-            SwapRGB swap,
-            u32& width, u32& height, lsize_t& rowBytes, DataFormat& format);
+            s32& width,
+            s32& height,
+            DataFormat& format);
 
         static bool read(
             Texture2DRef& texture,
-            lcore::istream& is,
+            ISStream& is,
             Usage usage,
             BindFlag bindFlag,
             CPUAccessFlag access,
             ResourceMisc misc,
-            bool sRGB,
-            SwapRGB swap,
-            u32& width, u32& height, lsize_t& rowBytes, DataFormat& format);
+            s32& width,
+            s32& height,
+            DataFormat& format);
     };
 }
 }
-#endif //INC_LGRAPHICS_DX11_IOPNG_H__
+#endif //INC_LGRAPHICS_DX11_IOPNG_H_

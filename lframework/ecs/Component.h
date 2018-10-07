@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENT_H__
-#define INC_LFRAMEWORK_COMPONENT_H__
+#ifndef INC_LFRAMEWORK_COMPONENT_H_
+#define INC_LFRAMEWORK_COMPONENT_H_
 /**
 @file Component.h
 @author t-sakai
@@ -52,4 +52,4 @@ namespace lfw
         {}
     };
 }
-#endif //INC_LFRAMEWORK_COMPONENT_H__
+#endif //INC_LFRAMEWORK_COMPONENT_H_

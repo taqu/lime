@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_RENDERSTATEREF_H__
-#define INC_LGRAPHICS_RENDERSTATEREF_H__
+﻿#ifndef INC_LGRAPHICS_RENDERSTATEREF_H_
+#define INC_LGRAPHICS_RENDERSTATEREF_H_
 /**
 @file RenderStateRef.h
 @author t-sakai
@@ -18,4 +18,4 @@
 #include "gles2/RenderStateRef.h"
 #endif
 
-#endif //INC_LGRAPHICS_RENDERSTATEREF_H__
+#endif //INC_LGRAPHICS_RENDERSTATEREF_H_

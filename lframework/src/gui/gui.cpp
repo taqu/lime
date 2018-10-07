@@ -259,7 +259,7 @@ namespace lfw
         device.setVSConstantBuffers(0, 1, constants_);
 
         //Viewport
-        device.setViewport(0.0f, 0.0f, io.DisplaySize.x, io.DisplaySize.y);
+        device.setViewport(0, 0, static_cast<s32>(io.DisplaySize.x), static_cast<s32>(io.DisplaySize.y));
 
         //Shaders and Buffers
         device.setInputLayout(inputLayout_);
@@ -351,10 +351,9 @@ namespace lfw
     bool GUI::init()
     {
         ImGuiIO& io = ImGui::GetIO();
-        s32 width,height;
-        System::getWindow().getViewSize(width, height);
-        io.DisplaySize.x = static_cast<f32>(width);
-        io.DisplaySize.y = static_cast<f32>(height);
+        lgfx::Window::Vector2 size = System::getWindow().getViewSize();
+        io.DisplaySize.x = static_cast<f32>(size.x_);
+        io.DisplaySize.y = static_cast<f32>(size.y_);
 
         io.KeyMap[ImGuiKey_Tab] = VK_TAB;
         io.KeyMap[ImGuiKey_LeftArrow] = VK_LEFT;

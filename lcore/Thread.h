@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_THREAD_H__
-#define INC_LCORE_THREAD_H__
+﻿#ifndef INC_LCORE_THREAD_H_
+#define INC_LCORE_THREAD_H_
 /**
 @file Thread.h
 @author t-sakai
@@ -7,10 +7,12 @@
 */
 #include "lcore.h"
 #include "SyncObject.h"
+#include "CPU.h"
+#include "Random.h"
 
 namespace lcore
 {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
     //----------------------------------------------------
     //---
     //--- Thread Affinity
@@ -374,7 +376,149 @@ namespace lcore
         bool suspend_;
     };
 #endif
+
+    //----------------------------------------------------
+    //---
+    //--- ThreadPool
+    //---
+    //----------------------------------------------------
+    class ThreadPool
+    {
+    public:
+        static const s32 InvalidJobId = -1;
+        typedef void(*JobProc)(u32 threadId, s32 jobId, void* data);
+
+        enum WaitStatus
+        {
+            WaitStatus_Success = 0,
+            WaitStatus_Timeout,
+        };
+
+        ThreadPool(s32 maxThreads, s32 maxJobs);
+        ~ThreadPool();
+
+        void start();
+
+        s32 add(JobProc proc, void* data);
+
+        WaitStatus waitAllFinish(u32 timeout);
+        //WaitStatus busyWaitAllFinish(u32 timeout);
+        WaitStatus waitFinish(s32 numJobs, u32 timeout);
+        WaitStatus waitJobFinish(s32 jobId, u32 timeout);
+
+        s32 getNumMaxJobs() const{ return maxJobs_; }
+        s32 getNumMaxThreads() const{ return maxThreads_; }
+
+        s32 getNumFreeJobs();
+        s32 getNumPendingJobs();
+        s32 getNumActiveJobs();
+        void getNumJobs(s32& numFree, s32& numPending, s32& numActive);
+
+        bool removePendingJob(s32 jobId);
+        void clearPendingJobs();
+
+        u32 getThreadId(s32 index) const;
+    private:
+        ThreadPool(const ThreadPool&);
+        ThreadPool& operator=(const ThreadPool&);
+
+        struct Job
+        {
+            s32 jobId_;
+            Job* next_;
+            JobProc proc_;
+            void* data_;
+        };
+
+        class WorkerThread : public ThreadRaw
+        {
+        public:
+            explicit WorkerThread(ThreadPool* threadPool);
+            virtual ~WorkerThread();
+
+            ThreadPool* threadPool_;
+
+            static void proc(u32 threadId, void* data);
+        };
+
+        friend class WorkerThread;
+
+        bool canRun();
+        void setCanRun(bool value);
+
+        void waitJobAvailable();
+
+        Job* popJob();
+        void pushJob(Job* job);
+
+        Job* popPendingJob();
+        void pushPendingJob(Job* job);
+
+        bool canRun_;
+        CriticalSection localCS_;
+        Semaphore jobSemaphore_;
+
+        s32 maxJobs_;
+        s32 numPendigJobs_;
+        s32 numActiveJobs_;
+        Job* jobs_;
+        Job* freeJobs_;
+        Job* pendingJobs_;
+
+        s32 maxThreads_;
+        WorkerThread** threads_;
+    };
+
+    //----------------------------------------------------
+    //---
+    //--- ThreadAffinity
+    //---
+    //----------------------------------------------------
+    class ThreadAffinity
+    {
+    public:
+        static const s32 MaxCores = 32;
+        static const u8 Flag_None = 0;
+        static const u8 Flag_Occupied = 0x01U;
+        static const u8 MaxAllocated = 0x7F;
+
+        ThreadAffinity();
+        ~ThreadAffinity();
+
+        /**
+        */
+        void initialize();
+        /**
+        */
+        inline const CPUInformation& getCPUInformation() const;
+
+        /**
+        */
+        s32 setAffinity(LHANDLE thread, bool occupy);
+
+        /**
+        */
+        s32 setAffinity(ThreadRaw& thread, bool occupy);
+
+        /**
+        */
+        s32 setAffinity(Thread& thread, bool occupy);
+    private:
+        ThreadAffinity(const ThreadAffinity&) = delete;
+        ThreadAffinity(ThreadAffinity&&) = delete;
+        ThreadAffinity& operator=(const ThreadAffinity&) = delete;
+        ThreadAffinity& operator=(ThreadAffinity&&) = delete;
+
+        CPUInformation cpuInformation_;
+        RandXorshift128Plus32 random_;
+        u8 flags_[MaxCores];
+    };
+
+    inline const CPUInformation& ThreadAffinity::getCPUInformation() const
+    {
+        return cpuInformation_;
+    }
 }
 
-#endif //INC_LCORE_THREAD_H__
+#endif //INC_LCORE_THREAD_H_
 

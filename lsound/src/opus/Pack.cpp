@@ -21,17 +21,16 @@ namespace lsound
 
     Pack::~Pack()
     {
-        releaseData();
-        releaseEntries();
+        LDELETE_ARRAY(data_);
+        LDELETE_ARRAY(entries_);
     }
 
-    // ƒtƒ@ƒCƒ‹”æ“¾
     u32 Pack::getNumFiles() const
     {
         return header_.numFiles_;
     }
 
-    u32 Pack::getSize(u32 index) const
+    s64 Pack::getSize(u32 index) const
     {
         LASSERT(0<=index && index<header_.numFiles_);
         return entries_[index].size_;
@@ -43,7 +42,7 @@ namespace lsound
         return data_ + entries_[index].offset_;
     }
 
-    s32 Pack::getFileOffset(u32 index) const
+    s64 Pack::getFileOffset(u32 index) const
     {
         LASSERT(0<=index && index<header_.numFiles_);
         return dataTopOffset_ + entries_[index].offset_;
@@ -55,15 +54,5 @@ namespace lsound
         lcore::swap(entries_, rhs.entries_);
         lcore::swap(dataTopOffset_, rhs.dataTopOffset_);
         lcore::swap(data_, rhs.data_);
-    }
-
-    void Pack::releaseEntries()
-    {
-        LDELETE_ARRAY(entries_);
-    }
-
-    void Pack::releaseData()
-    {
-        LDELETE_ARRAY(data_);
     }
 }

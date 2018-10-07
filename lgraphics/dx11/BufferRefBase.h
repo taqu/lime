@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_DX11_BUFFERREFBASE_H__
-#define INC_LGRAPHICS_DX11_BUFFERREFBASE_H__
+﻿#ifndef INC_LGRAPHICS_DX11_BUFFERREFBASE_H_
+#define INC_LGRAPHICS_DX11_BUFFERREFBASE_H_
 /**
 @file BufferRefBase.h
 @author t-sakai
@@ -97,4 +97,4 @@ namespace lgfx
             u32 slicePitch =0);
     };
 }
-#endif //INC_LGRAPHICS_DX11_BUFFERREFBASE_H__
+#endif //INC_LGRAPHICS_DX11_BUFFERREFBASE_H_

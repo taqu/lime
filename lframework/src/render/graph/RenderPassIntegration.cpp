@@ -29,17 +29,16 @@ namespace graph
     {
     }
 
-    void RenderPassIntegration::create(const Camera& camera)
+    void RenderPassIntegration::create(const Camera& /*camera*/)
     {
         lgfx::Window& window = System::getWindow();
 
         GBufferConstant constant;
-        s32 width, height;
-        window.getViewSize(width, height);
-        constant.width_ = width;
-        constant.height_ = height;
-        constant.invWidth_ = 1.0f/width;
-        constant.invHeight_ = 1.0f/height;
+        lgfx::Window::Vector2 size = window.getViewSize();
+        constant.width_ = size.x_;
+        constant.height_ = size.y_;
+        constant.invWidth_ = 1.0f/size.x_;
+        constant.invHeight_ = 1.0f/size.y_;
         constantGBuffer_ = lgfx::ConstantBuffer::create(
             sizeof(GBufferConstant),
             lgfx::Usage_Immutable,

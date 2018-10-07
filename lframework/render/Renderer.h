@@ -7,7 +7,6 @@
 */
 #include "../lframework.h"
 #include <lcore/Array.h>
-#include <lcore/BitSet.h>
 #include <lgraphics/FrameSyncQuery.h>
 #include <lgraphics/VertexBufferRef.h>
 #include <lgraphics/IndexBufferRef.h>

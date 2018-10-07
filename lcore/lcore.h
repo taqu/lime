@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_H__
-#define INC_LCORE_H__
+﻿#ifndef INC_LCORE_H_
+#define INC_LCORE_H_
 /**
 @file lcore.h
 @author t-sakai
@@ -8,6 +8,7 @@
 
 //#define NOMINMAX
 #include <cassert>
+#include <cstdint>
 #include <cfloat>
 #include <malloc.h>
 #include <cstring>
@@ -15,9 +16,9 @@
 #include <limits>
 #include <new>
 
+//#define LCORE_DISABLE_F16C
 
 #if defined(ANDROID) || defined(__GNUC__)
-#include <stdint.h>
 #include <time.h>
 #include <cmath>
 #include <utility>
@@ -26,6 +27,11 @@
 #if defined(ANDROID)
 #include <android/log.h>
 #endif //ANDROID
+
+//#include <mmintrin.h>  //MMX intrinsics
+//#include <xmmintrin.h> //SSE intrinsics
+//#include <emmintrin.h> //SSE2 intrinsics
+#include <immintrin.h> //AVX intrinsics
 
 //-------------------
 void* operator new(std::size_t size);
@@ -40,51 +46,52 @@ void* operator new[](std::size_t size, const char* file, int line);
 void operator delete[](void* ptr, const char* file, int line);
 
 //-------------------
-#if defined(_WIN32) || defined(_WIN64)
 #ifdef _DEBUG
-#define LNEW new(__FILE__,__LINE__)
-#define LNEW_RAW new
-
+#    define LNEW new(__FILE__,__LINE__)
+#    define LNEW_RAW new
 #else //_DEBUG
-#define LNEW new
-#define LNEW_RAW new
-
+#    define LNEW new
+#    define LNEW_RAW new
 #endif
 
-#else
-#define LNEW new
-#define LIME_RAW_NEW new
-
-#endif
-
-
-#ifndef NULL
-#ifdef __cplusplus
 //C++98 199711L
 //C++11 201103L
-    #if __cplusplus<201103L
-        #define NULL 0
-    #else
-        #ifdef NULL
-            #undef NULL
-        #endif
-        #define NULL nullptr
-    #endif
-
-#else
-    #define NULL ((void*)0)
+#ifdef __cplusplus
+#   if 201103L<=__cplusplus || 1900<=_MSC_VER
+#       define LCPP11 1
+#   endif
 #endif
+
+#ifdef NULL
+#   ifdef __cplusplus
+#       ifdef LCPP11
+#           undef NULL
+#           define NULL nullptr
+#       endif
+#   endif
+#else
+#   ifdef __cplusplus
+#       ifdef LCPP11
+#           define NULL nullptr
+#       else
+#           define NULL 0
+#       endif
+#   else
+#       define NULL ((void*)0)
+#   endif
 #endif
 
 
 // Exception
 //-------------------
-#ifndef __cplusplus
-#define LNOTHROW
-#elif __cplusplus < 201103L
-#define LNOTHROW throw()
+#ifdef __cplusplus
+#   ifdef LCPP11
+#       define LNOTHROW noexcept
+#   else
+#       define LNOTHROW throw()
+#   endif
 #else
-#define LNOTHROW noexcept
+#    define LNOTHROW
 #endif
 
 // メモリ確保・開放
@@ -162,27 +169,23 @@ static const uintptr_t LALIGN16_MASK = (0xFU);
 //-------------------
 #if defined(_DEBUG)
 
-#if defined(ANDROID)
-#define LASSERT(expression) {if(false == (expression)){__android_log_assert("assert", "lime", "%s (%d)", __FILE__, __LINE__);}}while(0)
+#   if defined(ANDROID)
+#       define LASSERT(expression) {if(false == (expression)){__android_log_assert("assert", "lime", "%s (%d)", __FILE__, __LINE__);}}while(0)
 
-#elif defined(__GNUC__)
-#define LASSERT(expression) assert(expression)
-
+#   elif defined(__GNUC__)
+#       define LASSERT(expression) assert(expression)
+#   else
+#      define LASSERT(expression) assert(expression)
+#   endif
 #else
-#define LASSERT(expression) assert(expression)
-#endif
-
-#else
-#define LASSERT(expression)
+#   define LASSERT(expression)
 #endif
 
 
 // Memory Debug Break
 //-------------------
-#if defined(_WIN32) || defined(_WIN64)
-#if defined(_DEBUG)
+#if defined(_DEBUG) && defined(_MSC_VER)
 #define LCORE_DEBUG_MEMORY_BREAK
-#endif
 #endif
 
 #ifdef LCORE_DEBUG_MEMORY_BREAK
@@ -207,37 +210,6 @@ void lcore_setMallocBreak(unsigned int id);
 
 namespace lcore
 {
-#if defined(_MSC_VER)
-    typedef char Char;
-    typedef unsigned char UChar;
-    typedef wchar_t WChar;
-
-#if 201103L <= __cplusplus //C++11 or above
-    typedef char16_t Char16;
-#else //199711L C++98
-    typedef unsigned __int16 Char16;
-#endif
-    typedef __int8 s8;
-    typedef __int16 s16;
-    typedef __int32 s32;
-    typedef __int64 s64;
-
-    typedef unsigned __int8 u8;
-    typedef unsigned __int16 u16;
-    typedef unsigned __int32 u32;
-    typedef unsigned __int64 u64;
-
-    typedef float f32;
-    typedef double f64;
-
-    typedef intptr_t  intptr_t;
-    typedef uintptr_t  uintptr_t;
-    typedef ptrdiff_t  ptrdiff_t;
-    typedef size_t lsize_t;
-
-    typedef void* LHANDLE;
-
-#elif defined(ANDROID) || defined(__GNUC__)
     typedef char Char;
     typedef unsigned char UChar;
     typedef char16_t Char16;
@@ -258,41 +230,48 @@ namespace lcore
     typedef intptr_t  intptr_t;
     typedef uintptr_t  uintptr_t;
     typedef ptrdiff_t  ptrdiff_t;
-    typedef size_t lsize_t;
+    typedef size_t size_t;
+    typedef s64 off_t;
 
     typedef void* LHANDLE;
-
-#else
-    typedef char Char;
-    typedef unsigned char UChar;
-    typedef char16_t Char16;
-    typedef wchar_t WChar;
-    typedef char s8;
-    typedef short s16;
-    typedef long s32;
-    typedef long long s64;
-
-    typedef unsigned char u8;
-    typedef unsigned short u16;
-    typedef unsigned long u32;
-    typedef unsigned long long u64;
-
-    typedef float f32;
-    typedef double f64;
-
-    typedef intptr_t  intptr_t;
-    typedef uintptr_t  uintptr_t;
-    typedef ptrdiff_t  ptrdiff_t;
-    typedef size_t lsize_t;
-
-    typedef void* LHANDLE;
-#endif
 
 #if defined(ANDROID) || defined(__GNUC__)
     typedef clock_t ClockType;
 #else
     typedef u64 ClockType;
 #endif
+
+#if defined(ANDROID)
+    static constexpr f32 F32_EPSILON = 1.192092896e-07F;
+    static constexpr f32 F64_EPSILON = 2.2204460492503131e-016;
+#else
+    static constexpr f32 F32_EPSILON = FLT_EPSILON;
+    static constexpr f32 F64_EPSILON = DBL_EPSILON;
+#endif
+
+    static constexpr f32 F32_ANGLE_COSINE_ALMOST_ONE = 0.9999f;
+    static constexpr f32 F32_DOT_EPSILON = 1.0e-6f;
+
+    static constexpr f32 PI = static_cast<f32>(3.14159265358979323846);
+    static constexpr f32 PI2 = static_cast<f32>(6.28318530717958647692);
+    static constexpr f32 INV_PI = static_cast<f32>(0.31830988618379067153);
+    static constexpr f32 INV_PI2 = static_cast<f32>(0.15915494309189533576);
+    static constexpr f32 PI_2 = static_cast<f32>(1.57079632679489661923);
+    static constexpr f32 INV_PI_2 = static_cast<f32>(0.63661977236758134308);
+    static constexpr f32 LOG2 = static_cast<f32>(0.693147180559945309417);
+    static constexpr f32 INV_LOG2 = static_cast<f32>(1.0/0.693147180559945309417);
+
+    static constexpr f64 PI_64 = static_cast<f64>(3.14159265358979323846);
+    static constexpr f64 PI2_64 = static_cast<f64>(6.28318530717958647692);
+    static constexpr f64 INV_PI_64 = static_cast<f64>(0.31830988618379067153);
+    static constexpr f64 INV_PI2_64 = static_cast<f64>(0.15915494309189533576);
+    static constexpr f64 PI_2_64 = static_cast<f64>(1.57079632679489661923);
+    static constexpr f64 INV_PI_2_64 = static_cast<f64>(0.63661977236758134308);
+    static constexpr f64 LOG2_64 = static_cast<f64>(0.693147180559945309417);
+    static constexpr f64 INV_LOG2_64 = static_cast<f64>(1.0/0.693147180559945309417);
+
+    static constexpr f32 DEG_TO_RAD = static_cast<f32>(1.57079632679489661923/90.0);
+    static constexpr f32 RAD_TO_DEG = static_cast<f32>(90.0/1.57079632679489661923);
 
     static const s32 SSE_ALIGN = 16;
     static const s32 SSE_ALIGN_MASK = 15;
@@ -426,31 +405,33 @@ namespace lcore
     class numeric_limits
     {
     public:
-        static T epsilon() LNOTHROW
+        static constexpr T epsilon() LNOTHROW
         {
             return std::numeric_limits<T>::epsilon();
         }
 
-        static T minimum() LNOTHROW
+        static constexpr T minimum() LNOTHROW
         {
             return (std::numeric_limits<T>::min)();
         }
 
-        static T maximum() LNOTHROW
+        static constexpr T maximum() LNOTHROW
         {
             return (std::numeric_limits<T>::max)();
         }
 
-        static T lowest() LNOTHROW
+        static constexpr T lowest() LNOTHROW
         {
             return std::numeric_limits<T>::lowest();
         }
 
-        static T inifinity() LNOTHROW
+        static constexpr T inifinity() LNOTHROW
         {
             return std::numeric_limits<T>::infinity();
         }
     };
+
+    static constexpr f32 LINFINITY = numeric_limits<f32>::maximum();
 
     //---------------------------------------------------------
     //---
@@ -497,21 +478,17 @@ namespace lcore
         r = lcore::move(tmp);
     }
 
-    template<class T>
-    inline T lerp(const T& v0, const T& v1, f32 ratio)
+    template<class T, class U>
+    inline U lerp(const T& v0, const T& v1, f32 ratio)
     {
-        return v0 + ratio*(v1-v0);
+        return static_cast<U>(v0 + ratio*(v1-v0));
         //return (1.0f-ratio)*v0 + ratio*v1;
     }
 
-    inline f32 lerpf(f32 v0, f32 v1, f32 ratio)
+    template<class T>
+    inline f32 lerpf(const T& v0, const T& v1, f32 ratio)
     {
         return v0 + ratio*(v1-v0);
-    }
-
-    inline f32 lerpf(s32 v0, s32 v1, f32 ratio)
-    {
-        return v0 + ratio*static_cast<f32>(v1-v0);
     }
 
 #define LCORE_DEFINE_MINMAX_FUNC(TYPE) \
@@ -628,6 +605,12 @@ namespace lcore
         quotient += (0<remainder)? 1 : 0;
         return quotient;
     }
+
+    //--- SIMD Math
+    //-----------------------------------------------------
+    __m128 log(const __m128& x);
+    __m128 exp(const __m128& x);
+    __m128 pow(const __m128& x, const __m128& y);
 
     template<class Itr>
     struct iterator_traits
@@ -768,17 +751,15 @@ namespace lcore
         }
     };
 
-    struct U32F32Union
-    {
-        union
-        {
-            u32 u_;
-            f32 f_;
-        };
-    };
+    /**
+    @brief Convert IEEE 754 single precision float to half precision float
+    */
+    u16 toFloat16(f32 f);
 
-    u16 toBinary16Float(f32 f);
-    f32 fromBinary16Float(u16 s);
+    /**
+    @brief Convert IEEE 754 half precision float to single precision float
+    */
+    f32 toFloat32(u16 s);
 
     s8 floatTo8SNORM(f32 f);
     u8 floatTo8UNORM(f32 f);
@@ -805,6 +786,8 @@ namespace lcore
     u32 bitreverse(u32 x);
     u64 bitreverse(u64 x);
 
+    u32 leadingzero(u32 x);
+
     #define LMAKE_FOURCC(c0, c1, c2, c3)\
     ( (lcore::u32)(c0) | ((lcore::u32)(c1) << 8) | ((lcore::u32)(c2) << 16) | ((lcore::u32)(c3) << 24) )
 
@@ -813,27 +796,18 @@ namespace lcore
 
     void Log(const Char* format, ...);
 
-    //class MemorySpace
-    //{
-    //public:
-    //    enum Locked
-    //    {
-    //        Locked_Disable = 0,
-    //        Locked_Enable,
-    //    };
-    //    MemorySpace();
-    //    ~MemorySpace();
-
-    //    bool create(u32 capacity, Locked locked=Locked_Disable);
-    //    void destroy();
-
-    //    bool valid() const;
-    //    void* allocate(u32 size);
-    //    void deallocate(void* mem);
-    //private:
-    //    void* mspace_;
-    //};
-
+    class System
+    {
+    public:
+        inline System()
+        {
+            initializeSystem();
+        }
+        inline ~System()
+        {
+            terminateSystem();
+        }
+    };
     //---------------------------------------------------------
     //---
     //---
@@ -879,6 +853,101 @@ namespace lcore
     inline f64 absolute<f64>(f64 val)
     {
         return fabs(val);
+    }
+
+    inline bool isPositive(f32 v)
+    {
+        static const u32 mask = ~(((u32)-1)>>1);
+        return (*((u32*)&v) & mask) == 0;
+    }
+
+    inline bool isEqual(f32 x1, f32 x2)
+    {
+        return (lcore::absolute<f32>(x1 - x2) <= F32_EPSILON);
+    }
+
+    inline bool isEqual(f32 x1, f32 x2, f32 epsilon)
+    {
+        return (lcore::absolute<f32>(x1 - x2) <= epsilon);
+    }
+
+    inline bool isEqual(f64 x1, f64 x2)
+    {
+        return (lcore::absolute<f64>(x1 - x2) <= F64_EPSILON);
+    }
+
+    inline bool isEqual(f64 x1, f64 x2, f64 epsilon)
+    {
+        return (lcore::absolute<f64>(x1 - x2) <= epsilon);
+    }
+
+    inline bool isZero(f32 x1)
+    {
+        return (lcore::absolute<f32>(x1) <= F32_EPSILON);
+    }
+
+    inline bool isZero(f32 x1, f32 epsilon)
+    {
+        return (lcore::absolute<f32>(x1) <= epsilon);
+    }
+
+    inline bool isZero(f64 x1)
+    {
+        return (lcore::absolute<f64>(x1) <= F64_EPSILON);
+    }
+
+    inline bool isZero(f64 x1, f64 epsilon)
+    {
+        return (lcore::absolute<f64>(x1) <= epsilon);
+    }
+
+
+    inline bool isZeroPositive(f32 x1)
+    {
+        LASSERT(0.0f<=x1);
+        return (x1 <= F32_EPSILON);
+    }
+
+    inline bool isZeroPositive(f32 x1, f32 epsilon)
+    {
+        LASSERT(0.0f<=x1);
+        return (x1 <= epsilon);
+    }
+
+    inline bool isZeroPositive(f64 x1)
+    {
+        LASSERT(0.0f<=x1);
+        return (x1 <= F64_EPSILON);
+    }
+
+    inline bool isZeroPositive(f64 x1, f64 epsilon)
+    {
+        LASSERT(0.0f<=x1);
+        return (x1 <= epsilon);
+    }
+
+    inline bool isZeroNegative(f32 x1)
+    {
+        LASSERT(x1<=0.0f);
+        return (-F32_EPSILON<=x1);
+    }
+
+    inline bool isZeroNegative(f32 x1, f32 epsilon)
+    {
+        LASSERT(x1<0.0f);
+        return (epsilon<=x1);
+    }
+
+    inline bool isZeroNegative(f64 x1)
+    {
+        LASSERT(x1<0.0f);
+        return (-F64_EPSILON<=x1);
+    }
+
+    inline bool isZeroNegative(f64 x1, f64 epsilon)
+    {
+        LASSERT(x1<0.0f);
+        return (epsilon<=x1);
     }
 
     inline bool isNan(f32 f)
@@ -936,14 +1005,14 @@ namespace lcore
         return (c == CharNull);
     }
 
-    inline int strncmp(const Char* str1, const Char* str2, lsize_t maxCount)
+    inline int strncmp(const Char* str1, const Char* str2, size_t maxCount)
     {
         return ::strncmp(str1, str2, maxCount);
     }
 
-    inline char* strncpy(Char* dst, lsize_t dstSize, const Char* src, lsize_t count)
+    inline char* strncpy(Char* dst, size_t dstSize, const Char* src, size_t count)
     {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         strncpy_s(dst, dstSize, src, count);
         return dst;
 #else
@@ -951,12 +1020,12 @@ namespace lcore
 #endif
     }
 
-    inline lsize_t strlen(const Char* str)
+    inline size_t strlen(const Char* str)
     {
         return ::strlen(str);
     }
 
-    inline lsize_t strnlen(const Char* str, lsize_t size)
+    inline size_t strnlen(const Char* str, size_t size)
     {
         return ::strnlen(str, size);
     }
@@ -966,7 +1035,7 @@ namespace lcore
         return static_cast<s32>(::strlen(str));
     }
 
-    inline s32 strnlen_s32(const Char* str, lsize_t size)
+    inline s32 strnlen_s32(const Char* str, size_t size)
     {
         return static_cast<s32>(::strnlen(str, size));
     }
@@ -979,7 +1048,7 @@ namespace lcore
 
     inline void strcat(Char* dst, u32 dstSize, const Char* str)
     {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         ::strcat_s(dst, dstSize, str);
 #else
         ::strcat(dst, str);
@@ -987,151 +1056,105 @@ namespace lcore
     }
 
 
-    inline s32 memcmp(const void* buff0, const void* buff1, lsize_t size)
+    inline s32 memcmp(const void* buff0, const void* buff1, size_t size)
     {
         return ::memcmp(buff0, buff1, size);
     }
 
-    inline void* memset(void* dst, int val, lsize_t size)
+    inline void* memset(void* dst, int val, size_t size)
     {
         return ::memset(dst, val, size);
     }
 
-    inline void* memcpy(void* dst, const void* src, lsize_t size)
+    inline void* memcpy(void* dst, const void* src, size_t size)
     {
         return ::memcpy(dst, src, size);
     }
-
 
     //---------------------------------------------------------
     //---
     //--- Color
     //---
     //---------------------------------------------------------
-#define LCOLO8_TO_FLOAT_RATIO (1.0f/255.0f);
+    u8 toColorU8(f32 x);
+    f32 toColorF32(u8 x);
 
-    inline u32 getARGB(u8 a, u8 r, u8 g, u8 b)
-    {
-        return (a << 24) | (r << 16) | (g << 8) | b;
-    }
-
-    inline u32 getABGR(u8 a, u8 r, u8 g, u8 b)
-    {
-        return (a << 24) | r | (g << 8) | (b << 16);
-    }
-
-    inline u32 getRGBA(u8 a, u8 r, u8 g, u8 b)
-    {
-        return (r << 24) | (g << 16) | (b << 8) | a;
-    }
+    u32 getARGB(u8 a, u8 r, u8 g, u8 b);
+    u32 getABGR(u8 a, u8 r, u8 g, u8 b);
+    u32 getRGBA(u8 a, u8 r, u8 g, u8 b);
 
 
-    inline u8 getAFromARGB(u32 argb)
-    {
-        return static_cast<u8>((argb>>24) & 0xFFU);
-    }
-
-    inline u8 getRFromARGB(u32 argb)
-    {
-        return static_cast<u8>((argb>>16) & 0xFFU);
-    }
-
-    inline u8 getGFromARGB(u32 argb)
-    {
-        return static_cast<u8>((argb>>8) & 0xFFU);
-    }
-
-    inline u8 getBFromARGB(u32 argb)
-    {
-        return static_cast<u8>((argb) & 0xFFU);
-    }
+    u8 getAFromARGB(u32 argb);
+    u8 getRFromARGB(u32 argb);
+    u8 getGFromARGB(u32 argb);
+    u8 getBFromARGB(u32 argb);
 
 
-    inline u8 getAFromABGR(u32 abgr)
-    {
-        return static_cast<u8>((abgr>>24) & 0xFFU);
-    }
+    u8 getAFromABGR(u32 abgr);
+    u8 getRFromABGR(u32 abgr);
+    u8 getGFromABGR(u32 abgr);
+    u8 getBFromABGR(u32 abgr);
 
-    inline u8 getRFromABGR(u32 abgr)
-    {
-        return static_cast<u8>((abgr) & 0xFFU);
-    }
-
-    inline u8 getGFromABGR(u32 abgr)
-    {
-        return static_cast<u8>((abgr>>8) & 0xFFU);
-    }
-
-    inline u8 getBFromABGR(u32 abgr)
-    {
-        return static_cast<u8>((abgr>>16) & 0xFFU);
-    }
-
-
-    inline u8 getRFromRGBA(u32 rgba)
-    {
-        return static_cast<u8>((rgba>>24) & 0xFFU);
-    }
-
-    inline u8 getGFromRGBA(u32 rgba)
-    {
-        return static_cast<u8>((rgba>>16) & 0xFFU);
-    }
-
-    inline u8 getBFromRGBA(u32 rgba)
-    {
-        return static_cast<u8>((rgba>>8) & 0xFFU);
-    }
-
-    inline u8 getAFromRGBA(u32 rgba)
-    {
-        return static_cast<u8>((rgba) & 0xFFU);
-    }
+    u8 getRFromRGBA(u32 rgba);
+    u8 getGFromRGBA(u32 rgba);
+    u8 getBFromRGBA(u32 rgba);
+    u8 getAFromRGBA(u32 rgba);
 
     u8 getLuminance(u8 r, u8 g, u8 b);
     f32 getLuminance(f32 r, f32 g, f32 b);
 
-    inline u16 getARGB4444(u32 argb)
+    inline u8 getGray(u8 r, u8 g, u8 b)
     {
-        u16 a = static_cast<u16>((argb>> 16)&0xF000U);
-        u16 r = static_cast<u16>((argb>> 12)&0x0F00U);
-        u16 g = static_cast<u16>((argb>>  8)&0x00F0U);
-        u16 b = static_cast<u16>((argb>>  4)&0x000FU);
-        return r|g|b|a;
+        return getLuminance(r, g, b);
     }
 
-    inline u16 getABGR4444(u32 abgr)
+    inline f32 getGray(f32 r, f32 g, f32 b)
     {
-        u16 a = static_cast<u16>((abgr>> 16)&0xF000U);
-        u16 b = static_cast<u16>((abgr>> 12)&0x0F00U);
-        u16 g = static_cast<u16>((abgr>>  8)&0x00F0U);
-        u16 r = static_cast<u16>((abgr>>  4)&0x000FU);
-        return r|g|b|a;
+        return getLuminance(r, g, b);
     }
 
-    inline u16 getRGBA4444(u32 rgba)
+    u16 getARGB4444(u32 argb);
+    u16 getABGR4444(u32 abgr);
+    u16 getRGBA4444(u32 rgba);
+
+    u32 getARGB4444(u8 a, u8 r, u8 g, u8 b);
+    u32 getABGR4444(u8 a, u8 r, u8 g, u8 b);
+    u32 getRGBA4444(u8 a, u8 r, u8 g, u8 b);
+
+    u32 toSRGB_NOSIMD(u32 rgba);
+    void toSRGB_NOSIMD(f32* drgba, const f32* srgba);
+
+    u32 toLinear_NOSIMD(u32 rgba);
+    void toLinear_NOSIMD(f32* drgba, const f32* srgba);
+
+    u32 toSRGB_SIMD(u32 rgba);
+    void toSRGB_SIMD(f32* drgba, const f32* srgba);
+
+    u32 toLinear_SIMD(u32 rgba);
+    void toLinear_SIMD(f32* drgba, const f32* srgba);
+
+    inline u32 toSRGB(u32 rgba)
     {
-        u16 r = static_cast<u16>((rgba>> 16)&0xF000U);
-        u16 g = static_cast<u16>((rgba>> 12)&0x0F00U);
-        u16 b = static_cast<u16>((rgba>>  8)&0x00F0U);
-        u16 a = static_cast<u16>((rgba>>  4)&0x000FU);
-        return r|g|b|a;
+        return toSRGB_SIMD(rgba);
+    }
+    inline void toSRGB(f32* drgba, const f32* srgba)
+    {
+        toSRGB_SIMD(drgba, srgba);
     }
 
-    inline u32 getARGB4444(u8 a, u8 r, u8 g, u8 b)
+    inline u32 toLinear(u32 rgba)
     {
-        return ((a&0xF0U) << 8) | ((r&0xF0U) << 4) | ((g&0xF0U)) | ((b&0xF0U) >> 4);
+        return toLinear_SIMD(rgba);
+    }
+    inline void toLinear(f32* drgba, const f32* srgba)
+    {
+        toLinear_SIMD(drgba, srgba);
     }
 
-    inline u32 getABGR4444(u8 a, u8 r, u8 g, u8 b)
-    {
-        return ((a&0xF0U) << 8) | ((b&0xF0U) << 4) | ((g&0xF0U)) | ((r&0xF0U) >> 4);
-    }
-
-    inline u32 getRGBA4444(u8 a, u8 r, u8 g, u8 b)
-    {
-        return ((r&0xF0U) << 8) | ((g&0xF0U) << 4) | ((b&0xF0U)) | ((a&0xF0U) >> 4);
-    }
+    u8 toSRGB(u8 x);
+    f32 toSRGB(f32 x);
+    u8 toLinear(u8 x);
+    f32 toLinear(f32 x);
 
     enum RefractiveIndex
     {
@@ -1188,8 +1211,6 @@ namespace lcore
     @param refract1 ... 出射側媒質の屈折率
     */
     f32 calcFresnelTerm(f32 refract0, f32 refract1);
-
-
 
     //---------------------------------------------------------
     //---
@@ -1335,7 +1356,7 @@ namespace lcore
     //---
     //---------------------------------------------------------
     s32 printf(const Char* format, ...);
-    s32 snprintf(Char* dst, lsize_t n, const Char* format, ...);
+    s32 snprintf(Char* dst, size_t n, const Char* format, ...);
 
     s32 scprintf(const Char* format, ...);
     s32 vscprintf(const Char* format, va_list args);
@@ -1350,80 +1371,30 @@ namespace lcore
     */
     const Char* rFindChr(s32 length, const Char* src, Char c);
 
-
-    /**
-    @brief パスからディレクトリパス抽出. dstがNULLの場合, パスの長さを返す
-    @return dstの長さ
-    @param dst ... 出力. ヌル文字込みで十分なサイズがあること
-    @param length ... パスの長さ
-    @param path ... パス
-    */
-    s32 extractDirectoryPath(Char* dst, s32 length, const Char* path);
-
-    /**
-    @brief パスからディレクトリ名抽出. dstがNULLの場合, ディレクトリ名の長さを返す
-    @return dstの長さ
-    @param dst ... 出力. ヌル文字込みで十分なサイズがあること
-    @param length ... パスの長さ
-    @param path ... パス
-    */
-    s32 extractDirectoryName(Char* dst, s32 length, const Char* path);
-
-    /**
-    @brief パスからファイル名抽出. dstがNULLの場合, ファイル名の長さを返す
-    @return dstの長さ
-    @param dst ... 出力. ヌル文字込みで十分なサイズがあること
-    @param length ... パスの長さ
-    @param path ... パス
-    */
-    s32 extractFileName(Char* dst, s32 length, const Char* path);
-
-    /**
-    @brief パスからファイル名抽出. dstがNULLの場合, ファイル名の長さを返す
-    @return dstの長さ
-    @param dst ... 出力. ヌル文字込みで十分なサイズがあること
-    @param length ... パスの長さ
-    @param path ... パス
-    */
-    s32 extractFileNameWithoutExt(Char* dst, s32 length, const Char* path);
-
-    /**
-    @brief パスから最初のファイル名抽出.
-    @param length ... 出力. 抽出したファイル名の長さ
-    @param name ... 出力. 抽出したファイル名
-    @param pathLength ... パスの長さ
-    @param path ... パス
-    */
-    const Char* parseFirstNameFromPath(s32& length, Char* name, s32 pathLength, const Char* path);
-
-    /**
-    @brief パスから拡張子抽出
-    */
-    const Char* getExtension(s32 length, const Char* path);
-
     //---------------------------------------------------------
     //---
-    //--- タイム関係
+    //--- Time
     //---
     //---------------------------------------------------------
     void sleep(u32 milliSeconds);
 
-    /// カウント取得
+    /// Get performance counter
     ClockType getPerformanceCounter();
 
-    /// 秒間カウント数
+    /// Get performance count per second
     ClockType getPerformanceFrequency();
 
-    /// 秒単位の時間差分計算
+    /// Calculate duration time from performance count
     f64 calcTime64(ClockType prevTime, ClockType currentTime);
 
+    /// Calculate duration time from performance count
     inline f32 calcTime(ClockType prevTime, ClockType currentTime)
     {
         return static_cast<f32>(calcTime64(prevTime, currentTime));
     }
 
-    /// ミリ秒単位の時間を取得
-    u32 getTime();
+    /// Get time in milli second
+    u32 getTimeMilliSec();
 
 
     template<bool enable>
@@ -1618,6 +1589,47 @@ namespace lcore
     u64 hash_FNV1a_64(const Char* str);
 #endif
 
+    //----------------------------------------------
+    //---
+    //--- BitSet32
+    //---
+    //----------------------------------------------
+    class BitSet32
+    {
+    public:
+        BitSet32()
+            :flags_(0)
+        {}
+
+        explicit BitSet32(u32 flags)
+            :flags_(flags)
+        {}
+
+        ~BitSet32()
+        {}
+
+        inline void clear()
+        {
+            flags_ = 0;
+        }
+
+        inline bool check(u32 flag) const
+        {
+            return 0 != (flags_&flag);
+        }
+
+        inline void set(u32 flag)
+        {
+            flags_ |= flag;
+        }
+
+        inline void reset(u32 flag)
+        {
+            flags_ &= ~flag;
+        }
+    private:
+        u32 flags_;
+    };
 }
 
-#endif //INC_LCORE_H__
+#endif //INC_LCORE_H_

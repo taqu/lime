@@ -168,6 +168,8 @@ namespace lmath
     //--- Vector3
     //---
     //--------------------------------------------
+    static_assert(std::is_trivially_copyable<Vector3>::value, "Vector3 must be trivially copyable");
+
     inline Vector3 Vector3::construct(f32 xyz)
     {
         return {xyz, xyz, xyz};

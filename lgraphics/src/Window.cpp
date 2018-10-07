@@ -1,61 +1,76 @@
-﻿/**
+/**
 @file Window.cpp
 @author t-sakai
-@date 2009/04/26
+@date 2017/11/03
 */
 #include "Window.h"
 
+#ifdef LIME_USE_XCB
+#include <xcb/xcb_icccm.h>
+#include <stdlib.h>
+#include <string.h>
+#endif
+
+#ifdef LIME_USE_XLIB
+#include <X11/Xatom.h>
+#include <string.h>
+#endif
+
 namespace lgfx
 {
-    void Window::InitParam::setTitle(const char* title, u32 size)
-    {
-        size = ((MAX_TITLE_SIZE-1) < size)? (MAX_TITLE_SIZE-1) : size;
-        for(u32 i=0; i<size; ++i){
-            title_[i] = title[i];
-        }
-        title_[size-1] = lcore::CharNull;
-    }
-
-#if defined(_WIN32) || defined(_WIN64)
-    const char* Window::CLASS_NAME_ = "LWINDOW";
-
+namespace
+{
+#ifdef LIME_USE_WIN32
+    const char* CLASSNAME_ = "LWINDOW";
     static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wPara, LPARAM lParam);
-
+#endif
+}
     Window::Window()
-        //:viewWidth_(1)
-        //,viewHeight_(1)
+#ifdef LIME_USE_WIN32
+        :instance_(NULL)
+        ,handle_(NULL)
+#endif
+#ifdef LIME_USE_XCB
+        :connection_(NULL)
+        ,handle_(0)
+        ,delete_(NULL)
+        ,wndProc_(NULL)
+#endif
+#ifdef LIME_USE_XLIB
+        :display_(NULL)
+        ,handle_(0)
+        ,wndProc_(NULL)
+#endif
     {
-        handle_.hWnd_ = NULL;
     }
 
     Window::~Window()
     {
-        terminate();
+        destroy();
     }
 
-    bool Window::initialize(const InitParam& param, bool show)
+    bool Window::create(InitParam& param)
     {
-        LASSERT(handle_.hWnd_ == NULL);
-        LASSERT(param.title_ != NULL);
+        LASSERT(NULL == handle_);
+        LASSERT(NULL != param.title_);
 
-        HINSTANCE hInstance = GetModuleHandle(0);
+#ifdef LIME_USE_WIN32
+        instance_ = (NULL != param.instance_)? param.instance_ : GetModuleHandle(0);
 
-        //Window Class 作成・登録
+        //Create and register window class
         //-----------------------------------------------------------
         WNDCLASSEX wcex;
-
         wcex.cbSize = sizeof(WNDCLASSEX);
-
         wcex.style			= CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
-        wcex.lpfnWndProc	= (param.wndProc_ == NULL)? WndProc : param.wndProc_;
+        wcex.lpfnWndProc	= (NULL == param.wndProc_)? WndProc : param.wndProc_;
         wcex.cbClsExtra		= 0;
         wcex.cbWndExtra		= 0;
-        wcex.hInstance		= hInstance;
+        wcex.hInstance		= instance_;
         wcex.hIcon			= LoadIcon(NULL, IDI_WINLOGO);
         wcex.hCursor		= LoadCursor(NULL, IDC_ARROW);
         wcex.hbrBackground	= NULL;//(HBRUSH)(COLOR_WINDOW+1);
         wcex.lpszMenuName	= NULL;
-        wcex.lpszClassName	= CLASS_NAME_;
+        wcex.lpszClassName	= CLASSNAME_;
         wcex.hIconSm		= LoadIcon(wcex.hInstance, NULL);
 
         if(!RegisterClassEx(&wcex)){
@@ -81,9 +96,9 @@ namespace lgfx
 
         AdjustWindowRectEx(&rect, style, FALSE, exStyle);
 
-        handle_.hWnd_ = CreateWindowEx(
+        handle_ = CreateWindowEx(
             exStyle,
-            CLASS_NAME_,
+            CLASSNAME_,
             param.title_,
             style,
             CW_USEDEFAULT, CW_USEDEFAULT,
@@ -91,102 +106,358 @@ namespace lgfx
             rect.bottom - rect.top,
             NULL,
             NULL,
-            hInstance,
+            instance_,
             NULL);
 
-        if(handle_.hWnd_ == NULL){
-            UnregisterClass(CLASS_NAME_, hInstance);
+        if(NULL == handle_){
+            UnregisterClass(CLASSNAME_, instance_);
             return false;
         }
 
-        if(show){
-            ShowWindow(handle_.hWnd_, SW_SHOW);
-        }
-        UpdateWindow(handle_.hWnd_);
-        SetFocus(handle_.hWnd_);
+        UpdateWindow(handle_);
+        SetFocus(handle_);
+#endif
 
-        //viewWidth_ = param.width_;
-        //viewHeight_ = param.height_;
+#ifdef LIME_USE_XCB
+        int screenIndex = 0;
+        connection_ = xcb_connect(NULL, &screenIndex);
+        if(xcb_connection_has_error(connection_)){
+            connection_ = NULL;
+            return false;
+        }
+        const xcb_setup_t* setup = xcb_get_setup(connection_);
+        xcb_screen_iterator_t screenIterator = xcb_setup_roots_iterator(setup);
+        for(int i=0; i<screenIndex; ++i){
+            xcb_screen_next(&screenIterator);
+        }
+        xcb_screen_t* screen = screenIterator.data;
+        handle_ = xcb_generate_id(connection_);
+
+        u32 valueList[] =
+        {
+            screen->white_pixel,
+            XCB_EVENT_MASK_EXPOSURE | XCB_EVENT_MASK_STRUCTURE_NOTIFY,
+        };
+
+        xcb_create_window(
+            connection_,
+            XCB_COPY_FROM_PARENT,
+            handle_,
+            screen->root,
+            -1, -1, param.width_, param.height_,
+            0,
+            XCB_WINDOW_CLASS_INPUT_OUTPUT,
+            screen->root_visual,
+            XCB_CW_BACK_PIXEL | XCB_CW_EVENT_MASK,
+            valueList);
+
+        wndProc_ = param.wndProc_;
+
+        xcb_flush(connection_);
+        xcb_change_property(
+            connection_,
+            XCB_PROP_MODE_REPLACE,
+            handle_,
+            XCB_ATOM_WM_NAME,
+            XCB_ATOM_STRING,
+            8,
+            strlen(param.title_),
+            param.title_);
+
+        xcb_intern_atom_cookie_t protocols_cookie = xcb_intern_atom(connection_, 1, 12, "WM_PROTOCOLS");
+        xcb_intern_atom_reply_t* protocol_reply = xcb_intern_atom_reply(connection_, protocols_cookie, 0);
+        xcb_intern_atom_cookie_t delete_cookie = xcb_intern_atom(connection_, 0, 16, "WM_DELETE_WINDOW");
+        delete_ = xcb_intern_atom_reply(connection_, delete_cookie, 0);
+        xcb_change_property(connection_, XCB_PROP_MODE_REPLACE, handle_, (*protocol_reply).atom, 4, 32, 1, &(*delete_).atom);
+        free(protocol_reply);
+        
+        xcb_size_hints_t hints;
+        xcb_icccm_size_hints_set_min_size(&hints, param.width_, param.height_);
+        xcb_icccm_size_hints_set_max_size(&hints, param.width_, param.height_);
+        xcb_icccm_set_wm_size_hints(connection_, handle_, XCB_ATOM_WM_NORMAL_HINTS, &hints);
+
+        width_ = param.width_;
+        height_ = param.height_;
+        xcb_map_window(connection_, handle_);
+        xcb_flush(connection_);
+#endif
+#ifdef LIME_USE_XLIB
+        display_ = XOpenDisplay(NULL);
+        if(NULL == display_){
+            return false;
+        }
+        int default_screen = DefaultScreen(display_);
+        handle_ = XCreateWindow(
+            display_,
+            DefaultRootWindow(display_),
+            -1, -1, param.width_, param.height_,
+            0, //border width
+            CopyFromParent, //color depth
+            InputOutput, //
+            DefaultVisual(display_, DefaultScreen(display_)),
+            0, NULL);
+        if(handle_<=0){
+            XCloseDisplay(display_);
+            display_ = NULL;
+            return false;
+        }
+        wndProc_ = param.wndProc_;
+
+        //------------------------
+        XTextProperty name;
+        name.value = reinterpret_cast<unsigned char*>(const_cast<char*>(param.title_));
+        name.encoding = XA_STRING;
+        name.format = 8;
+        name.nitems = strlen(param.title_);
+        XSetWMName(display_, handle_, &name);
+
+        delete_ = XInternAtom(display_, "WM_DELETE_WINDOW", false);
+        XSetWMProtocols(display_, handle_, &delete_, 1);
+        XSelectInput(display_, handle_, ExposureMask | StructureNotifyMask);
+
+        XSizeHints hints;
+        hints.min_width = param.width_;
+        hints.min_height = param.height_;
+        hints.max_width = param.width_;
+        hints.max_height = param.height_;
+        hints.flags = PMinSize | PMaxSize;
+        XSetWMNormalHints(display_, handle_, &hints);
+
+        width_ = static_cast<s32>(param.width_);
+        height_ = static_cast<s32>(param.height_);
+        XClearWindow(display_, handle_);
+        XMapWindow(display_, handle_);
+#endif
         return true;
     }
-
 
     void Window::destroy()
     {
-        DestroyWindow(handle_.hWnd_);
-    }
-
-    void Window::terminate()
-    {
-        handle_.hWnd_ = NULL;
-        UnregisterClass(CLASS_NAME_, GetModuleHandle(0));
-    }
-
-
-    bool Window::peekEvent(EVENT& ev)
-    {
-        while(PeekMessage(&ev, NULL, 0, 0, PM_REMOVE)){
-            if(ev.message==WM_QUIT)
-                return false;
-            TranslateMessage(&ev);
-            DispatchMessage(&ev);
+#ifdef LIME_USE_WIN32
+        if(NULL != handle_){
+            DestroyWindow(handle_);
+            handle_ = NULL;
+            UnregisterClass(CLASSNAME_, instance_);
+            instance_ = NULL;
         }
-
-        return true;
-    }
-
-#if defined(_WIN32) || defined(_WIN64)
-    bool Window::peekEvent(HWND hDlg, EVENT& ev)
-    {
-        while(PeekMessage(&ev, NULL, 0, 0, PM_REMOVE)){
-            if(ev.message==WM_QUIT)
-                return false;
-
-            if(NULL != hDlg && IsDialogMessage(hDlg, &ev)){
-                continue;
-            }
-
-            TranslateMessage(&ev);
-            DispatchMessage(&ev);
-        }
-
-        return true;
-    }
 #endif
-
-    bool Window::getEvent(EVENT& ev)
-    {
-        if(GetMessage(&ev, NULL, 0, 0) > 0){
-            TranslateMessage(&ev);
-            DispatchMessage(&ev);
-            return true;
+#ifdef LIME_USE_XCB
+        if(NULL != delete_){
+            free(delete_);
+            delete_ = NULL;
         }
-
-        return false;
+        if(NULL != connection_){
+            wndProc_ = NULL;
+            xcb_destroy_window(connection_, handle_);
+            xcb_disconnect(connection_);
+            handle_ = 0;
+            connection_ = NULL;
+        }
+#endif
+#ifdef LIME_USE_XLIB
+        if(NULL != display_){
+            wndProc_ = NULL;
+            XDestroyWindow(display_, handle_);
+            XCloseDisplay(display_);
+            handle_ = 0;
+            display_ = NULL;
+        }
+#endif
     }
 
-    void Window::setShow(bool enable)
+    const Window::Handle Window::getHandle() const
     {
-        ShowWindow(handle_.hWnd_, (enable)?SW_SHOW : SW_HIDE);
+        return handle_;
     }
 
-    void Window::getViewSize(s32& width, s32& height)
+    Window::Handle Window::getHandle()
     {
+        return handle_;
+    }
+
+    void Window::setShow(bool show)
+    {
+#ifdef LIME_USE_WIN32
+        ShowWindow(handle_, (show)?SW_SHOW : SW_HIDE);
+#endif
+#ifdef LIME_USE_XCB
+        if(show){
+            xcb_map_window(connection_, handle_);
+        }else{
+            xcb_unmap_window(connection_, handle_);
+        }
+#endif
+#ifdef LIME_USE_XLIB
+        if(show){
+            XMapWindow(display_, handle_);
+        }else{
+            XUnmapWindow(display_, handle_);
+        }
+#endif
+    }
+
+    Window::Vector2 Window::getViewSize()
+    {
+#ifdef LIME_USE_WIN32
         RECT rect;
-        if(TRUE == GetClientRect(handle_.hWnd_, &rect)){
+        s32 width, height;
+        if(TRUE == GetClientRect(handle_, &rect)){
             width = rect.right - rect.left;
             height = rect.bottom - rect.top;
         }else{
             width = 1;
             height = 1;
         }
+        return {width, height};
+#endif
+#ifdef LIME_USE_XCB
+        xcb_get_geometry_cookie_t cookie = xcb_get_geometry(connection_, handle_);
+        xcb_get_geometry_reply_t* geom = xcb_get_geometry_reply(connection_, cookie, NULL);
+        s32 width = geom->width - geom->border_width*2;
+        s32 height = geom->height - geom->border_width*2;
+        free(geom);
+        return {width, height};
+#endif
+#ifdef LIME_USE_XLIB
+        s32 x;
+        s32 y;
+        s32 width=1;
+        s32 height=1;
+        ::Window root;
+        u32 border;
+        u32 depth;
+        XGetGeometry(display_, handle_,
+            &root,
+            &x, &y, reinterpret_cast<u32*>(&width), reinterpret_cast<u32*>(&height),
+            &border, //border
+            &depth);//depth
+        return {width, height};
+#endif
     }
 
-    static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+    bool Window::peekEvent()
     {
-        switch(msg)
+#ifdef LIME_USE_WIN32
+        while(PeekMessage(&event_, NULL, 0, 0, PM_REMOVE)){
+            if(event_.message==WM_QUIT)
+                return false;
+            TranslateMessage(&event_);
+            DispatchMessage(&event_);
+        }
+        return true;
+#endif
+#ifdef LIME_USE_XCB
+        for(;;){
+            event_ = xcb_poll_for_event(connection_);
+            if(NULL == event_){
+                return true;
+            }
+            switch(event_->response_type & 0x7F){
+            case XCB_CLIENT_MESSAGE:
+                if((*(xcb_client_message_event_t*)event_).data.data32[0] == (*delete_).atom){
+                    return false;
+                }
+                break;
+            }
+            if(NULL != wndProc_){
+                if(!wndProc_(event_)){
+                    return false;
+                }
+            }
+
+        } //for(;;)
+#endif
+#ifdef LIME_USE_XLIB
+        while(XPending(display_)){
+            XNextEvent(display_, &event_);
+            switch(event_.type){
+            case ConfigureNotify:
+                break;
+            case DestroyNotify:
+                return false;
+            case ClientMessage:
+                if(static_cast<u32>(event_.xclient.data.l[0]) == delete_){
+                    return false;
+                }
+                break;
+            }
+            if(NULL != wndProc_){
+                if(!wndProc_(event_)){
+                    return false;
+                }
+            }
+        } //while(XPending
+        return true;
+#endif
+    }
+
+
+#ifdef LIME_USE_WIN32
+    HINSTANCE Window::getInstance()
+    {
+        return instance_;
+    }
+
+    bool Window::peekEvent(HWND hDlg)
+    {
+        while(PeekMessage(&event_, NULL, 0, 0, PM_REMOVE)){
+            if(event_.message==WM_QUIT)
+                return false;
+
+            if(NULL != hDlg && IsDialogMessage(hDlg, &event_)){
+                continue;
+            }
+
+            TranslateMessage(&event_);
+            DispatchMessage(&event_);
+        }
+        return true;
+    }
+
+    bool Window::getEvent(HWND hDlg)
+    {
+        BOOL result;
+        while(0 != (result = GetMessage(&event_, NULL, 0, 0))){
+            if(result<0){
+                return false;
+            }
+            if(event_.message==WM_QUIT)
+                return false;
+
+            if(NULL != hDlg && IsDialogMessage(hDlg, &event_)){
+                continue;
+            }
+
+            TranslateMessage(&event_);
+            DispatchMessage(&event_);
+        }
+        return true;
+    }
+
+#endif
+
+#ifdef LIME_USE_XCB
+    xcb_connection_t* Window::getConnection()
+    {
+        return connection_;
+    }
+#endif
+
+#ifdef LIME_USE_XLIB
+    Display* Window::getDisplay()
+    {
+        return display_;
+    }
+#endif
+
+    namespace
+    {
+#ifdef LIME_USE_WIN32
+        static LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
         {
-        case WM_SYSCOMMAND:
+            switch(msg)
+            {
+            case WM_SYSCOMMAND:
             {
                 switch(wParam)
                 {
@@ -198,179 +469,28 @@ namespace lgfx
             }
             break;
 
-        //case WM_CLOSE:
-        //    DestroyWindow(hWnd);
-        //    break;
+            //case WM_CLOSE:
+            //    DestroyWindow(hWnd);
+            //    break;
 
-        case WM_PAINT:
+            case WM_PAINT:
             {
                 ValidateRect(hWnd, NULL);
             }
 
             break;
 
-        case WM_DESTROY:
-            PostQuitMessage(0);
-			return 1;
-            break;
+            case WM_DESTROY:
+                PostQuitMessage(0);
+                return 1;
+                break;
 
-        default:
-            return DefWindowProc(hWnd, msg, wParam, lParam);
-            break;
-        }
-        return 0;
-    }
-#endif
-
-
-#if defined(__CYGWIN__) || defined(__linux__)
-    const char* Window::CLASS_NAME_ = NULL;
-
-    static int WndProc(XEvent& event);
-
-    Window::Window()
-        :wndProc_(WndProc)
-    {
-        handle_.display_ = NULL;
-        handle_.window_ = None;
-    }
-
-    Window::~Window()
-    {
-        terminate();
-    }
-
-    bool Window::initialize(const InitParam& param)
-    {
-        LASSERT(handle_.display_ == NULL);
-        LASSERT(param.title_ != NULL);
-        
-        // Xサーバと接続
-        Display *display = XOpenDisplay(NULL);
-        if(display == NULL){
-            return false;
-        }
-
-        // ウィンドウ作成
-        handle_.display_ = display;
-        ::Window window = XCreateWindow(
-            display, //display
-            DefaultRootWindow(display), //parent window
-            0, 0, param.width_, param.height_, //x y w h
-            0, // window border width
-            CopyFromParent, // color depth
-            InputOutput, //InputOnly:入力のみ、InputOutput:入力と表示領域
-            DefaultVisual(display, DefaultScreen(display)), //visual
-            0, NULL); //visual mask, attributes
-
-        if(window <= 0){
-            XCloseDisplay(display);
-            handle_.display_ = NULL;
-            return false;
-        }
-        handle_.window_ = window;
-
-        // ウィンドウ名セット
-        if(param.title_ != NULL){
-            XTextProperty name;
-            name.value = static_cast<unsigned char*>( const_cast<char*>(param.title_) );
-            name.encoding = XA_STRING;
-            name.format = 8;
-            name.nitems = strlen(param.title_);
-            XSetWMName(display, window, &name);
-        }
-
-        if(param.wndProc_ != NULL){
-            wndProc_ = param.wndProc_;
-        }
-
-        //
-        setEventMask();
-
-        XMapWindow(display, window);
-        XRaiseWindow(display, window);
-
-        return true;
-    }
-
-
-    bool Window::initialize(const WindowHandle& handle, WNDPROC wndProc)
-    {
-        LASSERT(handle_.display_ == NULL);
-        handle_ = handle;
-        
-
-        if(wndProc != NULL){
-            wndProc_ = wndProc;
-        }
-
-        //
-        setEventMask();
-
-        Display *display = handle_.display_;
-        ::Window window = handle_.window_;
-        XRaiseWindow(display, window);
-
-        return true;
-    }
-
-
-    void Window::destroy()
-    {
-        XUnmapWindow(handle_.display_, handle_.window_);
-        XDestroyWindow(handle_.display_, handle_.window_);
-        handle_.window_ = None;
-    }
-
-    void Window::terminate()
-    {
-        if(handle_.display_ != NULL){
-            XCloseDisplay(handle_.display_);
-            handle_.display_ = NULL;
-        }
-    }
-
-
-    bool Window::peekEvent(EVENT& ev)
-    {
-        //イベントがあれば処理する
-        while(XPending(handle_.display_)){
-            XNextEvent(handle_.display_, &ev);
-            if(wndProc_(ev) != 0){
-                return false;
+            default:
+                return DefWindowProc(hWnd, msg, wParam, lParam);
+                break;
             }
+            return 0;
         }
-        return true;
-    }
-
-    bool Window::getEvent(EVENT& ev)
-    {
-        XNextEvent(handle_.display_, &ev);
-        if(wndProc_(ev) != 0){
-            return false;
-        }
-        return true;
-    }
-
-    void Window::setEventMask()
-    {
-        XSelectInput(handle_.display_, handle_.window_, StructureNotifyMask);
-    }
-
-
-    static int WndProc(XEvent& event)
-    {
-        switch(event.type)
-        {
-        case DestroyNotify: //ウィンドウ破棄イベント
-            return -1;
-            break;
-
-        default:
-            break;
-        };
-        return 0;
-    }
 #endif
+    }
 }
-

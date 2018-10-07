@@ -1,5 +1,5 @@
-#ifndef INC_LCORE_NOISE_H__
-#define INC_LCORE_NOISE_H__
+#ifndef INC_LCORE_NOISE_H_
+#define INC_LCORE_NOISE_H_
 /**
 @file Noise.h
 @author t-sakai
@@ -340,4 +340,4 @@ namespace lcore
     };
 }
 
-#endif //INC_LCORE_NOISE_H__
+#endif //INC_LCORE_NOISE_H_

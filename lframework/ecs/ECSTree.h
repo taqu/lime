@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_ECSTREE_H__
-#define INC_LFRAMEWORK_ECSTREE_H__
+#ifndef INC_LFRAMEWORK_ECSTREE_H_
+#define INC_LFRAMEWORK_ECSTREE_H_
 /**
 @file ECSTree.h
 @author t-sakai
@@ -386,4 +386,4 @@ namespace lfw
         return *this;
     }
 }
-#endif //INC_LFRAMEWORK_ECSTREE_H__
+#endif //INC_LFRAMEWORK_ECSTREE_H_

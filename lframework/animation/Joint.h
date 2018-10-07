@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_JOINT_H__
-#define INC_LFRAMEWORK_JOINT_H__
+﻿#ifndef INC_LFRAMEWORK_JOINT_H_
+#define INC_LFRAMEWORK_JOINT_H_
 /**
 @file Joint.h
 @author t-sakai
@@ -70,4 +70,4 @@ namespace lfw
         lmath::Matrix34 invInitialMatrix_; /// 初期姿勢
     };
 }
-#endif //INC_LFRAMEWORK_JOINT_H__
+#endif //INC_LFRAMEWORK_JOINT_H_

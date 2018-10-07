@@ -34,7 +34,7 @@ namespace graph
     {
     }
 
-    void RenderPassUI::execute(RenderContext& renderContext, Camera& camera)
+    void RenderPassUI::execute(RenderContext& renderContext, Camera& /*camera*/)
     {
         lgfx::ContextRef& context = renderContext.getContext();
 

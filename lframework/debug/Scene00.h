@@ -1,5 +1,5 @@
-#ifndef INC_SAMPLES_SCENE00_H__
-#define INC_SAMPLES_SCENE00_H__
+#ifndef INC_SAMPLES_SCENE00_H_
+#define INC_SAMPLES_SCENE00_H_
 /**
 @file Scene00.h
 @author t-sakai
@@ -43,4 +43,4 @@ namespace debug
         lfw::s32 count_;
     };
 }
-#endif //INC_SAMPLES_SCENE00_H__
+#endif //INC_SAMPLES_SCENE00_H_

@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_USERPLAYER_H__
-#define INC_LSOUND_USERPLAYER_H__
+#ifndef INC_LSOUND_USERPLAYER_H_
+#define INC_LSOUND_USERPLAYER_H_
 /**
 @file UserPlayer.h
 @author t-sakai
@@ -17,4 +17,4 @@
 #include "OpenSL/UserPlayer.h"
 #endif
 
-#endif //INC_LSOUND_USERPLAYER_H__
+#endif //INC_LSOUND_USERPLAYER_H_

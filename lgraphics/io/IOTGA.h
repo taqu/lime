@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_IOTGA_H__
-#define INC_LGRAPHICS_IOTGA_H__
+﻿#ifndef INC_LGRAPHICS_IOTGA_H_
+#define INC_LGRAPHICS_IOTGA_H_
 /**
 @file IOTGA.h
 @author t-sakai
@@ -21,4 +21,4 @@
 #include "../gles2/io/IOTGA.h"
 #endif
 
-#endif //INC_LGRAPHICS_IOTGA_H__
+#endif //INC_LGRAPHICS_IOTGA_H_

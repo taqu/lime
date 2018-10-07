@@ -1,5 +1,5 @@
-#ifndef INC_LCORE_REDBLACKTREE_H__
-#define INC_LCORE_REDBLACKTREE_H__
+#ifndef INC_LCORE_REDBLACKTREE_H_
+#define INC_LCORE_REDBLACKTREE_H_
 /**
 @file RedBlackTree.h
 @author t-sakai
@@ -389,8 +389,8 @@ namespace lcore
     template<class T, class Allocator, class Comparator, class Traversal>
     bool RedBlackTree<T,Allocator,Comparator, Traversal>::balanceInsertLeft(node_type*& node)
     {
-        TASSERT(nullptr_ != node);
-        TASSERT(node->isBlack());
+        LASSERT(nullptr_ != node);
+        LASSERT(node->isBlack());
         if(node->left_->right_->isRed()){
             node->left_ = rotateLeft(node->left_);
         }
@@ -409,8 +409,8 @@ namespace lcore
     template<class T, class Allocator, class Comparator, class Traversal>
     bool RedBlackTree<T,Allocator,Comparator, Traversal>::balanceInsertRight(node_type*& node)
     {
-        TASSERT(nullptr_ != node);
-        TASSERT(node->isBlack());
+        LASSERT(nullptr_ != node);
+        LASSERT(node->isBlack());
         if(node->right_->left_->isRed()){
             node->right_ = rotateRight(node->right_);
         }
@@ -565,10 +565,10 @@ namespace lcore
     typename RedBlackTree<T,Allocator,Comparator, Traversal>::node_type*
         RedBlackTree<T,Allocator,Comparator, Traversal>::rotateRight(node_type* node)
     {
-        TASSERT(nullptr_ != node);
+        LASSERT(nullptr_ != node);
 
         node_type* left = node->left_;
-        TASSERT(nullptr_ != left); //‰E‰ñ“]‚·‚éê‡•K‚¸‘¶Ý
+        LASSERT(nullptr_ != left); //‰E‰ñ“]‚·‚éê‡•K‚¸‘¶Ý
 
         node->left_ = left->right_;
         
@@ -585,10 +585,10 @@ namespace lcore
     typename RedBlackTree<T,Allocator,Comparator, Traversal>::node_type*
         RedBlackTree<T,Allocator,Comparator, Traversal>::rotateLeft(node_type* node)
     {
-        TASSERT(nullptr_ != node);
+        LASSERT(nullptr_ != node);
 
         node_type* right = node->right_;
-        TASSERT(nullptr_ != right); //¶‰ñ“]‚·‚éê‡•K‚¸‘¶Ý
+        LASSERT(nullptr_ != right); //¶‰ñ“]‚·‚éê‡•K‚¸‘¶Ý
 
         node->right_ = right->left_;
 
@@ -656,4 +656,4 @@ namespace lcore
     }
 
 }
-#endif //INC_LCORE_REDBLACKTREE_H__
+#endif //INC_LCORE_REDBLACKTREE_H_

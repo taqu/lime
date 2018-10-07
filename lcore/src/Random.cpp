@@ -24,7 +24,7 @@ namespace lcore
     {
         u32 getRandomBasedOnDisckUsage()
         {
-            u32 t = getTime();
+            u32 t = getTimeMilliSec();
             lcore::ClockType counter = getPerformanceCounter();
 
             LARGE_INTEGER freeBytesAvalable;
@@ -52,7 +52,7 @@ namespace lcore
 
         u64 getRandomBasedOnDisckUsage64()
         {
-            u32 t = getTime();
+            u32 t = getTimeMilliSec();
             lcore::ClockType counter = getPerformanceCounter();
 
             LARGE_INTEGER freeBytesAvalable;

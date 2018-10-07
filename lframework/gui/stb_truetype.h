@@ -444,8 +444,8 @@ int main(int arg, char **argv)
 ////
 ////
 
-#ifndef __STB_INCLUDE_STB_TRUETYPE_H__
-#define __STB_INCLUDE_STB_TRUETYPE_H__
+#ifndef __STB_INCLUDE_STB_TRUETYPE_H_
+#define __STB_INCLUDE_STB_TRUETYPE_H_
 
 #ifdef STBTT_STATIC
 #define STBTT_DEF static
@@ -945,7 +945,7 @@ enum { // languageID for STBTT_PLATFORM_ID_MAC
 }
 #endif
 
-#endif // __STB_INCLUDE_STB_TRUETYPE_H__
+#endif // __STB_INCLUDE_STB_TRUETYPE_H_
 
 ///////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////

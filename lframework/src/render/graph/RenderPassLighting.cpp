@@ -40,7 +40,7 @@ namespace graph
         LALIGNED_FREE(lightMatrices_, 16);
     }
 
-    void RenderPassLighting::create(const Camera& camera)
+    void RenderPassLighting::create(const Camera& /*camera*/)
     {
         //ƒ{ƒŠƒ…[ƒ€‚ ‚è‚ÌŒõŒ¹— –Ê•`‰æ—p
         if(!depthStencilStateBack_.valid()){
@@ -168,8 +168,8 @@ namespace graph
         }
 
 
-        s32 xthreads = width_>>ComputeShader_NumThreads_Shift;
-        s32 ythreads = height_>>ComputeShader_NumThreads_Shift;
+        //s32 xthreads = width_>>ComputeShader_NumThreads_Shift;
+        //s32 ythreads = height_>>ComputeShader_NumThreads_Shift;
         s32 halfWidth = padSizeForComputeShader(width_>>1);
         s32 halfHeight = padSizeForComputeShader(height_>>1);
         halfXThreads_ = halfWidth>>ComputeShader_NumThreads_Shift;
@@ -316,7 +316,7 @@ namespace graph
         depthStencilStateBack_.destroy();
     }
 
-    void RenderPassLighting::execute(RenderContext& renderContext, Camera& camera)
+    void RenderPassLighting::execute(RenderContext& renderContext, Camera& /*camera*/)
     {
         lgfx::ContextRef& context = renderContext.getContext();
 

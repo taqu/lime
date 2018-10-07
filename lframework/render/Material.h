@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_MATERIAL_H__
-#define INC_LFRAMEWORK_MATERIAL_H__
+#ifndef INC_LFRAMEWORK_MATERIAL_H_
+#define INC_LFRAMEWORK_MATERIAL_H_
 /**
 @file Material.h
 @author t-sakai
@@ -78,4 +78,4 @@ namespace lfw
         return 0<=textureIDs_[type];
     }
 }
-#endif //INC_LFRAMEWORK_MATERIAL_H__
+#endif //INC_LFRAMEWORK_MATERIAL_H_

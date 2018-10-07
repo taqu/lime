@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_DX11_PREDICATEREF_H__
-#define INC_LGRAPHICS_DX11_PREDICATEREF_H__
+#ifndef INC_LGRAPHICS_DX11_PREDICATEREF_H_
+#define INC_LGRAPHICS_DX11_PREDICATEREF_H_
 /**
 @file PredicateRef.h
 @author t-sakai
@@ -50,4 +50,4 @@ namespace lgfx
             QueryMiscFlag flag);
     };
 }
-#endif //INC_LGRAPHICS_DX11_PREDICATEREF_H__
+#endif //INC_LGRAPHICS_DX11_PREDICATEREF_H_

@@ -207,7 +207,7 @@ namespace lfw
         }
     }
 
-    void RenderContext::endRenderPath(s32 path)
+    void RenderContext::endRenderPath(s32 /*path*/)
     {
         switch(renderPath_)
         {

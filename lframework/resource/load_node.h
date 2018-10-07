@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_LOADNODE_H__
-#define INC_LFRAMEWORK_LOADNODE_H__
+#ifndef INC_LFRAMEWORK_LOADNODE_H_
+#define INC_LFRAMEWORK_LOADNODE_H_
 /**
 @file load_node.h
 @author t-sakai
@@ -54,4 +54,4 @@ namespace lfw
         u8 numMeshes_;
     };
 }
-#endif //INC_LFRAMEWORK_LOADNODE_H__
+#endif //INC_LFRAMEWORK_LOADNODE_H_

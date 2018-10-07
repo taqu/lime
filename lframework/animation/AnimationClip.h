@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_ANIMATIONCLIP_H__
-#define INC_LFRAMEWORK_ANIMATIONCLIP_H__
+﻿#ifndef INC_LFRAMEWORK_ANIMATIONCLIP_H_
+#define INC_LFRAMEWORK_ANIMATIONCLIP_H_
 /**
 @file AnimationClip.h
 @author t-sakai
@@ -39,8 +39,8 @@ namespace lfw
         /// 名前セット
         inline void setName(s32 length, const Char* name);
 
-        static bool serialize(lcore::ostream& os, AnimationClip* anim);
-        static bool deserialize(AnimationClip** ppAnim, lcore::istream& is);
+        static bool serialize(lcore::File& os, AnimationClip* anim);
+        static bool deserialize(AnimationClip** ppAnim, lcore::File& is);
     private:
         AnimationClip(const AnimationClip&);
         AnimationClip& operator=(const AnimationClip&);
@@ -121,4 +121,4 @@ namespace lfw
         }
     }
 }
-#endif //INC_LFRAMEWORK_ANIMATIONCLIP_H__
+#endif //INC_LFRAMEWORK_ANIMATIONCLIP_H_

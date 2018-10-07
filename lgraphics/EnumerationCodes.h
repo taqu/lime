@@ -1,5 +1,5 @@
-#ifndef INC_ENUMERATIONCODES_H__
-#define INC_ENUMERATIONCODES_H__
+#ifndef INC_ENUMERATIONCODES_H_
+#define INC_ENUMERATIONCODES_H_
 /**
 @file EnumerationCodes.h
 @author t-sakai
@@ -349,4 +349,4 @@ namespace lgfx
     VertexBlend decodeVertexBlend(CodeVertexBlend type);
 #endif //LGFX_GL
 }
-#endif //INC_ENUMERATIONCODES_H__
+#endif //INC_ENUMERATIONCODES_H_

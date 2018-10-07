@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_DX11_SAMPLERSTATEREF_H__
-#define INC_LGRAPHICS_DX11_SAMPLERSTATEREF_H__
+﻿#ifndef INC_LGRAPHICS_DX11_SAMPLERSTATEREF_H_
+#define INC_LGRAPHICS_DX11_SAMPLERSTATEREF_H_
 /**
 @file SamplerStateRef.h
 @author t-sakai
@@ -91,4 +91,4 @@ namespace lgfx
             f32 borderColor);
     };
 }
-#endif //INC_LGRAPHICS_DX11_SAMPLERSTATEREF_H__
+#endif //INC_LGRAPHICS_DX11_SAMPLERSTATEREF_H_

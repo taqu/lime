@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_FRUSTUM_H__
-#define INC_LFRAMEWORK_FRUSTUM_H__
+﻿#ifndef INC_LFRAMEWORK_FRUSTUM_H_
+#define INC_LFRAMEWORK_FRUSTUM_H_
 /**
 @file Frustum.h
 @author t-sakai
@@ -94,4 +94,4 @@ namespace lfw
     };
 
 }
-#endif //INC_LFRAMEWORK_FRUSTUM_H__
+#endif //INC_LFRAMEWORK_FRUSTUM_H_

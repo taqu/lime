@@ -1,8 +1,8 @@
 ﻿//-----------------------------------------------------------------------------
 // MurmurHash3 was written by Austin Appleby, and is placed in the public
 // domain. The author hereby disclaims copyright to this source code.
-#ifndef INC_LCORE_MURMURHASH_H__
-#define INC_LCORE_MURMURHASH_H__
+#ifndef INC_LCORE_MURMURHASH_H_
+#define INC_LCORE_MURMURHASH_H_
 /**
 @file MurmurHash.h
 @author t-sakai
@@ -33,4 +33,4 @@ namespace lcore
 
     u32 MurmurHash32(const u8* data, s32 length, u32 seed=88675123U);
 }
-#endif //INC_LCORE_MURMURHASH_H__
+#endif //INC_LCORE_MURMURHASH_H_

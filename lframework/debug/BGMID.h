@@ -1,5 +1,5 @@
-#ifndef INC_SAMPLES_BGMID_H__
-#define INC_SAMPLES_BGMID_H__
+#ifndef INC_SAMPLES_BGMID_H_
+#define INC_SAMPLES_BGMID_H_
 /**
 @file BGMID.h
 @author t-sakai
@@ -13,4 +13,4 @@ namespace debug
 #include "sound/BGM.txt"
     };
 }
-#endif //INC_SAMPLES_BGMID_H__
+#endif //INC_SAMPLES_BGMID_H_

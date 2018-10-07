@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_INTRUSIVE_PTR_H__
-#define INC_LCORE_INTRUSIVE_PTR_H__
+﻿#ifndef INC_LCORE_INTRUSIVE_PTR_H_
+#define INC_LCORE_INTRUSIVE_PTR_H_
 /**
 @file intrusive_ptr.h
 @author t-sakai
@@ -18,29 +18,33 @@ namespace lcore
     struct intrusive_ptr_traits
     {
         typedef T& reference_type;
+        typedef const T& const_reference_type;
     };
 
     template<>
     struct intrusive_ptr_traits<void>
     {
         typedef void reference_type;
+        typedef void const_reference_type;
     };
 
     template<class T>
     class intrusive_ptr
     {
     public:
+        typedef intrusive_ptr<T> this_type;
         typedef T value_type;
         typedef T* pointer_type;
-        typedef intrusive_ptr<T> this_type;
+        typedef const T* const_pointer_type;
         typedef typename intrusive_ptr_traits<T>::reference_type reference_type;
+        typedef typename intrusive_ptr_traits<T>::const_reference_type const_reference_type;
 
         intrusive_ptr()
             :pointer_(NULL)
         {
         }
 
-        explicit intrusive_ptr(T* pointer)
+        intrusive_ptr(T* pointer)
             :pointer_(pointer)
         {
             if(NULL != pointer_){
@@ -56,8 +60,14 @@ namespace lcore
             }
         }
 
+        intrusive_ptr(this_type&& rhs)
+            :pointer_(rhs.pointer_)
+        {
+            rhs.pointer_ = NULL;
+        }
+
         template<class U>
-        explicit intrusive_ptr(U* ptr)
+        intrusive_ptr(U* ptr)
             :pointer_(ptr)
         {
             if(NULL != pointer_){
@@ -66,7 +76,7 @@ namespace lcore
         }
 
         template<class U>
-        intrusive_ptr(const intrusive_ptr<U>& rhs)
+        intrusive_ptr(intrusive_ptr<U>& rhs)
             :pointer_(rhs.get())
         {
             if(NULL != pointer_){
@@ -81,7 +91,12 @@ namespace lcore
             }
         }
 
-        pointer_type get() const
+        const_pointer_type get() const
+        {
+            return pointer_;
+        }
+
+        pointer_type get()
         {
             return pointer_;
         }
@@ -104,22 +119,22 @@ namespace lcore
             return dynamic_cast<U*>(pointer_);
         }
 
-        //operator pointer_type()
-        //{
-        //    return pointer_;
-        //}
-
-        //operator const pointer_type() const
-        //{
-        //    return pointer_;
-        //}
-
-        reference_type operator*() const
+        const_reference_type operator*() const
         {
             return *pointer_;
         }
 
-        pointer_type operator->() const
+        reference_type operator*()
+        {
+            return *pointer_;
+        }
+
+        const_pointer_type operator->() const
+        {
+            return pointer_;
+        }
+
+        pointer_type operator->()
         {
             return pointer_;
         }
@@ -134,11 +149,13 @@ namespace lcore
             return (NULL == pointer_);
         }
 
-        intrusive_ptr& operator=(const intrusive_ptr& rhs)
+        intrusive_ptr& operator=(const this_type& rhs)
         {
             this_type(rhs).swap(*this);
             return *this;
         }
+
+        this_type& operator=(this_type&& rhs);
 
         intrusive_ptr& operator=(T* rhs)
         {
@@ -146,16 +163,33 @@ namespace lcore
             return *this;
         }
 
-        void swap(intrusive_ptr& rhs)
-        {
-            T* tmp = pointer_;
-            pointer_ = rhs.pointer_;
-            rhs.pointer_ = tmp;
-        }
+        void swap(this_type& rhs);
     private:
 
         T *pointer_;
     };
+
+    template<class T>
+    typename intrusive_ptr<T>::this_type& intrusive_ptr<T>::operator=(this_type&& rhs)
+    {
+        if(this == &rhs){
+            return *this;
+        }
+        if(NULL != pointer_){
+            intrusive_ptr_release(pointer_);
+        }
+        pointer_ = rhs.pointer_;
+        rhs.pointer_ = NULL;
+        return *this;
+    }
+
+    template<class T>
+    void intrusive_ptr<T>::swap(this_type& rhs)
+    {
+        T* tmp = pointer_;
+        pointer_ = rhs.pointer_;
+        rhs.pointer_ = tmp;
+    }
 
     template<class T, class U>
     inline bool operator==(const intrusive_ptr<T>& left, const intrusive_ptr<U>& right)
@@ -193,6 +227,31 @@ namespace lcore
         return left != right.get();
     }
 
+    //--- std::null_ptr_t
+    //-------------------------------------------------------------------
+    template<class T>
+    inline bool operator==(const intrusive_ptr<T>& left, const std::nullptr_t right)
+    {
+        return left.get() == right;
+    }
+
+    template<class T>
+    inline bool operator!=(const intrusive_ptr<T>& left, const std::nullptr_t right)
+    {
+        return left.get() != right;
+    }
+
+    template<class T>
+    inline bool operator==(const std::nullptr_t left, const intrusive_ptr<T>& right)
+    {
+        return left == right.get();
+    }
+
+    template<class T>
+    inline bool operator!=(const std::nullptr_t left, const intrusive_ptr<T>& right)
+    {
+        return left != right.get();
+    }
 
     template<class T>
     inline bool operator<(const intrusive_ptr<T>& left, const intrusive_ptr<T>& right)
@@ -243,4 +302,4 @@ namespace lcore
     }
 
 }
-#endif //INC_LCORE_INTRUSIVE_PTR_H__
+#endif //INC_LCORE_INTRUSIVE_PTR_H_

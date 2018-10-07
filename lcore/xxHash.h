@@ -26,8 +26,8 @@
    You can contact the author at :
    - xxHash source repository : https://github.com/Cyan4973/xxHash
 */
-#ifndef INC_LCORE_XXHASH_H__
-#define INC_LCORE_XXHASH_H__
+#ifndef INC_LCORE_XXHASH_H_
+#define INC_LCORE_XXHASH_H_
 /**
 @file xxHash.h
 @author t-sakai
@@ -135,4 +135,4 @@ namespace lcore
         return xxHash64_8(reinterpret_cast<const u8*>(&x), seed);
     }
 }
-#endif //INC_LCORE_XXHASH_H__
+#endif //INC_LCORE_XXHASH_H_

@@ -59,7 +59,6 @@ namespace lfw
         }
         queue.entries_[queue.size_].depth_ = depth;
         queue.entries_[queue.size_].component_ = component;
-        lmath::lm128 bmin, bmax;
         ++queue.size_;
     }
 

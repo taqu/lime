@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_COUNTERREF_H__
-#define INC_LGRAPHICS_COUNTERREF_H__
+#ifndef INC_LGRAPHICS_COUNTERREF_H_
+#define INC_LGRAPHICS_COUNTERREF_H_
 /**
 @file CounterRef.h
 @author t-sakai
@@ -17,4 +17,4 @@
 #elif defined(LGFX_GLES2)
 #endif
 
-#endif //INC_LGRAPHICS_COUNTERREF_H__
+#endif //INC_LGRAPHICS_COUNTERREF_H_

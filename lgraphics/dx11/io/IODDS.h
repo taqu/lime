@@ -1,13 +1,11 @@
-﻿#ifndef INC_LGRAPHICS_DX11_IODDS_H__
-#define INC_LGRAPHICS_DX11_IODDS_H__
+﻿#ifndef INC_LGRAPHICS_DX11_IODDS_H_
+#define INC_LGRAPHICS_DX11_IODDS_H_
 /**
 @file IODDS.h
 @author t-sakai
 @date 2012/07/26 create
 */
-#include "../../lgraphics.h"
-#include <lcore/liostream.h>
-#include "../../Enumerations.h"
+#include "../../io/IOImage.h"
 
 namespace lgfx
 {
@@ -54,7 +52,7 @@ namespace io
             u32 reserved2_;
         };
 
-        static bool checkSignature(lcore::istream& is);
+        static bool checkSignature(Stream& is);
 
         static bool read(
             Texture2DRef& texture,
@@ -64,8 +62,9 @@ namespace io
             BindFlag bindFlag,
             CPUAccessFlag access,
             ResourceMisc misc,
-            bool sRGB,
-            u32& width, u32& height, DataFormat& format);
+            s32& width,
+            s32& height,
+            DataFormat& format);
 
         static bool read(
             Texture3DRef& texture,
@@ -75,9 +74,11 @@ namespace io
             BindFlag bindFlag,
             CPUAccessFlag access,
             ResourceMisc misc,
-            bool sRGB,
-            u32& width, u32& height, u32& depth, DataFormat& format);
+            s32& width,
+            s32& height,
+            s32& depth,
+            DataFormat& format);
     };
 }
 }
-#endif //INC_LGRAPHICS_DX11_IODDS_H__
+#endif //INC_LGRAPHICS_DX11_IODDS_H_

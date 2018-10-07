@@ -5,7 +5,7 @@
 */
 #include "resource/ModelLoader.h"
 
-#include <lcore/liostream.h>
+#include <lcore/File.h>
 #include <lgraphics/InputLayoutRef.h>
 #include <lgraphics/VertexBufferRef.h>
 #include <lgraphics/IndexBufferRef.h>
@@ -150,7 +150,7 @@ namespace lfw
             directoryPathLength_ = len;
             path_ = LNEW Char[directoryPathLength_+MaxNameSize]; //ファイル名のサイズだけ余分に確保
         }
-        directoryPathLength_ = lcore::extractDirectoryPath(path_, len, path);
+        directoryPathLength_ = lcore::Path::extractDirectoryPath(path_, len, path);
     }
 
     void ModelLoader::clearFileStream(lcore::FileProxy* file)
@@ -285,7 +285,7 @@ namespace lfw
 
         s32 size = tmp.vsize_*tmp.numVertices_;
         u8* vertices = static_cast<u8*>(LMALLOC(size));
-        if(size != fileStream_.read(vertices, size)){
+        if(!fileStream_.read(size, vertices)){
             LFREE(vertices);
             return false;
         }
@@ -302,7 +302,7 @@ namespace lfw
         size = sizeof(u16) * tmp.numIndices_;
         u16* indices = static_cast<u16*>(LMALLOC(size));
 
-        if(size != fileStream_.read(indices, size)){
+        if(!fileStream_.read(size, indices)){
             LFREE(indices);
             LFREE(vertices);
             return false;
@@ -436,13 +436,13 @@ namespace lfw
         if(fileSystem_){
             resTex = resources.load(setID, path_, ResourceType_Texture2D, texParam).get_reinterpret_cast<ResourceTexture2D>();
         }else{
-            lcore::ifstream file(path_, lcore::ios::binary);
+            lcore::File file(path_, lcore::ios::in);
             if(!file.is_open()){
                 return false;
             }
-            u32 size = file.getSize();
+            s64 size = file.size();
             u8* buffer = LNEW u8[size];
-            lcore::io::read(file, buffer, size);
+            file.read(size, buffer);
             resTex = ResourceTexture2D::load(path_, size, buffer, texParam);
             LDELETE_ARRAY(buffer);
         }
@@ -552,7 +552,7 @@ namespace lfw
         LoadTexture* textures = LNEW LoadTexture[numTextures];
 
         fileStream_.seekg(offsetTextures, lcore::ios::beg);
-        fileStream_.read(textures, sizeof(LoadTexture)*numTextures);
+        fileStream_.read(sizeof(LoadTexture)*numTextures, textures);
         clearFileStream(file);
         return textures;
     }
@@ -560,7 +560,7 @@ namespace lfw
     //
     bool ModelLoader::save(const Char* filepath, Model& model, LoadTexture* textures, Skeleton* skeleton)
     {
-        lcore::ofstream os(filepath, lcore::ios::binary);
+        lcore::File os(filepath, lcore::ios::out);
         if(!os.is_open()){
             return false;
         }
@@ -675,24 +675,24 @@ namespace lfw
         loadHeader.elems_[Elem_Texture].offset_ = offset;
 
 
-        lcore::io::write(os, loadHeader);
+        os.write(loadHeader);
         for(s32 i=0; i<model.getNumGeometries(); ++i){
             Geometry& geometry = model.getGeometry(i);
 
-            lcore::io::write(os, loadGeometries[i]);
-            lcore::io::write(os, geometry.getVertices(), geometry.getVSize()*geometry.getNumVertices());
-            lcore::io::write(os, geometry.getIndices(), sizeof(u16)*geometry.getNumIndices());
+            os.write(loadGeometries[i]);
+            os.write(geometry.getVSize()*geometry.getNumVertices(), geometry.getVertices());
+            os.write(sizeof(u16)*geometry.getNumIndices(), geometry.getIndices());
         }
 
-        lcore::io::write(os, loadMaterials, sizeof(LoadMaterial)*model.getNumMaterials());
-        lcore::io::write(os, loadMeshes, sizeof(LoadMesh)*model.getNumMeshes());
-        lcore::io::write(os, loadNodes, sizeof(LoadNode)*model.getNumNodes());
+        os.write(sizeof(LoadMaterial)*model.getNumMaterials(), loadMaterials);
+        os.write(sizeof(LoadMesh)*model.getNumMeshes(), loadMeshes);
+        os.write(sizeof(LoadNode)*model.getNumNodes(), loadNodes);
         if(NULL != loadJoints){
-            lcore::io::write(os, loadJoints, sizeof(LoadJoint)*skeleton->getNumJoints());
+            os.write(sizeof(LoadJoint)*skeleton->getNumJoints(), loadJoints);
         }
 
         if(NULL != textures){
-            lcore::io::write(os, textures, sizeof(LoadTexture)*model.getNumTextures());
+            os.write(sizeof(LoadTexture)*model.getNumTextures(), textures);
         }
 
         os.close();

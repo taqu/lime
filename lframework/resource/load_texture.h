@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_LOADTEXTURE_H__
-#define INC_LFRAMEWORK_LOADTEXTURE_H__
+#ifndef INC_LFRAMEWORK_LOADTEXTURE_H_
+#define INC_LFRAMEWORK_LOADTEXTURE_H_
 /**
 @file load_texture.h
 @author t-sakai
@@ -20,4 +20,4 @@ namespace lfw
         Char name_[MaxFileNameSize];
     };
 }
-#endif //INC_LFRAMEWORK_LOADTEXTURE_H__
+#endif //INC_LFRAMEWORK_LOADTEXTURE_H_

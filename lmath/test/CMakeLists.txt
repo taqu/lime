@@ -24,7 +24,7 @@ set(FILES ${HEADERS} ${FILES})
 add_executable(${ProjectTest} ${FILES})
 
 if(MSVC)
-target_link_libraries(${ProjectTest} LCORE LMATH GTEST)
+target_link_libraries(${ProjectTest} LCORE LMATH)
 target_link_libraries(${ProjectTest} ${LCORE_DEPEND_LIBS} ${LMATH_DEPEND_LIBS})
 
 set_target_properties(${ProjectTest} PROPERTIES

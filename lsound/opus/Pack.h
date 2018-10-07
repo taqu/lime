@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_PACK_H__
-#define INC_LSOUND_PACK_H__
+#ifndef INC_LSOUND_PACK_H_
+#define INC_LSOUND_PACK_H_
 /**
 @file Pack.h
 @author t-sakai
@@ -11,15 +11,13 @@ namespace lsound
 {
     struct PackHeader
     {
-        u8 reserved0_;
-        u8 reserved1_;
-        u16 numFiles_;
+        u32 numFiles_;
     };
 
     struct FileEntry
     {
-        u32 size_;
-        s32 offset_;
+        s64 size_;
+        s64 offset_;
     };
 
     class Pack
@@ -28,24 +26,29 @@ namespace lsound
         Pack();
         ~Pack();
 
-        /// ÉtÉ@ÉCÉãêîéÊìæ
+        /**
+        @return Number of files
+        */
         u32 getNumFiles() const;
 
-        u32 getSize(u32 index) const;
+        s64 getSize(u32 index) const;
         const u8* getData(u32 index) const;
 
-        s32 getFileOffset(u32 index) const;
+        s64 getFileOffset(u32 index) const;
 
         void swap(Pack& rhs);
     private:
+        Pack(const Pack&) = delete;
+        Pack(Pack&&) = delete;
+        Pack& operator=(const Pack&) = delete;
+        Pack& operator=(Pack&&) = delete;
+
         friend class PackReader;
-        void releaseEntries();
-        void releaseData();
 
         PackHeader header_;
         FileEntry* entries_;
-        s32 dataTopOffset_;
+        s64 dataTopOffset_;
         u8* data_;
     };
 }
-#endif //INC_LSOUND_PACK_H__
+#endif //INC_LSOUND_PACK_H_

@@ -250,7 +250,7 @@ namespace lfw
             f32 logZ = znear_ * lmath::pow(farOverNear, step);
             f32 uniformZ = zextent * step;
 
-            f32 zfar = lcore::lerp(uniformZ, logZ, logRatio);
+            f32 zfar = lcore::lerpf(uniformZ, logZ, logRatio);
 
             cascadePartitions_[i] = zfar;
             cascadeScales_[i-1] = (zfar-cascadePartitions_[i-1]);

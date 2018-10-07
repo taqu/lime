@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include <stdarg.h>
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 
 #if !defined(WIN32_LEAN_AND_MEAN)
 #define WIN32_LEAN_AND_MEAN
@@ -38,6 +38,9 @@
 #if defined(_DEBUG) && !defined(ANDROID)
 #define LCORE_DEBUG_MEMORY_INFO
 #endif
+
+#define USE_SSE2
+#include "sse_mathfun.h"
 
 namespace
 {
@@ -447,42 +450,60 @@ namespace
         return ++x;
     }
 
+    //--- SIMD Math
+    //-----------------------------------------------------
+    __m128 log(const __m128& x)
+    {
+        return log_ps(x);
+    }
+
+    __m128 exp(const __m128& x)
+    {
+        return exp_ps(x);
+    }
+
+    __m128 pow(const __m128& x, const __m128& y)
+    {
+        return exp_ps(_mm_mul_ps(y, log_ps(x)));
+    }
+
     bool isLittleEndian()
     {
         u32 v = 1;
         return *reinterpret_cast<u8*>(&v) != 0;
     }
 
-    u16 toBinary16Float(f32 f)
+    u16 toFloat16(f32 f)
     {
-        U32F32Union t;
-        t.f_ = f;
+#if defined(LCORE_DISABLE_F16C)
+        UnionU32F32 t;
+        t.f32_ = f;
 
-        u16 sign = (t.u_>>16) & 0x8000U;
-        s32 exponent = (t.u_>>23) & 0x00FFU;
-        u32 fraction = t.u_ & 0x007FFFFFU;
+        u16 sign = (t.u32_>>16) & 0x8000U;
+        s32 exponent = (t.u32_>>23) & 0x00FFU;
+        u32 fraction = t.u32_ & 0x007FFFFFU;
 
         if(exponent == 0){
-            return sign; //符号付き0
+            return sign; //Signed zero
 
         }else if(exponent == 0xFFU){
             if(fraction == 0){
-                return sign | 0x7C00U; //符号付きInf
+                return sign | 0x7C00U; //Signed infinity
             }else{
                 return static_cast<u16>((fraction>>13) | 0x7C00U); //NaN
             }
         }else {
             exponent += (-127 + 15);
-            if(exponent>=0x1F){ //オーバーフロー
+            if(exponent>=0x1F){ //Overflow
                 return sign | 0x7C00U;
-            }else if(exponent<=0){ //アンダーフロー
+            }else if(exponent<=0){ //Underflow
                 s32 shift = 14 - exponent;
-                if(shift>24){ //表現できないほど小さい
+                if(shift>24){ //Too small
                     return sign;
                 }else{
-                    fraction |= 0x800000U; //隠れた整数ビット足す
+                    fraction |= 0x800000U; //Add hidden bit
                     u16 frac = static_cast<u16>(fraction >> shift);
-                    if((fraction>>(shift-1)) & 0x01U){ //１ビット下位を丸める
+                    if((fraction>>(shift-1)) & 0x01U){ //Round lowest 1 bit
                         frac += 1;
                     }
                     return sign | frac;
@@ -491,19 +512,24 @@ namespace
         }
 
         u16 ret = static_cast<u16>(sign | ((exponent<<10) & 0x7C00U) | (fraction>>13));
-        if((fraction>>12) & 0x01U){ //１ビット下位を丸める
+        if((fraction>>12) & 0x01U){ //Round lower 1 bit
             ret += 1;
         }
         return ret;
+#else
+        __declspec(align(16)) u16 result[8];
+        _mm_store_si128((__m128i*)result, _mm_cvtps_ph(_mm_set1_ps(f), 0)); //round to nearest
+        return result[0];
+#endif
     }
 
-    f32 fromBinary16Float(u16 s)
+    f32 toFloat32(u16 h)
     {
-        u32 sign = (s & 0x8000U) << 16;
-        u32 exponent = ((s & 0x7C00U) >> 10);
-        u32 fraction = (s & 0x03FFU);
+#if defined(LCORE_DISABLE_F16C)
+        u32 sign = (h & 0x8000U) << 16;
+        u32 exponent = ((h & 0x7C00U) >> 10);
+        u32 fraction = (h & 0x03FFU);
 
-        U32F32Union t;
         if(exponent == 0){
             if(fraction != 0){
                 fraction <<= 1;
@@ -516,15 +542,21 @@ namespace
             }
 
         }else if(exponent == 0x1FU){
-            exponent = 0xFFU; //Infinity か NaN
+            exponent = 0xFFU; //Infinity or NaN
 
         }else{
             exponent += (127 - 15);
         }
 
-         t.u_ = sign | (exponent<<23) | (fraction<<13);
+        UnionU32F32 t;
+        t.u32_ = sign | (exponent<<23) | (fraction<<13);
 
-        return t.f_;
+        return t.f32_;
+#else
+        __declspec(align(16)) f32 result[4];
+        _mm_store_ps(result, _mm_cvtph_ps(_mm_set1_epi16(*(s16*)&h)));
+        return result[0];
+#endif
     }
 
     s8 floatTo8SNORM(f32 f)
@@ -702,10 +734,30 @@ namespace
         return x;
     }
 
+    // return undefined, if x==0
+    u32 leadingzero(u32 x)
+    {
+#if defined(_MSC_VER)
+        DWORD n;
+        _BitScanReverse(&n, x);
+        return 31-n;
+#elif defined(__GNUC__)
+        return __builtin_clz(x);
+#else
+        u32 n = 0;
+        if(x<=0x0000FFFFU){ n+=16; x<<=16;}
+        if(x<=0x00FFFFFFU){ n+= 8; x<<= 8;}
+        if(x<=0x0FFFFFFFU){ n+= 4; x<<= 4;}
+        if(x<=0x3FFFFFFFU){ n+= 2; x<<= 2;}
+        if(x<=0x7FFFFFFFU){ ++n;}
+        return n;
+#endif
+    }
+
     void initializeSystem()
     {
 #ifdef _DEBUG
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 #endif
 
@@ -714,8 +766,8 @@ namespace
 #endif
 #endif
 
-#if defined(_WIN32) || defined(_WIN64)
-        timeBeginPeriod(1);
+#if defined(_WIN32)
+        //timeBeginPeriod(1);
 #endif
     }
 
@@ -727,8 +779,8 @@ namespace
 #endif
 #endif
 
-#if defined(_WIN32) || defined(_WIN64)
-        timeEndPeriod(1);
+#if defined(_WIN32)
+        //timeEndPeriod(1);
 #endif
     }
 
@@ -760,15 +812,15 @@ namespace
 
         Char buffer[MaxBuffer+2];
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         s32 count=vsnprintf_s(buffer, MaxBuffer, format, ap);
 #else
         s32 count = ::vsnprintf(buffer, MaxBuffer, format, ap);
-#endif //defined(_WIN32) || defined(_WIN64)
+#endif //defined(_WIN32)
         if(count<0){
             count = MaxBuffer;
         }
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         buffer[count] = '\n';
         buffer[count+1] = CharNull;
         OutputDebugString(buffer);
@@ -776,7 +828,7 @@ namespace
         buffer[count] = '\n';
         buffer[count+1] = CharNull;
         std::cerr << buffer;
-#endif //defined(_WIN32) || defined(_WIN64)
+#endif //defined(_WIN32)
 
 #endif //defined(ANDROID)
 
@@ -789,6 +841,97 @@ namespace
     //--- Color
     //---
     //---------------------------------------------------------
+    u8 toColorU8(f32 x)
+    {
+        LASSERT(0.0f<=x);
+        s32 ix = static_cast<s32>(x*256.0f);
+        return ix<256 ? static_cast<u8>(ix) : 255;
+    }
+
+    f32 toColorF32(u8 x)
+    {
+        const f32 ratio = 1.0f/255.0f;
+        return static_cast<f32>(x)*ratio;
+    }
+
+    u32 getARGB(u8 a, u8 r, u8 g, u8 b)
+    {
+        return (a << 24) | (r << 16) | (g << 8) | b;
+    }
+
+    u32 getABGR(u8 a, u8 r, u8 g, u8 b)
+    {
+        return (a << 24) | r | (g << 8) | (b << 16);
+    }
+
+    u32 getRGBA(u8 a, u8 r, u8 g, u8 b)
+    {
+        return (r << 24) | (g << 16) | (b << 8) | a;
+    }
+
+
+    u8 getAFromARGB(u32 argb)
+    {
+        return static_cast<u8>((argb>>24) & 0xFFU);
+    }
+
+    u8 getRFromARGB(u32 argb)
+    {
+        return static_cast<u8>((argb>>16) & 0xFFU);
+    }
+
+    u8 getGFromARGB(u32 argb)
+    {
+        return static_cast<u8>((argb>>8) & 0xFFU);
+    }
+
+    u8 getBFromARGB(u32 argb)
+    {
+        return static_cast<u8>((argb) & 0xFFU);
+    }
+
+
+    u8 getAFromABGR(u32 abgr)
+    {
+        return static_cast<u8>((abgr>>24) & 0xFFU);
+    }
+
+    u8 getRFromABGR(u32 abgr)
+    {
+        return static_cast<u8>((abgr) & 0xFFU);
+    }
+
+    u8 getGFromABGR(u32 abgr)
+    {
+        return static_cast<u8>((abgr>>8) & 0xFFU);
+    }
+
+    u8 getBFromABGR(u32 abgr)
+    {
+        return static_cast<u8>((abgr>>16) & 0xFFU);
+    }
+
+
+    u8 getRFromRGBA(u32 rgba)
+    {
+        return static_cast<u8>((rgba>>24) & 0xFFU);
+    }
+
+    u8 getGFromRGBA(u32 rgba)
+    {
+        return static_cast<u8>((rgba>>16) & 0xFFU);
+    }
+
+    u8 getBFromRGBA(u32 rgba)
+    {
+        return static_cast<u8>((rgba>>8) & 0xFFU);
+    }
+
+    u8 getAFromRGBA(u32 rgba)
+    {
+        return static_cast<u8>((rgba) & 0xFFU);
+    }
+
     u8 getLuminance(u8 r, u8 g, u8 b)
     {
         return static_cast<u8>(r * 0.212671f + g * 0.715160f + b * 0.072169f);
@@ -798,6 +941,223 @@ namespace
     {
         return r * 0.212671f + g * 0.715160f + b * 0.072169f;
     }
+
+    u16 getARGB4444(u32 argb)
+    {
+        u16 a = static_cast<u16>((argb>> 16)&0xF000U);
+        u16 r = static_cast<u16>((argb>> 12)&0x0F00U);
+        u16 g = static_cast<u16>((argb>>  8)&0x00F0U);
+        u16 b = static_cast<u16>((argb>>  4)&0x000FU);
+        return r|g|b|a;
+    }
+
+    u16 getABGR4444(u32 abgr)
+    {
+        u16 a = static_cast<u16>((abgr>> 16)&0xF000U);
+        u16 b = static_cast<u16>((abgr>> 12)&0x0F00U);
+        u16 g = static_cast<u16>((abgr>>  8)&0x00F0U);
+        u16 r = static_cast<u16>((abgr>>  4)&0x000FU);
+        return r|g|b|a;
+    }
+
+    u16 getRGBA4444(u32 rgba)
+    {
+        u16 r = static_cast<u16>((rgba>> 16)&0xF000U);
+        u16 g = static_cast<u16>((rgba>> 12)&0x0F00U);
+        u16 b = static_cast<u16>((rgba>>  8)&0x00F0U);
+        u16 a = static_cast<u16>((rgba>>  4)&0x000FU);
+        return r|g|b|a;
+    }
+
+    u32 getARGB4444(u8 a, u8 r, u8 g, u8 b)
+    {
+        return ((a&0xF0U) << 8) | ((r&0xF0U) << 4) | ((g&0xF0U)) | ((b&0xF0U) >> 4);
+    }
+
+    u32 getABGR4444(u8 a, u8 r, u8 g, u8 b)
+    {
+        return ((a&0xF0U) << 8) | ((b&0xF0U) << 4) | ((g&0xF0U)) | ((r&0xF0U) >> 4);
+    }
+
+    u32 getRGBA4444(u8 a, u8 r, u8 g, u8 b)
+    {
+        return ((r&0xF0U) << 8) | ((g&0xF0U) << 4) | ((b&0xF0U)) | ((a&0xF0U) >> 4);
+    }
+
+    namespace
+    {
+        __m128 fastpow_ps(__m128 x, __m128 y)
+        {
+            __m128 one = _mm_set1_ps(1.0f);
+            __m128 half = _mm_set1_ps(0.5f);
+
+            __m128 a = _mm_sub_ps(one, y);
+            __m128 b = _mm_sub_ps(x, one);
+            __m128 aSq = _mm_mul_ps(a, a);
+            __m128 bSq = _mm_mul_ps(b, b);
+            __m128 c = _mm_mul_ps(half, bSq);
+            __m128 d = _mm_sub_ps(b, c);
+            __m128 dSq = _mm_mul_ps(d, d);
+            __m128 e = _mm_mul_ps(aSq, dSq);
+            __m128 f = _mm_mul_ps(a, d);
+            __m128 g = _mm_mul_ps(half, e);
+            __m128 h = _mm_add_ps(one, f);
+            __m128 i = _mm_add_ps(h, g);
+            __m128 iRcp = _mm_rcp_ps(i);
+            __m128 result = _mm_mul_ps(x, iRcp);
+
+            return result;
+        }
+
+        void toSRGB(f32* drgba, const __m128& rgba)
+        {
+            __m128 f0031308 = _mm_set1_ps(0.0031308f);
+            __m128 f1292 = _mm_set1_ps(12.92f);
+            __m128 f1055 = _mm_set1_ps(1.055f);
+            __m128 fi24 = _mm_set1_ps(1.0f/2.4f);
+            __m128 f0055 = _mm_set1_ps(0.055f);
+
+            __m128 r0 = _mm_mul_ps(f1292, rgba);
+            //__m128 r1 = _mm_sub_ps( _mm_mul_ps(f1055, pow(rgba, fi24)), f0055);
+            __m128 r1 = _mm_sub_ps(_mm_mul_ps(f1055, fastpow_ps(rgba, fi24)), f0055);
+            __m128 c0 = _mm_cmp_ps(rgba, f0031308, _CMP_LE_OQ);
+            __m128 c1 = _mm_cmp_ps(rgba, f0031308, _CMP_GT_OQ);
+            __m128 r = _mm_or_ps(_mm_and_ps(r0, c0), _mm_and_ps(r1, c1));
+
+            _mm_storeu_ps(drgba, r);
+        }
+
+        void toLinear(f32* drgba, const __m128& rgba)
+        {
+            __m128 f04045 = _mm_set1_ps(0.04045f);
+            __m128 fi1292 = _mm_set1_ps(1.0f/12.92f);
+            __m128 f0055 = _mm_set1_ps(0.055f);
+            __m128 fi1055 = _mm_set1_ps(1.0f/1.055f);
+            __m128 f24 = _mm_set1_ps(2.4f);
+
+            __m128 r0 = _mm_mul_ps(fi1292, rgba);
+            //__m128 r1 = pow(_mm_mul_ps(_mm_add_ps(rgba, f0055), fi1055), f24);
+            __m128 r1 = fastpow_ps(_mm_mul_ps(_mm_add_ps(rgba, f0055), fi1055), f24);
+            __m128 c0 = _mm_cmp_ps(rgba, f04045, _CMP_LE_OQ);
+            __m128 c1 = _mm_cmp_ps(rgba, f04045, _CMP_GT_OQ);
+            __m128 r = _mm_or_ps(_mm_and_ps(r0,c0), _mm_and_ps(r1,c1));
+
+            _mm_storeu_ps(drgba, r);
+        }
+    }
+
+    u32 toSRGB_NOSIMD(u32 rgba)
+    {
+        f32 frgba[4];
+        frgba[0] = toColorF32(getRFromRGBA(rgba));
+        frgba[1] = toColorF32(getGFromRGBA(rgba));
+        frgba[2] = toColorF32(getBFromRGBA(rgba));
+        frgba[3] = toColorF32(getAFromRGBA(rgba));
+        toSRGB_NOSIMD(frgba, frgba);
+        u8 r = toColorU8(frgba[0]);
+        u8 g = toColorU8(frgba[1]);
+        u8 b = toColorU8(frgba[2]);
+        u8 a = toColorU8(frgba[3]);
+        return getRGBA(a, r, g, b);
+    }
+
+    void toSRGB_NOSIMD(f32* drgba, const f32* srgba)
+    {
+        drgba[0] = (srgba[0]<=0.0031308f) ? 12.92f*srgba[0] : 1.055f*powf(srgba[0], 1.0f/2.4f) - 0.055f;
+        drgba[1] = (srgba[1]<=0.0031308f) ? 12.92f*srgba[1] : 1.055f*powf(srgba[1], 1.0f/2.4f) - 0.055f;
+        drgba[2] = (srgba[2]<=0.0031308f) ? 12.92f*srgba[2] : 1.055f*powf(srgba[2], 1.0f/2.4f) - 0.055f;
+        drgba[3] = srgba[3];
+    }
+
+    u32 toLinear_NOSIMD(u32 rgba)
+    {
+        f32 frgba[4];
+        frgba[0] = toColorF32(getRFromRGBA(rgba));
+        frgba[1] = toColorF32(getGFromRGBA(rgba));
+        frgba[2] = toColorF32(getBFromRGBA(rgba));
+        frgba[3] = toColorF32(getAFromRGBA(rgba));
+        toLinear_NOSIMD(frgba, frgba);
+        u8 r = toColorU8(frgba[0]);
+        u8 g = toColorU8(frgba[1]);
+        u8 b = toColorU8(frgba[2]);
+        u8 a = toColorU8(frgba[3]);
+        return getRGBA(a, r, g, b);
+    }
+
+    void toLinear_NOSIMD(f32* drgba, const f32* srgba)
+    {
+        drgba[0] = (srgba[0]<=0.04045f) ? srgba[0]/12.92f : powf((srgba[0]+0.055f)/1.055f, 2.4f);
+        drgba[1] = (srgba[1]<=0.04045f) ? srgba[1]/12.92f : powf((srgba[1]+0.055f)/1.055f, 2.4f);
+        drgba[2] = (srgba[2]<=0.04045f) ? srgba[2]/12.92f : powf((srgba[2]+0.055f)/1.055f, 2.4f);
+        drgba[3] = srgba[3];
+    }
+
+    u32 toSRGB_SIMD(u32 rgba)
+    {
+        __m128i i = _mm_set_epi32(getRFromRGBA(rgba), getGFromRGBA(rgba), getBFromRGBA(rgba), getAFromRGBA(rgba));
+        __m128 f = _mm_cvtepi32_ps(i);
+        f32 frgba[4];
+        toSRGB(frgba, f);
+        u8 r = toColorU8(frgba[0]);
+        u8 g = toColorU8(frgba[1]);
+        u8 b = toColorU8(frgba[2]);
+        u8 a = toColorU8(frgba[3]);
+        return getRGBA(a, r, g, b);
+    }
+
+    void toSRGB_SIMD(f32* drgba, const f32* srgba)
+    {
+#ifdef _DEBUG
+        for(s32 i = 0; i<4; ++i){
+            LASSERT(0.0f<=srgba[i] && srgba[i]<=1.0f);
+        }
+#endif
+        toSRGB(drgba, _mm_loadu_ps(srgba));
+    }
+
+    u32 toLinear_SIMD(u32 rgba)
+    {
+        __m128i i = _mm_set_epi32(getRFromRGBA(rgba), getGFromRGBA(rgba), getBFromRGBA(rgba), getAFromRGBA(rgba));
+        __m128 f = _mm_cvtepi32_ps(i);
+        f32 frgba[4];
+        toLinear(frgba, f);
+        u8 r = toColorU8(frgba[0]);
+        u8 g = toColorU8(frgba[1]);
+        u8 b = toColorU8(frgba[2]);
+        u8 a = toColorU8(frgba[3]);
+        return getRGBA(a, r, g, b);
+    }
+
+    void toLinear_SIMD(f32* drgba, const f32* srgba)
+    {
+#ifdef _DEBUG
+        for(s32 i = 0; i<4; ++i){
+            LASSERT(0.0f<=srgba[i] && srgba[i]<=1.0f);
+        }
+#endif
+        toLinear(drgba, _mm_loadu_ps(srgba));
+    }
+
+    u8 toSRGB(u8 x)
+    {
+        return toColorU8(toSRGB(toColorF32(x)));
+    }
+
+    f32 toSRGB(f32 x)
+    {
+        return (x<=0.0031308f) ? 12.92f*x : 1.055f*powf(x, 1.0f/2.4f) - 0.055f;
+    }
+
+    u8 toLinear(u8 x)
+    {
+        return toColorU8(toLinear(toColorF32(x)));
+    }
+
+    f32 toLinear(f32 x)
+    {
+        return (x<=0.04045f) ? x/12.92f : powf((x+0.055f)/1.055f, 2.4f);
+    }
+
 
     f32 getRefractiveIndex(RefractiveIndex index)
     {
@@ -842,7 +1202,7 @@ namespace
         return count;
     }
 
-    s32 snprintf(Char* dst, lsize_t n, const Char* format, ...)
+    s32 snprintf(Char* dst, size_t n, const Char* format, ...)
     {
         va_list args;
         va_start(args, format);
@@ -908,173 +1268,14 @@ namespace
         return NULL;
     }
 
-
-    //-------------------------------------------------------------
-    // パスからディレクトリパス抽出
-    s32 extractDirectoryPath(Char* dst, s32 length, const Char* path)
-    {
-        LASSERT(NULL != path);
-        LASSERT(0<=length);
-        if(length<=0){
-            if(NULL != dst){
-                dst[0] = CharNull;
-            }
-            return 0;
-        }
-
-        s32 i = length-1;
-        for(; 0<=i; --i){
-            if(PathDelimiter == path[i]){
-                break;
-            }
-        }
-        s32 dstLen = i+1;
-        if(NULL != dst){
-            for(s32 j=0; j<dstLen; ++j){
-                dst[j] = path[j];
-            }
-            dst[dstLen] = CharNull;
-        }
-        return dstLen;
-    }
-
-    // パスからディレクトリ名抽出
-    s32 extractDirectoryName(Char* dst, s32 length, const Char* path)
-    {
-        LASSERT(NULL != path);
-        LASSERT(0<=length);
-        if(NULL != dst){
-            dst[0] = CharNull;
-        }
-        if(length<=0){
-            return 0;
-        }
-
-        if(PathDelimiter == path[length-1]){
-            --length;
-            if(length<=0){
-                return 0;
-            }
-        }
-        s32 i = length-1;
-        for(; 0<=i; --i){
-            if(PathDelimiter == path[i]){
-                break;
-            }
-        }
-
-        s32 dstLen = length-i-1;
-        if(NULL != dst){
-            for(s32 j=i+1; j<length; ++j){
-                dst[j-i-1] = path[j];
-            }
-            dst[dstLen] = CharNull;
-        }
-        return dstLen;
-    }
-
-    //-------------------------------------------------------------
-    // パスからファイル名抽出
-    s32 extractFileName(Char* dst, s32 length, const Char* path)
-    {
-        LASSERT(NULL != path);
-        LASSERT(0<=length);
-        if(length<=0){
-            if(NULL != dst){
-                dst[0] = CharNull;
-            }
-            return 0;
-        }
-
-        s32 i = length-1;
-        for(; 0<=i; --i){
-            if(PathDelimiter == path[i]){
-                break;
-            }
-        }
-
-        s32 dstLen = length-i-1;
-        if(NULL != dst){
-            for(s32 j=i+1; j<length; ++j){
-                dst[j-i-1] = path[j];
-            }
-            dst[dstLen] = CharNull;
-        }
-        return dstLen;
-    }
-
-    // パスからファイル名抽出
-    s32 extractFileNameWithoutExt(Char* dst, s32 length, const Char* path)
-    {
-        LASSERT(NULL != path);
-        LASSERT(0<=length);
-        if(length<=0){
-            if(NULL != dst){
-                dst[0] = CharNull;
-            }
-            return 0;
-        }
-
-        s32 i = length-1;
-        for(; 0<=i; --i){
-            if(PathDelimiter == path[i]){
-                break;
-            }
-        }
-
-        s32 dstLen = length-i-1;
-        if(NULL != dst){
-            for(s32 j=length-1; i<j; --j){
-                if('.' == path[j]){
-                    dstLen = j-i-1;
-                }
-                dst[j-i-1] = path[j];
-            }
-            dst[dstLen] = CharNull;
-        }
-        return dstLen;
-    }
-
-    // パスから最初のファイル名抽出
-    const Char* parseFirstNameFromPath(s32& length, Char* name, s32 pathLength, const Char* path)
-    {
-        LASSERT(NULL != name);
-        LASSERT(NULL != path);
-
-        length = 0;
-        while(CharNull != *path && length<(pathLength-1)){
-            if(PathDelimiter == *path){
-                ++path;
-                break;
-            }
-            name[length++] = *path;
-            ++path;
-        }
-        name[length] = CharNull;
-        return path;
-    }
-
-    //パスから拡張子抽出
-    const Char* getExtension(s32 length, const Char* path)
-    {
-        LASSERT(0<=length);
-        LASSERT(NULL != path);
-        for(s32 i=length-1; 0<=i; --i){
-            if(path[i] == '.'){
-                return &path[i+1];
-            }
-        }
-        return &path[length];
-    }
-
     //---------------------------------------------------------
     //---
-    //--- タイム関係
+    //--- Time
     //---
     //---------------------------------------------------------
     void sleep(u32 milliSeconds)
     {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         ::Sleep(milliSeconds);
 #else
         timespec ts;
@@ -1088,10 +1289,9 @@ namespace
 #endif
     }
 
-    // カウント取得
     ClockType getPerformanceCounter()
     {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         LARGE_INTEGER count;
         QueryPerformanceCounter(&count);
         return count.QuadPart;
@@ -1102,10 +1302,9 @@ namespace
 #endif
     }
 
-    // 秒間カウント数
     ClockType getPerformanceFrequency()
     {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         LARGE_INTEGER freq;
         QueryPerformanceFrequency(&freq);
         return freq.QuadPart;
@@ -1114,18 +1313,16 @@ namespace
 #endif
     }
 
-    // 秒単位の時間差分計算
-    lcore::f64 calcTime64(lcore::ClockType prevTime, lcore::ClockType currentTime)
+    f64 calcTime64(ClockType prevTime, ClockType currentTime)
     {
-        lcore::ClockType d = (currentTime>=prevTime)? currentTime - prevTime : lcore::numeric_limits<lcore::ClockType>::maximum() - prevTime + currentTime;
-        lcore::f64 delta = static_cast<lcore::f64>(d)/lcore::getPerformanceFrequency();
+        ClockType d = (currentTime>=prevTime)? currentTime - prevTime : numeric_limits<ClockType>::maximum() - prevTime + currentTime;
+        f64 delta = static_cast<f64>(d)/getPerformanceFrequency();
         return delta;
     }
 
-    // ミリ秒単位の時間を取得
-    u32 getTime()
+    u32 getTimeMilliSec()
     {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         DWORD time = timeGetTime();
         return static_cast<u32>(time);
 #else
@@ -1140,7 +1337,7 @@ namespace
     {
         inline u32 getUsageMSec()
         {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
             return 1;
 #else
             rusage t;
@@ -1241,7 +1438,7 @@ namespace
     // SJIS -> UTF16変換
     s32 MBSToWCS(WChar* dst, u32 sizeInWords, const Char* src, u32 srcSize)
     {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         size_t converted = 0;
         s32 ret = mbstowcs_s(&converted, dst, sizeInWords, src, srcSize);
         return (0==ret)? static_cast<s32>(converted) : -1;
@@ -1254,7 +1451,7 @@ namespace
     // SJIS -> UTF16変換
     s32 MBSToWCS(WChar* dst, u32 sizeInWords, const Char* src)
     {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         size_t converted = 0;
         s32 ret = mbstowcs_s(&converted, dst, sizeInWords, src, _TRUNCATE);
         return (0==ret)? static_cast<s32>(converted) : -1;
@@ -1311,7 +1508,7 @@ namespace
         return getProcAddress(handle_, name);
     }
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
     LHANDLE DLL::openDLL(const Char* path)
     {
         LASSERT(NULL != path);
@@ -1337,7 +1534,7 @@ namespace
 
     LHANDLE DLL::openDLL(const Char* path)
     {
-        LASSERT(NULL != path);
+        ACC_ASSERT(NULL != path);
         return dlopen(path, RTLD_NOW);
     }
 
@@ -1351,8 +1548,8 @@ namespace
 
     void* DLL::getProcAddress(LHANDLE module, const Char* name)
     {
-        LASSERT(NULL != handle);
-        LASSERT(NULL != name);
+        ACC_ASSERT(NULL != handle);
+        ACC_ASSERT(NULL != name);
         return (void*)dlsym(module, name);
     }
 #endif

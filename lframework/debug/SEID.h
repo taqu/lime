@@ -1,5 +1,5 @@
-#ifndef INC_SAMPLES_SEID_H__
-#define INC_SAMPLES_SEID_H__
+#ifndef INC_SAMPLES_SEID_H_
+#define INC_SAMPLES_SEID_H_
 /**
 @file SEID.h
 @author t-sakai
@@ -13,4 +13,4 @@ namespace debug
 #include "sound/SE.txt"
     };
 }
-#endif //INC_SAMPLES_SEID_H__
+#endif //INC_SAMPLES_SEID_H_

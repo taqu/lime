@@ -1,12 +1,11 @@
-#ifndef INC_LFRAMEWORK_COMPONENTMANAGER_H__
-#define INC_LFRAMEWORK_COMPONENTMANAGER_H__
+#ifndef INC_LFRAMEWORK_COMPONENTMANAGER_H_
+#define INC_LFRAMEWORK_COMPONENTMANAGER_H_
 /**
 @file ComponentManager.h
 @author t-sakai
 @date 2016/05/18 create
 */
 #include "lecs.h"
-#include <lcore/Buffer.h>
 #include "Entity.h"
 
 namespace lfw
@@ -74,4 +73,4 @@ namespace lfw
         {}
     };
 }
-#endif //INC_LFRAMEWORK_COMPONENTMANAGER_H__
+#endif //INC_LFRAMEWORK_COMPONENTMANAGER_H_

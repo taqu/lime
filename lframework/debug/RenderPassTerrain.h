@@ -1,5 +1,5 @@
-#ifndef INC_DEBUG_RENDERPASSTERRAIN_H__
-#define INC_DEBUG_RENDERPASSTERRAIN_H__
+#ifndef INC_DEBUG_RENDERPASSTERRAIN_H_
+#define INC_DEBUG_RENDERPASSTERRAIN_H_
 /**
 @file RenderPassTerrain.h
 @author t-sakai
@@ -54,4 +54,4 @@ namespace debug
         lgfx::ShaderResourceViewRef srvNoise_;
     };
 }
-#endif //INC_DEBUG_RENDERPASSTERRAIN_H__
+#endif //INC_DEBUG_RENDERPASSTERRAIN_H_

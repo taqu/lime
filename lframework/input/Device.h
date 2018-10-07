@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFW_LINPUT_DEVICE_H__
-#define INC_LFW_LINPUT_DEVICE_H__
+﻿#ifndef INC_LFW_LINPUT_DEVICE_H_
+#define INC_LFW_LINPUT_DEVICE_H_
 /**
 @file Device.h
 @author t-sakai
@@ -11,4 +11,4 @@
 #include "DirectInput/Device.h"
 #endif
 
-#endif //INC_LFW_LINPUT_DEVICE_H__
+#endif //INC_LFW_LINPUT_DEVICE_H_

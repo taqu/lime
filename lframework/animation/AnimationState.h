@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_ANIMATIONSTATE_H__
-#define INC_LFRAMEWORK_ANIMATIONSTATE_H__
+#ifndef INC_LFRAMEWORK_ANIMATIONSTATE_H_
+#define INC_LFRAMEWORK_ANIMATIONSTATE_H_
 /**
 @file Animation.h
 @author t-sakai
@@ -175,4 +175,4 @@ namespace lfw
         }
     }
 }
-#endif //INC_LFRAMEWORK_ANIMATIONSTATE_H__
+#endif //INC_LFRAMEWORK_ANIMATIONSTATE_H_

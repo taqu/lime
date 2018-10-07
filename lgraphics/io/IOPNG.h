@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_IOPNG_H__
-#define INC_LGRAPHICS_IOPNG_H__
+﻿#ifndef INC_LGRAPHICS_IOPNG_H_
+#define INC_LGRAPHICS_IOPNG_H_
 /**
 @file IOPNG.h
 @author t-sakai
@@ -21,4 +21,4 @@
 #include "../gles2/io/IOPNG.h"
 #endif
 
-#endif //INC_LGRAPHICS_IOPNG_H__
+#endif //INC_LGRAPHICS_IOPNG_H_

@@ -1,5 +1,5 @@
-#ifndef INC_SAMPLES_PARTICLE00_H__
-#define INC_SAMPLES_PARTICLE00_H__
+#ifndef INC_SAMPLES_PARTICLE00_H_
+#define INC_SAMPLES_PARTICLE00_H_
 /**
 @file Particle00.h
 @author t-sakai
@@ -32,4 +32,4 @@ namespace debug
         Particle00Vertex vertices1_[capacity];
     };
 }
-#endif //INC_SAMPLES_PARTICLE00_H__
+#endif //INC_SAMPLES_PARTICLE00_H_

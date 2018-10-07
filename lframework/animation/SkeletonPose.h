@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_SKELETONPOSE_H__
-#define INC_LFRAMEWORK_SKELETONPOSE_H__
+﻿#ifndef INC_LFRAMEWORK_SKELETONPOSE_H_
+#define INC_LFRAMEWORK_SKELETONPOSE_H_
 /**
 @file SkeletonPose.h
 @author t-sakai
@@ -69,4 +69,4 @@ namespace lfw
         return matrix_;
     }
 }
-#endif //INC_LFRAMEWORK_SKELETONPOSE_H__
+#endif //INC_LFRAMEWORK_SKELETONPOSE_H_

@@ -42,9 +42,9 @@ namespace lgfx
         return blob_->GetBufferPointer();
     }
 
-    lsize_t BlobRef::getSize()
+    size_t BlobRef::getSize()
     {
-        return static_cast<lsize_t>(blob_->GetBufferSize());
+        return static_cast<size_t>(blob_->GetBufferSize());
     }
 
     BlobRef& BlobRef::operator=(const BlobRef& rhs)

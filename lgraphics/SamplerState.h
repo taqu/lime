@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_SAMPLERSTATE_H__
-#define INC_LGRAPHICS_SAMPLERSTATE_H__
+#ifndef INC_LGRAPHICS_SAMPLERSTATE_H_
+#define INC_LGRAPHICS_SAMPLERSTATE_H_
 /**
 @file SamplerState.h
 @author t-sakai
@@ -183,4 +183,4 @@ namespace lcore
         l.swap(r);
     }
 }
-#endif //INC_LGRAPHICS_SAMPLERSTATE_H__
+#endif //INC_LGRAPHICS_SAMPLERSTATE_H_

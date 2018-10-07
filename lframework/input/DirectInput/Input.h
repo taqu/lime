@@ -1,5 +1,5 @@
-#ifndef INC_LFW_LINPUT_DINPUT_INPUT_H__
-#define INC_LFW_LINPUT_DINPUT_INPUT_H__
+#ifndef INC_LFW_LINPUT_DINPUT_INPUT_H_
+#define INC_LFW_LINPUT_DINPUT_INPUT_H_
 /**
 @file Input.h
 @author t-sakai
@@ -40,4 +40,4 @@ namespace linput
         Device* devices_[DevType_Num];
     };
 }
-#endif //INC_LFW_LINPUT_DINPUT_INPUT_H__
+#endif //INC_LFW_LINPUT_DINPUT_INPUT_H_

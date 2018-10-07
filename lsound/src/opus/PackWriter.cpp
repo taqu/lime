@@ -12,8 +12,6 @@ namespace lsound
     //-------------------------------------------------
     PackWriter::PackWriter()
     {
-        header_.reserved0_ = 0;
-        header_.reserved1_ = 0;
         header_.numFiles_ = 0;
     }
 
@@ -30,12 +28,11 @@ namespace lsound
     }
 
     //-------------------------------------------------
-    bool PackWriter::push_back(const Char* name, u32 size, const void* buffer)
+    bool PackWriter::push_back(const Char* name, s64 size, const void* buffer)
     {
         LASSERT(NULL != name);
 
         FileEntry entry;
-
         entry.size_ = size;
 
         entries_.push_back(entry);
@@ -48,26 +45,31 @@ namespace lsound
         if(listStream_.is_open()){
             listStream_.print("%s,\r\n", name);
         }
-
         return true;
+    }
+
+    //-------------------------------------------------
+    bool PackWriter::openListFile(const Char* path)
+    {
+        LASSERT(NULL != path);
+        return listStream_.open(path, lcore::ios::out);
     }
 
     //-------------------------------------------------
     bool PackWriter::write(const Char* path)
     {
-        if(false == open(path)){
+        LASSERT(NULL != path);
+        lcore::File file;
+        if(!file.open(path, lcore::ios::out)){
+            return false;
+        }
+        PackHeader header;
+        header.numFiles_ = static_cast<u32>(entries_.size());
+        if(!file.write(header)){
             return false;
         }
 
-        header_.numFiles_ = static_cast<u16>(entries_.size());
-
-        lcore::lsize_t ret = lcore::io::write(stream_, header_);
-        if(0 == ret){
-            return false;
-        }
-
-        s32 offset = 0;//stream_.tellg() + sizeof(FileEntry) * header_.numFiles_;
-
+        s64 offset = 0;
         for(FileEntryArray::iterator itr = entries_.begin();
             itr != entries_.end();
             ++itr)
@@ -75,8 +77,7 @@ namespace lsound
             (*itr).offset_ = offset;
             offset += (*itr).size_;
 
-            ret = lcore::io::write(stream_, (*itr));
-            if(0 == ret){
+            if(!file.write(*itr)){
                 return false;
             }
         }
@@ -84,17 +85,13 @@ namespace lsound
         FileEntryArray::iterator entryItr = entries_.begin();
         for(MemPtrArray::iterator itr = mempts_.begin();
             itr != mempts_.end();
-            ++itr)
+            ++itr, ++entryItr)
         {
-            ret = lcore::io::write( stream_, (*itr), (*entryItr).size_ );
-            if(0 == ret){
+            if(!file.write((*entryItr).size_, (*itr))){
                 return false;
             }
-            ++entryItr;
         }
-
-        close();
+        file.close();
         return true;
     }
-
 }

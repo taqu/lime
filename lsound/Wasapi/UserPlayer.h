@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_WASAPI_USERPLAYER_H__
-#define INC_LSOUND_WASAPI_USERPLAYER_H__
+#ifndef INC_LSOUND_WASAPI_USERPLAYER_H_
+#define INC_LSOUND_WASAPI_USERPLAYER_H_
 /**
 @file UserPlayer.h
 @author t-sakai
@@ -51,4 +51,4 @@ namespace lsound
         Impl impl_;
     };
 }
-#endif //INC_LSOUND_WASAPI_USERPLAYER_H__
+#endif //INC_LSOUND_WASAPI_USERPLAYER_H_

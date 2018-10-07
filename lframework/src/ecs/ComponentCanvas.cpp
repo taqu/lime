@@ -93,9 +93,8 @@ namespace
     void ComponentCanvas::onStart()
     {
         if(width_<=0 || height_<=0){
-            s32 width,height;
-            System::getWindow().getViewSize(width, height);
-            setScreen(0, 0, width, height);
+            lgfx::Window::Vector2 size = System::getWindow().getViewSize();
+            setScreen(0, 0, size.x_, size.y_);
         }
         rebuild();
     }
@@ -246,10 +245,10 @@ namespace
     void ComponentCanvas::addRect(const lmath::Vector4& rect, u32 abgr, const lmath::Vector4& texcoord, ID3D11ShaderResourceView* srv, ID3D11PixelShader* ps)
     {
         u16 uv[4];
-        uv[0] = lcore::toBinary16Float(texcoord.x_);
-        uv[1] = lcore::toBinary16Float(texcoord.y_);
-        uv[2] = lcore::toBinary16Float(texcoord.z_);
-        uv[3] = lcore::toBinary16Float(texcoord.w_);
+        uv[0] = lcore::toFloat16(texcoord.x_);
+        uv[1] = lcore::toFloat16(texcoord.y_);
+        uv[2] = lcore::toFloat16(texcoord.z_);
+        uv[3] = lcore::toFloat16(texcoord.w_);
         addRect(rect, abgr, uv, srv, ps);
     }
 

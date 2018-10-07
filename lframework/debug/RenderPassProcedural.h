@@ -1,5 +1,5 @@
-#ifndef INC_DEBUG_RENDERPASSPROCEDURAL_H__
-#define INC_DEBUG_RENDERPASSPROCEDURAL_H__
+#ifndef INC_DEBUG_RENDERPASSPROCEDURAL_H_
+#define INC_DEBUG_RENDERPASSPROCEDURAL_H_
 /**
 @file RenderPassProcedural.h
 @author t-sakai
@@ -59,4 +59,4 @@ namespace debug
         lgfx::ViewRef viewAccumLighting_;
     };
 }
-#endif //INC_DEBUG_RENDERPASSPROCEDURAL_H__
+#endif //INC_DEBUG_RENDERPASSPROCEDURAL_H_

@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_TEXTURE_H__
-#define INC_LFRAMEWORK_TEXTURE_H__
+#ifndef INC_LFRAMEWORK_TEXTURE_H_
+#define INC_LFRAMEWORK_TEXTURE_H_
 /**
 @file Texture.h
 @author t-sakai
@@ -28,4 +28,4 @@ namespace lfw
         lgfx::ShaderResourceViewRef srv_;
     };
 }
-#endif //INC_LFRAMEWORK_TEXTURE_H__
+#endif //INC_LFRAMEWORK_TEXTURE_H_

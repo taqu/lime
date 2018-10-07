@@ -4,7 +4,7 @@
 @date 2016/12/25 create
 */
 #include "resource/FontManager.h"
-#include <lcore/io/VirtualFileSystem.h>
+#include <lcore/VirtualFileSystem.h>
 #include <lcore/Sort.h>
 
 #include "System.h"
@@ -58,13 +58,13 @@ namespace lfw
         Resources& resources = System::getResources();
         if(BufferSize<pathlen){
             Char* filename = (Char*)LMALLOC(pathlen+8);
-            s32 len = lcore::extractFileNameWithoutExt(filename, pathlen, path);
+            s32 len = lcore::Path::extractFileNameWithoutExt(filename, pathlen, path);
             lcore::strcat(filename, len+8, "_0.dds");
             texFont = resources.load(setID, filename, lfw::ResourceType::ResourceType_Texture2D, texParam);
             LFREE(filename);
         }else{
             Char filename[BufferSize+8];
-            s32 len = lcore::extractFileNameWithoutExt(filename, pathlen, path);
+            s32 len = lcore::Path::extractFileNameWithoutExt(filename, pathlen, path);
             lcore::strcat(filename, len+8, "_0.dds");
             texFont = resources.load(setID, filename, lfw::ResourceType::ResourceType_Texture2D, texParam);
         }
@@ -127,10 +127,10 @@ namespace lfw
             glyphes[count].yoffset_ = fmtChar[i].yoffset_;
             glyphes[count].width_ = fmtChar[i].width_;
             glyphes[count].height_ = fmtChar[i].height_;
-            glyphes[count].uv_[0] = lcore::toBinary16Float(invWidth*fmtChar[i].x_);
-            glyphes[count].uv_[1] = lcore::toBinary16Float(invHeight*fmtChar[i].y_);
-            glyphes[count].uv_[2] = lcore::toBinary16Float(invWidth*(fmtChar[i].x_+fmtChar[i].width_));
-            glyphes[count].uv_[3] = lcore::toBinary16Float(invHeight*(fmtChar[i].y_+fmtChar[i].height_));
+            glyphes[count].uv_[0] = lcore::toFloat16(invWidth*fmtChar[i].x_);
+            glyphes[count].uv_[1] = lcore::toFloat16(invHeight*fmtChar[i].y_);
+            glyphes[count].uv_[2] = lcore::toFloat16(invWidth*(fmtChar[i].x_+fmtChar[i].width_));
+            glyphes[count].uv_[3] = lcore::toFloat16(invHeight*(fmtChar[i].y_+fmtChar[i].height_));
             ++count;
         }
         lcore::introsort(count, glyphes, Font::less);

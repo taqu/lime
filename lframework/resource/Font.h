@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_FONT_H__
-#define INC_LFRAMEWORK_FONT_H__
+#ifndef INC_LFRAMEWORK_FONT_H_
+#define INC_LFRAMEWORK_FONT_H_
 /**
 @file Font.h
 @author t-sakai
@@ -139,4 +139,4 @@ namespace lfw
         return glyphes_[index];
     }
 }
-#endif //INC_LFRAMEWORK_FONTMANAGER_H__
+#endif //INC_LFRAMEWORK_FONTMANAGER_H_

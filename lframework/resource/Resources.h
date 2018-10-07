@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_RESOURCES_H__
-#define INC_LFRAMEWORK_RESOURCES_H__
+#ifndef INC_LFRAMEWORK_RESOURCES_H_
+#define INC_LFRAMEWORK_RESOURCES_H_
 /**
 @file Resources.h
 @author t-sakai
@@ -192,4 +192,4 @@ namespace lfw
         return textureChecker_;
     }
 }
-#endif //INC_LFRAMEWORK_RESOURCES_H__
+#endif //INC_LFRAMEWORK_RESOURCES_H_

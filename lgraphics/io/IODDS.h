@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_IODDS_H__
-#define INC_LGRAPHICS_IODDS_H__
+﻿#ifndef INC_LGRAPHICS_IODDS_H_
+#define INC_LGRAPHICS_IODDS_H_
 /**
 @file IODDS.h
 @author t-sakai
@@ -21,4 +21,4 @@
 #include "../gles2/io/IODDS.h"
 #endif
 
-#endif //INC_LGRAPHICS_IODDS_H__
+#endif //INC_LGRAPHICS_IODDS_H_

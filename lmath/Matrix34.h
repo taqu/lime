@@ -21,32 +21,20 @@ namespace lmath
     class Matrix34
     {
     public:
-        Matrix34()
-        {}
-
-        Matrix34(f32 m00, f32 m01, f32 m02, f32 m03,
+        static Matrix34 construct(
+            f32 m00, f32 m01, f32 m02, f32 m03,
             f32 m10, f32 m11, f32 m12, f32 m13,
-            f32 m20, f32 m21, f32 m22, f32 m23)
-        {
-            m_[0][0] = m00; m_[0][1] = m01; m_[0][2] = m02; m_[0][3] = m03;
-            m_[1][0] = m10; m_[1][1] = m11; m_[1][2] = m12; m_[1][3] = m13;
-            m_[2][0] = m20; m_[2][1] = m21; m_[2][2] = m22; m_[2][3] = m23;
-        }
+            f32 m20, f32 m21, f32 m22, f32 m23);
 
-        explicit Matrix34(const Matrix44& rhs);
-
-        ~Matrix34()
-        {}
+        static Matrix34 construct(const Matrix44& rhs);
+        
+        static void copy(Matrix34& dst, const Matrix34& src);
+        static void copy(Matrix34& dst, const Matrix44& src);
 
         /// 値セット
         void set(f32 m00, f32 m01, f32 m02, f32 m03,
             f32 m10, f32 m11, f32 m12, f32 m13,
-            f32 m20, f32 m21, f32 m22, f32 m23)
-        {
-            m_[0][0] = m00; m_[0][1] = m01; m_[0][2] = m02; m_[0][3] = m03;
-            m_[1][0] = m10; m_[1][1] = m11; m_[1][2] = m12; m_[1][3] = m13;
-            m_[2][0] = m20; m_[2][1] = m21; m_[2][2] = m22; m_[2][3] = m23;
-        }
+            f32 m20, f32 m21, f32 m22, f32 m23);
 
         /// 要素アクセス
         inline f32 operator()(s32 r, s32 c) const;
@@ -58,7 +46,6 @@ namespace lmath
         Matrix34& operator*=(const Matrix34& rhs);
         Matrix34& operator+=(const Matrix34& rhs);
         Matrix34& operator-=(const Matrix34& rhs);
-        Matrix34& operator=(const Matrix34& rhs);
 
         Matrix34 operator-() const;
 
@@ -129,11 +116,19 @@ namespace lmath
 #if defined(LMATH_USE_SSE)
         //SSEセット・ストア命令
         static void load(lm128& r0, lm128& r1, lm128& r2, const Matrix34& m);
+        static void load(lm128& r0, lm128& r1, lm128& r2, const Matrix44& m);
         static void store(Matrix34& m, const lm128& r0, const lm128& r1, const lm128& r2);
 #endif
 
         f32 m_[3][4];
     };
+
+    //--------------------------------------------
+    //---
+    //--- Matrix34
+    //---
+    //--------------------------------------------
+    static_assert(std::is_trivially_copyable<Matrix34>::value, "Matrix34 must be trivially copyable");
 
     inline f32 Matrix34::operator()(s32 r, s32 c) const
     {

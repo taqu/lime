@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTRENDERER_H__
-#define INC_LFRAMEWORK_COMPONENTRENDERER_H__
+#ifndef INC_LFRAMEWORK_COMPONENTRENDERER_H_
+#define INC_LFRAMEWORK_COMPONENTRENDERER_H_
 /**
 @file ComponentRenderer.h
 @author t-sakai
@@ -97,4 +97,4 @@ namespace lfw
         sortLayer_ = sortLayer;
     }
 }
-#endif //INC_LFRAMEWORK_COMPONENTRENDERER_H__
+#endif //INC_LFRAMEWORK_COMPONENTRENDERER_H_

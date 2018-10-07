@@ -1,5 +1,5 @@
-#ifndef INC_LFW_RENDERGRAPH_H__
-#define INC_LFW_RENDERGRAPH_H__
+#ifndef INC_LFW_RENDERGRAPH_H_
+#define INC_LFW_RENDERGRAPH_H_
 /**
 @file RenderGraph.h
 @author t-sakai
@@ -496,4 +496,4 @@ namespace graph
     };
 }
 }
-#endif //INC_LFW_RENDERGRAPH_H__
+#endif //INC_LFW_RENDERGRAPH_H_

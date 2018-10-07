@@ -116,6 +116,7 @@ namespace lfw
         u32 v[2];
         for(s32 i=0; i<2; ++i){
             v[i] = static_cast<u32>((position[i] - bmin_[i])*invUnit_[i]);
+            v[i] = (v[i]<static_cast<u32>(numSplits_))? v[i] : numSplits_-1;
         }
         return Quadtree::mortonCode2(v[0], v[1]);
     }

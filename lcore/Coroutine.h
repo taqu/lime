@@ -1,5 +1,5 @@
-#ifndef INC_LCORE_COROUTINE_H__
-#define INC_LCORE_COROUTINE_H__
+#ifndef INC_LCORE_COROUTINE_H_
+#define INC_LCORE_COROUTINE_H_
 /**
 @file Coroutine.h
 @author t-sakai
@@ -51,4 +51,4 @@ namespace lcore
         volatile s32 status_;
     };
 }
-#endif //INC_LCORE_COROUTINE_H__
+#endif //INC_LCORE_COROUTINE_H_

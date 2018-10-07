@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_DX11_SHADERREF_H__
-#define INC_LGRAPHICS_DX11_SHADERREF_H__
+﻿#ifndef INC_LGRAPHICS_DX11_SHADERREF_H_
+#define INC_LGRAPHICS_DX11_SHADERREF_H_
 /**
 @file ShaderRef.h
 @author t-sakai
@@ -413,4 +413,4 @@ namespace lgfx
         static HullShaderRef createHullShaderFromBinary(const u8* memory, u32 size);
     };
 }
-#endif //INC_LGRAPHICS_DX11_SHADERREF_H__
+#endif //INC_LGRAPHICS_DX11_SHADERREF_H_

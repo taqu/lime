@@ -1,5 +1,5 @@
-#ifndef INC_LCORE_OBJECTALLOCATOR_H__
-#define INC_LCORE_OBJECTALLOCATOR_H__
+#ifndef INC_LCORE_OBJECTALLOCATOR_H_
+#define INC_LCORE_OBJECTALLOCATOR_H_
 /**
 @file ObjectAllocator.h
 @author t-sakai
@@ -131,4 +131,4 @@ namespace lcore
         page_ = page;
     }
 }
-#endif //INC_LCORE_OBJECTALLOCATOR_H__
+#endif //INC_LCORE_OBJECTALLOCATOR_H_

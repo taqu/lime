@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_SHADERSET_H__
-#define INC_LFRAMEWORK_SHADERSET_H__
+#ifndef INC_LFRAMEWORK_SHADERSET_H_
+#define INC_LFRAMEWORK_SHADERSET_H_
 /**
 @file ShaderSet.h
 @author t-sakai
@@ -29,4 +29,4 @@ namespace lfw
         lgfx::PixelShaderRef ps_;
     };
 }
-#endif //INC_LFRAMEWORK_SHADERSET_H__
+#endif //INC_LFRAMEWORK_SHADERSET_H_

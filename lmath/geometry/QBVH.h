@@ -11,7 +11,7 @@
 
 namespace lcore
 {
-    class istream;
+    class File;
 }
 
 namespace lmath
@@ -191,7 +191,7 @@ namespace lmath
         const lmath::Vector3& getPosition() const{ return position_;}
         void setPosition(f32 x, f32 y, f32 z){ position_.set(x, y, z);}
 
-        bool load(lcore::istream& in, s32 offset);
+        bool load(lcore::File& in, s32 offset);
         void copyFrom(QBVHConstructor& constructor);
 
         bool test(HitRecord& hitRecord, const lmath::Ray& localRay);

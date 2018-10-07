@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_AVLTREE_H__
-#define INC_LCORE_AVLTREE_H__
+﻿#ifndef INC_LCORE_AVLTREE_H_
+#define INC_LCORE_AVLTREE_H_
 /**
 @file AVLTree.h
 @author t-sakai
@@ -571,4 +571,4 @@ namespace lcore
         printInternal(node->right_, level+1);
     }
 }
-#endif //INC_LCORE_AVLTREE_H__
+#endif //INC_LCORE_AVLTREE_H_

@@ -37,8 +37,8 @@ namespace debug
         vertex.position_ = lmath::Vector3::construct(1.0f, 0.5f, 0.25f);
         vertex.time_ = 0.0f;
         vertex.scale_ =  1.0f;
-        vertex.radius_ = lcore::toBinary16Float(1.0f);
-        vertex.frequencyScale_ = lcore::toBinary16Float(0.091f);
+        vertex.radius_ = lcore::toFloat16(1.0f);
+        vertex.frequencyScale_ = lcore::toFloat16(0.091f);
         add(vertex, lfw::Nothing());
         time_ = 0.0f;
     }

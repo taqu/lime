@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_RESOURCE_H__
-#define INC_LFRAMEWORK_RESOURCE_H__
+#ifndef INC_LFRAMEWORK_RESOURCE_H_
+#define INC_LFRAMEWORK_RESOURCE_H_
 /**
 @file Resource.h
 @author t-sakai
@@ -101,4 +101,4 @@ namespace lfw
         }
     }
 }
-#endif //INC_LFRAMEWORK_RESOURCE_H__
+#endif //INC_LFRAMEWORK_RESOURCE_H_

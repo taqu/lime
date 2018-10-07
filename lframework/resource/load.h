@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_LOAD_H__
-#define INC_LFRAMEWORK_LOAD_H__
+#ifndef INC_LFRAMEWORK_LOAD_H_
+#define INC_LFRAMEWORK_LOAD_H_
 /**
 @file load.h
 @author t-sakai
@@ -125,4 +125,4 @@ namespace lfw
         Element elems_[Elem_Num];
     };
 }
-#endif //INC_LFRAMEWORK_LOAD_H__
+#endif //INC_LFRAMEWORK_LOAD_H_

@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_DSP_H__
-#define INC_LSOUND_DSP_H__
+#ifndef INC_LSOUND_DSP_H_
+#define INC_LSOUND_DSP_H_
 /**
 @file dsp.h
 @author t-sakai
@@ -71,4 +71,4 @@ namespace lsound
 
     ConvTypeFunc getConvTypeFunc(u16 dstNumChannels, u16 dstBytesPerSample, u16 srcNumChannels, u16 srcBytesPerSample);
 }
-#endif //INC_LSOUND_DSP_H__
+#endif //INC_LSOUND_DSP_H_

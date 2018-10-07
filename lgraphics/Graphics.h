@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_GRAPHICS_H__
-#define INC_LGRAPHICS_GRAPHICS_H__
+#ifndef INC_LGRAPHICS_GRAPHICS_H_
+#define INC_LGRAPHICS_GRAPHICS_H_
 /**
 @file Graphics.h
 @author t-sakai
@@ -32,4 +32,4 @@ namespace lgfx
         return Graphics::device_;
     }
 }
-#endif //INC_LGRAPHICS_GRAPHICS_H__
+#endif //INC_LGRAPHICS_GRAPHICS_H_

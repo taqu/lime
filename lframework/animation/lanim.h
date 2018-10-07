@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_LANIM_H__
-#define INC_LFRAMEWORK_LANIM_H__
+﻿#ifndef INC_LFRAMEWORK_LANIM_H_
+#define INC_LFRAMEWORK_LANIM_H_
 /**
 @file lanim.h
 @author t-sakai
@@ -11,8 +11,7 @@
 
 namespace lcore
 {
-    class ostream;
-    class istream;
+    class File;
 }
 
 namespace lfw
@@ -124,7 +123,7 @@ namespace lfw
         instance_.animationSpeed_ = speed;
     }
 
-    void write(lcore::ostream& os, const Name& name);
-    void read(Name& name, lcore::istream& is);
+    void write(lcore::File& os, const Name& name);
+    void read(Name& name, lcore::File& is);
 }
-#endif //INC_LFRAMEWORK_LANIM_H__
+#endif //INC_LFRAMEWORK_LANIM_H_

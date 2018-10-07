@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_CONSTANTBUFFERTABLE_H__
-#define INC_LGRAPHICS_CONSTANTBUFFERTABLE_H__
+#ifndef INC_LGRAPHICS_CONSTANTBUFFERTABLE_H_
+#define INC_LGRAPHICS_CONSTANTBUFFERTABLE_H_
 /**
 @file ConstantBufferTable.h
 @author t-sakai
@@ -73,4 +73,4 @@ namespace lgfx
         EntryAllocator entryAllocator_;
     };
 }
-#endif //INC_LGRAPHICS_CONSTANTBUFFERTABLE_H__
+#endif //INC_LGRAPHICS_CONSTANTBUFFERTABLE_H_

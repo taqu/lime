@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_TIMER_H__
-#define INC_LFRAMEWORK_TIMER_H__
+#ifndef INC_LFRAMEWORK_TIMER_H_
+#define INC_LFRAMEWORK_TIMER_H_
 /**
 @file Timer.h
 @author t-sakai
@@ -42,4 +42,4 @@ namespace lfw
         f32 accumulation_[8];
     };
 }
-#endif //INC_LFRAMEWORK_TIMER_H__
+#endif //INC_LFRAMEWORK_TIMER_H_

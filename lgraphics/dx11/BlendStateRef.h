@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_DX11_BLENDSTATEREF_H__
-#define INC_LGRAPHICS_DX11_BLENDSTATEREF_H__
+﻿#ifndef INC_LGRAPHICS_DX11_BLENDSTATEREF_H_
+#define INC_LGRAPHICS_DX11_BLENDSTATEREF_H_
 /**
 @file BlendStateRef.h
 @author t-sakai
@@ -124,4 +124,4 @@ namespace lgfx
             const u8* writeMask);
     };
 }
-#endif //INC_LGRAPHICS_DX11_BLENDSTATEREF_H__
+#endif //INC_LGRAPHICS_DX11_BLENDSTATEREF_H_

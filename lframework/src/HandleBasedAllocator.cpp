@@ -3,7 +3,7 @@
 @author t-sakai
 @date 2016/08/12 create
 */
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #endif
@@ -68,7 +68,7 @@ namespace lfw
             handle.offset_ = capacityFreeAlloc_;
             void** freeAllocs = (void**)LMALLOC(sizeof(void*)*(capacityFreeAlloc_+NumFreeAlloc));
             lcore::memcpy(freeAllocs, freeAllocs_, sizeof(void*)*capacityFreeAlloc_);
-            lcore::memset(freeAllocs+capacityFreeAlloc_, NULL, sizeof(void*)*NumFreeAlloc);
+            lcore::memset(freeAllocs+capacityFreeAlloc_, 0, sizeof(void*)*NumFreeAlloc);
             LFREE(freeAllocs_);
             freeAllocs_ = freeAllocs;
             freeAllocs_[capacityFreeAlloc_] = LMALLOC(size);

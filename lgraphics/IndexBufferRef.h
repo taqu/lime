@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_INDEXBUFFERREF_H__
-#define INC_LGRAPHICS_INDEXBUFFERREF_H__
+﻿#ifndef INC_LGRAPHICS_INDEXBUFFERREF_H_
+#define INC_LGRAPHICS_INDEXBUFFERREF_H_
 /**
 @file IndexBufferRef.h
 @author t-sakai
@@ -22,4 +22,4 @@
 #include "gles2/IndexBufferRef.h"
 #endif
 
-#endif //INC_LGRAPHICS_INDEXBUFFERREF_H__
+#endif //INC_LGRAPHICS_INDEXBUFFERREF_H_

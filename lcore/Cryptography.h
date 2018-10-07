@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_CRYPTOGRAPHY_H__
-#define INC_LCORE_CRYPTOGRAPHY_H__
+﻿#ifndef INC_LCORE_CRYPTOGRAPHY_H_
+#define INC_LCORE_CRYPTOGRAPHY_H_
 /**
 @file Cryptography.h
 @author t-sakai
@@ -218,4 +218,4 @@ namespace lcore
     */
     MD5Hash calcMD5(u32 length, const u8* data);
 }
-#endif //INC_LCORE_CRYPTOGRAPHY_H__
+#endif //INC_LCORE_CRYPTOGRAPHY_H_

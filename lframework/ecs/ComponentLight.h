@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTLIGHT_H__
-#define INC_LFRAMEWORK_COMPONENTLIGHT_H__
+#ifndef INC_LFRAMEWORK_COMPONENTLIGHT_H_
+#define INC_LFRAMEWORK_COMPONENTLIGHT_H_
 /**
 @file ComponentLight.h
 @author t-sakai
@@ -36,4 +36,4 @@ namespace lfw
         ComponentLight& operator=(const ComponentLight&);
     };
 }
-#endif //INC_LFRAMEWORK_COMPONENTLIGHT_H__
+#endif //INC_LFRAMEWORK_COMPONENTLIGHT_H_

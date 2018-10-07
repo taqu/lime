@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_CHUNKALLOCATOR_H__
-#define INC_LCORE_CHUNKALLOCATOR_H__
+﻿#ifndef INC_LCORE_CHUNKALLOCATOR_H_
+#define INC_LCORE_CHUNKALLOCATOR_H_
 /**
 @file ChunkAllocator.h
 @author t-sakai
@@ -88,4 +88,4 @@ namespace lcore
         Bank banks_[MaxNumBanks];
     };
 }
-#endif //INC_LCORE_CHUNKALLOCATOR_H__
+#endif //INC_LCORE_CHUNKALLOCATOR_H_

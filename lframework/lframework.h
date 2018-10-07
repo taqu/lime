@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_H__
-#define INC_LFRAMEWORK_H__
+#ifndef INC_LFRAMEWORK_H_
+#define INC_LFRAMEWORK_H_
 /**
 @file lframework.h
 @author t-sakai
@@ -27,7 +27,7 @@ namespace lfw
     using lcore::f32;
     using lcore::f64;
     using lcore::Char;
-    using lcore::lsize_t;
+    using lcore::size_t;
 
     static const s32 ComputeShader_NumThreads_Shift = LFW_CONFIG_COMPUTESHADER_NUMTHREADS_BITSHIFT;
     static const s32 ComputeShader_NumThreads = (0x01<<ComputeShader_NumThreads_Shift);
@@ -329,4 +329,4 @@ namespace lfw
         size_ = static_cast<size_type>(newSize);
     }
 }
-#endif //INC_LFRAMEWORK_H__
+#endif //INC_LFRAMEWORK_H_

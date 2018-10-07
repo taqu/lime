@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_ANIMATION_H__
-#define INC_LFRAMEWORK_ANIMATION_H__
+#ifndef INC_LFRAMEWORK_ANIMATION_H_
+#define INC_LFRAMEWORK_ANIMATION_H_
 /**
 @file Animation.h
 @author t-sakai
@@ -109,4 +109,4 @@ namespace lfw
         return states_[index];
     }
 }
-#endif //INC_LFRAMEWORK_ANIMATION_H__
+#endif //INC_LFRAMEWORK_ANIMATION_H_

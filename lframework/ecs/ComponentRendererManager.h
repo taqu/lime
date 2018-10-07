@@ -1,12 +1,11 @@
-#ifndef INC_LFRAMEWORK_COMPONENTRENDERERMANAGER_H__
-#define INC_LFRAMEWORK_COMPONENTRENDERERMANAGER_H__
+#ifndef INC_LFRAMEWORK_COMPONENTRENDERERMANAGER_H_
+#define INC_LFRAMEWORK_COMPONENTRENDERERMANAGER_H_
 /**
 @file ComponentRendererManager.h
 @author t-sakai
 @date 2016/10/18 create
 */
 #include "ComponentManager.h"
-#include <lcore/BitSet.h>
 
 namespace lfw
 {
@@ -17,7 +16,7 @@ namespace lfw
     public:
         static const u8 Category = ECSCategory_Renderer;
 
-        typedef lcore::ArrayPOD<ComponentRenderer*, lcore::array_static_inc_size<128> > ComponentRendererArray;
+        typedef lcore::Array<ComponentRenderer*, lcore::ArrayStaticCapacityIncrement<128> > ComponentRendererArray;
 
         struct Data : public ComponentDataCommon<Data>
         {
@@ -71,4 +70,4 @@ namespace lfw
         return componentRenderers_;
     }
 }
-#endif //INC_LFRAMEWORK_COMPONENTRENDERERMANAGER_H__
+#endif //INC_LFRAMEWORK_COMPONENTRENDERERMANAGER_H_

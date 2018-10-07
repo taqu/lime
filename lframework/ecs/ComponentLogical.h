@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTLOGICAL_H__
-#define INC_LFRAMEWORK_COMPONENTLOGICAL_H__
+#ifndef INC_LFRAMEWORK_COMPONENTLOGICAL_H_
+#define INC_LFRAMEWORK_COMPONENTLOGICAL_H_
 /**
 @file ComponentLogical.h
 @author t-sakai
@@ -46,4 +46,4 @@ namespace lfw
         ECSNode getECSNode() const;
     };
 }
-#endif //INC_LFRAMEWORK_COMPONENTLOGICAL_H__
+#endif //INC_LFRAMEWORK_COMPONENTLOGICAL_H_

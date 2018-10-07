@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_CONFIGURATION_H__
-#define INC_LCORE_CONFIGURATION_H__
+﻿#ifndef INC_LCORE_CONFIGURATION_H_
+#define INC_LCORE_CONFIGURATION_H_
 /**
 @file Configuration.h
 @author t-sakai
@@ -13,7 +13,7 @@
 
 namespace lcore
 {
-    class ifstream;
+    class File;
 
     class Configuration
     {
@@ -60,8 +60,8 @@ namespace lcore
         void destroy(s32 index);
         void setKeyValue(const Char* key, Char* value);
 
-        static void skipBOM(lcore::ifstream& is);
-        static void getLine(s32& length, s32& capacity, Char*& line, lcore::ifstream& is);
+        static void skipBOM(File& file);
+        static void getLine(s32& length, s32& capacity, Char*& line, File& file);
         static Char* skipSpace(Char* str);
         static s16 guessType(const Char* str);
         static Char* extractString(Char* str);
@@ -73,4 +73,4 @@ namespace lcore
         Entry* entries_;
     };
 }
-#endif //INC_LCORE_CONFIGURATION_H__
+#endif //INC_LCORE_CONFIGURATION_H_

@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_LSTRING_H__
-#define INC_LCORE_LSTRING_H__
+﻿#ifndef INC_LCORE_LSTRING_H_
+#define INC_LCORE_LSTRING_H_
 /**
 @file LString.h
 @author t-sakai
@@ -243,7 +243,7 @@ namespace lcore
 
         va_list ap;
         va_start(ap, format);
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         s32 ret = vsnprintf_s(buffer_, SIZE-1, format, ap);
 #else
         s32 ret = vsnprintf(buffer_, SIZE-1, format, ap);
@@ -288,6 +288,7 @@ namespace lcore
         String(s32 length, const Char* str);
         String(s32 length, const Char* str, FilterFunc filter);
         String(const String& rhs);
+        String(String&& rhs);
         ~String();
 
         inline s32 capacity() const;
@@ -312,6 +313,7 @@ namespace lcore
 
         s32 printf(const Char* format, ...);
         String& operator=(const String& rhs);
+        String& operator=(String&& rhs);
         String& operator=(const Char* str);
         inline void assign(const Char* str);
         void assign(s32 length, const Char* str);
@@ -485,4 +487,4 @@ namespace lcore
     }
 }
 
-#endif //INC_LCORE_LSTRING_H__
+#endif //INC_LCORE_LSTRING_H_

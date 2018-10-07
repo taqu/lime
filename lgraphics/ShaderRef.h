@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_SHADERREF_H__
-#define INC_LGRAPHICS_SHADERREF_H__
+﻿#ifndef INC_LGRAPHICS_SHADERREF_H_
+#define INC_LGRAPHICS_SHADERREF_H_
 /**
 @file ShaderRef.h
 @author t-sakai
@@ -19,4 +19,4 @@
 
 #endif
 
-#endif //INC_LGRAPHICS_SHADERREF_H__
+#endif //INC_LGRAPHICS_SHADERREF_H_

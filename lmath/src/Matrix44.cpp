@@ -16,45 +16,54 @@ namespace lmath
     //--- Matrix44
     //---
     //--------------------------------------------
-    const lmath::Matrix44 Matrix44::identity_ = lmath::Matrix44(
+    const Matrix44 Matrix44::identity_ = Matrix44::construct(
         1.0f, 0.0f, 0.0f, 0.0f,
         0.0f, 1.0f, 0.0f, 0.0f,
         0.0f, 0.0f, 1.0f, 0.0f,
         0.0f, 0.0f, 0.0f, 1.0f);
 
-    Matrix44::Matrix44(const Matrix44& rhs)
+    Matrix44 Matrix44::construct(const Matrix34& rhs)
     {
+        Matrix44 tmp;
 #if defined(LMATH_USE_SSE)
         lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
         lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
         lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
-        lm128 r3 = _mm_loadu_ps(&rhs.m_[3][0]);
 
-        _mm_storeu_ps(&m_[0][0], r0);
-        _mm_storeu_ps(&m_[1][0], r1);
-        _mm_storeu_ps(&m_[2][0], r2);
-        _mm_storeu_ps(&m_[3][0], r3);
+        _mm_storeu_ps(&tmp.m_[0][0], r0);
+        _mm_storeu_ps(&tmp.m_[1][0], r1);
+        _mm_storeu_ps(&tmp.m_[2][0], r2);
 #else
-        lcore::memcpy(m_, rhs.m_, sizeof(Matrix44));
+        lcore::memcpy(tmp.m_, rhs.m_, sizeof(Matrix34));
 #endif
+        tmp.m_[3][0] = tmp.m_[3][1] = tmp.m_[3][2] = 0.0f;
+        tmp.m_[3][3] = 1.0f;
+        return tmp;
     }
 
-
-    Matrix44::Matrix44(const Matrix34& rhs)
+    Matrix44 Matrix44::construct(
+        f32 m00, f32 m01, f32 m02, f32 m03,
+        f32 m10, f32 m11, f32 m12, f32 m13,
+        f32 m20, f32 m21, f32 m22, f32 m23,
+        f32 m30, f32 m31, f32 m32, f32 m33)
     {
-#if defined(LMATH_USE_SSE)
-        lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
-        lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
-        lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
+        Matrix44 tmp;
+        tmp.m_[0][0] = m00; tmp.m_[0][1] = m01; tmp.m_[0][2] = m02; tmp.m_[0][3] = m03;
+        tmp.m_[1][0] = m10; tmp.m_[1][1] = m11; tmp.m_[1][2] = m12; tmp.m_[1][3] = m13;
+        tmp.m_[2][0] = m20; tmp.m_[2][1] = m21; tmp.m_[2][2] = m22; tmp.m_[2][3] = m23;
+        tmp.m_[3][0] = m30; tmp.m_[3][1] = m31; tmp.m_[3][2] = m32; tmp.m_[3][3] = m33;
+        return tmp;
+    }
 
-        _mm_storeu_ps(&m_[0][0], r0);
-        _mm_storeu_ps(&m_[1][0], r1);
-        _mm_storeu_ps(&m_[2][0], r2);
-#else
-        lcore::memcpy(m_, rhs.m_, sizeof(Matrix34));
-#endif
-        m_[3][0] = m_[3][1] = m_[3][2] = 0.0f;
-        m_[3][3] = 1.0f;
+    void Matrix44::set(f32 m00, f32 m01, f32 m02, f32 m03,
+        f32 m10, f32 m11, f32 m12, f32 m13,
+        f32 m20, f32 m21, f32 m22, f32 m23,
+        f32 m30, f32 m31, f32 m32, f32 m33)
+    {
+        m_[0][0] = m00; m_[0][1] = m01; m_[0][2] = m02; m_[0][3] = m03;
+        m_[1][0] = m10; m_[1][1] = m11; m_[1][2] = m12; m_[1][3] = m13;
+        m_[2][0] = m20; m_[2][1] = m21; m_[2][2] = m22; m_[2][3] = m23;
+        m_[3][0] = m30; m_[3][1] = m31; m_[3][2] = m32; m_[3][3] = m33;
     }
 
     // 値セット
@@ -78,40 +87,38 @@ namespace lmath
 #endif
     }
 
-    Matrix44& Matrix44::operator=(const Matrix44& rhs)
+    void Matrix44::copy(Matrix44& dst, const Matrix44& src)
     {
 #if defined(LMATH_USE_SSE)
-        lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
-        lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
-        lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
-        lm128 r3 = _mm_loadu_ps(&rhs.m_[3][0]);
+        lm128 r0 = _mm_loadu_ps(&src.m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&src.m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&src.m_[2][0]);
+        lm128 r3 = _mm_loadu_ps(&src.m_[3][0]);
 
-        _mm_storeu_ps(&m_[0][0], r0);
-        _mm_storeu_ps(&m_[1][0], r1);
-        _mm_storeu_ps(&m_[2][0], r2);
-        _mm_storeu_ps(&m_[3][0], r3);
+        _mm_storeu_ps(&dst.m_[0][0], r0);
+        _mm_storeu_ps(&dst.m_[1][0], r1);
+        _mm_storeu_ps(&dst.m_[2][0], r2);
+        _mm_storeu_ps(&dst.m_[3][0], r3);
 #else
-        lcore::memcpy(m_, rhs.m_, sizeof(Matrix44));
+        lcore::memcpy(dst.m_, src.m_, sizeof(Matrix44));
 #endif
-        return *this;
     }
 
-    Matrix44& Matrix44::operator=(const Matrix34& rhs)
+    void Matrix44::copy(Matrix44& dst, const Matrix34& src)
     {
 #if defined(LMATH_USE_SSE)
-        lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
-        lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
-        lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
+        lm128 r0 = _mm_loadu_ps(&src.m_[0][0]);
+        lm128 r1 = _mm_loadu_ps(&src.m_[1][0]);
+        lm128 r2 = _mm_loadu_ps(&src.m_[2][0]);
 
-        _mm_storeu_ps(&m_[0][0], r0);
-        _mm_storeu_ps(&m_[1][0], r1);
-        _mm_storeu_ps(&m_[2][0], r2);
+        _mm_storeu_ps(&dst.m_[0][0], r0);
+        _mm_storeu_ps(&dst.m_[1][0], r1);
+        _mm_storeu_ps(&dst.m_[2][0], r2);
 #else
         lcore::memcpy(m_, rhs.m_, sizeof(Matrix34));
 #endif
-        m_[3][0] = m_[3][1] = m_[3][2] = 0.0f;
-        m_[3][3] = 1.0f;
-        return *this;
+        dst.m_[3][0] = dst.m_[3][1] = dst.m_[3][2] = 0.0f;
+        dst.m_[3][3] = 1.0f;
     }
 
 

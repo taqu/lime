@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_DX11_QUERYREF_H__
-#define INC_LGRAPHICS_DX11_QUERYREF_H__
+#ifndef INC_LGRAPHICS_DX11_QUERYREF_H_
+#define INC_LGRAPHICS_DX11_QUERYREF_H_
 /**
 @file QueryRef.h
 @author t-sakai
@@ -49,4 +49,4 @@ namespace lgfx
         static QueryRef create(QueryType type, QueryMiscFlag flag);
     };
 }
-#endif //INC_LGRAPHICS_DX11_QUERYREF_H__
+#endif //INC_LGRAPHICS_DX11_QUERYREF_H_

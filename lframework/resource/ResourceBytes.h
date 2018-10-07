@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_RESOURCEBYTES_H__
-#define INC_LFRAMEWORK_RESOURCEBYTES_H__
+#ifndef INC_LFRAMEWORK_RESOURCEBYTES_H_
+#define INC_LFRAMEWORK_RESOURCEBYTES_H_
 /**
 @file ResourceBytes.h
 @author t-sakai
@@ -62,4 +62,4 @@ namespace lfw
         return bytes_;
     }
 }
-#endif //INC_LFRAMEWORK_RESOURCEBYTES_H__
+#endif //INC_LFRAMEWORK_RESOURCEBYTES_H_

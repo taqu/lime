@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_LOADREQUEST_H__
-#define INC_LFRAMEWORK_LOADREQUEST_H__
+#ifndef INC_LFRAMEWORK_LOADREQUEST_H_
+#define INC_LFRAMEWORK_LOADREQUEST_H_
 /**
 @file LoadRequest.h
 @author t-sakai
@@ -27,4 +27,4 @@ namespace lfw
 
     };
 }
-#endif //INC_LFRAMEWORK_LOADREQUEST_H__
+#endif //INC_LFRAMEWORK_LOADREQUEST_H_

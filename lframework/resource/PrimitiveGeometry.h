@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_PRIMITIVEGEOMETRY_H__
-#define INC_LFRAMEWORK_PRIMITIVEGEOMETRY_H__
+#ifndef INC_LFRAMEWORK_PRIMITIVEGEOMETRY_H_
+#define INC_LFRAMEWORK_PRIMITIVEGEOMETRY_H_
 /**
 @file PrimitiveGeometry.h
 @author t-sakai
@@ -56,4 +56,4 @@ namespace lfw
             const lmath::Sphere& sphere);
     };
 }
-#endif //INC_LFRAMEWORK_PRIMITIVEGEOMETRY_H__
+#endif //INC_LFRAMEWORK_PRIMITIVEGEOMETRY_H_

@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_RESOURCE_H__
-#define INC_LSOUND_RESOURCE_H__
+#ifndef INC_LSOUND_RESOURCE_H_
+#define INC_LSOUND_RESOURCE_H_
 /**
 @file Resource.h
 @author t-sakai
@@ -16,7 +16,7 @@
 
 //#define LSOUND_RESOURCE_ENABLE_SYNC
 #ifdef LSOUND_RESOURCE_ENABLE_SYNC
-#include <lcore/async/SyncObject.h>
+#include <lcore/SyncObject.h>
 #endif
 
 namespace lsound
@@ -30,19 +30,38 @@ namespace lsound
     {
     public:
         File();
-        File(FILE* file);
+
+#if defined(_WIN32)
+        explicit File(lcore::LHANDLE file);
+#else
+        explicit File(FILE* file);
+#endif
+
         ~File();
 
         void addRef();
         void release();
-    private:
-        friend class FileStream;
 
-        File(const File&);
-        File& operator=(const File&);
+        void seek(s64 pos, s32 origin);
+
+        /**
+        @return Number of bytes which been read
+        */
+        s32 read(s32 size, void* data);
+
+        void swap(File& rhs);
+    private:
+        File(const File&) = delete;
+        File(File&&) = delete;
+        File& operator=(const File&) = delete;
+        File& operator=(File&&) = delete;
 
         s32 refCount_;
+#if defined(_WIN32)
+        lcore::LHANDLE file_;
+#else
         FILE* file_;
+#endif
 #ifdef LSOUND_RESOURCE_ENABLE_SYNC
         lcore::CriticalSection cs_;
 #endif
@@ -57,19 +76,30 @@ namespace lsound
     {
     public:
         Memory();
-        Memory(u32 size, u8* memory);
+        Memory(s64 size, u8* memory);
         ~Memory();
 
         void addRef();
         void release();
+
+        void seek(s64 pos, s32 dir);
+
+        /**
+        @return Number of bytes which been read
+        */
+        s32 read(s32 size, void* data);
+
+        void swap(Memory& rhs);
     private:
+        Memory(const Memory&) = delete;
+        Memory(Memory&&) = delete;
+        Memory& operator=(const Memory&) = delete;
+        Memory& operator=(Memory&&) = delete;
+
         friend class MemoryStream;
 
-        Memory(const Memory&);
-        Memory& operator=(const Memory&);
-
         s32 refCount_;
-        u32 size_;
+        s64 size_;
         u8* memory_;
     };
 
@@ -89,13 +119,15 @@ namespace lsound
         void addRef();
         void release();
     private:
+        Asset(const Asset&) = delete;
+        Asset(Asset&&) = delete;
+        Asset& operator=(const Asset&) = delete;
+        Asset& operator=(Asset&&) = delete;
+
         friend class AssetStream;
 #ifdef LSOUND_USE_WAVE
         friend class Wave;
 #endif
-        Asset(const Asset&);
-        Asset& operator=(const Asset&);
-
         s32 refCount_;
         AAsset* asset_;
 #ifdef LSOUND_RESOURCE_ENABLE_SYNC
@@ -147,12 +179,14 @@ namespace lsound
 
         virtual s32 getType() const{ return PackResource::ResourceType_File;}
 
-        void get(s32 index, File*& file, s32& start, s32& end);
+        void get(s32 index, File*& file, s64& start, s64& end);
 
         static PackFile* open(const Char* path);
     private:
-        PackFile(const PackFile&);
-        PackFile& operator=(const PackFile&);
+        PackFile(const PackFile&) = delete;
+        PackFile(PackFile&&) = delete;
+        PackFile& operator=(const PackFile&) = delete;
+        PackFile& operator=(PackFile&&) = delete;
 
         FileEntry* entries_;
         File* file_;
@@ -171,7 +205,7 @@ namespace lsound
 
         virtual s32 getType() const{ return PackResource::ResourceType_Memory;}
 
-        void get(s32 index, Memory*& memory, u32& size, s32& offset);
+        void get(s32 index, Memory*& memory, s64& offset, s64& size);
 
         static PackMemory* open(const Char* path);
 
@@ -180,8 +214,10 @@ namespace lsound
 #endif
 
     private:
-        PackMemory(const PackMemory&);
-        PackMemory& operator=(const PackMemory&);
+        PackMemory(const PackMemory&) = delete;
+        PackMemory(PackMemory&&) = delete;
+        PackMemory& operator=(const PackMemory&) = delete;
+        PackMemory& operator=(PackMemory&&) = delete;
 
         FileEntry* entries_;
         Memory* memory_;
@@ -205,12 +241,14 @@ namespace lsound
 
         static PackAsset* open(AAssetManager* assetManager, const Char* path, s32 mode);
     private:
-        PackAsset(const PackAsset&);
-        PackAsset& operator=(const PackAsset&);
+        PackAsset(const PackAsset&) = delete;
+        PackAsset(PackAsset&&) = delete;
+        PackAsset& operator=(const PackAsset&) = delete;
+        PackAsset& operator=(PackAsset&&) = delete;
 
         FileEntry* entries_;
         Asset* asset_;
     };
 #endif
 }
-#endif //INC_LSOUND_RESOURCE_H__
+#endif //INC_LSOUND_RESOURCE_H_

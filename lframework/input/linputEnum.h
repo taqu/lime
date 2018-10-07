@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFW_LINPUTENUM_H__
-#define INC_LFW_LINPUTENUM_H__
+﻿#ifndef INC_LFW_LINPUTENUM_H_
+#define INC_LFW_LINPUTENUM_H_
 /**
 @file linputEnum.h
 @author t-sakai
@@ -221,4 +221,4 @@ namespace linput
     };
 }
 
-#endif //INC_LFW_LINPUTENUM_H__
+#endif //INC_LFW_LINPUTENUM_H_

@@ -1,31 +1,16 @@
-﻿本ソフトウェアのライセンスについては、LICENSEを確認してください。
+﻿=================================================
+=== About
+See  LICENSE about the license of this software.
 
 =================================================
 === Additional Licenses
-このソフトウェアは、以下のソフトウェアを利用しています。
-これら素晴らしいソフトウェア、及び開発者の皆様に深く感謝致します。
+This software use following softwares.
 
-zlib 1.2.8 <http://www.zlib.net/>
-libpng 1.6.26 <http://www.libpng.org/pub/png/libpng.html>
-libjpeg 9 <http://www.ijg.org/>
-lz4 r131 <https://github.com/lz4/lz4>
-jemalloc 4.2.1 <http://jemalloc.net/>
+| name | version | license | uri |
+| lz4  | r131    | lz4/LICENSE | https://github.com/lz4/lz4/ |
+| jemmaloc | 5.1.0 | jemalloc/COPYING | http://jemalloc.net/ |
+| sse_mathfun | | zlib | http://gruntthepeon.free.fr/ssemath/ |
 
-各ソフトウェアのライセンスは以下を確認してください。
-zlib              zlib/README
-libjpeg           libjpeg/README
-libpng            libpng/LICENSE
-lz4               lz4/LICENSE
-jemalloc          jemalloc/COPYING
-
-=================================================
-=== Copyright
-libjpeg:
-This software is based in part on the work of the Independent JPEG Group.
-Copyright (C) 1991-2013, Thomas G. Lane, Guido Vollbeding.
-
-=================================================
-=== 免責条項
-・本ソフトウェアの利用によって生じた損害について、
-作者は責任を負わないものとします。
-各自の責任において利用してください。
+opus | 1.2.1 | 3-Clause BSD
+opusfile | 0.11 | 3-Clause BSD
+libogg | 1.3.3 | 3-Clause BSD

@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_SYSTEM_H__
-#define INC_LFRAMEWORK_SYSTEM_H__
+#ifndef INC_LFRAMEWORK_SYSTEM_H_
+#define INC_LFRAMEWORK_SYSTEM_H_
 /**
 @file System.h
 @author t-sakai
@@ -134,4 +134,4 @@ namespace graph
         return *renderGraph_;
     }
 }
-#endif //INC_LFRAMEWORK_SYSTEM_H__
+#endif //INC_LFRAMEWORK_SYSTEM_H_

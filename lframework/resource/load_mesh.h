@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_LOADMESH_H__
-#define INC_LFRAMEWORK_LOADMESH_H__
+#ifndef INC_LFRAMEWORK_LOADMESH_H_
+#define INC_LFRAMEWORK_LOADMESH_H_
 /**
 @file load_mesh.h
 @author t-sakai
@@ -21,4 +21,4 @@ namespace lfw
         lmath::Sphere sphere_; /// ‹«ŠE‹…
     };
 }
-#endif //INC_LFRAMEWORK_LOADMESH_H__
+#endif //INC_LFRAMEWORK_LOADMESH_H_

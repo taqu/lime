@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_DX11_DISPLAY_H__
-#define INC_LGRAPHICS_DX11_DISPLAY_H__
+#ifndef INC_LGRAPHICS_DX11_DISPLAY_H_
+#define INC_LGRAPHICS_DX11_DISPLAY_H_
 /**
 @file Display.h
 @author t-sakai
@@ -124,4 +124,4 @@ namespace lgfx
         u32 adapterCount_;
     };
 }
-#endif //INC_LGRAPHICS_DX11_DISPLAY_H__
+#endif //INC_LGRAPHICS_DX11_DISPLAY_H_

@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COLLIDER_H__
-#define INC_LFRAMEWORK_COLLIDER_H__
+#ifndef INC_LFRAMEWORK_COLLIDER_H_
+#define INC_LFRAMEWORK_COLLIDER_H_
 /**
 @file Collider.h
 @author t-sakai
@@ -114,4 +114,4 @@ namespace lfw
         :ColliderBase3D(callback, data, id, next, group, CollisionType_Capsule)
     {}
 }
-#endif //INC_LFRAMEWORK_COLLIDER_H__
+#endif //INC_LFRAMEWORK_COLLIDER_H_

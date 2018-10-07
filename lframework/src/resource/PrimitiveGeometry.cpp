@@ -147,11 +147,11 @@ namespace lfw
         LDELETE_ARRAY(vertices);
     }
 
-    void PrimitiveGeometry::createLightCapsule(Geometry& geometry, s32 resolution)
+    void PrimitiveGeometry::createLightCapsule(Geometry& /*geometry*/, s32 /*resolution*/)
     {
     }
 
-    void PrimitiveGeometry::createLightCone(Geometry& geometry, s32 resolution)
+    void PrimitiveGeometry::createLightCone(Geometry& /*geometry*/, s32 /*resolution*/)
     {
     }
 
@@ -198,20 +198,20 @@ namespace lfw
         f32 half = scale*0.5f;
         Vertex vertices[4];
         vertices[0].position_[0] = -half; vertices[0].position_[1] =  0.0f; vertices[0].position_[2] = -half;
-        vertices[0].normal_[0] = lcore::toBinary16Float(0.0f); vertices[0].normal_[1] = lcore::toBinary16Float(1.0f); vertices[0].normal_[2] = vertices[0].normal_[3] = vertices[0].normal_[0];
-        vertices[0].texcoord_[0] = vertices[0].texcoord_[1] = lcore::toBinary16Float(0.0f);
+        vertices[0].normal_[0] = lcore::toFloat16(0.0f); vertices[0].normal_[1] = lcore::toFloat16(1.0f); vertices[0].normal_[2] = vertices[0].normal_[3] = vertices[0].normal_[0];
+        vertices[0].texcoord_[0] = vertices[0].texcoord_[1] = lcore::toFloat16(0.0f);
 
         vertices[1].position_[0] =  half; vertices[1].position_[1] =  0.0f; vertices[1].position_[2] = -half;
         vertices[1].normal_[0] = vertices[0].normal_[0]; vertices[1].normal_[1] = vertices[0].normal_[1]; vertices[1].normal_[2] = vertices[0].normal_[2]; vertices[1].normal_[3] = vertices[0].normal_[3];
-        vertices[1].texcoord_[0] = lcore::toBinary16Float(1.0f); vertices[1].texcoord_[1] = lcore::toBinary16Float(0.0f);
+        vertices[1].texcoord_[0] = lcore::toFloat16(1.0f); vertices[1].texcoord_[1] = lcore::toFloat16(0.0f);
 
         vertices[2].position_[0] = -half; vertices[2].position_[1] =  0.0f; vertices[2].position_[2] =  half;
         vertices[2].normal_[0] = vertices[0].normal_[0]; vertices[2].normal_[1] = vertices[0].normal_[1]; vertices[2].normal_[2] = vertices[0].normal_[2]; vertices[2].normal_[3] = vertices[0].normal_[3];
-        vertices[2].texcoord_[0] = lcore::toBinary16Float(0.0f); vertices[2].texcoord_[1] = lcore::toBinary16Float(1.0f);
+        vertices[2].texcoord_[0] = lcore::toFloat16(0.0f); vertices[2].texcoord_[1] = lcore::toFloat16(1.0f);
 
         vertices[3].position_[0] =  half; vertices[3].position_[1] =  0.0f; vertices[3].position_[2] =  half;
         vertices[3].normal_[0] = vertices[0].normal_[0]; vertices[3].normal_[1] = vertices[0].normal_[1]; vertices[3].normal_[2] = vertices[0].normal_[2]; vertices[3].normal_[3] = vertices[0].normal_[3];
-        vertices[3].texcoord_[0] = vertices[3].texcoord_[1] = lcore::toBinary16Float(1.0f);
+        vertices[3].texcoord_[0] = vertices[3].texcoord_[1] = lcore::toFloat16(1.0f);
 
         u16 indices[6] = {0,2,1, 1,2,3};
         lmath::Sphere sphere;

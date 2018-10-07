@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_TEXTUREREF_H__
-#define INC_LGRAPHICS_TEXTUREREF_H__
+﻿#ifndef INC_LGRAPHICS_TEXTUREREF_H_
+#define INC_LGRAPHICS_TEXTUREREF_H_
 /**
 @file Texture.h
 @author t-sakai
@@ -22,4 +22,4 @@
 #include "gles2/TextureRef.h"
 #endif
 
-#endif //INC_LGRAPHICS_TEXTUREREF_H__
+#endif //INC_LGRAPHICS_TEXTUREREF_H_

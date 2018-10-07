@@ -1,5 +1,5 @@
-#ifndef INC_LFW_RENDERPASSUI_H__
-#define INC_LFW_RENDERPASSUI_H__
+#ifndef INC_LFW_RENDERPASSUI_H_
+#define INC_LFW_RENDERPASSUI_H_
 /**
 @file RenderPassUI.h
 @author t-sakai
@@ -38,4 +38,4 @@ namespace graph
     };
 }
 }
-#endif //INC_LFW_RENDERPASSUI_H__
+#endif //INC_LFW_RENDERPASSUI_H_

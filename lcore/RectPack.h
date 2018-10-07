@@ -1,5 +1,5 @@
-#ifndef INC_LCORE_RECTPACK_H__
-#define INC_LCORE_RECTPACK_H__
+#ifndef INC_LCORE_RECTPACK_H_
+#define INC_LCORE_RECTPACK_H_
 /**
 @file RectPack.h
 @author t-sakai
@@ -202,4 +202,4 @@ namespace lcore
         }
     }
 }
-#endif //INC_LCORE_RECTPACK_H__
+#endif //INC_LCORE_RECTPACK_H_

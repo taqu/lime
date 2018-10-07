@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_RENDERQUEUE_H__
-#define INC_LFRAMEWORK_RENDERQUEUE_H__
+#ifndef INC_LFRAMEWORK_RENDERQUEUE_H_
+#define INC_LFRAMEWORK_RENDERQUEUE_H_
 /**
 @file RenderQueue.h
 @author t-sakai
@@ -124,4 +124,4 @@ namespace lfw
         return queues_[index];
     }
 }
-#endif //INC_LFRAMEWORK_RENDERQUEUE_H__
+#endif //INC_LFRAMEWORK_RENDERQUEUE_H_

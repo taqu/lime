@@ -1,5 +1,5 @@
-﻿#ifndef INC_LSCENE_DIRECTIONALLIGHT_H__
-#define INC_LSCENE_DIRECTIONALLIGHT_H__
+﻿#ifndef INC_LSCENE_DIRECTIONALLIGHT_H_
+#define INC_LSCENE_DIRECTIONALLIGHT_H_
 /**
 @file DirectionalLight.h
 @author t-sakai
@@ -89,4 +89,4 @@ namespace lscene
     };
 }
 
-#endif //INC_LSCENE_DIRECTIONALLIGHT_H__
+#endif //INC_LSCENE_DIRECTIONALLIGHT_H_

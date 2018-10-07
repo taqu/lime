@@ -1,5 +1,5 @@
-#ifndef INC_LFW_RENDERPASSTRANSPARENT_H__
-#define INC_LFW_RENDERPASSTRANSPARENT_H__
+#ifndef INC_LFW_RENDERPASSTRANSPARENT_H_
+#define INC_LFW_RENDERPASSTRANSPARENT_H_
 /**
 @file RenderPassTransparent.h
 @author t-sakai
@@ -45,4 +45,4 @@ namespace graph
     };
 }
 }
-#endif //INC_LFW_RENDERPASSTRANSPARENT_H__
+#endif //INC_LFW_RENDERPASSTRANSPARENT_H_

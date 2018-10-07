@@ -1,5 +1,5 @@
-#ifndef INC_SAMPLES_VOLUMEPARTICLE01_H__
-#define INC_SAMPLES_VOLUMEPARTICLE01_H__
+#ifndef INC_SAMPLES_VOLUMEPARTICLE01_H_
+#define INC_SAMPLES_VOLUMEPARTICLE01_H_
 /**
 @file VolumeParticle01.h
 @author t-sakai
@@ -29,4 +29,4 @@ namespace debug
         lgfx::ShaderResourceViewRef srvNoise_;
     };
 }
-#endif //INC_SAMPLES_VOLUMEPARTICLE01_H__
+#endif //INC_SAMPLES_VOLUMEPARTICLE01_H_

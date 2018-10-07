@@ -99,6 +99,8 @@ namespace lmath
     //--- Vector2
     //---
     //--------------------------------------------
+    static_assert(std::is_trivially_copyable<Vector2>::value, "Vector2 must be trivially copyable");
+
     inline f32 Vector2::operator[](s32 index) const
     {
         LASSERT(0<=index && index < 2);

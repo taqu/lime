@@ -1,12 +1,12 @@
-#ifndef INC_LSOUND_PACKWRITER_H__
-#define INC_LSOUND_PACKWRITER_H__
+#ifndef INC_LSOUND_PACKWRITER_H_
+#define INC_LSOUND_PACKWRITER_H_
 /**
 @file PackWriter.h
 @author t-sakai
 @date 2012/03/20 create
 
 */
-#include <lcore/liostream.h>
+#include <lcore/File.h>
 #include <lcore/Array.h>
 #include "Pack.h"
 
@@ -18,47 +18,28 @@ namespace lsound
         PackWriter();
         ~PackWriter();
 
-        bool push_back(const Char* name, u32 size, const void* buffer);
+        bool push_back(const Char* name, s64 size, const void* buffer);
 
         bool write(const Char* path);
 
-        /// ファイルオープン
-        inline bool openListFile(const Char* path);
+        /**
+        @brief Open a list file
+        */
+        bool openListFile(const Char* path);
 
     private:
-        typedef lcore::ArrayPOD<FileEntry> FileEntryArray;
-        typedef lcore::ArrayPOD<void*> MemPtrArray;
+        PackWriter(const PackWriter&) = delete;
+        PackWriter(PackWriter&&) = delete;
+        PackWriter& operator=(const PackWriter&) = delete;
+        PackWriter& operator=(PackWriter&&) = delete;
 
-        /// ファイルオープン
-        inline bool open(const Char* path);
+        typedef lcore::Array<FileEntry> FileEntryArray;
+        typedef lcore::Array<void*> MemPtrArray;
 
-        /// ファイルクローズ
-        inline void close();
-
-        lcore::ofstream stream_;
-        lcore::ofstream listStream_;
+        lcore::File listStream_;
         PackHeader header_;
         FileEntryArray entries_;
         MemPtrArray mempts_;
     };
-
-    // ファイルオープン
-    inline bool PackWriter::open(const Char* path)
-    {
-        LASSERT(NULL != path);
-        return stream_.open(path, lcore::ios::binary);
-    }
-
-    inline bool PackWriter::openListFile(const Char* path)
-    {
-        listStream_.close();
-        return listStream_.open(path, lcore::ios::binary);
-    }
-
-    // ファイルクローズ
-    inline void PackWriter::close()
-    {
-        stream_.close();
-    }
 }
-#endif //INC_LSOUND_PACKWRITER_H__
+#endif //INC_LSOUND_PACKWRITER_H_

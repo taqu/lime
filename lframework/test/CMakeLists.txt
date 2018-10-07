@@ -19,7 +19,7 @@ set(FILES ${HEADERS} ${CPPFILES})
 add_executable(${ProjectTest} ${FILES})
 
 if(MSVC)
-    target_link_libraries(${ProjectTest} LCORE LMATH LGRAPHICS LSOUND LFRAMEWORK GTEST)
+    target_link_libraries(${ProjectTest} LCORE LMATH LGRAPHICS LSOUND LFRAMEWORK)
     target_link_libraries(${ProjectTest} ${LCORE_DEPEND_LIBS} ${LMATH_DEPEND_LIBS} ${LGRAPHICS_DEPEND_LIBS} ${LFRAMEWORK_DEPEND_LIBS})
     set_target_properties(${ProjectTest} PROPERTIES
         LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE"

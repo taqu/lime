@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFW_LINPUT_KEYBOARD_H__
-#define INC_LFW_LINPUT_KEYBOARD_H__
+﻿#ifndef INC_LFW_LINPUT_KEYBOARD_H_
+#define INC_LFW_LINPUT_KEYBOARD_H_
 /**
 @file Keyboard.h
 @author t-sakai
@@ -11,5 +11,5 @@
 #include "DirectInput/Keyboard.h"
 #endif
 
-#endif //INC_LFW_LINPUT_KEYBOARD_H__
+#endif //INC_LFW_LINPUT_KEYBOARD_H_
 

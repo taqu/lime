@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_SHADERKEY_H__
-#define INC_LGRAPHICS_SHADERKEY_H__
+#ifndef INC_LGRAPHICS_SHADERKEY_H_
+#define INC_LGRAPHICS_SHADERKEY_H_
 /**
 @file ShaderKey.h
 @author t-sakai
@@ -154,4 +154,4 @@ namespace lgfx
     }
 }
 
-#endif //INC_LGRAPHICS_SHADERKEY_H__
+#endif //INC_LGRAPHICS_SHADERKEY_H_

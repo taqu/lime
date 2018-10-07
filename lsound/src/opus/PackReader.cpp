@@ -4,82 +4,45 @@
 @date 2013/02/12 create
 */
 #include "opus/PackReader.h"
+#include <lcore/File.h>
 
 namespace lsound
 {
-
     //------------------------------------------
     //---
     //--- PackReader
     //---
     //------------------------------------------
-    PackReader::PackReader()
-    {
-    }
-
-    PackReader::~PackReader()
-    {
-        close();
-    }
-
-    // ファイルオープン
-    bool PackReader::open(const Char* path)
+    bool PackReader::read(Pack& pack, const Char* path)
     {
         LASSERT(NULL != path);
-        bool isOpen = stream_.open(path, lcore::ios::in | lcore::ios::binary);
-        if(isOpen){
-            lcore::lsize_t size;
-            dataSize_ = 0;
-
-            size = lcore::io::read(stream_, pack_.header_);
-            if(size<1){
-                return false;
-            }
-
-            pack_.releaseEntries();
-            pack_.entries_ = LNEW FileEntry[pack_.header_.numFiles_];
-
-            u32 entrySize = pack_.header_.numFiles_ * sizeof(FileEntry);
-            size = lcore::io::read(stream_, pack_.entries_, entrySize);
-            if(size<1){
-                return false;
-            }
-
-            //データサイズ計算
-            s32 dataTop = stream_.tellg();
-            stream_.seekg(0, lcore::ios::end);
-            dataSize_ = stream_.tellg() - dataTop;
-            stream_.seekg(dataTop, lcore::ios::beg);
-            pack_.dataTopOffset_ = dataTop;
-        }
-        return isOpen;
-    }
-
-    // ファイルクローズ
-    void PackReader::close()
-    {
-        stream_.close();
-    }
-
-    bool PackReader::readEntries(Pack& pack)
-    {
-        LASSERT(stream_.is_open());
-        pack_.swap(pack);
-        return true;
-    }
-
-    bool PackReader::readAll(Pack& pack)
-    {
-        LASSERT(stream_.is_open());
-
-        pack_.releaseData();
-        pack_.data_ = LNEW u8[dataSize_];
-        u32 size = lcore::io::read(stream_, pack_.data_, dataSize_);
-        if(size < 1){
+        lcore::File stream;
+        if(!stream.open(path, lcore::ios::in)){
             return false;
         }
-        pack_.swap(pack);
+
+        Pack tmp;
+        if(!stream.read(tmp.header_)){
+            return false;
+        }
+
+        tmp.entries_ = LNEW FileEntry[tmp.header_.numFiles_];
+
+        s64 entrySize = tmp.header_.numFiles_ * sizeof(FileEntry);
+        if(!stream.read(entrySize, tmp.entries_)){
+            return false;
+        }
+
+        //Calcurate data size
+        s64 dataTop = stream.tell();
+        s64 dataSize = stream.size() - dataTop;
+        stream.seek(dataTop, lcore::ios::beg);
+
+        tmp.data_ = LNEW u8[dataSize];
+        if(!stream.read(dataSize, tmp.data_)){
+            return false;
+        }
+        pack.swap(tmp);
         return true;
     }
-
 }

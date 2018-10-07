@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_APPLICATION_H__
-#define INC_LFRAMEWORK_APPLICATION_H__
+#ifndef INC_LFRAMEWORK_APPLICATION_H_
+#define INC_LFRAMEWORK_APPLICATION_H_
 /**
 @file Application.h
 @author t-sakai
@@ -96,4 +96,4 @@ namespace lfw
         Timer timer_;
     };
 }
-#endif //INC_LFRAMEWORK_APPLICATION_H__
+#endif //INC_LFRAMEWORK_APPLICATION_H_

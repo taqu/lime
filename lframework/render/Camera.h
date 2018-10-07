@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_CAMERA_H__
-#define INC_LFRAMEWORK_CAMERA_H__
+﻿#ifndef INC_LFRAMEWORK_CAMERA_H_
+#define INC_LFRAMEWORK_CAMERA_H_
 /**
 @file Camera.h
 @author t-sakai
@@ -29,7 +29,7 @@ namespace graph
     class Camera
     {
     public:
-        typedef lcore::ArrayPOD<graph::RenderPass*> RenderPassArray;
+        typedef lcore::Array<graph::RenderPass*> RenderPassArray;
 
         Camera();
         Camera(Camera&& rhs);
@@ -415,4 +415,4 @@ namespace graph
 #endif
 }
 
-#endif //INC_LFRAMEWORK_CAMERA_H__
+#endif //INC_LFRAMEWORK_CAMERA_H_

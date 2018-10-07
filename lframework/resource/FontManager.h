@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_FONTMANAGER_H__
-#define INC_LFRAMEWORK_FONTMANAGER_H__
+#ifndef INC_LFRAMEWORK_FONTMANAGER_H_
+#define INC_LFRAMEWORK_FONTMANAGER_H_
 /**
 @file FontManager.h
 @author t-sakai
@@ -115,4 +115,4 @@ namespace lfw
         Font* fonts_[MaxSlots];
     };
 }
-#endif //INC_LFRAMEWORK_FONTMANAGER_H__
+#endif //INC_LFRAMEWORK_FONTMANAGER_H_

@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_DX11_TEXTUREREF_H__
-#define INC_LGRAPHICS_DX11_TEXTUREREF_H__
+﻿#ifndef INC_LGRAPHICS_DX11_TEXTUREREF_H_
+#define INC_LGRAPHICS_DX11_TEXTUREREF_H_
 /**
 @file TextureRef.h
 @author t-sakai
@@ -497,4 +497,4 @@ namespace lgfx
         UnorderedAccessViewRef* uavs,
         const u32* UAVInitCounts);
 }
-#endif //INC_LGRAPHICS_DX11_TEXTUREREF_H__
+#endif //INC_LGRAPHICS_DX11_TEXTUREREF_H_

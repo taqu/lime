@@ -1,5 +1,5 @@
-#ifndef INC_SAMPLES_PLANE00_H__
-#define INC_SAMPLES_PLANE00_H__
+#ifndef INC_SAMPLES_PLANE00_H_
+#define INC_SAMPLES_PLANE00_H_
 /**
 @file Plane00.h
 @author t-sakai
@@ -31,4 +31,4 @@ namespace debug
         lfw::ComponentMeshRenderer* mesh_;
     };
 }
-#endif //INC_SAMPLES_PLANE00_H__
+#endif //INC_SAMPLES_PLANE00_H_

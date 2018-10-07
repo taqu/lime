@@ -1,5 +1,5 @@
-#ifndef INC_LFW_RENDERPASSGBUFFER_H__
-#define INC_LFW_RENDERPASSGBUFFER_H__
+#ifndef INC_LFW_RENDERPASSGBUFFER_H_
+#define INC_LFW_RENDERPASSGBUFFER_H_
 /**
 @file RenderPassGBuffer.h
 @author t-sakai
@@ -112,4 +112,4 @@ namespace graph
     };
 }
 }
-#endif //INC_LFW_RENDERPASSGBUFFER_H__
+#endif //INC_LFW_RENDERPASSGBUFFER_H_

@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_GRAPHICSDEVICEREF_H__
-#define INC_LGRAPHICS_GRAPHICSDEVICEREF_H__
+﻿#ifndef INC_LGRAPHICS_GRAPHICSDEVICEREF_H_
+#define INC_LGRAPHICS_GRAPHICSDEVICEREF_H_
 /**
 @file GraphicsDeviceRef.h
 @author t-sakai
@@ -22,4 +22,4 @@
 #include "gles2/GraphicsDeviceRef.h"
 #endif
 
-#endif //INC_LGRAPHICS_GRAPHICSDEVICEREF_H__
+#endif //INC_LGRAPHICS_GRAPHICSDEVICEREF_H_

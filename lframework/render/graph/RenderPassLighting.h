@@ -1,5 +1,5 @@
-#ifndef INC_LFW_RENDERPASSLIGHTING_H__
-#define INC_LFW_RENDERPASSLIGHTING_H__
+#ifndef INC_LFW_RENDERPASSLIGHTING_H_
+#define INC_LFW_RENDERPASSLIGHTING_H_
 /**
 @file RenderPassLighting.h
 @author t-sakai
@@ -121,4 +121,4 @@ namespace lfw
         };
     }
 }
-#endif //INC_LFW_RENDERPASSLIGHTING_H__
+#endif //INC_LFW_RENDERPASSLIGHTING_H_

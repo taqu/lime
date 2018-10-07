@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_DX11_COUNTERREF_H__
-#define INC_LGRAPHICS_DX11_COUNTERREF_H__
+#ifndef INC_LGRAPHICS_DX11_COUNTERREF_H_
+#define INC_LGRAPHICS_DX11_COUNTERREF_H_
 /**
 @file CounterRef.h
 @author t-sakai
@@ -47,4 +47,4 @@ namespace lgfx
         static CounterRef create(CounterType type);
     };
 }
-#endif //INC_LGRAPHICS_DX11_COUNTERREF_H__
+#endif //INC_LGRAPHICS_DX11_COUNTERREF_H_

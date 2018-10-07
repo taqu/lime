@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_ENTITY_H__
-#define INC_LFRAMEWORK_ENTITY_H__
+#ifndef INC_LFRAMEWORK_ENTITY_H_
+#define INC_LFRAMEWORK_ENTITY_H_
 /**
 @file Entity.h
 @author t-sakai
@@ -211,4 +211,4 @@ namespace lfw
         return lhs.offset_ != rhs.offset_;
     }
 }
-#endif //INC_LFRAMEWORK_ENTITY_H__
+#endif //INC_LFRAMEWORK_ENTITY_H_

@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTCANVAS_H__
-#define INC_LFRAMEWORK_COMPONENTCANVAS_H__
+#ifndef INC_LFRAMEWORK_COMPONENTCANVAS_H_
+#define INC_LFRAMEWORK_COMPONENTCANVAS_H_
 /**
 @file ComponentCanvas.h
 @author t-sakai
@@ -114,8 +114,8 @@ namespace lfw
 
         typedef ArrayPODAligned<Vertex, 128> VertexArray;
         typedef ArrayPODAligned<u16, 128> IndexArray;
-        typedef lcore::ArrayPOD<Command> CommandArray;
-        typedef lcore::ArrayPOD<ComponentCanvasElement*, lcore::array_static_inc_size<32>> CanvasElementArray;
+        typedef lcore::Array<Command> CommandArray;
+        typedef lcore::Array<ComponentCanvasElement*, lcore::ArrayStaticCapacityIncrement<32>> CanvasElementArray;
 
         void pushCommand();
         void rebuild();
@@ -208,4 +208,4 @@ namespace lfw
         addTriangle(numTriangles, vertices, srv, defaultPixelShader_);
     }
 }
-#endif //INC_LFRAMEWORK_COMPONENTCANVAS_H__
+#endif //INC_LFRAMEWORK_COMPONENTCANVAS_H_

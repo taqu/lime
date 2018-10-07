@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_SORT_H__
-#define INC_LCORE_SORT_H__
+﻿#ifndef INC_LCORE_SORT_H_
+#define INC_LCORE_SORT_H_
 /**
 @file Sort.h
 @author t-sakai
@@ -1055,4 +1055,4 @@ CopyA:
         merge_force_collapse();
     }
 }
-#endif //INC_LCORE_SORT_H__
+#endif //INC_LCORE_SORT_H_

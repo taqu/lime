@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_SKELETON_H__
-#define INC_LFRAMEWORK_SKELETON_H__
+﻿#ifndef INC_LFRAMEWORK_SKELETON_H_
+#define INC_LFRAMEWORK_SKELETON_H_
 /**
 @file Skeleton.h
 @author t-sakai
@@ -7,7 +7,6 @@
 */
 #include "lanim.h"
 #include <lcore/intrusive_ptr.h>
-#include <lcore/Buffer.h>
 #include "Joint.h"
 
 namespace lfw
@@ -70,8 +69,8 @@ namespace lfw
         void swap(Skeleton& rhs);
         bool copyTo(Skeleton& dst);
 
-        static bool serialize(lcore::ostream& os, Skeleton& skeleton);
-        static bool deserialize(Skeleton& skeleton, lcore::istream& is);
+        static bool serialize(lcore::File& os, Skeleton& skeleton);
+        static bool deserialize(Skeleton& skeleton, lcore::File& is);
     private:
         Skeleton(const Skeleton&);
         Skeleton& operator=(const Skeleton&);
@@ -185,4 +184,4 @@ namespace lfw
         }
     }
 }
-#endif //INC_LFRAMEWORK_SKELETON_H__
+#endif //INC_LFRAMEWORK_SKELETON_H_

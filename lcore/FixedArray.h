@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_FIXEDARRAY_H__
-#define INC_LCORE_FIXEDARRAY_H__
+﻿#ifndef INC_LCORE_FIXEDARRAY_H_
+#define INC_LCORE_FIXEDARRAY_H_
 /**
 @file FixedArray.h
 @author t-sakai
@@ -145,4 +145,4 @@ namespace lcore
     };
 }
 
-#endif //INC_LCORE_FIXEDARRAY_H__
+#endif //INC_LCORE_FIXEDARRAY_H_

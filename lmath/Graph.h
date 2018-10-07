@@ -46,8 +46,8 @@ namespace lmath
         s32 krusal(s32 numVertices, s32 numEdges, Edge* edges);
 
     private:
-        UnionFind(const UnionFind&);
-        UnionFind& operator=(const UnionFind&);
+        UnionFind(const UnionFind&) = delete;
+        UnionFind& operator=(const UnionFind&) = delete;
 
         s32 find(s32 x);
         void unionSet(s32 x, s32 y);

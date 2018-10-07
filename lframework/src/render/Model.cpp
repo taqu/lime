@@ -127,8 +127,8 @@ namespace lfw
 
         //MeshƒNƒ[ƒ“
         for(s32 i=0; i<numMeshes_; ++i){
-            lcore::lsize_t geomIndex = (meshes_[i].getGeometry() - geometries_);
-            lcore::lsize_t materialIndex = (meshes_[i].getMaterial() - materials_);
+            u32 geomIndex = (meshes_[i].getGeometry() - geometries_);
+            u32 materialIndex = (meshes_[i].getMaterial() - materials_);
 
             dst.meshes_[i].create(
                 meshes_[i].getType(),

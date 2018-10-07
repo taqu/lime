@@ -1,5 +1,5 @@
-#ifndef INC_LFW_RENDERPASSINTEGRATION_H__
-#define INC_LFW_RENDERPASSINTEGRATION_H__
+#ifndef INC_LFW_RENDERPASSINTEGRATION_H_
+#define INC_LFW_RENDERPASSINTEGRATION_H_
 /**
 @file RenderPassIntegration.h
 @author t-sakai
@@ -46,4 +46,4 @@ namespace lfw
         };
     }
 }
-#endif //INC_LFW_RENDERPASSINTEGRATION_H__
+#endif //INC_LFW_RENDERPASSINTEGRATION_H_

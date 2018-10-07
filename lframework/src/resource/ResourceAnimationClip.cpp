@@ -7,7 +7,7 @@
 
 namespace lfw
 {
-    ResourceAnimationClip* ResourceAnimationClip::load(const Char* path, s64 size, const u8* memory)
+    ResourceAnimationClip* ResourceAnimationClip::load(const Char* /*path*/, s64 /*size*/, const u8* /*memory*/)
     {
         return NULL;
     }

@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_SHADERCOMPILER_H__
-#define INC_LGRAPHICS_SHADERCOMPILER_H__
+#ifndef INC_LGRAPHICS_SHADERCOMPILER_H_
+#define INC_LGRAPHICS_SHADERCOMPILER_H_
 /**
 @file ShaderCompiler.h
 @author t-sakai
@@ -10,4 +10,4 @@
 #if defined(LGFX_DX11)
 #include "dx11/ShaderCompiler.h"
 #endif
-#endif //INC_LGRAPHICS_SHADERCOMPILER_H__
+#endif //INC_LGRAPHICS_SHADERCOMPILER_H_

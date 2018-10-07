@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_SHADERID_H__
-#define INC_LFRAMEWORK_SHADERID_H__
+#ifndef INC_LFRAMEWORK_SHADERID_H_
+#define INC_LFRAMEWORK_SHADERID_H_
 /**
 @file ShaderID.h
 @author t-sakai
@@ -140,4 +140,4 @@ namespace lfw
         static const s32 sizeHS_[];
     };
 }
-#endif //INC_LFRAMEWORK_SHADERID_H__
+#endif //INC_LFRAMEWORK_SHADERID_H_

@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_DX11_INDEXBUFFERREF_H__
-#define INC_LGRAPHICS_DX11_INDEXBUFFERREF_H__
+﻿#ifndef INC_LGRAPHICS_DX11_INDEXBUFFERREF_H_
+#define INC_LGRAPHICS_DX11_INDEXBUFFERREF_H_
 /**
 @file IndexBufferRef.h
 @author t-sakai
@@ -77,4 +77,4 @@ namespace lgfx
         }
     };
 }
-#endif //INC_LGRAPHICS_DX11_INDEXBUFFERREF_H__
+#endif //INC_LGRAPHICS_DX11_INDEXBUFFERREF_H_

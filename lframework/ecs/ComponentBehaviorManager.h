@@ -1,12 +1,11 @@
-#ifndef INC_LFRAMEWORK_COMPONENTBEHAVIORMANAGER_H__
-#define INC_LFRAMEWORK_COMPONENTBEHAVIORMANAGER_H__
+#ifndef INC_LFRAMEWORK_COMPONENTBEHAVIORMANAGER_H_
+#define INC_LFRAMEWORK_COMPONENTBEHAVIORMANAGER_H_
 /**
 @file ComponentBehaviorManager.h
 @author t-sakai
 @date 2016/09/13 create
 */
 #include "ComponentManager.h"
-#include <lcore/BitSet.h>
 
 namespace lfw
 {
@@ -57,4 +56,4 @@ namespace lfw
         return data_[id.index()];
     }
 }
-#endif //INC_LFRAMEWORK_COMPONENTBEHAVIORMANAGER_H__
+#endif //INC_LFRAMEWORK_COMPONENTBEHAVIORMANAGER_H_

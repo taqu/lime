@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_ASYNCHRONOUSREF_H__
-#define INC_LGRAPHICS_ASYNCHRONOUSREF_H__
+#ifndef INC_LGRAPHICS_ASYNCHRONOUSREF_H_
+#define INC_LGRAPHICS_ASYNCHRONOUSREF_H_
 /**
 @file AsynchronousRef.h
 @author t-sakai
@@ -10,4 +10,4 @@
 #if defined(LGFX_DX11)
 #include "dx11/AsynchronousRef.h"
 #endif
-#endif //INC_LGRAPHICS_ASYNCHRONOUSREF_H__
+#endif //INC_LGRAPHICS_ASYNCHRONOUSREF_H_

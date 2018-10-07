@@ -4,7 +4,7 @@
 @date 2016/11/20 create
 */
 #include "resource/Resources.h"
-#include <lcore/io/VirtualFileSystem.h>
+#include <lcore/VirtualFileSystem.h>
 #include "resource/ResourceBytes.h"
 #include "resource/ResourceTexture2D.h"
 #include "resource/ResourceTexture3D.h"

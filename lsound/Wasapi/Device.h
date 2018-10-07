@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_WASAPI_DEVICE_H__
-#define INC_LSOUND_WASAPI_DEVICE_H__
+#ifndef INC_LSOUND_WASAPI_DEVICE_H_
+#define INC_LSOUND_WASAPI_DEVICE_H_
 /**
 @file Device.h
 @author t-sakai
@@ -37,4 +37,4 @@ namespace lsound
         return (NULL != device_);
     }
 }
-#endif //INC_LSOUND_WASAPI_DEVICE_H__
+#endif //INC_LSOUND_WASAPI_DEVICE_H_

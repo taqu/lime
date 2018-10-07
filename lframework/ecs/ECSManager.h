@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_ECSMANAGER_H__
-#define INC_LFRAMEWORK_ECSMANAGER_H__
+#ifndef INC_LFRAMEWORK_ECSMANAGER_H_
+#define INC_LFRAMEWORK_ECSMANAGER_H_
 /**
 @file ECSManager.h
 @author t-sakai
@@ -107,7 +107,7 @@ namespace lfw
         typedef lcore::Array<ComponentRenderer*> ComponentRendererArray;
         ComponentRendererArray componentRenderers_;
 
-        typedef lcore::ArrayPOD<ComponentOperation> OperationArray;
+        typedef lcore::Array<ComponentOperation> OperationArray;
         OperationArray componentOperations_;
         //OperationArray entityComponentOperations_;
     };
@@ -193,4 +193,4 @@ namespace lfw
         return const_cast<ECSManager*>(this)->getComponent(entity, category, type);
     }
 }
-#endif //INC_LFRAMEWORK_ECSMANAGER_H__
+#endif //INC_LFRAMEWORK_ECSMANAGER_H_

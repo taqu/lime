@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_NODE_H__
-#define INC_LFRAMEWORK_NODE_H__
+#ifndef INC_LFRAMEWORK_NODE_H_
+#define INC_LFRAMEWORK_NODE_H_
 /**
 @file Node.h
 @author t-sakai
@@ -65,4 +65,4 @@ namespace lfw
         calcEuler(angle.x_, angle.y_, angle.z_);
     }
 }
-#endif //INC_LFRAMEWORK_NODE_H__
+#endif //INC_LFRAMEWORK_NODE_H_

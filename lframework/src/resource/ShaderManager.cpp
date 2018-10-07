@@ -4,7 +4,7 @@
 @date 2016/11/20 create
 */
 #include "resource/ShaderManager.h"
-#include <lcore/io/VirtualFileSystem.h>
+#include <lcore/VirtualFileSystem.h>
 #include <lgraphics/ShaderRef.h>
 #include <lgraphics/BlobRef.h>
 #include "render/ShaderSet.h"

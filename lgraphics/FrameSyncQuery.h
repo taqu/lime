@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_FRAMESYNCQUERY_H__
-#define INC_LGRAPHICS_FRAMESYNCQUERY_H__
+#ifndef INC_LGRAPHICS_FRAMESYNCQUERY_H_
+#define INC_LGRAPHICS_FRAMESYNCQUERY_H_
 /**
 @file FrameSyncQuery.h
 @author t-sakai
@@ -50,4 +50,4 @@ namespace lgfx
         EventQuery events_[MaxFrames];
     };
 }
-#endif //INC_LGRAPHICS_FRAMESYNCQUERY_H__
+#endif //INC_LGRAPHICS_FRAMESYNCQUERY_H_

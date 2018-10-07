@@ -1,11 +1,11 @@
-#ifndef INC_LGRAPHICS_TRANSIENTBUFFER_H__
-#define INC_LGRAPHICS_TRANSIENTBUFFER_H__
+#ifndef INC_LGRAPHICS_TRANSIENTBUFFER_H_
+#define INC_LGRAPHICS_TRANSIENTBUFFER_H_
 /**
 @file TransientBuffer.h
 @author t-sakai
 @date 2014/10/16 create
 */
-#include <lcore/ObjectPool.h>
+#include <lcore/Pool.h>
 #include <lcore/RedBlackTree.h>
 #include "BufferCreator.h"
 
@@ -239,12 +239,12 @@ namespace lgfx
             return (size + ChunkAlignMask) & ~ChunkAlignMask;
         }
 
-        typedef lcore::ObjectPool<Chunk, lcore::DefaultAllocator> ChunkPool;
+        typedef lcore::ObjectPool<Chunk> ChunkPool;
 
         struct RedBlackTreeAllocator
         {
             typedef lcore::RedBlackTreeNodeBase<Chunk*> node_type;
-            typedef lcore::ObjectPool<node_type, lcore::DefaultAllocator> NodePool;
+            typedef lcore::ObjectPool<node_type> NodePool;
 
             RedBlackTreeAllocator(node_type* ptr)
                 :nullptr_(ptr)
@@ -744,4 +744,4 @@ namespace lgfx
     }
 }
 
-#endif //INC_LGRAPHICS_TRANSIENTBUFFER_H__
+#endif //INC_LGRAPHICS_TRANSIENTBUFFER_H_

@@ -205,6 +205,8 @@ namespace lmath
     //--- Vector4
     //---
     //--------------------------------------------
+    static_assert(std::is_trivially_copyable<Vector4>::value, "Vector4 must be trivially copyable");
+
     inline Vector4 Vector4::construct(f32 xyzw)
     {
         Vector4 v;

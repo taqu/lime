@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_LECS_H__
-#define INC_LFRAMEWORK_LECS_H__
+#ifndef INC_LFRAMEWORK_LECS_H_
+#define INC_LFRAMEWORK_LECS_H_
 /**
 @file lecs.h
 @author t-sakai
@@ -449,4 +449,4 @@ namespace lfw
         EntityFlag_Default = EntityFlag_UpdateSelf | EntityFlag_RenderSelf | EntityFlag_Update | EntityFlag_Render,
     };
 }
-#endif //INC_LFRAMEWORK_LECS_H__
+#endif //INC_LFRAMEWORK_LECS_H_

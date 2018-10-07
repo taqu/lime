@@ -1,5 +1,5 @@
-#ifndef INC_SAMPLES_BEHAVIOR00_H__
-#define INC_SAMPLES_BEHAVIOR00_H__
+#ifndef INC_SAMPLES_BEHAVIOR00_H_
+#define INC_SAMPLES_BEHAVIOR00_H_
 /**
 @file Behavior00.h
 @author t-sakai
@@ -32,4 +32,4 @@ namespace debug
         lfw::f32 time_;
     };
 }
-#endif //INC_SAMPLES_BEHAVIOR00_H__
+#endif //INC_SAMPLES_BEHAVIOR00_H_

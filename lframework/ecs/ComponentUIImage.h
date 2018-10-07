@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTUIIMAGE_H__
-#define INC_LFRAMEWORK_COMPONENTUIIMAGE_H__
+#ifndef INC_LFRAMEWORK_COMPONENTUIIMAGE_H_
+#define INC_LFRAMEWORK_COMPONENTUIIMAGE_H_
 /**
 @file ComponentUIImage.h
 @author t-sakai
@@ -23,7 +23,7 @@ namespace lfw
         inline void setRect(f32 left, f32 top, f32 right, f32 bottom);
         inline void setRect(const lmath::Vector4& rect);
 
-        const lmath::Vector4& getUVRect() const;
+        const lmath::Vector4 getUVRect() const;
         inline u16* getTexcoord();
         void setUVRect(f32 left, f32 top, f32 right, f32 bottom);
 
@@ -89,4 +89,4 @@ namespace lfw
         image_ = image;
     }
 }
-#endif //INC_LFRAMEWORK_COMPONENTUIIMAGE_H__
+#endif //INC_LFRAMEWORK_COMPONENTUIIMAGE_H_

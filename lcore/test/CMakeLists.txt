@@ -18,13 +18,10 @@ source_group(src FILES ${FILES})
 
 set(FILES ${HEADERS} ${FILES})
 
-#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_DEBUG "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
-#set(CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_SOURCE_DIR}/../lib")
-
 add_executable(${ProjectTest} ${FILES})
 
 if(MSVC)
-    target_link_libraries(${ProjectTest} LCORE GTEST)
+    target_link_libraries(${ProjectTest} LCORE)
     target_link_libraries(${ProjectTest} ${LCORE_DEPEND_LIBS})
     set_target_properties(${ProjectTest} PROPERTIES
         LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE"

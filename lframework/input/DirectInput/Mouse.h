@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFW_LINPUT_DINPUT_MOUSE_H__
-#define INC_LFW_LINPUT_DINPUT_MOUSE_H__
+﻿#ifndef INC_LFW_LINPUT_DINPUT_MOUSE_H_
+#define INC_LFW_LINPUT_DINPUT_MOUSE_H_
 /**
 @file Mouse.h
 @author t-sakai
@@ -98,4 +98,4 @@ namespace linput
     }
 }
 
-#endif //INC_LFW_LINPUT_DINPUT_MOUSE_H__
+#endif //INC_LFW_LINPUT_DINPUT_MOUSE_H_

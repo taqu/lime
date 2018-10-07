@@ -425,7 +425,7 @@ namespace
         }
 
         for(s32 i=0; i<size; ++i){
-            s32 index = random::range_ropen(rand, i, size);
+            s32 index = range_ropen(rand, i, size);
             lcore::swap(permutation_[i], permutation_[index]);
         }
 
@@ -481,7 +481,7 @@ namespace
         s32 h1 = permutation_[ix1];
 
         NoiseSample1 sample;
-        sample.value_ = lcore::lerpf(h0, h1, t);
+        sample.value_ = lerpf(h0, h1, t);
         sample.dx_ = dt * (h0-h1);
         sample.dx_ *= frequency;
         return sample * (1.0f / PermutationTableSizeMask);
@@ -516,7 +516,7 @@ namespace
         f32 d = static_cast<f32>(h11 - h01 - h10 + h00);
 
         NoiseSample2 sample;
-        sample.value_ = lcore::lerpf(lcore::lerpf(h00, h10, tx), lcore::lerpf(h01, h11, tx), ty);
+        sample.value_ = lerpf(lerpf(h00, h10, tx), lerpf(h01, h11, tx), ty);
         sample.dx_ = (b + d*ty) * dtx;
         sample.dy_ = (c + d*tx) * dty;
         sample.dx_ *= frequency;
@@ -573,9 +573,9 @@ namespace
         f32 h = static_cast<f32>(h111 - h011 - h101 + h001 - h110 + h010 + h100 - h000);
 
         NoiseSample3 sample;
-        sample.value_ = lcore::lerpf(
-            lcore::lerpf(lcore::lerpf(h000, h100, tx), lcore::lerpf(h010, h110, tx), ty),
-            lcore::lerpf(lcore::lerpf(h001, h101, tx), lcore::lerpf(h011, h111, tx), ty),
+        sample.value_ = lerpf(
+            lerpf(lerpf(h000, h100, tx), lerpf(h010, h110, tx), ty),
+            lerpf(lerpf(h001, h101, tx), lerpf(h011, h111, tx), ty),
             tz);
         sample.dx_ = (b + e * ty + (f + h * ty) * tz) * dtx;
         sample.dy_ = (c + e * tx + (g + h * tx) * tz) * dty;

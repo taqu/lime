@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_GUI_H__
-#define INC_LFRAMEWORK_GUI_H__
+#ifndef INC_LFRAMEWORK_GUI_H_
+#define INC_LFRAMEWORK_GUI_H_
 /**
 @file gui.h
 @author t-sakai
@@ -47,4 +47,4 @@ namespace gui
 {
 }
 }
-#endif //INC_LFRAMEWORK_GUI_H__
+#endif //INC_LFRAMEWORK_GUI_H_

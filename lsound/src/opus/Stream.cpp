@@ -7,7 +7,7 @@
 #include "opus/Resource.h"
 
 #ifdef LSOUND_USE_WAVE
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 #include "../dsp/dsp.h"
 #else
 #include <string.h>
@@ -164,12 +164,13 @@ namespace lsound
 #ifdef LSOUND_RESOURCE_ENABLE_SYNC
         lcore::CSLock lock(fileStream->file_->cs_);
 #endif
-        FILE* file = fileStream->file_->file_;
+        File* file = fileStream->file_;
 
-        fseek(file, fileStream->current_, SEEK_SET);
-        size_t bytes = fread(ptr, 1, nbytes, file);
+
+        file->seek(fileStream->current_, SEEK_SET);
+        s32 bytes = file->read(nbytes, ptr);
         fileStream->current_ += bytes;
-        return static_cast<int>(bytes);
+        return bytes;
     }
 
     int FileStream::seek_func(void* stream, opus_int64 offset, int whence)
@@ -210,7 +211,8 @@ namespace lsound
     //---
     //-------------------------------------------
     MemoryStream::MemoryStream()
-        :size_(0)
+        :offset_(0)
+        ,size_(0)
         ,memory_(NULL)
     {
     }
@@ -222,16 +224,17 @@ namespace lsound
         }
     }
 
-    void MemoryStream::set(u32 size, u32 offset, Memory* memory)
+    void MemoryStream::set(Memory* memory, opus_int64 offset, opus_int64 size)
     {
+        LASSERT(0<=offset);
         LASSERT(0<size);
         LASSERT(NULL != memory);
         if(NULL != memory_){
             memory_->release();
         }
 
-        size_ = size;
         offset_ = offset;
+        size_ = size;
         memory_ = memory;
         memory_->addRef();
     }
@@ -252,8 +255,8 @@ namespace lsound
     {
         Stream::swap(rhs);
 
-        lcore::swap(size_, rhs.size_);
         lcore::swap(offset_, rhs.offset_);
+        lcore::swap(size_, rhs.size_);
         lcore::swap(memory_, rhs.memory_);
     }
 

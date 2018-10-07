@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_SURFACEREF_H__
-#define INC_LGRAPHICS_SURFACEREF_H__
+﻿#ifndef INC_LGRAPHICS_SURFACEREF_H_
+#define INC_LGRAPHICS_SURFACEREF_H_
 /**
 @file SurfaceRef.h
 @author t-sakai
@@ -16,4 +16,4 @@
 
 #endif
 
-#endif //INC_LGRAPHICS_SURFACEREF_H__
+#endif //INC_LGRAPHICS_SURFACEREF_H_

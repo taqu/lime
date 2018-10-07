@@ -84,8 +84,8 @@ set_target_properties(${ProjectName} PROPERTIES OUTPUT_NAME_DEBUG "${ProjectName
 if(MSVC)
     set_target_properties(${ProjectName} PROPERTIES
         STATIC_LIBRARY_FLAGS "/LIBPATH:\"${EXTERNAL_LIB_DIR}\" \"d3d11.lib\" \"dxguid.lib\" \"dxgi.lib\""
-        STATIC_LIBRARY_FLAGS_DEBUG  "\"zlibd.lib\" \"libpng16d.lib\" \"lz4d.lib\""
-        STATIC_LIBRARY_FLAGS_RELEASE "/LTCG \"zlib.lib\" \"libpng16.lib\" \"lz4.lib\"")
+        STATIC_LIBRARY_FLAGS_DEBUG  "\"lz4d.lib\""
+        STATIC_LIBRARY_FLAGS_RELEASE "/LTCG \"lz4.lib\"")
 
     if(1900 LESS MSVC_VERSION)
         get_vs_property_group(VSPROPERTIES "EnableCppCoreCheck" "true")

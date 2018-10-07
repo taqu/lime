@@ -143,7 +143,6 @@ namespace lfw
             break;
         };
 
-        f32 lineWidth = textBoxWidth;
         f32 left = lineLeft;
         sprites_.reserve(text_.length());
         s32 count = 0;
@@ -183,7 +182,7 @@ namespace lfw
         canvas_->requestUpdate();
     }
 
-    void ComponentUIText::calcTextBoxSize(f32& width, f32& height, const Char* text, f32 screenWidth, f32 screenHeight, Font* font)
+    void ComponentUIText::calcTextBoxSize(f32& width, f32& height, const Char* text, f32 /*screenWidth*/, f32 /*screenHeight*/, Font* font)
     {
         LASSERT(NULL != text);
         LASSERT(NULL != font);

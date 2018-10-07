@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_CONTEXT_H__
-#define INC_LSOUND_CONTEXT_H__
+#ifndef INC_LSOUND_CONTEXT_H_
+#define INC_LSOUND_CONTEXT_H_
 /**
 @file Context.h
 @author t-sakai
@@ -17,4 +17,4 @@
 #include "OpenSL/Context.h"
 #endif
 
-#endif //INC_LSOUND_CONTEXT_H__
+#endif //INC_LSOUND_CONTEXT_H_

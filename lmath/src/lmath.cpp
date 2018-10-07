@@ -668,7 +668,7 @@ namespace lmath
 
     void reflect(Vector3& dst, const Vector3& src, const Vector3& normal)
     {
-        lmath::Vector3 tmp = src;
+        Vector3 tmp = src;
 
         dst = normal;
         dst *= 2.0f*dot(normal, src);
@@ -677,7 +677,7 @@ namespace lmath
 
     void reflect(Vector4& dst, const Vector4& src, const Vector4& normal)
     {
-        lmath::Vector4 tmp = src;
+        Vector4 tmp = src;
 
         dst = normal;
         dst *= 2.0f*dot(normal, src);
@@ -695,7 +695,7 @@ namespace lmath
 #if 1
         lm128 tmp = _mm_loadu_ps(static_cast<const f32*>(&rgba.x_));
 
-        lm128 one = _mm_load_ps(lmath::Vector4::One);
+        lm128 one = _mm_load_ps(Vector4::One);
         lm128 zero = _mm_setzero_ps();
 
         tmp = _mm_max_ps(zero, tmp);
@@ -1057,7 +1057,7 @@ namespace
 
         Vector4 tmp = mul(vt, curveCoeff);
 
-        lmath::Matrix44 param;
+        Matrix44 param;
         param.set(p0, p1, p2, p3);
         
         dst = mul(tmp, param);
@@ -1080,7 +1080,7 @@ namespace
     // Ferguson-Coons曲線
     void fergusonCoonsCurve(Vector4& dst, f32 t, const Vector4& p0, const Vector4& v0, const Vector4& p1, const Vector4& v1)
     {
-        lmath::Matrix44 curveCoeff(
+        Matrix44 curveCoeff = Matrix44::construct(
             2.0f, -2.0f, 1.0f, 1.0f,
             -3.0f, 3.0f, -2.0f, -1.0f,
             0.0f, 0.0f, 1.0f, 0.0f,
@@ -1092,7 +1092,7 @@ namespace
     // Bezier曲線
     void cubicBezierCurve(Vector4& dst, f32 t, const Vector4& p0, const Vector4& p1, const Vector4& p2, const Vector4& p3)
     {
-        lmath::Matrix44 curveCoeff(
+        Matrix44 curveCoeff = Matrix44::construct(
             -1.0f,  3.0f, -3.0f, 1.0f,
              3.0f, -6.0f,  3.0f, 0.0f,
             -3.0f,  3.0f,  0.0f, 0.0f,
@@ -1105,7 +1105,7 @@ namespace
     // Catmull-Rom曲線
     void catmullRomCurve(Vector4& dst, f32 t, const Vector4& p0, const Vector4& p1, const Vector4& p2, const Vector4& p3)
     {
-        lmath::Matrix44 curveCoeff(
+        Matrix44 curveCoeff = Matrix44::construct(
             -1.0f/2.0f,  3.0f/2.0f, -3.0f/2.0f,  1.0f/2.0f,
              2.0f/2.0f, -5.0f/2.0f,  4.0f/2.0f, -1.0f/2.0f,
             -1.0f/2.0f,  0.0f,       1.0f/2.0f,  0.0f,
@@ -1116,7 +1116,7 @@ namespace
 
     void catmullRomCurveStartPoint(Vector4& dst, f32 t, const Vector4& p1, const Vector4& p2, const Vector4& p3)
     {
-        lmath::Matrix44 curveCoeff(
+        Matrix44 curveCoeff = Matrix44::construct(
            0.0f,  0.0f,       0.0f,       0.0f,
            0.0f,  1.0f/2.0f, -2.0f/2.0f,  1.0f/2.0f,
            0.0f, -3.0f/2.0f,  4.0f/2.0f, -1.0f/2.0f,
@@ -1128,7 +1128,7 @@ namespace
 
     void catmullRomCurveEndPoint(Vector4& dst, f32 t, const Vector4& p0, const Vector4& p1, const Vector4& p2)
     {
-        lmath::Matrix44 curveCoeff(
+        Matrix44 curveCoeff = Matrix44::construct(
             0.0f,       0.0f,       0.0f,      0.0f,
             1.0f/2.0f, -2.0f/2.0f,  1.0f/2.0f, 0.0f,
            -1.0f/2.0f,  0.0f,       1.0f/2.0f, 0.0f,
@@ -1141,7 +1141,7 @@ namespace
     // Catmull-Rom曲線
     void catmullRomCurve(f32& dst, f32 t, f32 p0, f32 p1, f32 p2, f32 p3)
     {
-        lmath::Matrix44 curveCoeff(
+        Matrix44 curveCoeff = Matrix44::construct(
             -1.0f/2.0f,  3.0f/2.0f, -3.0f/2.0f,  1.0f/2.0f,
              2.0f/2.0f, -5.0f/2.0f,  4.0f/2.0f, -1.0f/2.0f,
             -1.0f/2.0f,  0.0f,       1.0f/2.0f,  0.0f,

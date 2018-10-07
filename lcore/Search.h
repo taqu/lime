@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_SEARCH_H__
-#define INC_LCORE_SEARCH_H__
+﻿#ifndef INC_LCORE_SEARCH_H_
+#define INC_LCORE_SEARCH_H_
 /**
 @file Search.h
 @author t-sakai
@@ -71,4 +71,4 @@ namespace lcore
     }
 }
 
-#endif //INC_LCORE_SEARCH_H__
+#endif //INC_LCORE_SEARCH_H_

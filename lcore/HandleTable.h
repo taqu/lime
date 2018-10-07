@@ -1,5 +1,5 @@
-#ifndef INC_LCORE_HANDLETABLE_H__
-#define INC_LCORE_HANDLETABLE_H__
+#ifndef INC_LCORE_HANDLETABLE_H_
+#define INC_LCORE_HANDLETABLE_H_
 /**
 @file HandleTable.h
 @author t-sakai
@@ -426,4 +426,4 @@ namespace lcore
         lcore::swap(freeList_, rhs.freeList_);
     }
 }
-#endif //INC_LCORE_HANDLETABLE_H__
+#endif //INC_LCORE_HANDLETABLE_H_

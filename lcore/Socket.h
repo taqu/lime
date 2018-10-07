@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_SOCKET_H__
-#define INC_LCORE_SOCKET_H__
+﻿#ifndef INC_LCORE_SOCKET_H_
+#define INC_LCORE_SOCKET_H_
 /**
 @file Socket.h
 @author t-sakai
@@ -572,4 +572,4 @@ namespace lcore
     };
 }
 
-#endif //INC_LCORE_SOCKET_H__
+#endif //INC_LCORE_SOCKET_H_

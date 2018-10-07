@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTUITEXT_H__
-#define INC_LFRAMEWORK_COMPONENTUITEXT_H__
+#ifndef INC_LFRAMEWORK_COMPONENTUITEXT_H_
+#define INC_LFRAMEWORK_COMPONENTUITEXT_H_
 /**
 @file ComponentUIText.h
 @author t-sakai
@@ -72,7 +72,7 @@ namespace lfw
         Align verticalAlign_;
         Align horizontalAlign_;
         lcore::String text_;
-        lcore::ArrayPOD<Sprite2D> sprites_;
+        lcore::Array<Sprite2D> sprites_;
     };
 
     inline const lcore::String& ComponentUIText::text() const
@@ -137,4 +137,4 @@ namespace lfw
         setDirty();
     }
 }
-#endif //INC_LFRAMEWORK_COMPONENTFONTRENDERER_H__
+#endif //INC_LFRAMEWORK_COMPONENTFONTRENDERER_H_

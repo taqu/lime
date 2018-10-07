@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_QUADTREE_H__
-#define INC_LFRAMEWORK_QUADTREE_H__
+#ifndef INC_LFRAMEWORK_QUADTREE_H_
+#define INC_LFRAMEWORK_QUADTREE_H_
 /**
 @file Quadtree.h
 @author t-sakai
@@ -19,8 +19,8 @@ namespace lfw
         static const s32 LevelIndexStart[MaxLevels];
         static const s32 StackSize = MaxLevels;
 
-        typedef lcore::ArrayPOD<CollisionPair, lcore::array_static_inc_size<64>> CollisionPairArray;
-        typedef lcore::ArrayPOD<ColliderBase*, lcore::array_static_inc_size<64>> ColliderBaseArray;
+        typedef lcore::Array<CollisionPair, lcore::ArrayStaticCapacityIncrement<64>> CollisionPairArray;
+        typedef lcore::Array<ColliderBase*, lcore::ArrayStaticCapacityIncrement<64>> ColliderBaseArray;
 
         static u32 separateBy1(u32 x);
         static u32 mortonCode2(u32 x, u32 y);
@@ -59,4 +59,4 @@ namespace lfw
         ColliderBaseArray colliderBases_;
     };
 }
-#endif //INC_LFRAMEWORK_QUADTREE_H__
+#endif //INC_LFRAMEWORK_QUADTREE_H_

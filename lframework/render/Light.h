@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_LIGHT_H__
-#define INC_LFRAMEWORK_LIGHT_H__
+﻿#ifndef INC_LFRAMEWORK_LIGHT_H_
+#define INC_LFRAMEWORK_LIGHT_H_
 /**
 @file Light.h
 @author t-sakai
@@ -192,4 +192,4 @@ namespace lfw
         lightColor_ = color;
     }
 }
-#endif //INC_LFRAMEWORK_LIGHT_H__
+#endif //INC_LFRAMEWORK_LIGHT_H_

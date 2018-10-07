@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_LCOLLIDE_H__
-#define INC_LFRAMEWORK_LCOLLIDE_H__
+#ifndef INC_LFRAMEWORK_LCOLLIDE_H_
+#define INC_LFRAMEWORK_LCOLLIDE_H_
 /**
 @file lcollide.h
 @author t-sakai
@@ -185,4 +185,4 @@ namespace lfw
         f32 t_;
     };
 }
-#endif //INC_LFRAMEWORK_LCOLLIDE_H__
+#endif //INC_LFRAMEWORK_LCOLLIDE_H_

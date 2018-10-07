@@ -155,6 +155,13 @@ namespace lmath
         f32 w_, x_, y_, z_;
     };
 
+    //--------------------------------------------
+    //---
+    //--- Quaternion
+    //---
+    //--------------------------------------------
+    static_assert(std::is_trivially_copyable<Quaternion>::value, "Quaternion must be trivially copyable");
+
 #if defined(LMATH_USE_SSE)
     //extern LALIGN16 u32 QuaternionConjugateMask_[4];
     extern LALIGN16 u32 QuaternionMulMask0_[4];

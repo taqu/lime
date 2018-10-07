@@ -5,7 +5,7 @@
 */
 #include "CPU.h"
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 #include <Windows.h>
 #include <intrin.h>
 
@@ -102,7 +102,7 @@ namespace lcore
     */
     u32 getLogicalCPUCount()
     {
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
         SYSTEM_INFO systemInfo;
         GetSystemInfo(&systemInfo);
         return systemInfo.dwNumberOfProcessors;
@@ -145,7 +145,7 @@ namespace
     void CPUInformation::initialize()
     {
         numCores_ = 0;
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 
         BYTE* buffer = NULL;
         DWORD length = 0;

@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_VIEWREF_H__
-#define INC_LGRAPHICS_VIEWREF_H__
+#ifndef INC_LGRAPHICS_VIEWREF_H_
+#define INC_LGRAPHICS_VIEWREF_H_
 /**
 @file ViewRef.h
 @author t-sakai
@@ -11,4 +11,4 @@
 #include "dx11/ViewRef.h"
 #endif
 
-#endif //INC_LGRAPHICS_VIEWREF_H__
+#endif //INC_LGRAPHICS_VIEWREF_H_

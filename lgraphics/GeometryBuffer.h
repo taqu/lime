@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_GEOMETRYBUFFER_H__
-#define INC_LGRAPHICS_GEOMETRYBUFFER_H__
+﻿#ifndef INC_LGRAPHICS_GEOMETRYBUFFER_H_
+#define INC_LGRAPHICS_GEOMETRYBUFFER_H_
 /**
 @file GeometryBuffer.h
 @author t-sakai
@@ -22,4 +22,4 @@
 #include "gles2/GeometryBuffer.h"
 #endif
 
-#endif //INC_LGRAPHICS_GEOMETRYBUFFER_H__
+#endif //INC_LGRAPHICS_GEOMETRYBUFFER_H_

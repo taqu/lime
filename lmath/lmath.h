@@ -8,9 +8,10 @@
 #include <lcore/lcore.h>
 #include <math.h>
 
-//#include <mmintrin.h>  //MMX命令セット
-#include <xmmintrin.h> //SSE命令セット
-#include <emmintrin.h> //SSE2命令セット
+//#include <mmintrin.h>  //MMX intrinsics
+//#include <xmmintrin.h> //SSE intrinsics
+//#include <emmintrin.h> //SSE2 intrinsics
+#include <immintrin.h> //AVX intrinsics
 
 namespace lmath
 {

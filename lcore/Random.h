@@ -1,5 +1,5 @@
-﻿#ifndef INC_RANDOM_H__
-#define INC_RANDOM_H__
+﻿#ifndef INC_RANDOM_H_
+#define INC_RANDOM_H_
 /**
 @file Random.h
 @author t-sakai
@@ -36,7 +36,7 @@ namespace lcore
         void srand(u32 seed);
 
         /**
-        @brief 1 - 0xFFFFFFFFUの乱数生成
+        @brief 0 - 0xFFFFFFFFUの乱数生成
         */
         u32 rand();
 
@@ -262,8 +262,6 @@ namespace lcore
         u32 index_;
     };
 
-namespace random
-{
     //----------------------------------------------------
     /**
     @brief [vmin, vmax)
@@ -335,8 +333,8 @@ namespace random
             lcore::swap(v[i], v[offset]);
         }
 	}
-}
+
     void cryptRandom(u32 size, void* buffer);
 }
 
-#endif //INC_RANDOM_H__
+#endif //INC_RANDOM_H_

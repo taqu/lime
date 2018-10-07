@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_RINGBUFFER_H__
-#define INC_LGRAPHICS_RINGBUFFER_H__
+#ifndef INC_LGRAPHICS_RINGBUFFER_H_
+#define INC_LGRAPHICS_RINGBUFFER_H_
 /**
 @file RingBuffer.h
 @author t-sakai
@@ -73,4 +73,4 @@ namespace lgfx
         Entry entries_[MaxSyncFrames];
     };
 }
-#endif //INC_LGRAPHICS_RINGBUFFER_H__
+#endif //INC_LGRAPHICS_RINGBUFFER_H_

@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_LSOUND_H__
-#define INC_LSOUND_LSOUND_H__
+#ifndef INC_LSOUND_LSOUND_H_
+#define INC_LSOUND_LSOUND_H_
 /**
 @file lsound.h
 @author t-sakai
@@ -41,7 +41,7 @@ namespace lsound
     using lcore::intptr_t;
     using lcore::uintptr_t;
     using lcore::ptrdiff_t;
-    using lcore::lsize_t;
+    using lcore::size_t;
 
     using lcore::ClockType;
 
@@ -203,4 +203,4 @@ namespace lsound
 #endif
 
 }
-#endif //INC_LSOUND_LSOUND_H__
+#endif //INC_LSOUND_LSOUND_H_

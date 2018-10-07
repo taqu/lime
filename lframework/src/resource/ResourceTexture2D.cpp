@@ -4,7 +4,7 @@
 @date 2016/11/22 create
 */
 #include "resource/ResourceTexture2D.h"
-#include <lcore/liostream.h>
+#include <lcore/File.h>
 #include <lgraphics/io/IODDS.h>
 #include <lgraphics/io/IOPNG.h>
 #include <lgraphics/io/IOBMP.h>
@@ -19,11 +19,11 @@ namespace lfw
         LASSERT(NULL != memory);
 
         s32 length = lcore::strlen_s32(path);
-        const Char* ext = lcore::getExtension(length, path);
+        const Char* ext = lcore::Path::getExtension(length, path);
         lgfx::Texture2DRef texture;
 
-        u32 width = 0;
-        u32 height = 0;
+        s32 width = 0;
+        s32 height = 0;
         lgfx::DataFormat format = (param.isSRGB())? lgfx::Data_R8G8B8A8_UNorm_SRGB : lgfx::Data_R8G8B8A8_UNorm;
         bool result = false;
 
@@ -36,24 +36,21 @@ namespace lfw
                 lgfx::BindFlag_ShaderResource,
                 lgfx::CPUAccessFlag_None,
                 lgfx::ResourceMisc_None,
-                (param.isSRGB())? true:false,
                 width, height, format);
 
         }else if(0==lcore::strncmp(ext, ImageExtension_PNG, 3)){
-            lcore::ibstream stream(static_cast<s32>(size), memory);
-            //result = lgfx::io::IOPNG::read(
-            //    texture,
-            //    stream,
-            //    lgfx::Usage_Default,
-            //    lgfx::BindFlag_ShaderResource,
-            //    lgfx::CPUAccessFlag_None,
-            //    lgfx::ResourceMisc_None,
-            //    true,
-            //    lgfx::io::IOPNG::Swap_RGB,
-            //    width, height, rowBytes, format);
+            lgfx::ISStream stream(size, memory);
+            result = lgfx::io::IOPNG::read(
+                texture,
+                stream,
+                lgfx::Usage_Default,
+                lgfx::BindFlag_ShaderResource,
+                lgfx::CPUAccessFlag_None,
+                lgfx::ResourceMisc_None,
+                width, height, format);
 
         }else if(0==lcore::strncmp(ext, ImageExtension_BMP, 3)){
-            lcore::ibstream stream(static_cast<s32>(size), memory);
+            lgfx::ISStream stream(size, memory);
             result = lgfx::io::IOBMP::read(
                 texture,
                 stream,
@@ -62,11 +59,10 @@ namespace lfw
                 lgfx::CPUAccessFlag_None,
                 lgfx::ResourceMisc_None,
                 true,
-                true,
                 width, height, format);
 
         }else if(0==lcore::strncmp(ext, ImageExtension_TGA, 3)){
-            lcore::ibstream stream(static_cast<s32>(size), memory);
+            lgfx::ISStream stream(size, memory);
             result = lgfx::io::IOTGA::read(
                 texture,
                 stream,
@@ -74,8 +70,6 @@ namespace lfw
                 lgfx::BindFlag_ShaderResource,
                 lgfx::CPUAccessFlag_None,
                 lgfx::ResourceMisc_None,
-                true,
-                true,
                 width, height, format);
 
         }

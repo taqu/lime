@@ -1,5 +1,5 @@
-#ifndef INC_DEBUG_SHADERID_H__
-#define INC_DEBUG_SHADERID_H__
+#ifndef INC_DEBUG_SHADERID_H_
+#define INC_DEBUG_SHADERID_H_
 /**
 @file ShaderID.h
 @author t-sakai
@@ -48,4 +48,4 @@ namespace debug
         static const lfw::s32 sizeCS_[];
     };
 }
-#endif //INC_DEBUG_SHADERID_H__
+#endif //INC_DEBUG_SHADERID_H_

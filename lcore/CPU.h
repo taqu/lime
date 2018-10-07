@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_CPU_H__
-#define INC_LCORE_CPU_H__
+﻿#ifndef INC_LCORE_CPU_H_
+#define INC_LCORE_CPU_H_
 /**
 @file CPU.h
 @author t-sakai
@@ -148,4 +148,4 @@ namespace lcore
         return cores_[index];
     }
 }
-#endif //INC_LCORE_CPU_H__
+#endif //INC_LCORE_CPU_H_

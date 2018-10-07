@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_SYNCOBJECT_H__
-#define INC_LCORE_SYNCOBJECT_H__
+﻿#ifndef INC_LCORE_SYNCOBJECT_H_
+#define INC_LCORE_SYNCOBJECT_H_
 /**
 @file SyncObject.h
 @author t-sakai
@@ -7,7 +7,7 @@
 */
 #include "lcore.h"
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -23,7 +23,7 @@
 namespace lcore
 {
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 namespace thread
 {
     static const u32 Infinite = 0xFFFFFFFFU; /// タイムアウト時間に指定すると、シグナル状態になるまで待機
@@ -450,4 +450,4 @@ namespace thread
     };
 #endif
 }
-#endif //INC_LCORE_SYNCOBJECT_H__
+#endif //INC_LCORE_SYNCOBJECT_H_

@@ -4,7 +4,7 @@
 @date 2016/11/06 create
 */
 #include "Application.h"
-#include <lcore/io/FileSystem.h>
+#include <lcore/FileSystem.h>
 #include <lgraphics/Graphics.h>
 #include <lsound/Context.h>
 #include "System.h"
@@ -49,9 +49,8 @@ namespace lfw
     {
         initialize();
 
-        lgfx::Window::EVENT ev;
         for(;;){
-            if(false == window_.peekEvent(ev)){
+            if(false == window_.peekEvent(NULL)){
                 break;
             }
             update();
@@ -65,9 +64,8 @@ namespace lfw
     {
         initialize();
 
-        lgfx::Window::EVENT ev;
         for(;;){
-            if(false == window_.getEvent(ev)){
+            if(false == window_.getEvent(NULL)){
                 break;
             }
             update();
@@ -94,22 +92,21 @@ namespace lfw
         windowParam.exStyle_ = initParam.windowParam_.exStyle_;
         windowParam.width_ = initParam.gfxParam_.backBufferWidth_;
         windowParam.height_ = initParam.gfxParam_.backBufferHeight_;
-        windowParam.setTitle(title, static_cast<u32>(lcore::strlen(title)+1));
+        windowParam.title_ = title;
         windowParam.wndProc_ = wndProc;
-        bool ret = window_.initialize(windowParam, true);
-        if(false == ret){
+        if(!window_.create(windowParam)){
             return false;
         }
         System::setWindow(&window_);
 
         //Initialize Graphics
         //-----------------------------------------------------------------
-        initParam.gfxParam_.windowHandle_ = window_.getHandle().hWnd_;
+        initParam.gfxParam_.windowHandle_ = window_.getHandle();
 #if defined(_WIN32)
         ImmAssociateContext(initParam.gfxParam_.windowHandle_, NULL); //IME OFF
 #endif
         if(false == lgfx::initializeGraphics(initParam.gfxParam_)){
-            window_.terminate();
+            window_.destroy();
             return false;
         }
 
@@ -209,7 +206,7 @@ namespace lfw
         input_.terminate();
 
         lgfx::terminateGraphics();
-        window_.terminate();
+        window_.destroy();
 
         System::clear();
     }

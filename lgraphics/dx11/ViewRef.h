@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_DX11_VIEWREF_H__
-#define INC_LGRAPHICS_DX11_VIEWREF_H__
+#ifndef INC_LGRAPHICS_DX11_VIEWREF_H_
+#define INC_LGRAPHICS_DX11_VIEWREF_H_
 /**
 @file ViewRef.h
 @author t-sakai
@@ -686,4 +686,4 @@ namespace lgfx
         static UnorderedAccessViewRef View::createUAView(const UAVDesc& desc, ID3D11Resource* resource);
     };
 }
-#endif //INC_LGRAPHICS_DX11_VIEWREF_H__
+#endif //INC_LGRAPHICS_DX11_VIEWREF_H_

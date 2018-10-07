@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_INPUTLAYOUTFACTORY_H__
-#define INC_LFRAMEWORK_INPUTLAYOUTFACTORY_H__
+#ifndef INC_LFRAMEWORK_INPUTLAYOUTFACTORY_H_
+#define INC_LFRAMEWORK_INPUTLAYOUTFACTORY_H_
 /**
 @file InputLayoutFactory.h
 @author t-sakai
@@ -53,7 +53,7 @@ namespace lfw
         InputLayoutFactory& operator=(const InputLayoutFactory&);
 
         static const s32 IncSize = 16;
-        typedef lcore::Array<lgfx::InputLayoutRef, lcore::array_static_inc_size<IncSize> > LayoutArray;
+        typedef lcore::Array<lgfx::InputLayoutRef, lcore::ArrayStaticCapacityIncrement<IncSize> > LayoutArray;
 
         LayoutArray layouts_;
     };
@@ -110,4 +110,4 @@ namespace lfw
     };
 
 }
-#endif //INC_LFRAMEWORK_INPUTLAYOUTFACTORY_H__
+#endif //INC_LFRAMEWORK_INPUTLAYOUTFACTORY_H_

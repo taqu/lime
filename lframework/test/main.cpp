@@ -1,20 +1,11 @@
-#include <gtest/gtest.h>
+#define CATCH_CONFIG_RUNNER
+#include "catch.hpp"
 #include <lcore/lcore.h>
-#include "ecs/lecs.h"
-#include "TestHandleBaseAllocator.h"
-#include "TestTree.h"
-#include "TestEntity.h"
-#include "TestComponent.h"
-#include "TestTreeComponent.h"
-#include "TestComponentBehavior.h"
-#include "TestResources.h"
-#include "TestOctree.h"
 
 int main(int argc, char** argv)
 {
     lcore::initializeSystem();
-    ::testing::InitGoogleTest(&argc, argv);
-    int result = RUN_ALL_TESTS();
+    int result = Catch::Session().run(argc, argv);
     lcore::terminateSystem();
     return result;
 }

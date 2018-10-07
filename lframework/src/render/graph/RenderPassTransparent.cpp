@@ -29,7 +29,7 @@ namespace graph
     {
     }
 
-    void RenderPassTransparent::create(const Camera& camera)
+    void RenderPassTransparent::create(const Camera& /*camera*/)
     {
         graph::RenderGraph& renderGraph = System::getRenderGraph();
         rtvAccumLighting_ = renderGraph.getShared(RenderPassLighting::ID_RTVAccumLighting);
@@ -50,7 +50,7 @@ namespace graph
     {
     }
 
-    void RenderPassTransparent::execute(RenderContext& renderContext, Camera& camera)
+    void RenderPassTransparent::execute(RenderContext& renderContext, Camera& /*camera*/)
     {
         lgfx::ContextRef& context = renderContext.getContext();
         lfw::LightArray& lights = renderContext.getLights();

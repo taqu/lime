@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_JOINTPOSE_H__
-#define INC_LFRAMEWORK_JOINTPOSE_H__
+#ifndef INC_LFRAMEWORK_JOINTPOSE_H_
+#define INC_LFRAMEWORK_JOINTPOSE_H_
 /**
 @file JointPose.h
 @author t-sakai
@@ -25,4 +25,4 @@ namespace lfw
         lmath::Quaternion rotation_;
     };
 }
-#endif //INC_LFRAMEWORK_JOINTPOSE_H__
+#endif //INC_LFRAMEWORK_JOINTPOSE_H_

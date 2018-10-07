@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_RESOURCESET_H__
-#define INC_LFRAMEWORK_RESOURCESET_H__
+#ifndef INC_LFRAMEWORK_RESOURCESET_H_
+#define INC_LFRAMEWORK_RESOURCESET_H_
 /**
 @file ResourceSet.h
 @author t-sakai
@@ -56,7 +56,7 @@ namespace lfw
 
         ResourceSet& operator=(const ResourceSet& rhs);
     private:
-        typedef lcore::Array<Resource::pointer, lcore::array_static_inc_size<64>> ResourceArray;
+        typedef lcore::Array<Resource::pointer, lcore::ArrayStaticCapacityIncrement<64>> ResourceArray;
 
         ResourceArray resources_;
     };
@@ -77,4 +77,4 @@ namespace lfw
         return resources_.end();
     }
 }
-#endif //INC_LFRAMEWORK_RESOURCESET_H__
+#endif //INC_LFRAMEWORK_RESOURCESET_H_

@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_DX11_RASTERIZERSTATEREF_H__
-#define INC_LGRAPHICS_DX11_RASTERIZERSTATEREF_H__
+#ifndef INC_LGRAPHICS_DX11_RASTERIZERSTATEREF_H_
+#define INC_LGRAPHICS_DX11_RASTERIZERSTATEREF_H_
 /**
 @file RasterizerStateRef.h
 @author t-sakai
@@ -72,4 +72,4 @@ namespace lgfx
             bool antialiasedLineEnable);
     };
 }
-#endif //INC_LGRAPHICS_DX11_RASTERIZERSTATEREF_H__
+#endif //INC_LGRAPHICS_DX11_RASTERIZERSTATEREF_H_

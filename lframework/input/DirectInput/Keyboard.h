@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFW_LINPUT_DINPUT_KEYBOARD_H__
-#define INC_LFW_LINPUT_DINPUT_KEYBOARD_H__
+﻿#ifndef INC_LFW_LINPUT_DINPUT_KEYBOARD_H_
+#define INC_LFW_LINPUT_DINPUT_KEYBOARD_H_
 /**
 @file Keyboard.h
 @author t-sakai
@@ -7,7 +7,6 @@
 */
 #include "../linputEnum.h"
 #include "Device.h"
-#include <lcore/BitSet.h>
 
 namespace linput
 {
@@ -16,7 +15,7 @@ namespace linput
     public:
         static const u32 BufferSize = 8;
         static const u32 StateSizeInBytes = 256/8;
-        typedef lcore::BitSet<StateSizeInBytes> StateSet;
+        typedef BitSet<StateSizeInBytes> StateSet;
 
         Keyboard();
         virtual ~Keyboard();
@@ -47,4 +46,4 @@ namespace linput
     }
 }
 
-#endif //INC_LFW_LINPUT_DINPUT_KEYBOARD_H__
+#endif //INC_LFW_LINPUT_DINPUT_KEYBOARD_H_

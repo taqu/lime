@@ -5,7 +5,6 @@
 */
 #include "lgraphics.h"
 
-#include <lcore/liostream.h>
 #include "io/IODDS.h"
 #include "TextureRef.h"
 
@@ -385,12 +384,12 @@ namespace io
         }
     }
 
-    bool IODDS::checkSignature(lcore::istream& is)
+    bool IODDS::checkSignature(Stream& is)
     {
-        s32 pos = is.tellg();
+        s64 pos = is.tell();
         u32 magic;
-        u32 count = lcore::io::read(is, magic);
-        is.seekg(pos, lcore::ios::beg);
+        s32 count = is.read(sizeof(u32), &magic);
+        is.seek(pos, lcore::ios::beg);
         if(count<1){
             return false;
         }
@@ -405,24 +404,23 @@ namespace io
         BindFlag bindFlag,
         CPUAccessFlag access,
         ResourceMisc misc,
-        bool sRGB,
-        u32& width, u32& height, DataFormat& format)
+        s32& width,
+        s32& height,
+        DataFormat& format)
     {
         static const u32 MaxNumSubResourceData = 256;
         SubResourceData initData[MaxNumSubResourceData];
 
-        lcore::ibstream stream(size, data);
+        ISStream stream(size, data);
 
         u32 magic = 0;
-        lcore::io::read(stream, magic);
+        stream.read(magic);
         if(magic != DDS_MAGIC){
             return false;
         }
 
         DDS_HEADER header;
-        lcore::io::read(stream, header);
-
-        if(stream.eof()){
+        if(!stream.read(header)){
             return false;
         }
 
@@ -436,11 +434,11 @@ namespace io
         if((header.ddpf_.flags_ & DDPF_FOURCC) != 0
             && header.ddpf_.fourCC_ == DDS_DX10)
         {
-            lcore::io::read(stream, header10);
+            stream.read(header10);
             format = static_cast<DataFormat>(header10.format_);
             arraySize = header10.arraySize_;
         }else{
-            format = selectFormat(header.ddpf_, sRGB);
+            format = selectFormat(header.ddpf_, true);
 
             if((header.caps2_ & DDSCAPS2_CUBEMAP) != 0){
                 arraySize = 0;
@@ -478,7 +476,7 @@ namespace io
         u32 bytes = 0;
         u32 pitch = 0;
         u32 w, h;
-        const u8* mem = data + stream.tellg();
+        const u8* mem = data + stream.tell();
         u32 index = 0;
         for(u32 i=0; i<arraySize; ++i){
             w = header.width_;
@@ -536,24 +534,24 @@ namespace io
         BindFlag bindFlag,
         CPUAccessFlag access,
         ResourceMisc misc,
-        bool sRGB,
-        u32& width, u32& height, u32& depth, DataFormat& format)
+        s32& width,
+        s32& height,
+        s32& depth,
+        DataFormat& format)
     {
         static const u32 MaxNumSubResourceData = 256;
         SubResourceData initData[MaxNumSubResourceData];
 
-        lcore::ibstream stream(size, data);
+        ISStream stream(size, data);
 
         u32 magic = 0;
-        lcore::io::read(stream, magic);
+        stream.read(magic);
         if(magic != DDS_MAGIC){
             return false;
         }
 
         DDS_HEADER header;
-        lcore::io::read(stream, header);
-
-        if(stream.eof()){
+        if(!stream.read(header)){
             return false;
         }
 
@@ -567,7 +565,7 @@ namespace io
         if((header.ddpf_.flags_ & DDPF_FOURCC) != 0
             && header.ddpf_.fourCC_ == DDS_DX10)
         {
-            lcore::io::read(stream, header10);
+            stream.read(header10);
             format = static_cast<DataFormat>(header10.format_);
             arraySize = header10.arraySize_;
             if(1<arraySize){
@@ -575,7 +573,7 @@ namespace io
             }
 
         }else{
-            format = selectFormat(header.ddpf_, sRGB);
+            format = selectFormat(header.ddpf_, true);
 
             if((header.caps2_ & DDSCAPS2_CUBEMAP) != 0){
                 return false;
@@ -598,7 +596,7 @@ namespace io
         u32 pitch = 0;
         u32 slicePitch = 0;
         u32 w, h, d;
-        const u8* mem = data + stream.tellg();
+        const u8* mem = data + stream.tell();
         u32 index = 0;
         {
             w = header.width_;
@@ -616,8 +614,6 @@ namespace io
                 d = lcore::maximum<u32>(1, d>>1);
             }
         }
-
-        //u32 fileSize = (u32)mem - (u32)data;
 
         SRVDesc viewDesc;
         viewDesc.format_ = format;

@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_GEOMETRY_H__
-#define INC_LFRAMEWORK_GEOMETRY_H__
+#ifndef INC_LFRAMEWORK_GEOMETRY_H_
+#define INC_LFRAMEWORK_GEOMETRY_H_
 /**
 @file Geometry.h
 @author t-sakai
@@ -107,4 +107,4 @@ namespace lfw
         return (inputLayout_.valid() && vb_.valid());
     }
 }
-#endif //INC_LFRAMEWORK_GEOMETRY_H__
+#endif //INC_LFRAMEWORK_GEOMETRY_H_

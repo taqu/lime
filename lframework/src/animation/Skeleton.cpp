@@ -5,7 +5,7 @@
 */
 #include "animation/Skeleton.h"
 #include "animation/Joint.h"
-#include <lcore/liostream.h>
+#include <lcore/File.h>
 
 namespace lfw
 {
@@ -96,28 +96,28 @@ namespace lfw
         return true;
     }
 
-    bool Skeleton::serialize(lcore::ostream& os, Skeleton& skeleton)
+    bool Skeleton::serialize(lcore::File& os, Skeleton& skeleton)
     {
         write(os, skeleton.getName());
-        lcore::io::write(os, skeleton.getNumJoints());
+        os.write(skeleton.getNumJoints());
         for(s32 i=0; i<skeleton.getNumJoints(); ++i){
             write(os, skeleton.getJointName(i));
         }
 
         for(s32 i=0; i<skeleton.getNumJoints(); ++i){
             const Joint& joint = skeleton.getJoint(i);
-            lcore::io::write(os, joint);
+            os.write(joint);
         }
         return true;
     }
 
-    bool Skeleton::deserialize(Skeleton& skeleton, lcore::istream& is)
+    bool Skeleton::deserialize(Skeleton& skeleton, lcore::File& is)
     {
         Name name;
         read(name, is);
         
         s32 numJoints = 0;
-        lcore::io::read(is, numJoints);
+        is.read(numJoints);
         Skeleton tmpSkeleton(numJoints);
         tmpSkeleton.setName(name);
 
@@ -127,7 +127,7 @@ namespace lfw
         }
         for(s32 i=0; i<numJoints; ++i){
             Joint& joint = tmpSkeleton.getJoint(i);
-            lcore::io::read(is, joint);
+            is.read(joint);
         }
         skeleton.swap(tmpSkeleton);
         return true;

@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_DX11_BLOBREF_H__
-#define INC_LGRAPHICS_DX11_BLOBREF_H__
+﻿#ifndef INC_LGRAPHICS_DX11_BLOBREF_H_
+#define INC_LGRAPHICS_DX11_BLOBREF_H_
 /**
 @file BlobRef.h
 @author t-sakai
@@ -30,7 +30,7 @@ namespace lgfx
         bool valid() const{ return (blob_!=NULL);}
 
         void* getPointer();
-        lsize_t getSize();
+        size_t getSize();
 
         BlobRef& operator=(const BlobRef& rhs);
         BlobRef& operator=(BlobRef&& rhs);
@@ -64,4 +64,4 @@ namespace lgfx
     s32 unpackBlob(s32 dstSize, u8* dst, s32 srcSize, const u8* src);
     bool getPackBlobStatus(BlobPackInfo& info, s32 srcSize, const u8* src);
 }
-#endif //INC_LGRAPHICS_DX11_BLOBREF_H__
+#endif //INC_LGRAPHICS_DX11_BLOBREF_H_

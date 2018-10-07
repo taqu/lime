@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_IOJPG_H__
-#define INC_LGRAPHICS_IOJPG_H__
+#ifndef INC_LGRAPHICS_IOJPG_H_
+#define INC_LGRAPHICS_IOJPG_H_
 /**
 @file IOJPG.h
 @author t-sakai
@@ -20,4 +20,4 @@
 #include "../gles2/io/IOJPG.h"
 #endif
 
-#endif //INC_LGRAPHICS_IOJPG_H__
+#endif //INC_LGRAPHICS_IOJPG_H_

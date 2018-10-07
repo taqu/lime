@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_VERTEXBUFFERREF_H__
-#define INC_LGRAPHICS_VERTEXBUFFERREF_H__
+﻿#ifndef INC_LGRAPHICS_VERTEXBUFFERREF_H_
+#define INC_LGRAPHICS_VERTEXBUFFERREF_H_
 /**
 @file VertexBufferRef.h
 @author t-sakai
@@ -22,4 +22,4 @@
 #include "gles2/VertexBufferRef.h"
 #endif
 
-#endif //INC_LGRAPHICS_VERTEXBUFFERREF_H__
+#endif //INC_LGRAPHICS_VERTEXBUFFERREF_H_

@@ -463,7 +463,7 @@ namespace
                 FileStream* fileStream = LPLACEMENT_NEW(streamEntry) FileStream();
                 PackFile* packFile = reinterpret_cast<PackFile*>(packResource);
                 File* file;
-                s32 start, end;
+                s64 start, end;
                 packFile->get(id, file, start, end);
                 fileStream->set(file, start, end);
                 stream = fileStream;
@@ -475,10 +475,9 @@ namespace
                 MemoryStream* memoryStream = LPLACEMENT_NEW(streamEntry) MemoryStream();
                 PackMemory* packMemory = reinterpret_cast<PackMemory*>(packResource);
                 Memory* memory;
-                u32 size;
-                s32 offset;
-                packMemory->get(id, memory, size, offset);
-                memoryStream->set(size, offset, memory);
+                s64 offset, size;
+                packMemory->get(id, memory, offset, size);
+                memoryStream->set(memory, offset, size);
                 stream = memoryStream;
             }
             break;
@@ -554,7 +553,7 @@ namespace
                 FileStream* fileStream = LPLACEMENT_NEW(streamEntry) FileStream();
                 PackFile* packFile = reinterpret_cast<PackFile*>(packResource);
                 File* file;
-                s32 start, end;
+                s64 start, end;
                 packFile->get(id, file, start, end);
                 fileStream->set(file, start, end);
                 stream = fileStream;
@@ -566,10 +565,9 @@ namespace
                 MemoryStream* memoryStream = LPLACEMENT_NEW(streamEntry) MemoryStream();
                 PackMemory* packMemory = reinterpret_cast<PackMemory*>(packResource);
                 Memory* memory;
-                u32 size;
-                s32 offset;
-                packMemory->get(id, memory, size, offset);
-                memoryStream->set(size, offset, memory);
+                s64 offset, size;
+                packMemory->get(id, memory, offset, size);
+                memoryStream->set(memory, offset, size);
                 stream = memoryStream;
             }
             break;

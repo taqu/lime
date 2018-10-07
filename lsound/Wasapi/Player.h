@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_WASAPI_PLAYER_H__
-#define INC_LSOUND_WASAPI_PLAYER_H__
+#ifndef INC_LSOUND_WASAPI_PLAYER_H_
+#define INC_LSOUND_WASAPI_PLAYER_H_
 /**
 @file Player.h
 @author t-sakai
@@ -192,4 +192,4 @@ namespace lsound
         innerFlags_ &= ~flag;
     }
 }
-#endif //INC_LSOUND_WASAPI_PLAYER_H__
+#endif //INC_LSOUND_WASAPI_PLAYER_H_

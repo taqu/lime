@@ -39,13 +39,13 @@ namespace debug
             vertex0.position_.y_ = 1.0f;
             vertex0.position_.z_ = 0.0f;
 
-            vertex0.texcoord_[0] = lcore::toBinary16Float(0.0f);
-            vertex0.texcoord_[1] = lcore::toBinary16Float(0.0f);
-            vertex0.texcoord_[2] = lcore::toBinary16Float(1.0f);
-            vertex0.texcoord_[3] = lcore::toBinary16Float(1.0f);
+            vertex0.texcoord_[0] = lcore::toFloat16(0.0f);
+            vertex0.texcoord_[1] = lcore::toFloat16(0.0f);
+            vertex0.texcoord_[2] = lcore::toFloat16(1.0f);
+            vertex0.texcoord_[3] = lcore::toFloat16(1.0f);
             vertex0.abgr_ = lcore::getABGR(128, 0, 0, 255);
-            vertex0.size_[0] = lcore::toBinary16Float(0.2f);
-            vertex0.size_[1] = lcore::toBinary16Float(0.2f);
+            vertex0.size_[0] = lcore::toFloat16(0.2f);
+            vertex0.size_[1] = lcore::toFloat16(0.2f);
             vertex0.rotation_[0] = lcore::floatTo16SNORM(1.0f);
             vertex0.rotation_[1] = lcore::floatTo16SNORM(0.0f);
             add(vertex0, vertex1);

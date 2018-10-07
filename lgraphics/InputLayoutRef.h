@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_INPUTLAYOUTREF_H__
-#define INC_LGRAPHICS_INPUTLAYOUTREF_H__
+﻿#ifndef INC_LGRAPHICS_INPUTLAYOUTREF_H_
+#define INC_LGRAPHICS_INPUTLAYOUTREF_H_
 /**
 @file InputLayoutRef.h
 @author t-sakai
@@ -11,4 +11,4 @@
 #include "dx11/InputLayoutRef.h"
 #endif
 
-#endif //INC_LGRAPHICS_INPUTLAYOUTREF_H__
+#endif //INC_LGRAPHICS_INPUTLAYOUTREF_H_

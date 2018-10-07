@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_SHADERMANAGER_H__
-#define INC_LFRAMEWORK_SHADERMANAGER_H__
+#ifndef INC_LFRAMEWORK_SHADERMANAGER_H_
+#define INC_LFRAMEWORK_SHADERMANAGER_H_
 /**
 @file ShaderManager.h
 @author t-sakai
@@ -7,6 +7,7 @@
 */
 #include <lcore/Array.h>
 #include "../lframework.h"
+#include <lgraphics/ShaderRef.h>
 #include "ShaderID.h"
 
 namespace lcore
@@ -164,4 +165,4 @@ namespace lfw
         ShaderSet** shaderSets_;
     };
 }
-#endif //INC_LFRAMEWORK_SHADERMANAGER_H__
+#endif //INC_LFRAMEWORK_SHADERMANAGER_H_

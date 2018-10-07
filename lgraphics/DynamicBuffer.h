@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_DYNAMICBUFFER_H__
-#define INC_LGRAPHICS_DYNAMICBUFFER_H__
+#ifndef INC_LGRAPHICS_DYNAMICBUFFER_H_
+#define INC_LGRAPHICS_DYNAMICBUFFER_H_
 /**
 @file DynamicBuffer.h
 @author t-sakai
@@ -114,4 +114,4 @@ namespace lgfx
         context.setIndexBuffer(buffer_.get(), format, offsetInBytes);
     }
 }
-#endif //INC_LGRAPHICS_DYNAMICBUFFER_H__
+#endif //INC_LGRAPHICS_DYNAMICBUFFER_H_

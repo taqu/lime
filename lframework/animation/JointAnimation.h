@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_JOINTANIMATION_H__
-#define INC_LFRAMEWORK_JOINTANIMATION_H__
+﻿#ifndef INC_LFRAMEWORK_JOINTANIMATION_H_
+#define INC_LFRAMEWORK_JOINTANIMATION_H_
 /**
 @file JointAnimation.h
 @author t-sakai
@@ -160,4 +160,4 @@ namespace lfw
         return index;
     }
 }
-#endif //INC_LFRAMEWORK_JOINTANIMATION_H__
+#endif //INC_LFRAMEWORK_JOINTANIMATION_H_

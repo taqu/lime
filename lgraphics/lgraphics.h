@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_H__
-#define INC_LGRAPHICS_H__
+﻿#ifndef INC_LGRAPHICS_H_
+#define INC_LGRAPHICS_H_
 /**
 @file lgraphics.h
 @author t-sakai
@@ -9,7 +9,7 @@
 #include <lcore/lstring.h>
 #include "Config.h"
 
-#if defined(_WIN32) || defined(_WIN64)
+#if defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 
@@ -104,7 +104,7 @@ namespace lgfx
 
     using lcore::Char;
 
-    using lcore::lsize_t;
+    using lcore::size_t;
 
     static const s32 LGFX_MAX_SKINNING_MATRICES = LGFX_CONFIG_MAX_SKINNING_MATRICES;
     static const s32 LGFX_MAX_RENDER_TARGETS = LGFX_CONFIG_MAX_RENDER_TARGETS;
@@ -464,4 +464,4 @@ namespace lgfx
         return t;
     }
 }
-#endif //INC_LGRAPHICS_H__
+#endif //INC_LGRAPHICS_H_

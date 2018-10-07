@@ -4,7 +4,7 @@
 @date 2016/11/24 create
 */
 #include "animation/lanim.h"
-#include <lcore/liostream.h>
+#include <lcore/File.h>
 
 namespace lfw
 {
@@ -21,17 +21,17 @@ namespace lfw
 
     AnimationSystem AnimationSystem::instance_;
 
-    void write(lcore::ostream& os, const Name& name)
+    void write(lcore::File& os, const Name& name)
     {
-        lcore::io::write(os, name.c_str(), name.size()+1);
+        os.write(name.size()+1, name.c_str());
     }
 
-    void read(Name& name, lcore::istream& is)
+    void read(Name& name, lcore::File& is)
     {
         Char tmp[Name::Size];
         Char c;
         for(s32 i=0; i<Name::Size; ++i){
-            lcore::io::read(is, c);
+            is.read(c);
             tmp[i] = c;
             if(c == lcore::CharNull){
                 break;

@@ -11,7 +11,7 @@ include_directories(AFTER ${CMAKE_CURRENT_SOURCE_DIR})
 
 set(ROOT_INCLUDE "./")
 set(ROOT_SOURCE "./src")
-set(MODULES "/" "/io")
+set(MODULES "/")
 
 set(HEADERS "")
 set(SOURCES "")

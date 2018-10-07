@@ -1,5 +1,5 @@
-#ifndef INC_LCORE_ANY_H__
-#define INC_LCORE_ANY_H__
+#ifndef INC_LCORE_ANY_H_
+#define INC_LCORE_ANY_H_
 /**
 @file Any.h
 @author t-sakai
@@ -62,4 +62,4 @@ namespace lcore
         return *this;
     }
 }
-#endif //INC_LCORE_ANY_H__
+#endif //INC_LCORE_ANY_H_

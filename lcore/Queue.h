@@ -1,5 +1,5 @@
-#ifndef INC_LCORE_QUEUE_H__
-#define INC_LCORE_QUEUE_H__
+#ifndef INC_LCORE_QUEUE_H_
+#define INC_LCORE_QUEUE_H_
 /**
 @file Queue.h
 @author t-sakai
@@ -9,7 +9,7 @@
 
 namespace lcore
 {
-    template<class T, class IncSize=array_static_inc_size<16>, class Allocator=DefaultAllocator>
+    template<class T, class IncSize= ArrayStaticCapacityIncrement<16>, class Allocator=DefaultAllocator>
     class QueuePOD : public IncSize
     {
     public:
@@ -276,4 +276,4 @@ namespace lcore
         return cursor;
     }
 }
-#endif //INC_LCORE_QUEUE_H__
+#endif //INC_LCORE_QUEUE_H_

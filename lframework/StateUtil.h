@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_STATEUTIL_H__
-#define INC_LFRAMEWORK_STATEUTIL_H__
+#ifndef INC_LFRAMEWORK_STATEUTIL_H_
+#define INC_LFRAMEWORK_STATEUTIL_H_
 /**
 @file StateUtil.h
 @author t-sakai
@@ -259,4 +259,4 @@ namespace lfw
         state_ = state;
     }
 }
-#endif //INC_LFRAMEWORK_STATEUTIL_H__
+#endif //INC_LFRAMEWORK_STATEUTIL_H_

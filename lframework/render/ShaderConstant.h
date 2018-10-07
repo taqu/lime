@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_SHADERCONSTANT_H__
-#define INC_LFRAMEWORK_SHADERCONSTANT_H__
+#ifndef INC_LFRAMEWORK_SHADERCONSTANT_H_
+#define INC_LFRAMEWORK_SHADERCONSTANT_H_
 /**
 @file ShaderConstant.h
 @author t-sakai
@@ -137,4 +137,4 @@ namespace lfw
     //void setSceneConstantCameraMotionPS(SceneConstantCameraMotionPS& dst, const Scene& scene, f32 width, f32 height, f32 exposure, f32 maxMagnitude);
 
 }
-#endif //INC_LFRAMEWORK_SHADERCONSTANT_H__
+#endif //INC_LFRAMEWORK_SHADERCONSTANT_H_

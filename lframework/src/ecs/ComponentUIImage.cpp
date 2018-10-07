@@ -19,8 +19,8 @@ namespace lfw
         ,scale_(1.0f)
         ,abgr_(0xFFFFFFFFU)
     {
-        uvRect_[0] = uvRect_[1] = lcore::toBinary16Float(0.0f);
-        uvRect_[2] = uvRect_[3] = lcore::toBinary16Float(1.0f);
+        uvRect_[0] = uvRect_[1] = lcore::toFloat16(0.0f);
+        uvRect_[2] = uvRect_[3] = lcore::toFloat16(1.0f);
     }
 
     ComponentUIImage::~ComponentUIImage()
@@ -35,20 +35,20 @@ namespace lfw
         }
     }
 
-    const lmath::Vector4& ComponentUIImage::getUVRect() const
+    const lmath::Vector4 ComponentUIImage::getUVRect() const
     {
         return lmath::Vector4::construct(
-            lcore::fromBinary16Float(uvRect_[0]),
-            lcore::fromBinary16Float(uvRect_[1]),
-            lcore::fromBinary16Float(uvRect_[2]),
-            lcore::fromBinary16Float(uvRect_[3]));
+            lcore::toFloat32(uvRect_[0]),
+            lcore::toFloat32(uvRect_[1]),
+            lcore::toFloat32(uvRect_[2]),
+            lcore::toFloat32(uvRect_[3]));
     }
 
     void ComponentUIImage::setUVRect(f32 left, f32 top, f32 right, f32 bottom)
     {
-        uvRect_[0] = lcore::toBinary16Float(left);
-        uvRect_[1] = lcore::toBinary16Float(top);
-        uvRect_[2] = lcore::toBinary16Float(right);
-        uvRect_[3] = lcore::toBinary16Float(bottom);
+        uvRect_[0] = lcore::toFloat16(left);
+        uvRect_[1] = lcore::toFloat16(top);
+        uvRect_[2] = lcore::toFloat16(right);
+        uvRect_[3] = lcore::toFloat16(bottom);
     }
 }

@@ -1,5 +1,5 @@
-﻿#ifndef INC_LFRAMEWORK_IKPACK_H__
-#define INC_LFRAMEWORK_IKPACK_H__
+﻿#ifndef INC_LFRAMEWORK_IKPACK_H_
+#define INC_LFRAMEWORK_IKPACK_H_
 /**
 @file IKPack.h
 @author t-sakai
@@ -102,4 +102,4 @@ namespace lfw
         ptr->release();
     }
 }
-#endif //INC_LFRAMEWORK_IKPACK_H__
+#endif //INC_LFRAMEWORK_IKPACK_H_

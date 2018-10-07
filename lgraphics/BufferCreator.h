@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_BUFFERCREATOR_H__
-#define INC_LGRAPHICS_BUFFERCREATOR_H__
+#ifndef INC_LGRAPHICS_BUFFERCREATOR_H_
+#define INC_LGRAPHICS_BUFFERCREATOR_H_
 /**
 @file BufferCreator.h
 @author t-sakai
@@ -54,4 +54,4 @@ namespace lgfx
     };
 }
 
-#endif //INC_LGRAPHICS_BUFFERCREATOR_H__
+#endif //INC_LGRAPHICS_BUFFERCREATOR_H_

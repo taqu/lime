@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_MODELLOADER_H__
-#define INC_LFRAMEWORK_MODELLOADER_H__
+#ifndef INC_LFRAMEWORK_MODELLOADER_H_
+#define INC_LFRAMEWORK_MODELLOADER_H_
 /**
 @file ModelLoader.h
 @author t-sakai
@@ -7,7 +7,7 @@
 */
 #include "load.h"
 #include <lcore/Array.h>
-#include <lcore/io/VirtualFileSystem.h>
+#include <lcore/VirtualFileSystem.h>
 #include <lgraphics/Enumerations.h>
 #include "Resource.h"
 
@@ -161,4 +161,4 @@ namespace lfw
         textures_.clear();
     }
 }
-#endif //INC_LFRAMEWORK_MODELLOADER_H__
+#endif //INC_LFRAMEWORK_MODELLOADER_H_

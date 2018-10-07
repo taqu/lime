@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_RESAMPLER_H__
-#define INC_LSOUND_RESAMPLER_H__
+#ifndef INC_LSOUND_RESAMPLER_H_
+#define INC_LSOUND_RESAMPLER_H_
 /**
 @file Resampler.h
 @author t-sakai
@@ -97,4 +97,4 @@ namespace lsound
         return dstSamplesPerSec_;
     }
 }
-#endif //INC_LSOUND_RESAMPLER_H__
+#endif //INC_LSOUND_RESAMPLER_H_

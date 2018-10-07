@@ -1,5 +1,5 @@
-#ifndef INC_LCORE_STACKALLOCATOR_H__
-#define INC_LCORE_STACKALLOCATOR_H__
+#ifndef INC_LCORE_STACKALLOCATOR_H_
+#define INC_LCORE_STACKALLOCATOR_H_
 /**
 @file StackAllocator.h
 @author t-sakai
@@ -161,4 +161,4 @@ namespace lcore
         reinterpret_cast<Chunk*>(prev)->next_ = NULL;
     }
 }
-#endif //INC_LCORE_STACKALLOCATOR_H__
+#endif //INC_LCORE_STACKALLOCATOR_H_

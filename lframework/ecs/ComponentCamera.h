@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTCAMERA_H__
-#define INC_LFRAMEWORK_COMPONENTCAMERA_H__
+#ifndef INC_LFRAMEWORK_COMPONENTCAMERA_H_
+#define INC_LFRAMEWORK_COMPONENTCAMERA_H_
 /**
 @file ComponentCamera.h
 @author t-sakai
@@ -130,4 +130,4 @@ namespace lfw
         ComponentCamera& operator=(const ComponentCamera&) = delete;
     };
 }
-#endif //INC_LFRAMEWORK_COMPONENTCAMERA_H__
+#endif //INC_LFRAMEWORK_COMPONENTCAMERA_H_

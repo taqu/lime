@@ -18,7 +18,11 @@ namespace lsound
     {
     }
 
+#if defined(_WIN32)
+    File::File(lcore::LHANDLE file)
+#else
     File::File(FILE* file)
+#endif
         :refCount_(0)
         ,file_(file)
     {
@@ -27,7 +31,11 @@ namespace lsound
     File::~File()
     {
         if(NULL != file_){
+#if defined(_WIN32)
+            CloseHandle(file_);
+#else
             fclose(file_);
+#endif
             file_ = NULL;
         }
     }
@@ -44,6 +52,35 @@ namespace lsound
         }
     }
 
+    void File::seek(s64 pos, s32 origin)
+    {
+#ifdef _WIN32
+        LARGE_INTEGER loffset;
+        loffset.QuadPart = pos;
+        SetFilePointerEx(file_, loffset, NULL, origin);
+#else
+        fseek(file_, pos, origin);
+#endif
+    }
+
+    s32 File::read(s32 size, void* data)
+    {
+#ifdef _WIN32
+        DWORD numBytesRead = 0;
+        return ReadFile(file_, data, static_cast<DWORD>(size), &numBytesRead, NULL)
+            ? static_cast<s32>(numBytesRead)
+            : 0;
+#else
+        return static_cast<s32>(fread(data, size, 1, file_));
+#endif
+    }
+
+    void File::swap(File& rhs)
+    {
+        lcore::swap(refCount_, rhs.refCount_);
+        lcore::swap(file_, rhs.file_);
+    }
+
     //-------------------------------------------
     //---
     //--- Memory
@@ -56,7 +93,7 @@ namespace lsound
     {
     }
 
-    Memory::Memory(u32 size, u8* memory)
+    Memory::Memory(s64 size, u8* memory)
         :refCount_(0)
         ,size_(size)
         ,memory_(memory)
@@ -78,6 +115,13 @@ namespace lsound
         if(--refCount_ == 0){
             LDELETE_RAW(this);
         }
+    }
+
+    void Memory::swap(Memory& rhs)
+    {
+        lcore::swap(refCount_, rhs.refCount_);
+        lcore::swap(size_, rhs.size_);
+        lcore::swap(memory_, rhs.memory_);
     }
 
 #ifdef ANDROID
@@ -114,7 +158,7 @@ namespace lsound
     void Asset::release()
     {
         if(--refCount_ == 0){
-            LIME_DELETE_NONULL(this);
+            LDELETE_RAW(this);
         }
     }
 #endif
@@ -124,6 +168,94 @@ namespace lsound
     //--- PackFile
     //---
     //-------------------------------------------
+    namespace
+    {
+#if defined(_WIN32)
+        lcore::LHANDLE open_file(const Char* filepath)
+        {
+            return CreateFile(
+                filepath,
+                GENERIC_READ,
+                FILE_SHARE_READ,
+                NULL,
+                OPEN_EXISTING,
+                FILE_ATTRIBUTE_NORMAL,
+                NULL);
+        }
+
+        bool read(lcore::LHANDLE file, s64 size, void* data)
+        {
+            DWORD numBytesRead = 0;
+            return ReadFile(file, data, static_cast<DWORD>(size), &numBytesRead, NULL);
+        }
+
+        s64 fsize(lcore::LHANDLE file)
+        {
+            LARGE_INTEGER result;
+            return GetFileSizeEx(file, &result)? result.QuadPart : 0;
+        }
+
+        lcore::off_t tell(lcore::LHANDLE file)
+        {
+            LARGE_INTEGER offset;
+            offset.QuadPart = 0;
+            if(!SetFilePointerEx(file, offset, &offset, FILE_CURRENT)){
+                return 0;
+            }
+            return offset.QuadPart;
+        }
+
+        void seek(lcore::LHANDLE file, lcore::off_t offset, s32 dir)
+        {
+            LARGE_INTEGER loffset;
+            loffset.QuadPart = offset;
+            SetFilePointerEx(file, loffset, NULL, dir);
+        }
+
+        void close(lcore::LHANDLE file)
+        {
+            CloseHandle(file);
+        }
+#else
+        FILE* open_file(const Char* filepath)
+        {
+            return fopen(filepath, "rb");
+        }
+
+        bool read(FILE* file, u32 size, void* data)
+        {
+            return 0<fread(data, size, 1, file);
+        }
+
+        s64 fsize(FILE* file)
+        {
+            s32 fd = fileno(file);
+            if(fd<0){
+                return 0;
+            }
+            stat64 buff;
+            if(fstat64(fd, &buff)<0){
+                return 0;
+            }
+            return buff.st_size;
+        }
+
+        lcore::off_t tell(FILE* file file)
+        {
+            return ftell(file);
+        }
+
+        void seek(FILE* file, lcore::off_t offset, s32 dir)
+        {
+            fseek(file, offset, dir)
+        }
+
+        void close(FILE* file)
+        {
+            fclose(file);
+        }
+#endif
+    }
     PackFile::PackFile()
         :entries_(NULL)
         ,file_(NULL)
@@ -135,10 +267,11 @@ namespace lsound
         LDELETE_ARRAY(entries_);
         if(NULL != file_){
             file_->release();
+            file_ = NULL;
         }
     }
 
-    void PackFile::get(s32 index, File*& file, s32& start, s32& end)
+    void PackFile::get(s32 index, File*& file, s64& start, s64& end)
     {
         LASSERT(0<=index && index<numFiles_);
         file = file_;
@@ -149,39 +282,38 @@ namespace lsound
     PackFile* PackFile::open(const Char* path)
     {
         LASSERT(NULL != path);
-        FILE* f = NULL;
-#if defined(_WIN32) || defined(_WIN64)
-        fopen_s(&f, path, "rb");
+#if defined(_WIN32)
+        lcore::LHANDLE file = open_file(path);
 #else
-        f = fopen(path, "r");
+        FILE* file = open_file(path);
 #endif
         //lcore::Log("PackFile::open %s %s", path, (NULL==f)?"false":"true");
-        if(NULL == f){
+        if(NULL == file){
             return NULL;
         }
 
         PackHeader header;
-        if(0>=fread(&header, sizeof(PackHeader), 1, f)){
-            fclose(f);
+        if(!read(file, sizeof(PackHeader), &header)){
+            close(file);
             return NULL;
         }
         FileEntry* entries = LNEW FileEntry[header.numFiles_];
-        if(0>=fread(entries, sizeof(FileEntry)*header.numFiles_, 1, f)){
+        if(!read(file, sizeof(FileEntry)*header.numFiles_, entries)){
             LDELETE_ARRAY(entries);
-            fclose(f);
+            close(file);
             return NULL;
         }
 
         //ファイル先頭からのオフセットに変換
-        s32 dataTop = ftell(f);
-        for(s32 i=0; i<header.numFiles_; ++i){
+        s64 dataTop = tell(file);
+        for(u32 i=0; i<header.numFiles_; ++i){
             entries[i].offset_ += dataTop;
         }
 
         PackFile* packFile = LNEW PackFile();
         packFile->numFiles_ = header.numFiles_;
         packFile->entries_ = entries;
-        packFile->file_ = LNEW File(f);
+        packFile->file_ = LNEW File(file);
         packFile->file_->addRef();
         return packFile;
     }
@@ -205,53 +337,50 @@ namespace lsound
         }
     }
 
-    void PackMemory::get(s32 index, Memory*& memory, u32& size, s32& offset)
+    void PackMemory::get(s32 index, Memory*& memory, s64& offset, s64& size)
     {
         LASSERT(0<=index && index<numFiles_);
         memory = memory_;
-        size = entries_[index].size_;
         offset = entries_[index].offset_;
+        size = entries_[index].size_;
     }
 
     PackMemory* PackMemory::open(const Char* path)
     {
         LASSERT(NULL != path);
-        FILE* f = NULL;
-#if defined(_WIN32) || defined(_WIN64)
-        fopen_s(&f, path, "rb");
+#if defined(_WIN32)
+        lcore::LHANDLE file = open_file(path);
 #else
-        f = fopen(path, "rb");
+        FILE* file = open_file(path);
 #endif
-        if(NULL == f){
+        if(NULL == file){
             return NULL;
         }
 
         PackHeader header;
-        if(0>=fread(&header, sizeof(PackHeader), 1, f)){
-            fclose(f);
+        if(!read(file, sizeof(PackHeader), &header)){
+            close(file);
             return NULL;
         }
         FileEntry* entries = LNEW FileEntry[header.numFiles_];
-        if(0>=fread(entries, sizeof(FileEntry)*header.numFiles_, 1, f)){
+        if(!read(file, sizeof(FileEntry)*header.numFiles_, entries)){
             LDELETE_ARRAY(entries);
-            fclose(f);
+            close(file);
             return NULL;
         }
 
-        //データサイズ計算
-        s32 dataTop = ftell(f);
-        fseek(f, 0, SEEK_END);
-        u32 size = ftell(f) - dataTop;
-        fseek(f, dataTop, SEEK_SET);
+        //Calculate data size
+        s64 dataTop = tell(file);
+        s64 size = fsize(file) - dataTop;
 
         u8* memory = LNEW u8[size];
-        if(0>=fread(memory, size, 1, f)){
+        if(!read(file, size, memory)){
             LDELETE_ARRAY(memory);
             LDELETE_ARRAY(entries);
-            fclose(f);
+            close(file);
             return NULL;
         }
-        fclose(f);
+        close(file);
 
         PackMemory* packMemory = LNEW PackMemory();
         packMemory->numFiles_ = header.numFiles_;

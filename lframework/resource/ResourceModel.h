@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_RESOURCEMODEL_H__
-#define INC_LFRAMEWORK_RESOURCEMODEL_H__
+#ifndef INC_LFRAMEWORK_RESOURCEMODEL_H_
+#define INC_LFRAMEWORK_RESOURCEMODEL_H_
 /**
 @file ResourceModel.h
 @author t-sakai
@@ -56,4 +56,4 @@ namespace lfw
         return skeleton_;
     }
 }
-#endif //INC_LFRAMEWORK_RESOURCEMODEL_H__
+#endif //INC_LFRAMEWORK_RESOURCEMODEL_H_

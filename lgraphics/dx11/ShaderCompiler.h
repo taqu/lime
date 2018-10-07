@@ -1,5 +1,5 @@
-#ifndef INC_LGRAPHICS_DX11_SHADERCOMPILER_H__
-#define INC_LGRAPHICS_DX11_SHADERCOMPILER_H__
+#ifndef INC_LGRAPHICS_DX11_SHADERCOMPILER_H_
+#define INC_LGRAPHICS_DX11_SHADERCOMPILER_H_
 /**
 @file ShaderCompiler.h
 @author t-sakai
@@ -7,7 +7,7 @@
 */
 #include <D3Dcompiler.h>
 #include <lcore/lcore.h>
-#include <lcore/liostream.h>
+#include <lcore/File.h>
 #include <lgraphics/lgraphics.h>
 #include <lgraphics/ShaderRef.h>
 #include <lgraphics/BlobRef.h>
@@ -328,7 +328,7 @@ namespace lgfx
         BlobRef* blob)
     {
         LASSERT(filename != NULL);
-        lcore::ifstream in(filename, lcore::ios::binary);
+        lcore::ifstream in(filename, lcore::ios::in);
         if(!in.is_open()){
             return PixelShaderRef();
         }
@@ -396,7 +396,7 @@ namespace lgfx
         BlobRef* blob)
     {
         LASSERT(filename != NULL);
-        lcore::ifstream in(filename, lcore::ios::binary);
+        lcore::ifstream in(filename, lcore::ios::in);
         if(!in.is_open()){
             return VertexShaderRef();
         }
@@ -466,7 +466,7 @@ namespace lgfx
         BlobRef* blob)
     {
         LASSERT(filename != NULL);
-        lcore::ifstream in(filename, lcore::ios::binary);
+        lcore::ifstream in(filename, lcore::ios::in);
         if(!in.is_open()){
             return GeometryShaderRef();
         }
@@ -535,7 +535,7 @@ namespace lgfx
         BlobRef* blob)
     {
         LASSERT(filename != NULL);
-        lcore::ifstream in(filename, lcore::ios::binary);
+        lcore::ifstream in(filename, lcore::ios::in);
         if(!in.is_open()){
             return ComputeShaderRef();
         }
@@ -604,7 +604,7 @@ namespace lgfx
         BlobRef* blob)
     {
         LASSERT(filename != NULL);
-        lcore::ifstream in(filename, lcore::ios::binary);
+        lcore::ifstream in(filename, lcore::ios::in);
         if(!in.is_open()){
             return DomainShaderRef();
         }
@@ -673,7 +673,7 @@ namespace lgfx
         BlobRef* blob)
     {
         LASSERT(filename != NULL);
-        lcore::ifstream in(filename, lcore::ios::binary);
+        lcore::ifstream in(filename, lcore::ios::in);
         if(!in.is_open()){
             return HullShaderRef();
         }
@@ -880,4 +880,4 @@ namespace lgfx
         HRESULT __stdcall Close(LPCVOID data);
     };
 }
-#endif //INC_LGRAPHICS_DX11_SHADERCOMPILER_H__
+#endif //INC_LGRAPHICS_DX11_SHADERCOMPILER_H_

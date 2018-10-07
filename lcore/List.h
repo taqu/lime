@@ -1,5 +1,5 @@
-﻿#ifndef INC_LCORE_INTRUSIVE_LIST_H__
-#define INC_LCORE_INTRUSIVE_LIST_H__
+﻿#ifndef INC_LCORE_INTRUSIVE_LIST_H_
+#define INC_LCORE_INTRUSIVE_LIST_H_
 /**
 @file List.h
 @author t-sakai
@@ -359,4 +359,4 @@ namespace intrusive
     }
 }
 }
-#endif //INC_LCORE_INTRUSIVE_LIST_H__
+#endif //INC_LCORE_INTRUSIVE_LIST_H_

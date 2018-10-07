@@ -1,11 +1,10 @@
-#ifndef INC_LSOUND_PACKREADER_H__
-#define INC_LSOUND_PACKREADER_H__
+#ifndef INC_LSOUND_PACKREADER_H_
+#define INC_LSOUND_PACKREADER_H_
 /**
 @file PackReader.h
 @author t-sakai
 @date 2013/02/12 create
 */
-#include <lcore/liostream.h>
 #include "Pack.h"
 
 namespace lsound
@@ -13,23 +12,16 @@ namespace lsound
     class PackReader
     {
     public:
-        PackReader();
-        ~PackReader();
+        static bool read(Pack& pack, const Char* path);
 
-        /// ファイルオープン
-        bool open(const Char* path);
-
-        /// ファイルクローズ
-        void close();
-
-        bool readEntries(Pack& pack);
-        bool readAll(Pack& pack);
     private:
-        static const u32 BlockSize = 4096;
+        PackReader() = delete;
+        ~PackReader() = delete;
 
-        lcore::ifstream stream_;
-        u32 dataSize_;
-        Pack pack_;
+        PackReader(const PackReader&) = delete;
+        PackReader(PackReader&&) = delete;
+        PackReader& operator=(const PackReader&) = delete;
+        PackReader& operator=(PackReader&&) = delete;
     };
 }
-#endif //INC_LSOUND_PACKREADER_H__
+#endif //INC_LSOUND_PACKREADER_H_

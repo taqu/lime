@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_COMPONENTBEHAVIOR_H__
-#define INC_LFRAMEWORK_COMPONENTBEHAVIOR_H__
+#ifndef INC_LFRAMEWORK_COMPONENTBEHAVIOR_H_
+#define INC_LFRAMEWORK_COMPONENTBEHAVIOR_H_
 /**
 @file ComponentBehavior.h
 @author t-sakai
@@ -35,4 +35,4 @@ namespace lfw
         ComponentBehavior();
     };
 }
-#endif //INC_LFRAMEWORK_COMPONENTBEHAVIOR_H__
+#endif //INC_LFRAMEWORK_COMPONENTBEHAVIOR_H_

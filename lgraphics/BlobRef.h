@@ -1,5 +1,5 @@
-﻿#ifndef INC_LGRAPHICS_BLOBREF_H__
-#define INC_LGRAPHICS_BLOBREF_H__
+﻿#ifndef INC_LGRAPHICS_BLOBREF_H_
+#define INC_LGRAPHICS_BLOBREF_H_
 /**
 @file BlobRef.h
 @author t-sakai
@@ -11,4 +11,4 @@
 #include "dx11/BlobRef.h"
 #endif
 
-#endif //INC_LGRAPHICS_BLOBREF_H__
+#endif //INC_LGRAPHICS_BLOBREF_H_

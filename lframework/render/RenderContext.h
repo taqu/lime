@@ -1,5 +1,5 @@
-#ifndef INC_LFRAMEWORK_RENDERCONTEXT_H__
-#define INC_LFRAMEWORK_RENDERCONTEXT_H__
+#ifndef INC_LFRAMEWORK_RENDERCONTEXT_H_
+#define INC_LFRAMEWORK_RENDERCONTEXT_H_
 /**
 @file RenderContext.h
 @author t-sakai
@@ -201,4 +201,4 @@ namespace lfw
         return *geomLightSphere_;
     }
 }
-#endif //INC_LFRAMEWORK_RENDERCONTEXT_H__
+#endif //INC_LFRAMEWORK_RENDERCONTEXT_H_

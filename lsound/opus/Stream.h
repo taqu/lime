@@ -1,5 +1,5 @@
-#ifndef INC_LSOUND_STREAM_H__
-#define INC_LSOUND_STREAM_H__
+#ifndef INC_LSOUND_STREAM_H_
+#define INC_LSOUND_STREAM_H_
 /**
 @file Stream.h
 @author t-sakai
@@ -71,10 +71,12 @@ namespace lsound
         inline LSenum getChannels() const;
         inline LSenum getType() const;
     protected:
-        friend class Context;
+        Stream(const Stream&) = delete;
+        Stream(Stream&&) = delete;
+        Stream& operator=(const Stream&) = delete;
+        Stream& operator=(Stream&&) = delete;
 
-        Stream(const Stream&);
-        Stream& operator=(const Stream&);
+        friend class Context;
 
         Stream();
         virtual ~Stream();
@@ -201,8 +203,10 @@ namespace lsound
         static opus_int64 tell_func(void* stream);
         static int close_func(void* stream);
 
-        FileStream(const Stream&);
-        FileStream& operator=(const FileStream&);
+        FileStream(const FileStream&) = delete;
+        FileStream(FileStream&&) = delete;
+        FileStream& operator=(const FileStream&) = delete;
+        FileStream& operator=(FileStream&&) = delete;
 
         static OpusFileCallbacks callbacks_;
 
@@ -223,16 +227,18 @@ namespace lsound
         MemoryStream();
         virtual ~MemoryStream();
 
-        void set(u32 size, u32 offset, Memory* memory);
+        void set(Memory* memory, opus_int64 offset, opus_int64 size);
         virtual bool open();
 
         void swap(MemoryStream& rhs);
     private:
-        MemoryStream(const MemoryStream&);
-        MemoryStream& operator=(const MemoryStream&);
+        MemoryStream(const MemoryStream&) = delete;
+        MemoryStream(MemoryStream&&) = delete;
+        MemoryStream& operator=(const MemoryStream&) = delete;
+        MemoryStream& operator=(MemoryStream&&) = delete;
 
-        u32 size_;
-        u32 offset_;
+        opus_int64 offset_;
+        opus_int64 size_;
         Memory* memory_;
     };
 
@@ -556,4 +562,4 @@ namespace lsound
 #endif
 #endif //LSOUND_USE_WAVE
 }
-#endif //INC_LSOUND_STREAM_H__
+#endif //INC_LSOUND_STREAM_H_

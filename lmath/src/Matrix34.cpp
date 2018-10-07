@@ -15,28 +15,61 @@ namespace lmath
     //--- Matrix34
     //---
     //--------------------------------------------
-    Matrix34::Matrix34(const Matrix44& rhs)
+    Matrix34 Matrix34::construct(
+        f32 m00, f32 m01, f32 m02, f32 m03,
+        f32 m10, f32 m11, f32 m12, f32 m13,
+        f32 m20, f32 m21, f32 m22, f32 m23)
     {
+        Matrix34 tmp;
+        tmp.m_[0][0] = m00; tmp.m_[0][1] = m01; tmp.m_[0][2] = m02; tmp.m_[0][3] = m03;
+        tmp.m_[1][0] = m10; tmp.m_[1][1] = m11; tmp.m_[1][2] = m12; tmp.m_[1][3] = m13;
+        tmp.m_[2][0] = m20; tmp.m_[2][1] = m21; tmp.m_[2][2] = m22; tmp.m_[2][3] = m23;
+        return tmp;
+    }
+
+    Matrix34 Matrix34::construct(const Matrix44& rhs)
+    {
+        Matrix34 tmp;
 #if defined(LMATH_USE_SSE)
         lm128 r0 = _mm_loadu_ps(&rhs.m_[0][0]);
         lm128 r1 = _mm_loadu_ps(&rhs.m_[1][0]);
         lm128 r2 = _mm_loadu_ps(&rhs.m_[2][0]);
-        store(*this, r0, r1, r2);
+        store(tmp, r0, r1, r2);
 #else
-        lcore::memcpy(m_, rhs.m_, sizeof(Matrix34));
+        lcore::memcpy(tmp.m_, rhs.m_, sizeof(Matrix34));
 #endif
+        return tmp;
     }
 
-    Matrix34& Matrix34::operator=(const Matrix34& rhs)
+    void Matrix34::copy(Matrix34& dst, const Matrix34& src)
     {
 #if defined(LMATH_USE_SSE)
         lm128 r0, r1, r2;
-        load(r0, r1, r2, rhs);
-        store(*this, r0, r1, r2);
+        load(r0, r1, r2, src);
+        store(dst, r0, r1, r2);
 #else
-        lcore::memcpy(m_, rhs.m_, sizeof(Matrix34));
+        lcore::memcpy(dst.m_, src.m_, sizeof(Matrix34));
 #endif
-        return *this;
+    }
+
+    void Matrix34::copy(Matrix34& dst, const Matrix44& src)
+    {
+#if defined(LMATH_USE_SSE)
+        lm128 r0, r1, r2;
+        load(r0, r1, r2, src);
+        store(dst, r0, r1, r2);
+#else
+        lcore::memcpy(dst.m_, src.m_, sizeof(Matrix34));
+#endif
+    }
+
+    void Matrix34::set(f32 m00, f32 m01, f32 m02, f32 m03,
+        f32 m10, f32 m11, f32 m12, f32 m13,
+        f32 m20, f32 m21, f32 m22, f32 m23)
+    {
+        m_[0][0] = m00; m_[0][1] = m01; m_[0][2] = m02; m_[0][3] = m03;
+        m_[1][0] = m10; m_[1][1] = m11; m_[1][2] = m12; m_[1][3] = m13;
+        m_[2][0] = m20; m_[2][1] = m21; m_[2][2] = m22; m_[2][3] = m23;
     }
 
     Matrix34& Matrix34::operator*=(f32 f)
@@ -843,6 +876,13 @@ namespace lmath
     //SSEセット・ストア命令
 
     void Matrix34::load(lm128& r0, lm128& r1, lm128& r2, const Matrix34& m)
+    {
+        r0 = _mm_loadu_ps(&(m.m_[0][0]));
+        r1 = _mm_loadu_ps(&(m.m_[1][0]));
+        r2 = _mm_loadu_ps(&(m.m_[2][0]));
+    }
+
+    void Matrix34::load(lm128& r0, lm128& r1, lm128& r2, const Matrix44& m)
     {
         r0 = _mm_loadu_ps(&(m.m_[0][0]));
         r1 = _mm_loadu_ps(&(m.m_[1][0]));

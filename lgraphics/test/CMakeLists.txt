@@ -21,7 +21,7 @@ set(FILES ${HEADERS} ${FILES})
 add_executable(${ProjectTest} ${FILES})
 
 if(MSVC)
-target_link_libraries(${ProjectTest} LCORE LMATH LGRAPHICS GTEST)
+target_link_libraries(${ProjectTest} LCORE LMATH LGRAPHICS)
 target_link_libraries(${ProjectTest} ${LCORE_DEPEND_LIBS} ${LMATH_DEPEND_LIBS} ${LGRAPHICS_DEPEND_LIBS})
 set_target_properties(${ProjectTest} PROPERTIES
         LINK_FLAGS_DEBUG "/SUBSYSTEM:CONSOLE"

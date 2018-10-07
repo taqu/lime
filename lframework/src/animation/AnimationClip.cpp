@@ -5,7 +5,7 @@
 */
 #include "animation/AnimationClip.h"
 #include "animation/JointAnimation.h"
-#include <lcore/liostream.h>
+#include <lcore/File.h>
 
 namespace lfw
 {
@@ -31,13 +31,13 @@ namespace lfw
         LDELETE_ARRAY(jointAnims_);
     }
 
-    bool AnimationClip::serialize(lcore::ostream& os, AnimationClip* anim)
+    bool AnimationClip::serialize(lcore::File& os, AnimationClip* anim)
     {
         LASSERT(NULL != anim);
 
         write(os, anim->getName());
-        lcore::io::write(os, anim->getLastTime());
-        lcore::io::write(os, anim->getNumJoints());
+        os.write(anim->getLastTime());
+        os.write(anim->getNumJoints());
 
         for(u32 i=0; i<anim->getNumJoints(); ++i){
             const JointAnimation& jointAnim = anim->getJointAnimation(i);
@@ -47,28 +47,28 @@ namespace lfw
 
         for(u32 i=0; i<anim->getNumJoints(); ++i){
             const JointAnimation& jointAnim = anim->getJointAnimation(i);
-            lcore::io::write(os, jointAnim.getNumPoses());
+            os.write(jointAnim.getNumPoses());
             
             for(s32 j=0; j<jointAnim.getNumPoses(); ++j){
                 const JointPoseWithTime& pose = jointAnim.getPose(j);
-                lcore::io::write(os, pose.time_);
-                lcore::io::write(os, pose.translation_);
-                lcore::io::write(os, pose.rotation_);
+                os.write(pose.time_);
+                os.write(pose.translation_);
+                os.write(pose.rotation_);
             }
         }
         return true;
     }
 
-    bool AnimationClip::deserialize(AnimationClip** ppAnim, lcore::istream& is)
+    bool AnimationClip::deserialize(AnimationClip** ppAnim, lcore::File& is)
     {
         Name animName;
         read(animName, is);
 
         f32 lastTime = 0.0f;
-        lcore::io::read(is, lastTime);
+        is.read(lastTime);
 
         u32 numJoints = 0;
-        lcore::io::read(is, numJoints);
+        is.read(numJoints);
 
         *ppAnim = LNEW AnimationClip(numJoints);
         AnimationClip* anim = *ppAnim;
@@ -86,15 +86,15 @@ namespace lfw
         for(u32 i=0; i<anim->getNumJoints(); ++i){
             JointAnimation& jointAnim = anim->getJointAnimation(i);
             u32 numPoses = 0;
-            lcore::io::read(is, numPoses);
+            is.read(numPoses);
             
             jointAnim.setNumPoses(numPoses);
 
             for(s32 j=0; j<jointAnim.getNumPoses(); ++j){
                 JointPoseWithTime& pose = jointAnim.getPose(j);
-                lcore::io::read(is, pose.time_);
-                lcore::io::read(is, pose.translation_);
-                lcore::io::read(is, pose.rotation_);
+                is.read(pose.time_);
+                is.read(pose.translation_);
+                is.read(pose.rotation_);
             }
         }
         return true;
